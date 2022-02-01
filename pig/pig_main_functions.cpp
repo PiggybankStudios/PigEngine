@@ -207,14 +207,7 @@ void PigPostReload(Version_t oldVersion)
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
 	
-	// +==============================+
-	// |  Fix Physics Related Stuff   |
-	// +==============================+
-	{
-		q3AllocFunc = Q3AllocCallback;
-		q3FreeFunc = Q3FreeCallback;
-		InPlaceNew(MyPhysRenderer_c, &pig->physRenderer); //TODO: Do we need this?
-	}
+	GameHandleReload();
 }
 
 // +--------------------------------------------------------------+
