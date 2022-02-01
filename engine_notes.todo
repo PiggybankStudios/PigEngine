@@ -1,0 +1,168 @@
+[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
+[ ] Add support for ellipses (not just circles)
+[ ] Try to harden the triangulation process against duplicate and colinear points
+
+[ ] Add support for new added new resources without restarting the game
+[ ] Switch audio devices on primary device changed
+
+[ ] Improve the audio debug window
+- Line representing 0 - Ms Ticks - Selection - Replay
+[ ] Hover to readout actual sample values
+
+# A dumping ground for any and all notes and TODO lists
+	[ ] Monitor Info
+	[ ] Worker Thread Pool that can do tasks given to it by the Engine
+	[ ] Make sure we select the swap interval properly
+	[ ] Update loop: frame manual flip synchronization
+	{ } Add an installer?
+	[ ] Add support for opening a file without reading all the contents immediately
+	[ ] Can we make sure windows don't get lost in the void between monitors when multiple monitors are being used
+	( ) Having multiple windows opened forces us to wait for the monitor vertical sync multiple times
+	[ ] Add a Win32_ShowMessageBox api function that we use in GyLibAssertFailure
+	[ ] Ignore the first click when the window wasn't focused
+
+# Gylib
+	[ ] MemArenaType_PagedHeap
+	{ } gy_collision.h
+	{ } gy_rays.h
+	[ ] VarArray max length option
+	[ ] gy_fifo.h
+	( ) There seems to be something wrong with our quaternion implementation. Angles are doubled when trying to do Axis + Angle method to generate a quaternion
+
+# Engine
+	[ ] Add a confirmation dialogue
+	[ ] Add in-engine support for screenshots
+	[ ] Add in-engine support for GIFs
+	[ ] Add a UI button implementation
+	[ ] Add a UI checkbox implementation
+	[!] Add a UI textbox implementation
+	[ ] Add a UI combobox implementation
+	[ ] Add a UI slider implementation
+	[ ] Add a resource loading/parsing system
+	[?] MIDI keyboard support
+	[ ] WAV audio file parsing
+	[!] OGG audio file parsing
+	[!] Add support for mouse based view rotation
+	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
+	[ ] Sampled audio output
+	[ ] Streaming sampled audio output
+	[?] Entity Component System?
+	[ ] Zip compression/decompression
+	( ) Assertions in GetStartupOptions in release mode are not really clear to the user. The program just starts and immediately exits
+	[ ] Add support for replace colors with the new dynamic shader uniforms (or maybe make it a proper uniform but make it an array?)
+	[ ] Debug visual for resources
+	[?] Did we like the EaseMover_t implementation we made in PCQ? Maybe we should get that moved over here?
+	[ ] Add a debug visual for memory usage in various memory arenas
+	[ ] Debug visual for input events
+	[ ] Add a system for localization of strings
+	( ) Why are text stylings not working in notifications? Why does it crash with an OpenGL error when I do underline? Is it only when we do SelectDefaultFontFace??
+	[ ] Finish adding support for adding new images to a font pack AFTER it originally was generated
+	[ ] Add support for clicking on notifications to take you either to the source line that generated the notification OR if the notification is augmented with a specific filepath, that path
+	( ) We are going to need some way to get the ProgramTime (and possible SystemTime and LocalTime) into PigPostReload!
+	[ ] Debug overlay to enable visual of the name of what the mouse is hovering over currently
+	[ ] The beveled drawing that I normally do by drawing the text twice should be an option that you can enable for the font flow somehow (so that uncolorable glyphs don't get messed up)
+	[ ] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
+	[ ] Add support for parsing FBX files
+		[ ] Vertex Data
+		[ ] Animation Data
+		[ ] Using the animation data to actually animate a model
+	[ ] Add a proper AppState system
+	[ ] Make the debug console thread safe! And make it handle building a line from multiple debug outputs before committing to the string fifo
+	[ ] 
+
+# Twitch Links and Notes
+	[ ] Take a look at JUCE - 2kirbs
+	[ ] 
+
+//Unicode Reference
+@ "http://www.unicode.org/Public/UNIDATA/"
+// Audio Envelope calculation and Compressor Implementation
+@ "https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/"
+
+# Example SVG Paths:
+	@Triangle:      "m 20.045214,237.66616 2.939965,-26.99422 29.666917,4.27632 z"
+	@Straight line: "M 6.6145832,252.20982 52.916666,229.90923"
+	@Mouth:         "M 52.919365,289.24918 C 41.159506,289.51645 40.090428,277.48932 40.090428,277.48932 h 25.123336 c 0,0 0.53454,11.75986 -12.294399,11.75986 z"
+	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
+
+# Finished TODO List Items
+	[X] Could we add vector art support somehow?
+	[X] Auto-reload shaders gracefully
+	[X] Add support for shifting older notifications down in the array when newer notifications leave sooner
+	[X] Make a tool that allows us to stitch together a bunch of images into a sprite sheet
+	[X] Use sprite sheet to generate custom font
+	[X] Add a debug visual (and/or editor) for sprite sheets and meta information on each frame
+	[X] Add support for naming SpritSheetFrames and looking them up by names or name substrings
+	[X] Add bitmap font loading support
+	[X] Add support for rendering keyboard, gamepad, or mouse btn icons in the middle of text using unicode points of some sort
+	[X] Metadata added to sprite sheets
+	[X] Sanatize ElapsedMs for stuff like window dragging and initial frame time
+	[X] Get plaform layer debug output routed to the application to store/display
+	[X] Add support for interleve combination of two StringFifo's
+	[X] Add support for dumping a ProcessLog_t into the debug output
+	[X] Move all of the disparate icon loading into a single sprite sheet
+	[X] SpriteSheet_t loading
+	(X) Confirm whether exit really does exit immediately (win32_loading.cpp Win32_RenderLoadingScreen)
+	(X) KeyRepeated is broken?
+	[X] Can we add a system to push marks into the performance graph?
+	[X] Assert that TempNumMarks == 0 at end of update loop and other exit points
+	[X] File watching
+	[X] DLL Reloading
+	[X] Switch over to GLAD instead of GLEW
+	[X] Fix rendering to multiple windows
+	[X] Add WindowEngineInput_t to store window-specific input informations
+	[X] Keyboard+Mouse Input
+	[X] Controller Input
+	[X] Time information
+	(X) Check if our daylight savings time handling is working properly for localTime and the Bias value we are using to get the timestamp for it
+	[X] Window Icon
+	[X] Window Cursors
+	[X] Device Context
+	[X] Threading
+	[X] Performance time measuring stuff
+	[X] Re-render view during window resizing events
+	[X] Call Pig_Closing
+	[X] Basic Font Baking + Rendering
+	(X) Figure out the problem with FixedHeap used value being wrong
+	[X] Clipboard functions
+	[X] ShowFile and ShowSourceFile functions
+	{X} Add Audio Support
+	[X] VarArray_t
+	[X] Test VarArray_t
+	[X] BktArray_t
+	[X] gy_math.h
+	[X] gy_directions.h
+	[X] gy_easing.h
+	[X] gy_quaternion.h
+	[X] gy_random.h
+	[X] gy_sorting.h
+	[X] gy_time.h
+	[X] gy_unicode.h
+	[X] gy_parsing.h
+	{X} gy_primitives.h
+	[X] gy_log.h
+	[X] == operator for Color_t
+	(X) We should probably add UNUSED() macro to DebugAssert or some option to quickly bundle the two
+	[X] Assertions
+	[X] Debug Output
+	[X] Shader Loading
+	[X] Texture Loading
+	[X] Vertex Buffer Creation
+	[X] Render Context
+	[X] Time Helper Functions (Oscillate, Saw, TimeSince, etc)
+	[X] Full Render Context
+	[X] Render Functions
+	[X] Debug Print String (add to buffer in platform layer than then gets drawn at frame flip call time)
+	[X] Font Baking + Rendering
+	{X} Debug Console
+	[X] Performance Overlays (framerate, pie graph)
+	[X] Add functions to platform API to get performance sensitive time information
+	[X] Store information and render a nice framerate graph
+	[X] Create functions to help draw pie graphs
+	[X] Add functions that help us easily insert time captures (with names?) and aggregate them together easily into a pie graph
+	[X] Add support for obj file parsing
+	[X] Add timestamp and ProgramTime info to debug output lines
+	[X] Add notification little popups
+	[X] Change the way we open up debug overlays to use a little top bar with a bunch of buttons
+	[X] Saw and Square waves
+	[X] End of list placeholder
