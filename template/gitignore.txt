@@ -1,0 +1,33 @@
+
+#Folders
+/lib/include/*
+!lib/include/gylib
+!lib/include/my_glfw
+!lib/include/README.txt
+
+/build/*
+!build/build.bat
+!build/build_osx.sh
+# TODO: Re-enable me in a proper game project since resources take up a lot more repository space to track
+# /data/Resources/
+/data/Resources/Raw/
+
+/release/
+
+#File Types
+*.vim
+*.a
+*.sublime-workspace
+*.obj
+*.o
+/data/*.exe
+/data/PigEngine*
+
+#Visual Studio Stuff
+*.VC.*
+/.vs/
+vc140.pdb
+/Debug/
+
+#Mac Stuff
+*.DS_Store

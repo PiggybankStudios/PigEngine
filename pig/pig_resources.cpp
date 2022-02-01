@@ -20,6 +20,21 @@ void Pig_InitResources()
 }
 
 // +--------------------------------------------------------------+
+// |                           Helpers                            |
+// +--------------------------------------------------------------+
+u64 GetNumResourcesOfType(ResourceType_t resourceType)
+{
+	switch (resourceType)
+	{
+		case ResourceType_Texture: return RESOURCES_NUM_TEXTURES;
+		case ResourceType_Sheet:   return RESOURCES_NUM_SHEETS;
+		case ResourceType_Shader:  return RESOURCES_NUM_SHADERS;
+		case ResourceType_Font:    return RESOURCES_NUM_FONTS;
+		default: return 0;
+	}
+}
+
+// +--------------------------------------------------------------+
 // |                            Watch                             |
 // +--------------------------------------------------------------+
 #if DEBUG_BUILD

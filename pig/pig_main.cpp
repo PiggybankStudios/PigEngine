@@ -29,11 +29,6 @@ Description:
 #include "pig/pig_textbox.h"
 #include "pig/pig_debug_console.h"
 
-//AppStates
-#include "app_state_list.h"
-#include "pig/pig_none_app_state.h"
-#include "sprite_sheet_editor/sheet_ed_main.h"
-
 #include "game_main.h"
 
 #include "pig/pig_main.h"
@@ -115,16 +110,11 @@ static       NoneAppState_t*           noneState = nullptr;
 #include "pig/pig_audio_debug.cpp"
 #include "pig/pig_debug_overlay.cpp"
 
-//AppStates
-#include "pig/pig_none_app_state.cpp"
-#include "sprite_sheet_editor/sheet_ed_main.cpp"
-#include "app_state_list.cpp"
+#include "game_main.cpp"
 
-#include "pig/pig_startup_options.cpp"
 #include "pig/pig_audio_mixer.cpp"
 #include "pig/pig_main_functions.cpp"
 
-#include "game_main.cpp"
 
 // +--------------------------------------------------------------+
 // |                      Exported Functions                      |
@@ -153,7 +143,7 @@ PIG_GET_VERSION_DEF(Pig_GetVersion)
 PIG_GET_STARTUP_OPTIONS_DEF(Pig_GetStartupOptions)
 {
 	PigEntryPoint(PigEntryPoint_GetStartupOptions, nullptr, nullptr, nullptr, nullptr, nullptr);
-	PigGetStartupOptions(info, optionsOut);
+	GameGetStartupOptions(info, optionsOut);
 	PigExitPoint(PigEntryPoint_GetStartupOptions);
 }
 
