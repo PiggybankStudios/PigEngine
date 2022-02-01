@@ -21,9 +21,7 @@ struct PigState_t
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	
-	//AppStates
-	NoneAppState_t noneAppState;
-	SpriteSheetEditorState_t spriteSheetEditor;
+	AppStateStructs_t appStates;
 	
 	AppState_t currentAppState;
 	bool changeAppStateRequested;

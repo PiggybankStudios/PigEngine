@@ -72,13 +72,12 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 		TempArena = &pig->tempArena;
 		GetTempArena = Pig_GetTempArena;
 		if (entryPoint != PigEntryPoint_Initialize) { TempPushMark(); }
-		sheetEd = &pig->spriteSheetEditor;
-		noneState = &pig->noneAppState;
 	}
 	else
 	{
 		PigClearGlobals();
 	}
+	GameUpdateGlobals();
 	if (entryPoint != PigEntryPoint_Initialize && plat != nullptr)
 	{
 		AssertSingleThreaded();

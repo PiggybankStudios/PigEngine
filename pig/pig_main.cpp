@@ -60,10 +60,6 @@ static       r64              ElapsedMs      = 1.0f;
 static       v2               MousePos       = {};
 static       v2               ScreenSize     = {};
 
-//AppState Globals
-static       SpriteSheetEditorState_t* sheetEd   = nullptr;
-static       NoneAppState_t*           noneState = nullptr;
-
 #include "common_performance.cpp"
 #include "gylib/gy_temp_memory.cpp"
 
@@ -79,7 +75,6 @@ static       NoneAppState_t*           noneState = nullptr;
 #include "pig/pig_log.cpp"
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
-#include "pig/pig_dll_management.cpp"
 #include "pig/pig_input.cpp"
 
 #include "pig/pig_deserialization.cpp"
@@ -112,6 +107,7 @@ static       NoneAppState_t*           noneState = nullptr;
 
 #include "game_main.cpp"
 
+#include "pig/pig_dll_management.cpp"
 #include "pig/pig_audio_mixer.cpp"
 #include "pig/pig_main_functions.cpp"
 
