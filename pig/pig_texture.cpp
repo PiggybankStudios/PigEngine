@@ -34,7 +34,7 @@ void DestroyTexture(Texture_t* texture)
 	ClearPointer(texture);
 }
 
-bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageData_t* imageData, bool pixelated, bool repeating, bool reverseByteOrder = false)
+bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageData_t* imageData, bool pixelated, bool repeating, bool reverseByteOrder = false, bool generateMipmap = true, u64 antialiasingNumSamples = 0)
 {
 	NotNull(memArena);
 	NotNull(textureOut);
@@ -44,23 +44,34 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 	Assert(imageData->pixelSize > 0);
 	Assert(imageData->width > 0);
 	Assert(imageData->height > 0);
-	NotNull(imageData->data8);
+	Assert(antialiasingNumSamples == 0 || antialiasingNumSamples == 4 || antialiasingNumSamples == 8);
+	// NotNull(imageData->data8); //This can actually be null if you want to create a texture without filling it immediately
+	
 	ClearPointer(textureOut);
+	textureOut->allocArena = memArena;
+	textureOut->id = pig->nextTextureId;
+	pig->nextTextureId++;
+	textureOut->isPixelated = pixelated;
+	textureOut->isRepeating = repeating;
+	textureOut->antialiasingNumSamples = antialiasingNumSamples;
+	textureOut->sizei = imageData->size;
+	textureOut->size = ToVec2(imageData->size);
+	textureOut->error = TextureError_None;
+	bool hasAntialiasing = (antialiasingNumSamples > 0);
 	
 	const char* errorStr = nullptr;
 	#if OPENGL_SUPPORTED
-	#define CreateTexture_CheckOpenGlError(apiCallStr)                                            \
-	{                                                                                             \
-		errorStr = CheckOpenGlError(true);                                                        \
-		if (errorStr != nullptr)                                                                  \
-		{                                                                                         \
-			textureOut->apiErrorStr = PrintInArenaStr(memArena, apiCallStr " error: ", errorStr); \
-			textureOut->error = TextureError_ApiError;                                            \
-		}                                                                                         \
+	#define CreateTexture_CheckOpenGlError(apiCallStr)                                              \
+	{                                                                                               \
+		errorStr = CheckOpenGlError(true);                                                          \
+		if (errorStr != nullptr)                                                                    \
+		{                                                                                           \
+			textureOut->apiErrorStr = PrintInArenaStr(memArena, apiCallStr " error: %s", errorStr); \
+			textureOut->error = TextureError_ApiError;                                              \
+		}                                                                                           \
 	} if (errorStr != nullptr)
 	#endif
 	
-	bool result = false;
 	switch (pig->renderApi)
 	{
 		// +==============================+
@@ -72,103 +83,84 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 			// +==============================+
 			// |        Create Texture        |
 			// +==============================+
-			GLuint textureId = 0;
-			glGenTextures(1, &textureId);
-			CreateTexture_CheckOpenGlError("glGenTextures()")
-			{
-				return false;
-			}
-			glBindTexture(GL_TEXTURE_2D, textureId);
-			CreateTexture_CheckOpenGlError("glBindTexture(GL_TEXTURE_2D)")
-			{
-				glDeleteTextures(1, &textureId);
-				return false;
-			}
+			glGenTextures(1, &textureOut->glId);
+			CreateTexture_CheckOpenGlError("glGenTextures()") { break; }
+			GLenum targetEnum = (hasAntialiasing ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D);
+			glBindTexture(targetEnum, textureOut->glId);
+			CreateTexture_CheckOpenGlError("glBindTexture()") { break; }
 			
 			GLenum dataFormat = reverseByteOrder ? GL_BGRA : GL_RGBA;
 			GLenum internalFormat = GL_RGBA;
-			bool hasAlpha = true;
+			textureOut->hasAlpha = true;
 			if (imageData->pixelSize == 1)
 			{
 				dataFormat = GL_RED;
 				internalFormat = GL_RED;
-				hasAlpha = false;
+				textureOut->hasAlpha = false;
 			}
 			if (imageData->pixelSize == 3) //no-alpha
 			{
 				dataFormat = reverseByteOrder ? GL_BGR : GL_RGB;
 				internalFormat = GL_RGB;
-				hasAlpha = false;
-			}
-			glTexImage2D(
-				GL_TEXTURE_2D,      //bound texture type
-				0,                  //image level
-				internalFormat,     //internal format
-				imageData->width,   //image width
-				imageData->height,  //image height
-				0,                  //border
-				dataFormat,         //format
-				GL_UNSIGNED_BYTE,   //type
-				imageData->data8    //data
-			);
-			CreateTexture_CheckOpenGlError("glTexImage2D(...)")
-			{
-				glDeleteTextures(1, &textureId);
-				return false;
+				textureOut->hasAlpha = false;
 			}
 			
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR));
-			CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MIN_FILTER)")
+			if (hasAntialiasing)
 			{
-				glDeleteTextures(1, &textureId);
-				return false;
+				//TODO: This makes our minimum OpenGL version 3.2 or greater!
+				glTexImage2DMultisample(
+					targetEnum,                      //bound texture type
+					(GLsizei)antialiasingNumSamples, //samples
+					internalFormat,                  //internal format
+					imageData->width,                //image width
+					imageData->height,               //image height
+					GL_TRUE                          //fixed sample locations
+				);
+				CreateTexture_CheckOpenGlError("glTexImage2DMultisample(...)") { break; }
 			}
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (pixelated ? GL_NEAREST : GL_LINEAR));
-			CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MAG_FILTER)")
+			else
 			{
-				glDeleteTextures(1, &textureId);
-				return false;
+				glTexImage2D(
+					targetEnum,         //bound texture type
+					0,                  //image level
+					internalFormat,     //internal format
+					imageData->width,   //image width
+					imageData->height,  //image height
+					0,                  //border
+					dataFormat,         //format
+					GL_UNSIGNED_BYTE,   //type
+					imageData->data8    //data
+				);
+				CreateTexture_CheckOpenGlError("glTexImage2D(...)") { break; }
 			}
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
-			CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_WRAP_S)")
+			
+			if (!hasAntialiasing)
 			{
-				glDeleteTextures(1, &textureId);
-				return false;
-			}
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
-			CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_WRAP_T)")
-			{
-				glDeleteTextures(1, &textureId);
-				return false;
-			}
-			glGenerateMipmap(GL_TEXTURE_2D);
-			CreateTexture_CheckOpenGlError("glGenerateMipmap(GL_TEXTURE_2D)")
-			{
-				glDeleteTextures(1, &textureId);
-				return false;
-			}
-			if (imageData->pixelSize == 1)
-			{
-				GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_RED};
-				glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-				CreateTexture_CheckOpenGlError("glTexParameteriv(GL_TEXTURE_SWIZZLE_RGBA)")
+				//TODO: Should these go inside the "if (generateMipmap)"?
+				glTexParameteri(targetEnum, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR));
+				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MIN_FILTER)") { break; }
+				glTexParameteri(targetEnum, GL_TEXTURE_MAG_FILTER, (pixelated ? GL_NEAREST : GL_LINEAR));
+				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MAG_FILTER)") { break; }
+				glTexParameteri(targetEnum, GL_TEXTURE_WRAP_S, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_WRAP_S)") { break; }
+				glTexParameteri(targetEnum, GL_TEXTURE_WRAP_T, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_WRAP_T)") { break; }
+				
+				if (generateMipmap)
 				{
-					glDeleteTextures(1, &textureId);
-					return false;
+					glGenerateMipmap(targetEnum);
+					CreateTexture_CheckOpenGlError("glGenerateMipmap()") { break; }
 				}
 			}
 			
-			textureOut->allocArena = memArena;
-			textureOut->glId = textureId;
-			textureOut->id = pig->nextTextureId;
-			pig->nextTextureId++;
-			textureOut->isPixelated = pixelated;
-			textureOut->isRepeating = repeating;
-			textureOut->hasAlpha = hasAlpha;
-			textureOut->sizei = imageData->size;
-			textureOut->size = ToVec2(imageData->size);
+			if (imageData->pixelSize == 1)
+			{
+				GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_RED};
+				glTexParameteriv(targetEnum, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+				CreateTexture_CheckOpenGlError("glTexParameteriv(GL_TEXTURE_SWIZZLE_RGBA)") { break; }
+			}
+			
 			textureOut->isValid = true;
-			result = true;
 		} break;
 		#endif
 		
@@ -178,11 +170,11 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 		default:
 		{
 			textureOut->error = TextureError_UnsupportedApi;
-			return false;
 		} break;
 	}
 	
-	return result;
+	AssertIf(!textureOut->isValid, textureOut->error != TextureError_None);
+	return textureOut->isValid;
 }
 
 bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, bool pixelated, bool repeating, PlatImageData_t* imageDataOut = nullptr)
@@ -215,7 +207,7 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 		return false;
 	}
 	
-	bool result = CreateTexture(memArena, textureOut, &imageData, pixelated, repeating, false);
+	bool result = CreateTexture(memArena, textureOut, &imageData, pixelated, repeating);
 	
 	if (imageDataOut != nullptr && result)
 	{
@@ -233,6 +225,98 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	return result;
 }
 
+const char* PrintTextureError(const Texture_t* texture)
+{
+	NotNull(texture);
+	if (texture->error == TextureError_ApiError)
+	{
+		return TempPrint("Api: %.*s", texture->apiErrorStr.length, texture->apiErrorStr.pntr);
+	}
+	else
+	{
+		return GetTextureErrorStr(texture->error);
+	}
+}
+
+bool GetTextureDataSubPart(Texture_t* texture, reci subPartRec, MemArena_t* memArena, PlatImageData_t* imageDataOut)
+{
+	NotNull(texture);
+	NotNull(memArena);
+	NotNull(imageDataOut);
+	Assert(texture->isValid);
+	Assert(texture->widthi > 0 && texture->heighti > 0);
+	Assert(!texture->singleChannel); //TODO: we don't support single channel stuff in this function yet, because we don't need it
+	Assert(subPartRec.width > 0 && subPartRec.height > 0);
+	Assert(subPartRec.x >= 0 && subPartRec.y >= 0);
+	Assert(subPartRec.x + subPartRec.width <= texture->widthi && subPartRec.y + subPartRec.height <= texture->heighti);
+	
+	ClearPointer(imageDataOut);
+	imageDataOut->allocArena = memArena;
+	imageDataOut->size = subPartRec.size;
+	imageDataOut->pixelSize = (texture->hasAlpha ? 4 : 3);
+	imageDataOut->rowSize = imageDataOut->pixelSize * subPartRec.width;
+	imageDataOut->dataSize = imageDataOut->rowSize * subPartRec.height;
+	imageDataOut->data8 = AllocArray(memArena, u8, imageDataOut->dataSize);
+	if (imageDataOut->data8 == nullptr) { return false; }
+	
+	switch (pig->renderApi)
+	{
+		// +==============================+
+		// |            OpenGL            |
+		// +==============================+
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			GLint sourceY = (GLint)(texture->isFlippedY ? texture->height - (subPartRec.y + subPartRec.height) : subPartRec.y);
+			GLint sourceHeight = (GLint)subPartRec.height;
+			glGetTextureSubImage(
+				texture->glId,                          //texture,
+				0,                                      //level,
+				subPartRec.x,                           //xoffset,
+				sourceY,                                //yoffset,
+				0,                                      //zoffset,
+				subPartRec.width,                       //width,
+				sourceHeight,                           //height,
+				1,                                      //depth,
+				(texture->hasAlpha ? GL_RGBA : GL_RGB), //format,
+				GL_UNSIGNED_BYTE,                       //type,
+				(GLsizei)imageDataOut->dataSize,        //bufSize,
+				(GLvoid*)imageDataOut->data8            //pixels
+			);
+			AssertNoOpenGlError();
+		} break;
+		#endif
+		default: AssertMsg(false, "Unsupported API in GetTextureData"); break;
+	}
+	
+	if (texture->isFlippedY)
+	{
+		//NOTE: We need to reverse the rows in the image data since this texture
+		//      is stored internally with rows going bottom up
+		TempPushMark();
+		u8* tempRowBuffer = AllocArray(TempArena, u8, imageDataOut->rowSize);
+		NotNull(tempRowBuffer);
+		for (u64 rIndex = 0; rIndex < (u64)imageDataOut->height/2; rIndex++)
+		{
+			MyMemCopy(tempRowBuffer, &imageDataOut->data8[rIndex * imageDataOut->rowSize], imageDataOut->rowSize);
+			MyMemCopy(&imageDataOut->data8[rIndex * imageDataOut->rowSize], &imageDataOut->data8[((u64)imageDataOut->height-1 - rIndex) * imageDataOut->rowSize], imageDataOut->rowSize);
+			MyMemCopy(&imageDataOut->data8[((u64)imageDataOut->height-1 - rIndex) * imageDataOut->rowSize], tempRowBuffer, imageDataOut->rowSize);
+		}
+		TempPopMark();
+	}
+	
+	return true;
+}
+
+bool GetTextureData(Texture_t* texture, MemArena_t* memArena, PlatImageData_t* imageDataOut)
+{
+	NotNull(texture);
+	return GetTextureDataSubPart(texture, NewReci(Vec2i_Zero, texture->sizei), memArena, imageDataOut);
+}
+
+// +--------------------------------------------------------------+
+// |                   PlatImageData_t Helpers                    |
+// +--------------------------------------------------------------+
 void CreateSubImageData(const PlatImageData_t* sourceImageData, reci sourceRec, PlatImageData_t* imageDataOut, MemArena_t* allocArena)
 {
 	NotNull(sourceImageData);

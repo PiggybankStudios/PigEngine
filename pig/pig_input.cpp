@@ -166,19 +166,6 @@ void Pig_InputRenderDebugInfo()
 }
 
 // +--------------------------------------------------------------+
-// |                       Window Targeting                       |
-// +--------------------------------------------------------------+
-void Pig_ChangeWindow(const PlatWindow_t* window)
-{
-	AssertSingleThreaded();
-	NotNull(window);
-	plat->ChangeWindowTarget(window);
-	pig->currentWindow = window;
-	MousePos = window->input.mousePos;
-	ScreenSize = window->input.renderResolution;
-}
-
-// +--------------------------------------------------------------+
 // |                      Mouse Hit Testing                       |
 // +--------------------------------------------------------------+
 // +==============================+

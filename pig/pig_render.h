@@ -355,6 +355,8 @@ struct Texture_t
 	bool isPixelated;
 	bool isRepeating;
 	bool hasAlpha;
+	u64 antialiasingNumSamples;
+	bool isFlippedY;
 	bool singleChannel;
 	
 	union
@@ -370,6 +372,63 @@ struct Texture_t
 	
 	#if OPENGL_SUPPORTED
 	GLuint glId;
+	#endif
+};
+
+enum FrameBufferError_t
+{
+	FrameBufferError_None = 0,
+	FrameBufferError_UnsupportedApi,
+	FrameBufferError_ApiError,
+	FrameBufferError_TextureError,
+	FrameBufferError_OutTextureError,
+	FrameBufferError_NumErrors,
+};
+const char* GetFrameBufferErrorStr(FrameBufferError_t error)
+{
+	switch (error)
+	{
+		case FrameBufferError_None:            return "None";
+		case FrameBufferError_UnsupportedApi:  return "UnsupportedApi";
+		case FrameBufferError_ApiError:        return "ApiFailure";
+		case FrameBufferError_TextureError:    return "TextureError";
+		case FrameBufferError_OutTextureError: return "OutTextureError";
+		default: return "Unknown";
+	}
+}
+
+enum FrameBufferChannel_t
+{
+	FrameBufferChannel_None    = 0x00,
+	FrameBufferChannel_Opacity = 0x01,
+	FrameBufferChannel_Depth   = 0x02,
+	FrameBufferChannel_Stencil = 0x04,
+	FrameBufferChannel_Default = (FrameBufferChannel_Opacity|FrameBufferChannel_Depth),
+	FrameBufferChannel_All     = (FrameBufferChannel_Opacity|FrameBufferChannel_Depth|FrameBufferChannel_Stencil),
+};
+
+struct FrameBuffer_t
+{
+	MemArena_t* allocArena;
+	u64 id;
+	bool isValid;
+	FrameBufferError_t error;
+	MyStr_t apiErrorStr;
+	
+	Texture_t texture;
+	Texture_t outTexture;
+	union
+	{
+		v2i size;
+		struct { i32 width, height; };
+	};
+	u64 antialiasingNumSamples;
+	u8 channelFlags;
+	
+	#if OPENGL_SUPPORTED
+	GLuint glId;
+	GLuint glOutId;
+	GLuint glRenderBuffId;
 	#endif
 };
 

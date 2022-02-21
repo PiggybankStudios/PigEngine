@@ -43,10 +43,13 @@ void PigInitialize(EngineMemory_t* memory)
 	InitRenderContext();
 	PigInitAudioOutput();
 	PigInitSounds();
+	Pig_InitializeInput();
+	Pig_InitializeWindowStates();
 	
 	pig->nextUiId = 1;
 	pig->nextShaderId = 1;
 	pig->nextTextureId = 1;
+	pig->nextFrameBufferId = 1;
 	pig->nextVectorImgId = 1;
 	pig->nextVertBufferId = 1;
 	pig->nextSpriteSheetId = 1;
@@ -74,7 +77,7 @@ void PigInitialize(EngineMemory_t* memory)
 	// +==============================+
 	// |     Initialize AppState      |
 	// +==============================+
-	pig->currentAppState = AppState_None;
+	pig->currentAppState = INITIAL_APP_STATE;
 	InitializeAppState(pig->currentAppState);
 	
 	pig->initialized = true;
@@ -93,9 +96,9 @@ void PigUpdateMainWindow()
 	Pig_UpdateResources();
 	
 	PigNotificationsCaptureMouse(&pig->notificationsQueue);
-	PigAudioOutGraphCaptureMouse(&pig->audioOutGraph);
-	PigPerfGraphCaptureMouse(&pig->perfGraph);
 	PigDebugOverlayCaptureMouse(&pig->debugOverlay);
+	PigPerfGraphCaptureMouse(&pig->perfGraph);
+	PigAudioOutGraphCaptureMouse(&pig->audioOutGraph);
 	DebugConsoleCaptureMouse(&pig->debugConsole);
 	
 	PigUpdateNotifications(&pig->notificationsQueue);
@@ -103,6 +106,33 @@ void PigUpdateMainWindow()
 	UpdatePigPerfGraph(&pig->perfGraph);
 	UpdatePigAudioOutGraph(&pig->audioOutGraph);
 	UpdateDebugConsole(&pig->debugConsole);
+	
+	// +==============================+
+	// |      Screenshot Hotkey       |
+	// +==============================+
+	if (KeyPressedRaw(Key_F2))
+	{
+		pig->currentWindowState->screenshotKeyWasUsedForSelection = false;
+	}
+	if (KeyDownRaw(Key_F2) && MousePressedRaw(MouseBtn_Left) && IsMouseInsideWindow())
+	{
+		pig->currentWindowState->selectingScreenshotRec = true;
+		pig->currentWindowState->screenshotKeyWasUsedForSelection = true;
+		pig->currentWindowState->selectingScreenshotRecStart = Vec2Roundi(MousePos);
+	}
+	if (pig->currentWindowState->selectingScreenshotRec) { HandleMouse(MouseBtn_Left); }
+	if (pig->currentWindowState->selectingScreenshotRec && !(KeyDownRaw(Key_F2) && MouseDownRaw(MouseBtn_Left)))
+	{
+		pig->currentWindowState->selectingScreenshotRec = false;
+		reci selectedRec = NewReciBetween(pig->currentWindowState->selectingScreenshotRecStart, Vec2Roundi(MousePos));
+		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
+		Pig_CaptureScreenshotSub(selectedRec);
+	}
+	if (KeyReleasedRaw(Key_F2) && !pig->currentWindowState->screenshotKeyWasUsedForSelection)
+	{
+		Pig_CaptureScreenshot();
+	}
+	if (KeyDownRaw(Key_F2) || KeyReleasedRaw(Key_F2)) { HandleKey(Key_F2); }
 	
 	if (pig->changeAppStateRequested)
 	{
@@ -119,31 +149,36 @@ void PigUpdateMainWindow()
 // +--------------------------------------------------------------+
 // |                            Render                            |
 // +--------------------------------------------------------------+
-void PigRenderMainWindow()
+void PigRenderDebugOverlays()
 {
-	RenderAppState(pig->currentAppState);
-	
 	RcBindShader(&pig->resources.mainShader2D);
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
 	RcClearDepth(1.0f);
 	
-	RenderPigDebugOverlay(&pig->debugOverlay);
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);
 	RenderPigPerfGraph(&pig->perfGraph);
-	PigRenderNotifications(&pig->notificationsQueue);
 	Pig_InputRenderDebugInfo();
+	RenderPigDebugOverlay(&pig->debugOverlay);
+	PigRenderNotifications(&pig->notificationsQueue);
+	
+	if (pig->currentWindowState->selectingScreenshotRec)
+	{
+		reci selectedRec = NewReciBetween(pig->currentWindowState->selectingScreenshotRecStart, Vec2Roundi(MousePos));
+		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
+		RcDrawRectangleOutline(ToRec(selectedRec), ColorTransparent(Black, 0.5f), 1000000, true);
+	}
 }
 
 void PigUpdate()
 {
 	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
+	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
-	
 	PigUpdateMainWindow();
 	
 	if (true)
@@ -155,14 +190,32 @@ void PigUpdate()
 			NotNull(window);
 			if (!window->closed)
 			{
+				Pig_ChangeWindow(window);
+				NotNull(pig->currentWindowState);
+				#if 1
+				FrameBuffer_t* renderBuffer = &pig->currentWindowState->frameBuffer;
+				#else
+				FrameBuffer_t* renderBuffer = nullptr;
+				#endif
+				
 				if (isMainWindow)
 				{
-					PigRenderMainWindow();
+					RenderAppState(pig->currentAppState, renderBuffer);
+					PigRenderDebugOverlays();
 				}
 				else
 				{
-					RcBegin(window, &pig->resources.mainShader2D, GetPredefPalColorByIndex(wIndex+4));
+					RcBegin(window, renderBuffer, &pig->resources.mainShader2D, GetPredefPalColorByIndex(wIndex+4));
 				}
+				
+				if (renderBuffer != nullptr)
+				{
+					PrepareFrameBufferTexture(renderBuffer);
+					RcBegin(window, nullptr, &pig->resources.mainShader2D, PalPurpleDark);
+					RcBindTexture1(&renderBuffer->outTexture);
+					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
+				}
+				Pig_SaveScreenshot(pig->currentWindow, pig->currentWindowState);
 			}
 			window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
 		}

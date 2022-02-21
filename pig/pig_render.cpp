@@ -77,6 +77,21 @@ void RcBindVertexArrayObject_OpenGL(VertexArrayObject_t* vao)
 	}
 }
 
+void RcBindFrameBuffer_OpenGL(FrameBuffer_t* buffer)
+{
+	if (buffer != nullptr)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, buffer->glId);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer->glId);
+		AssertNoOpenGlError();
+	}
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		AssertNoOpenGlError();
+	}
+}
+
 void RcBindShader_OpenGL(Shader_t* shader)
 {
 	if (shader != nullptr)
@@ -288,23 +303,33 @@ void RcSetColor2_OpenGL(Colorf_t colorf)
 	}
 }
 
-void RcSetSourceRec1_OpenGL(rec rectangle)
+void RcSetSourceRec1_OpenGL(rec rectangle, bool flipped, r32 textureHeight)
 {
 	NotNull(rc);
 	NotNull(rc->state.boundShader);
 	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_SourceRec1))
 	{
+		if (flipped)
+		{
+			rectangle.y = textureHeight - rectangle.y;
+			rectangle.height = -rectangle.height;
+		}
 		Assert(rc->state.boundShader->glLocations.sourceRec1 >= 0);
 		glUniform4f(rc->state.boundShader->glLocations.sourceRec1, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 		AssertNoOpenGlError();
 	}
 }
-void RcSetSourceRec2_OpenGL(rec rectangle)
+void RcSetSourceRec2_OpenGL(rec rectangle, bool flipped, r32 textureHeight)
 {
 	NotNull(rc);
 	NotNull(rc->state.boundShader);
 	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_SourceRec2))
 	{
+		if (flipped)
+		{
+			rectangle.y = textureHeight - rectangle.y;
+			rectangle.height = -rectangle.height;
+		}
 		Assert(rc->state.boundShader->glLocations.sourceRec2 >= 0);
 		glUniform4f(rc->state.boundShader->glLocations.sourceRec2, rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 		AssertNoOpenGlError();
@@ -443,7 +468,7 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 void RcBegin_OpenGL()
 {
 	NotNull(rc);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); AssertNoOpenGlError();
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA); AssertNoOpenGlError();
 	glEnable(GL_BLEND); AssertNoOpenGlError();
 	glDepthFunc(GL_LEQUAL); AssertNoOpenGlError();
 	glEnable(GL_DEPTH_TEST); AssertNoOpenGlError();
@@ -557,8 +582,8 @@ void RcBindShader(Shader_t* shader)
 			RcSetCameraPosition_OpenGL(rc->state.cameraPosition);
 			RcSetColor1_OpenGL(ToColorf(rc->state.color1));
 			RcSetColor2_OpenGL(ToColorf(rc->state.color2));
-			RcSetSourceRec1_OpenGL(rc->state.sourceRec1);
-			RcSetSourceRec2_OpenGL(rc->state.sourceRec2);
+			if (rc->state.boundTexture1 != nullptr) { RcSetSourceRec1_OpenGL(rc->state.sourceRec1, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height); }
+			if (rc->state.boundTexture2 != nullptr) { RcSetSourceRec2_OpenGL(rc->state.sourceRec2, rc->state.boundTexture2->isFlippedY, rc->state.boundTexture2->height); }
 			RcSetShiftVec_OpenGL(rc->state.shiftVec);
 			RcSetCircleRadius_OpenGL(rc->state.circleRadius);
 			RcSetCircleInnerRadius_OpenGL(rc->state.circleInnerRadius);
@@ -574,6 +599,27 @@ void RcBindShader(Shader_t* shader)
 	}
 }
 
+void RcBindFrameBuffer(FrameBuffer_t* buffer, bool forceRebind = false)
+{
+	if (buffer != nullptr && !buffer->isValid) { DebugAssertMsg(false, "Trying to bind invalid frame buffer!"); buffer = nullptr; }
+	if (!forceRebind && rc->state.boundFrameBuffer == buffer) { return; }
+	
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcBindFrameBuffer_OpenGL(buffer);
+			rc->state.boundFrameBuffer = buffer;
+		} break;
+		#endif
+		default:
+		{
+			
+		} break;
+	}
+}
+
 void RcBindTexture1(Texture_t* texture)
 {
 	NotNull(rc);
@@ -586,8 +632,11 @@ void RcBindTexture1(Texture_t* texture)
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
+			rec defaultSourceRec = NewRec(0, 0, texture->width, texture->height);
 			RcBindTexture1_OpenGL(texture);
+			RcSetSourceRec1_OpenGL(defaultSourceRec, texture->isFlippedY, texture->height);
 			rc->state.boundTexture1 = texture;
+			rc->state.sourceRec1 = defaultSourceRec;
 		} break;
 		#endif
 		
@@ -606,8 +655,11 @@ void RcBindTexture2(Texture_t* texture)
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
+			rec defaultSourceRec = NewRec(0, 0, texture->width, texture->height);
 			RcBindTexture2_OpenGL(texture);
+			RcSetSourceRec2_OpenGL(defaultSourceRec, texture->isFlippedY, texture->height);
 			rc->state.boundTexture2 = texture;
+			rc->state.sourceRec2 = defaultSourceRec;
 		} break;
 		#endif
 		
@@ -879,13 +931,14 @@ void RcSetColor2(Color_t color)
 void RcSetSourceRec1(rec rectangle)
 {
 	NotNull(rc);
+	NotNull(rc->state.boundTexture1);
 	if (RecBasicallyEqual(rc->state.sourceRec1, rectangle)) { return; }
 	switch (pig->renderApi)
 	{
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
-			RcSetSourceRec1_OpenGL(rectangle);
+			RcSetSourceRec1_OpenGL(rectangle, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height);
 			rc->state.sourceRec1 = rectangle;
 		} break;
 		#endif
@@ -896,13 +949,14 @@ void RcSetSourceRec1(rec rectangle)
 void RcSetSourceRec2(rec rectangle)
 {
 	NotNull(rc);
+	NotNull(rc->state.boundTexture2);
 	if (RecBasicallyEqual(rc->state.sourceRec2, rectangle)) { return; }
 	switch (pig->renderApi)
 	{
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
-			RcSetSourceRec2_OpenGL(rectangle);
+			RcSetSourceRec2_OpenGL(rectangle, rc->state.boundTexture2->isFlippedY, rc->state.boundTexture2->height);
 			rc->state.sourceRec2 = rectangle;
 		} break;
 		#endif
@@ -1171,7 +1225,7 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 // |            Begin             |
 // +==============================+
 //TODO: Add support for rendering to a offscreen framebuffer
-void RcBegin(const PlatWindow_t* window, Shader_t* initialShader, Color_t clearColor)
+void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor)
 {
 	NotNull(pig);
 	NotNull(rc);
@@ -1181,6 +1235,7 @@ void RcBegin(const PlatWindow_t* window, Shader_t* initialShader, Color_t clearC
 	Pig_ChangeWindow(window);
 	rc->currentWindow = window;
 	
+	RcBindFrameBuffer(frameBuffer, true);
 	RcClearColor(clearColor);
 	RcClearDepth(1.0f);
 	//TODO: Should we check if the current window actually has a stencil buffer?

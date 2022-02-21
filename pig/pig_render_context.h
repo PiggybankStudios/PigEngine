@@ -14,6 +14,7 @@ struct RenderContextState_t
 	bool faceCulling;
 	r32 lineThickness;
 	
+	FrameBuffer_t* boundFrameBuffer;
 	Shader_t* boundShader;
 	VertexArrayObject_t* boundVao;
 	Texture_t* boundTexture1;

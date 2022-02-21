@@ -9,6 +9,18 @@ Description:
 #ifndef _PIG_MAIN_H
 #define _PIG_MAIN_H
 
+struct PigWindowState_t
+{
+	u64 windowId;
+	
+	FrameBuffer_t frameBuffer;
+	bool takeScreenshot;
+	reci screenshotSubPartRec;
+	bool screenshotKeyWasUsedForSelection;
+	bool selectingScreenshotRec;
+	v2i selectingScreenshotRecStart;
+};
+
 struct PigState_t
 {
 	bool initialized;
@@ -36,6 +48,7 @@ struct PigState_t
 	u64 nextShaderId;
 	u64 nextVertBufferId;
 	u64 nextTextureId;
+	u64 nextFrameBufferId;
 	u64 nextVectorImgId;
 	u64 nextSpriteSheetId;
 	u64 nextUiId;
@@ -45,6 +58,8 @@ struct PigState_t
 	
 	//Window Management
 	const PlatWindow_t* currentWindow;
+	PigWindowState_t* currentWindowState;
+	LinkedList_t windowStates;
 	
 	//Input Handling
 	MouseHitInfo_t prevMouseHit;

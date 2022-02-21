@@ -30,16 +30,6 @@ struct StartupInfo_t
 	PlatApiFreeFileContents_f* FreeFileContents;
 };
 
-struct PlatWindowOptions_t
-{
-	PlatWindowCreateOptions_t create;
-	bool enforceMinSize;
-	v2i minWindowSize;
-	bool enforceMaxSize;
-	v2i maxWindowSize;
-	bool forceAspectRatio;
-	v2i aspectRatio;
-};
 struct StartupOptions_t
 {
 	u64 mainMemoryRequest;

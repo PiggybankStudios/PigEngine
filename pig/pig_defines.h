@@ -9,7 +9,7 @@ Description:
 #ifndef _PIG_DEFINES_H
 #define _PIG_DEFINES_H
 
-#define PIG_WINDOW_ALWAYS_ON_TOP        false
+#define PIG_WINDOW_ALWAYS_ON_TOP        true
 #define SHOW_PERF_GRAPH_ON_STARTUP      false
 #define SHOW_PIE_GRAPHS_ON_STARTUP      false
 #define SHOW_AUDIO_OUT_GRAPH_ON_STARTUP false

@@ -577,6 +577,7 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	PlatWindow_t* newWindow = LinkedListAdd(&Platform->windows, PlatWindow_t);
 	NotNull(newWindow);
 	ClearPointer(newWindow);
+	MyMemCopy(&newWindow->options, options, sizeof(PlatWindowOptions_t));
 	newWindow->handle = glfwCreateWindow(options->requestSize.width, options->requestSize.height, options->windowTitle.pntr, options->requestMonitor, (Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr);
 	if (newWindow->handle == nullptr)
 	{

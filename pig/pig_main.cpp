@@ -75,12 +75,12 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_log.cpp"
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
-#include "pig/pig_input.cpp"
 
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_vertex_buffer.cpp"
 #include "pig/pig_shader.cpp"
 #include "pig/pig_texture.cpp"
+#include "pig/pig_frame_buffer.cpp"
 #include "pig/pig_sprite_sheet.cpp"
 #include "pig/pig_sprite_sheet_meta.cpp"
 #include "pig/pig_svg.cpp"
@@ -90,6 +90,8 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_model.cpp"
 #include "pig/pig_resources.cpp"
 
+#include "pig/pig_window.cpp"
+#include "pig/pig_input.cpp"
 #include "pig/pig_sounds.cpp"
 
 #include "pig/pig_render.cpp"

@@ -7,13 +7,13 @@ Description:
 */
 
 #if DEMO_BUILD
-#define ENGINE_DLL_NAME            "PigEngineTest_Demo.dll"
-#define ENGINE_DLL_TEMP_NAME       "PigEngineTest_Demo_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR "PigEngineTest_Demo_TEMP_Reload%llu.dll"
+#define ENGINE_DLL_NAME            "PigParts_Demo.dll"
+#define ENGINE_DLL_TEMP_NAME       "PigParts_Demo_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR "PigParts_Demo_TEMP_Reload%llu.dll"
 #else
-#define ENGINE_DLL_NAME            "PigEngineTest.dll"
-#define ENGINE_DLL_TEMP_NAME       "PigEngineTest_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR "PigEngineTest_TEMP__Reload%llu.dll"
+#define ENGINE_DLL_NAME            "PigParts.dll"
+#define ENGINE_DLL_TEMP_NAME       "PigParts_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR "PigParts_TEMP__Reload%llu.dll"
 #endif
 
 #define ENGINE_DLL_RELOAD_WAIT_TIME  400 //ms

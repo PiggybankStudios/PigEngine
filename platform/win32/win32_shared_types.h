@@ -113,6 +113,7 @@ struct PlatWindow_t
 {
 	u64 id;
 	bool closed;
+	PlatWindowOptions_t options;
 	
 	WindowEngineInput_t prevInput;
 	WindowEngineInput_t input;

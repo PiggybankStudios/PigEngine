@@ -162,6 +162,16 @@ struct PlatWindowCreateOptions_t
 	GLFWmonitor* requestMonitor;
 	MyStr_t windowTitle;
 };
+struct PlatWindowOptions_t
+{
+	PlatWindowCreateOptions_t create;
+	bool enforceMinSize;
+	v2i minWindowSize;
+	bool enforceMaxSize;
+	v2i maxWindowSize;
+	bool forceAspectRatio;
+	v2i aspectRatio;
+};
 
 struct PlatImageData_t
 {
