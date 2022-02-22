@@ -71,6 +71,7 @@ struct PlatformInfo_t
 	
 	const PlatWindow_t* mainWindow;
 	const LinkedList_t* windows;
+	const PlatMonitorList_t* monitors;
 };
 
 struct PlatformApi_t

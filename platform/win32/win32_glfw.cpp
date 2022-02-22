@@ -462,27 +462,6 @@ bool Win32_LoadGameControllerDbFile(MyStr_t filePath)
 	return result;
 }
 
-void Win32_FillMonitorInfo()
-{
-	//TODO: Implement this
-	// int numMonitors = 0;
-	// GLFWmonitor** monitors = glfwGetMonitors(&numMonitors);
-	// foreach
-	// {
-	// 	glfwGetMonitorPos(monitor, &info->offset.x, &info->offset.y);
-	// 	glfwGetMonitorPhysicalSize(monitor, &info->physicalSize.width, &info->physicalSize.height);
-	// 	glfwGetMonitorContentScale(monitor, &info->contentScale.x, &info->contentScale.y);
-	// 	glfwGetMonitorWorkarea(monitor, &info->workArea.x, &info->workArea.y, &info->workArea.width, &info->workArea.height);
-	// 	const char* monitorName = glfwGetMonitorName(monitor);
-	// 	const GLFWvidmode* videoModes = glfwGetVideoModes(monitor, &numVideoModes);
-	// 	const GLFWvidmode* currentVideoMode = glfwGetVideoMode(monitor);
-	// 	foreach
-	// 	{
-	// 		if (Win32_AreGlfwVideoModesEqual(vidMode, currentVideoMode)) { info->currentMode = dIndex; }
-	// 	}
-	// }
-}
-
 void Win32_GladInit()
 {
 	WriteLine_R("Initializing GLAD...");
@@ -578,7 +557,13 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	NotNull(newWindow);
 	ClearPointer(newWindow);
 	MyMemCopy(&newWindow->options, options, sizeof(PlatWindowOptions_t));
-	newWindow->handle = glfwCreateWindow(options->requestSize.width, options->requestSize.height, options->windowTitle.pntr, options->requestMonitor, (Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr);
+	newWindow->handle = glfwCreateWindow(
+		options->requestSize.width,
+		options->requestSize.height,
+		options->windowTitle.pntr,
+		((options->requestMonitor != nullptr) ? options->requestMonitor->glfwHandle : nullptr),
+		((Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr)
+	);
 	if (newWindow->handle == nullptr)
 	{
 		WriteLine_E("Failed to create GLFW window.");

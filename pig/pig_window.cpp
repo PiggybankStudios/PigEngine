@@ -100,44 +100,202 @@ void Pig_InitializeWindowStates()
 void Pig_CaptureScreenshotSub(reci subPartRec)
 {
 	NotNull2(pig->currentWindow, pig->currentWindowState);
+	Assert(!pig->currentWindowState->recordingGif);
 	pig->currentWindowState->takeScreenshot = true;
-	pig->currentWindowState->screenshotSubPartRec = subPartRec;
+	pig->currentWindowState->screenSubPart = subPartRec;
 }
 void Pig_CaptureScreenshot()
 {
 	Pig_CaptureScreenshotSub(NewReci(0, 0, Vec2Roundi(ScreenSize)));
 }
 
+void Pig_StartGifRecordingSub(reci subPartRec)
+{
+	NotNull2(pig->currentWindow, pig->currentWindowState);
+	Assert(!pig->currentWindowState->recordingGif);
+	pig->currentWindowState->recordingGif = true;
+	pig->currentWindowState->finishGif = false;
+	pig->currentWindowState->screenSubPart = subPartRec;
+	CreateLinkedList(&pig->currentWindowState->gifFrames, &pig->stdHeap, PigGifFrame_t);
+}
+void Pig_StartGifRecording()
+{
+	Pig_StartGifRecordingSub(NewReci(0, 0, Vec2Roundi(ScreenSize)));
+}
+void Pig_FinishGif()
+{
+	NotNull2(pig->currentWindow, pig->currentWindowState);
+	Assert(pig->currentWindowState->recordingGif);
+	pig->currentWindowState->finishGif = true;
+}
+
 // +--------------------------------------------------------------+
 // |                            Update                            |
 // +--------------------------------------------------------------+
-void Pig_SaveScreenshot(const PlatWindow_t* window, PigWindowState_t* state)
+void Pig_HandleScreenshotHotkeys()
+{
+	// +==============================+
+	// |      Screenshot Hotkey       |
+	// +==============================+
+	if (KeyPressedRaw(Key_F2))
+	{
+		pig->currentWindowState->screenshotKeyWasUsedForSelection = false;
+	}
+	if (KeyDownRaw(Key_F2) && MousePressedRaw(MouseBtn_Left) && IsMouseInsideWindow())
+	{
+		pig->currentWindowState->selectingSubPart = true;
+		pig->currentWindowState->screenshotKeyWasUsedForSelection = true;
+		pig->currentWindowState->subPartStartPos = Vec2Roundi(MousePos);
+	}
+	if (pig->currentWindowState->selectingSubPart) { HandleMouse(MouseBtn_Left); }
+	if (pig->currentWindowState->selectingSubPart && pig->currentWindowState->screenshotKeyWasUsedForSelection && !(KeyDownRaw(Key_F2) && MouseDownRaw(MouseBtn_Left)))
+	{
+		pig->currentWindowState->selectingSubPart = false;
+		reci selectedRec = NewReciBetween(pig->currentWindowState->subPartStartPos, Vec2Roundi(MousePos));
+		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
+		Pig_CaptureScreenshotSub(selectedRec);
+	}
+	if (KeyReleasedRaw(Key_F2) && !pig->currentWindowState->screenshotKeyWasUsedForSelection)
+	{
+		Pig_CaptureScreenshot();
+	}
+	if (KeyDownRaw(Key_F2) || KeyReleasedRaw(Key_F2)) { HandleKey(Key_F2); }
+	
+	// +==============================+
+	// |          Gif Hotkey          |
+	// +==============================+
+	if (KeyPressedRaw(Key_F4))
+	{
+		pig->currentWindowState->gifKeyWasUsedForSelection = false;
+	}
+	if (KeyDownRaw(Key_F4) && MousePressedRaw(MouseBtn_Left) && IsMouseInsideWindow() && !pig->currentWindowState->recordingGif)
+	{
+		pig->currentWindowState->selectingSubPart = true;
+		pig->currentWindowState->gifKeyWasUsedForSelection = true;
+		pig->currentWindowState->subPartStartPos = Vec2Roundi(MousePos);
+	}
+	if (pig->currentWindowState->selectingSubPart) { HandleMouse(MouseBtn_Left); }
+	if (pig->currentWindowState->selectingSubPart && pig->currentWindowState->gifKeyWasUsedForSelection && !(KeyDownRaw(Key_F4) && MouseDownRaw(MouseBtn_Left)))
+	{
+		pig->currentWindowState->selectingSubPart = false;
+		reci selectedRec = NewReciBetween(pig->currentWindowState->subPartStartPos, Vec2Roundi(MousePos));
+		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
+		Pig_StartGifRecordingSub(selectedRec);
+	}
+	if (KeyReleasedRaw(Key_F4) && !pig->currentWindowState->gifKeyWasUsedForSelection)
+	{
+		if (pig->currentWindowState->recordingGif)
+		{
+			pig->currentWindowState->finishGif = true;
+		}
+		else
+		{
+			Pig_StartGifRecording();
+		}
+	}
+	if (KeyDownRaw(Key_F4) || KeyReleasedRaw(Key_F4)) { HandleKey(Key_F4); }
+}
+
+void Pig_SaveScreenshot(FrameBuffer_t* frameBuffer, reci subPartRec, MyStr_t filePath)
+{
+	NotNull(frameBuffer);
+	PlatImageData_t imageData = {};
+	if (GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, TempArena, &imageData))
+	{
+		if (plat->SaveImageDataToFile(filePath, &imageData, PlatImageFormat_Png, nullptr))
+		{
+			PrintLine_I("Saved screenshot %dx%d (%llu bytes) to %.*s", imageData.width, imageData.height, imageData.dataSize, filePath.length, filePath.pntr);
+		}
+		else
+		{
+			NotifyPrint_E("Failed to save screenshot to %.*s!", filePath.length, filePath.pntr);
+		}
+	}
+	else
+	{
+		NotifyWrite_E("Failed to take screenshot!");
+	}
+}
+
+void Pig_StoreGifFrame(FrameBuffer_t* frameBuffer, reci subPartRec, LinkedList_t* frames)
+{
+	NotNull(frameBuffer);
+	NotNull(frames);
+	Assert(frames->itemSize == sizeof(PigGifFrame_t));
+	
+	PigGifFrame_t* newFrame = LinkedListAdd(frames, PigGifFrame_t);
+	NotNull(newFrame);
+	ClearPointer(newFrame);
+	
+	if (!GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, &pig->stdHeap, &newFrame->imageData))
+	{
+		DebugAssert(false);//TODO: What should we do in case of frame get failure?
+	}
+}
+void Pig_SaveGif(LinkedList_t* frames, MyStr_t filePath)
+{
+	NotNull(frames);
+	PrintLine_I("Finishing GIF with %llu frames", pig->currentWindowState->gifFrames.count);
+	v2i gifSize = pig->currentWindowState->screenSubPart.size;
+	MsfGifState msfState = {};
+	int beginResult = msf_gif_begin(&msfState, gifSize.width, gifSize.height);
+	Assert(beginResult != 0);
+	PigGifFrame_t* frame = LinkedListFirst(&pig->currentWindowState->gifFrames, PigGifFrame_t);
+	u64 totalImageDataSize = 0;
+	u64 totalNumFrames = 0;
+	while (frame != nullptr)
+	{
+		int frameResult = msf_gif_frame(&msfState, frame->imageData.data8, 2, frame->imageData.pixelSize*8, (int)frame->imageData.rowSize);
+		Assert(frameResult != 0);
+		totalImageDataSize += frame->imageData.dataSize;
+		totalNumFrames++;
+		FreeMem(frame->imageData.allocArena, frame->imageData.data8, frame->imageData.dataSize);
+		frame = LinkedListNext(frames, PigGifFrame_t, frame);
+	}
+	
+	MsfGifResult gifResult = msf_gif_end(&msfState);
+	NotNull(gifResult.data);
+	PrintLine_I("Uncompressed data for GIF was %s", FormatBytesNt(totalImageDataSize, TempArena));
+	PrintLine_I("Output GIF is %s", FormatBytesNt(gifResult.dataSize, TempArena));
+	
+	if (plat->WriteEntireFile(filePath, gifResult.data, gifResult.dataSize))
+	{
+		NotifyPrint_I("Saved %llu frame %dx%d resolution %s GIF to \"%.*s\"", totalNumFrames, gifSize.width, gifSize.height, FormatBytesNt(gifResult.dataSize, TempArena), filePath.length, filePath.pntr);
+	}
+	else
+	{
+		NotifyPrint_E("Failed to save %s GIF data to \"%.*s\"", FormatBytesNt(gifResult.dataSize, TempArena), filePath.length, filePath.pntr);
+	}
+	
+	FreeLinkedList(&pig->currentWindowState->gifFrames);
+}
+
+void Pig_UpdateCaptureHandling(const PlatWindow_t* window, PigWindowState_t* state)
 {
 	NotNull(window);
 	NotNull(state);
+	
 	if (state->takeScreenshot)
 	{
 		state->takeScreenshot = false;
 		TempPushMark();
 		//TODO: Move the output folder to a user directory like Documents
 		MyStr_t outputFilePath = TempPrintStr("screenshot_%04u-%02u-%02u_%02u-%02u-%02u.png", pigIn->localTime.year, pigIn->localTime.month+1, pigIn->localTime.day+1, pigIn->localTime.hour, pigIn->localTime.minute, pigIn->localTime.second);
-		PlatImageData_t imageData = {};
-		if (GetTextureDataSubPart(&state->frameBuffer.outTexture, state->screenshotSubPartRec, TempArena, &imageData))
-		{
-			if (plat->SaveImageDataToFile(outputFilePath, &imageData, PlatImageFormat_Png, nullptr))
-			{
-				PrintLine_I("Saved screenshot %dx%d (%llu bytes) to %.*s", imageData.width, imageData.height, imageData.dataSize, outputFilePath.length, outputFilePath.pntr);
-			}
-			else
-			{
-				NotifyPrint_E("Failed to save screenshot to %.*s!", outputFilePath.length, outputFilePath.pntr);
-			}
-		}
-		else
-		{
-			NotifyWrite_E("Failed to take screenshot!");
-		}
+		Pig_SaveScreenshot(&state->frameBuffer, state->screenSubPart, outputFilePath);
 		TempPopMark();
+	}
+	
+	if (state->recordingGif)
+	{
+		Pig_StoreGifFrame(&state->frameBuffer, state->screenSubPart, &state->gifFrames);
+		if (state->finishGif)
+		{
+			TempPushMark();
+			MyStr_t outputFilePath = TempPrintStr("recording_%04u-%02u-%02u_%02u-%02u-%02u.gif", pigIn->localTime.year, pigIn->localTime.month+1, pigIn->localTime.day+1, pigIn->localTime.hour, pigIn->localTime.minute, pigIn->localTime.second);
+			Pig_SaveGif(&state->gifFrames, outputFilePath);
+			pig->currentWindowState->recordingGif = false;
+			TempPopMark();
+		}
 	}
 }
 

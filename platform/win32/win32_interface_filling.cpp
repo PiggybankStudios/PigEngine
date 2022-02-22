@@ -71,6 +71,7 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->programStartPerfTime = programStartPerfTime;
 	info->mainWindow = Platform->mainWindow;
 	info->windows = &Platform->windows;
+	info->monitors = &Platform->monitors;
 }
 
 void Win32_FillPlatformApi(PlatformApi_t* api)

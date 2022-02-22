@@ -106,33 +106,7 @@ void PigUpdateMainWindow()
 	UpdatePigPerfGraph(&pig->perfGraph);
 	UpdatePigAudioOutGraph(&pig->audioOutGraph);
 	UpdateDebugConsole(&pig->debugConsole);
-	
-	// +==============================+
-	// |      Screenshot Hotkey       |
-	// +==============================+
-	if (KeyPressedRaw(Key_F2))
-	{
-		pig->currentWindowState->screenshotKeyWasUsedForSelection = false;
-	}
-	if (KeyDownRaw(Key_F2) && MousePressedRaw(MouseBtn_Left) && IsMouseInsideWindow())
-	{
-		pig->currentWindowState->selectingScreenshotRec = true;
-		pig->currentWindowState->screenshotKeyWasUsedForSelection = true;
-		pig->currentWindowState->selectingScreenshotRecStart = Vec2Roundi(MousePos);
-	}
-	if (pig->currentWindowState->selectingScreenshotRec) { HandleMouse(MouseBtn_Left); }
-	if (pig->currentWindowState->selectingScreenshotRec && !(KeyDownRaw(Key_F2) && MouseDownRaw(MouseBtn_Left)))
-	{
-		pig->currentWindowState->selectingScreenshotRec = false;
-		reci selectedRec = NewReciBetween(pig->currentWindowState->selectingScreenshotRecStart, Vec2Roundi(MousePos));
-		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
-		Pig_CaptureScreenshotSub(selectedRec);
-	}
-	if (KeyReleasedRaw(Key_F2) && !pig->currentWindowState->screenshotKeyWasUsedForSelection)
-	{
-		Pig_CaptureScreenshot();
-	}
-	if (KeyDownRaw(Key_F2) || KeyReleasedRaw(Key_F2)) { HandleKey(Key_F2); }
+	Pig_HandleScreenshotHotkeys();
 	
 	if (pig->changeAppStateRequested)
 	{
@@ -142,7 +116,6 @@ void PigUpdateMainWindow()
 		pig->newAppState = AppState_None;
 		pig->changeAppStateRequested = false;
 	}
-	
 	UpdateAppState(pig->currentAppState);
 }
 
@@ -163,9 +136,13 @@ void PigRenderDebugOverlays()
 	RenderPigDebugOverlay(&pig->debugOverlay);
 	PigRenderNotifications(&pig->notificationsQueue);
 	
-	if (pig->currentWindowState->selectingScreenshotRec)
+	if (pig->currentWindowState->selectingSubPart || pig->currentWindowState->recordingGif)
 	{
-		reci selectedRec = NewReciBetween(pig->currentWindowState->selectingScreenshotRecStart, Vec2Roundi(MousePos));
+		reci selectedRec = pig->currentWindowState->screenSubPart;
+		if (pig->currentWindowState->selectingSubPart)
+		{
+			selectedRec = NewReciBetween(pig->currentWindowState->subPartStartPos, Vec2Roundi(MousePos));
+		}
 		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
 		RcDrawRectangleOutline(ToRec(selectedRec), ColorTransparent(Black, 0.5f), 1000000, true);
 	}
@@ -215,7 +192,7 @@ void PigUpdate()
 					RcBindTexture1(&renderBuffer->outTexture);
 					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
 				}
-				Pig_SaveScreenshot(pig->currentWindow, pig->currentWindowState);
+				Pig_UpdateCaptureHandling(pig->currentWindow, pig->currentWindowState);
 			}
 			window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
 		}

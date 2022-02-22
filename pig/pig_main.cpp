@@ -14,6 +14,8 @@ Description:
 #include "common_includes.h"
 
 #include "qu3e/src/q3.h"
+#define MSF_GIF_IMPL
+#include "msf_gif/msf_gif.h"
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
@@ -90,8 +92,8 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_model.cpp"
 #include "pig/pig_resources.cpp"
 
-#include "pig/pig_window.cpp"
 #include "pig/pig_input.cpp"
+#include "pig/pig_window.cpp"
 #include "pig/pig_sounds.cpp"
 
 #include "pig/pig_render.cpp"

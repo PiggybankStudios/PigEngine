@@ -35,6 +35,7 @@ struct Win32PlatformState_t
 	RenderApi_t renderApi;
 	GlfwVersion_t glfwVersion;
 	
+	u64 nextMonitorId;
 	u64 nextFileContentsId;
 	u64 nextOpenFileId;
 	u64 nextWatchedFileId;
@@ -54,6 +55,8 @@ struct Win32PlatformState_t
 	HGLRC winGraphicsContext;
 	HWND windowHandle; //TODO: Should we have one for each window we create?
 	HANDLE processHandle;
+	
+	PlatMonitorList_t monitors;
 	
 	i64 perfCountFrequency;
 	PerfTime_t firstUpdateStartTime;

@@ -1,17 +1,8 @@
-[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
-[ ] Add support for ellipses (not just circles)
-[ ] Try to harden the triangulation process against duplicate and colinear points
-
-[ ] Add support for new added new resources without restarting the game
-[ ] Switch audio devices on primary device changed
-
-[ ] Improve the audio debug window
-- Line representing 0 - Ms Ticks - Selection - Replay
-[ ] Hover to readout actual sample values
+[ ] Monitor Info
+[ ] Add support for working line in the StringFifo_t structure
+[ ] Worker Thread Pool that can do tasks given to it by the Engine
 
 # A dumping ground for any and all notes and TODO lists
-	[ ] Monitor Info
-	[ ] Worker Thread Pool that can do tasks given to it by the Engine
 	[ ] Make sure we select the swap interval properly
 	[ ] Update loop: frame manual flip synchronization
 	{ } Add an installer?
@@ -20,6 +11,9 @@
 	( ) Having multiple windows opened forces us to wait for the monitor vertical sync multiple times
 	[ ] Add a Win32_ShowMessageBox api function that we use in GyLibAssertFailure
 	[ ] Ignore the first click when the window wasn't focused
+	[ ] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
+	[ ] Switch audio devices on primary device changed
+	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
 
 # Gylib
 	[ ] MemArenaType_PagedHeap
@@ -30,9 +24,14 @@
 	( ) There seems to be something wrong with our quaternion implementation. Angles are doubled when trying to do Axis + Angle method to generate a quaternion
 
 # Engine
+	[ ] Improve the audio debug window
+	- Line representing 0 - Ms Ticks - Selection - Replay
+	[ ] Hover to readout actual sample values
+	[ ] Add support for new added new resources without restarting the game
+	[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
+	[ ] Add support for ellipses (not just circles)
 	[ ] Add a confirmation dialogue
-	[ ] Add in-engine support for screenshots
-	[ ] Add in-engine support for GIFs
+	[ ] Add a GIF export editor AppState that allows you to see and manage what portion of the captured frames you'd like to export
 	[ ] Add a UI button implementation
 	[ ] Add a UI checkbox implementation
 	[!] Add a UI textbox implementation
@@ -86,6 +85,9 @@
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
 # Finished TODO List Items
+	[X] Add in-engine support for GIFs
+	[X] Add in-engine support for screenshots
+	[X] Try to harden the triangulation process against duplicate and colinear points
 	[X] Could we add vector art support somehow?
 	[X] Auto-reload shaders gracefully
 	[X] Add support for shifting older notifications down in the array when newer notifications leave sooner

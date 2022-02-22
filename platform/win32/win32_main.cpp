@@ -86,6 +86,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_clipboard.cpp"
 #include "win32/win32_input.cpp"
 #include "win32/win32_glfw.cpp"
+#include "win32/win32_monitors.cpp"
 #include "win32/win32_fonts.cpp"
 #include "win32/win32_render_basic.cpp"
 #include "win32/win32_overlays.cpp"
@@ -182,6 +183,7 @@ int main(int argc, char* argv[])
 	
 	Win32_GlfwInit();
 	Win32_LoadGameControllerDbFile(NewStr(SDL_CONTROLLER_DB_PATH));
+	Win32_InitMonitors();
 	Win32_FillMonitorInfo();
 	
 	// +==============================+

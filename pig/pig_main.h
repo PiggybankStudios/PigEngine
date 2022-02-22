@@ -9,16 +9,27 @@ Description:
 #ifndef _PIG_MAIN_H
 #define _PIG_MAIN_H
 
+struct PigGifFrame_t
+{
+	PlatImageData_t imageData;
+};
+
 struct PigWindowState_t
 {
 	u64 windowId;
 	
+	bool selectingSubPart;
+	v2i subPartStartPos;
+	reci screenSubPart;
+	
 	FrameBuffer_t frameBuffer;
 	bool takeScreenshot;
-	reci screenshotSubPartRec;
 	bool screenshotKeyWasUsedForSelection;
-	bool selectingScreenshotRec;
-	v2i selectingScreenshotRecStart;
+	
+	bool recordingGif;
+	bool finishGif;
+	bool gifKeyWasUsedForSelection;
+	LinkedList_t gifFrames; //PigGifFrame_t
 };
 
 struct PigState_t

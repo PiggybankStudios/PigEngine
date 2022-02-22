@@ -150,6 +150,31 @@ struct ProgramArguments_t
 	MyStr_t* args;
 };
 
+struct PlatMonitorInfo_t
+{
+	MemArena_t* allocArena;
+	u64 id;
+	
+	bool isPrimary;
+	u64 designatedNumber;
+	MyStr_t name;
+	
+	reci desktopSpaceRec;
+	reci workAreaRec;
+	v2i physicalSize;
+	v2 contentScale;
+	
+	//TODO: Add supported video mode information
+	
+	GLFWmonitor* glfwHandle;
+};
+struct PlatMonitorList_t
+{
+	u64 primaryIndex;
+	reci desktopRec;
+	LinkedList_t list; //PlatMonitorInfo_t 
+};
+
 struct PlatWindowCreateOptions_t
 {
 	bool resizableWindow;
@@ -159,7 +184,7 @@ struct PlatWindowCreateOptions_t
 	i32 requestRefreshRate;
 	bool autoIconify;
 	v2i requestSize;
-	GLFWmonitor* requestMonitor;
+	PlatMonitorInfo_t* requestMonitor;
 	MyStr_t windowTitle;
 };
 struct PlatWindowOptions_t
