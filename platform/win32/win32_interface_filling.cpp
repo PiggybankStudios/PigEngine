@@ -22,12 +22,13 @@ void Win32_FillStartupInfo(StartupInfo_t* info)
 	info->defaultAudioDeviceIndex = Platform->defaultAudioDeviceIndex;
 	MyMemCopy(&info->audioDevices, &Platform->audioDevices, sizeof(VarArray_t));
 	
-	info->DebugOutput      = Win32_DebugOutput;
-	info->GetProgramArg    = Win32_GetProgramArg;
-	info->GetThisThreadId  = Win32_GetThisThreadId;
-	info->DoesFileExist    = Win32_DoesFileExist;
-	info->ReadFileContents = Win32_ReadFileContents;
-	info->FreeFileContents = Win32_FreeFileContents;
+	info->DebugOutput         = Win32_DebugOutput;
+	info->GetProgramArg       = Win32_GetProgramArg;
+	info->GetThisThreadId     = Win32_GetThisThreadId;
+	info->DoesFileExist       = Win32_DoesFileExist;
+	info->ReadFileContents    = Win32_ReadFileContents;
+	info->FreeFileContents    = Win32_FreeFileContents;
+	info->GetMonitorVideoMode = Win32_GetMonitorVideoMode;
 }
 
 void Win32_FillEngineMemory(EngineMemory_t* memory, u64 mainSize, u64 tempSize)
@@ -121,6 +122,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->GetPerfTime            = Win32_GetPerfTime;
 	api->GetPerfTimeDiff        = Win32_GetPerfTimeDiff;
 	api->GetProgramTime         = Win32_GetProgramTime;
+	api->GetMonitorVideoMode    = Win32_GetMonitorVideoMode;
 }
 
 void Win32_FillEngineOutput(EngineOutput_t* output)

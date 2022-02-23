@@ -22,12 +22,13 @@ struct StartupInfo_t
 	u64 defaultAudioDeviceIndex;
 	VarArray_t audioDevices;
 	
-	PlatApiDebugOutput_f*      DebugOutput;
-	PlatApiGetProgramArg_f*    GetProgramArg;
-	PlatApiGetThisThreadId_f*  GetThisThreadId;
-	PlatApiDoesFileExist_f*    DoesFileExist;
-	PlatApiReadFileContents_f* ReadFileContents;
-	PlatApiFreeFileContents_f* FreeFileContents;
+	PlatApiDebugOutput_f*         DebugOutput;
+	PlatApiGetProgramArg_f*       GetProgramArg;
+	PlatApiGetThisThreadId_f*     GetThisThreadId;
+	PlatApiDoesFileExist_f*       DoesFileExist;
+	PlatApiReadFileContents_f*    ReadFileContents;
+	PlatApiFreeFileContents_f*    FreeFileContents;
+	PlatApiGetMonitorVideoMode_f* GetMonitorVideoMode;
 };
 
 struct StartupOptions_t
@@ -119,6 +120,7 @@ struct PlatformApi_t
 	PlatApiGetPerfTime_f*            GetPerfTime;
 	PlatApiGetPerfTimeDiff_f*        GetPerfTimeDiff;
 	PlatApiGetProgramTime_f*         GetProgramTime;
+	PlatApiGetMonitorVideoMode_f*    GetMonitorVideoMode;
 };
 
 struct EngineMemory_t

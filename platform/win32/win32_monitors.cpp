@@ -8,43 +8,64 @@ Description:
 	** with what rendering options it wants to be displayed on
 */
 
-#if 0
-void Win32_FillMonitorInfo()
-{
-	//TODO: Implement this
-	int numMonitors = 0;
-	GLFWmonitor** monitors = glfwGetMonitors(&numMonitors);
-	foreach
-	{
-		glfwGetMonitorPos(monitor, &info->offset.x, &info->offset.y);
-		glfwGetMonitorPhysicalSize(monitor, &info->physicalSize.width, &info->physicalSize.height);
-		glfwGetMonitorContentScale(monitor, &info->contentScale.x, &info->contentScale.y);
-		glfwGetMonitorWorkarea(monitor, &info->workArea.x, &info->workArea.y, &info->workArea.width, &info->workArea.height);
-		const char* monitorName = glfwGetMonitorName(monitor);
-		const GLFWvidmode* videoModes = glfwGetVideoModes(monitor, &numVideoModes);
-		const GLFWvidmode* currentVideoMode = glfwGetVideoMode(monitor);
-		foreach
-		{
-			if (Win32_AreGlfwVideoModesEqual(vidMode, currentVideoMode)) { info->currentMode = dIndex; }
-		}
-	}
-}
-#endif
-
-void Win32_InitMonitors()
-{
-	Platform->nextMonitorId = 1;
-	CreateLinkedList(&Platform->monitors.list, &Platform->mainHeap, PlatMonitorInfo_t);
-}
-
+// +--------------------------------------------------------------+
+// |                       Helper Functions                       |
+// +--------------------------------------------------------------+
 void Win32_FreeMonitorInfo(PlatMonitorInfo_t* monitorInfo)
 {
 	NotNull(monitorInfo);
 	AssertIf(monitorInfo->name.pntr != nullptr, monitorInfo->allocArena != nullptr);
 	FreeString(monitorInfo->allocArena, &monitorInfo->name);
+	FreeVarArray(&monitorInfo->videoModes);
 	ClearPointer(monitorInfo);
 }
 
+bool Win32_AreGlfwVideoModesEqual(const GLFWvidmode* mode1, const GLFWvidmode* mode2)
+{
+	NotNull2(mode1, mode2);
+	if (mode1->width != mode2->width)             { return false; }
+	if (mode1->height != mode2->height)           { return false; }
+	if (mode1->redBits != mode2->redBits)         { return false; }
+	if (mode1->greenBits != mode2->greenBits)     { return false; }
+	if (mode1->blueBits != mode2->blueBits)       { return false; }
+	if (mode1->refreshRate != mode2->refreshRate) { return false; }
+	return true;
+}
+
+// +--------------------------------------------------------------+
+// |                        API Functions                         |
+// +--------------------------------------------------------------+
+// +==============================+
+// |  Win32_GetMonitorVideoMode   |
+// +==============================+
+// const PlatMonitorVideoMode_t* GetMonitorVideoMode(const PlatMonitorInfo_t* monitor, v2i resolution)
+PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(Win32_GetMonitorVideoMode)
+{
+	NotNull(monitor);
+	VarArrayLoop(&monitor->videoModes, vIndex)
+	{
+		VarArrayLoopGet(PlatMonitorVideoMode_t, videoMode, &monitor->videoModes, vIndex);
+		if (videoMode->resolution == resolution)
+		{
+			return videoMode;
+		}
+	}
+	return nullptr;
+}
+
+// +--------------------------------------------------------------+
+// |                        Initialization                        |
+// +--------------------------------------------------------------+
+void Win32_InitMonitors()
+{
+	Platform->nextMonitorId = 1;
+	Platform->nextMonitorVideoModeId = 1;
+	CreateLinkedList(&Platform->monitors.list, &Platform->mainHeap, PlatMonitorInfo_t);
+}
+
+// +--------------------------------------------------------------+
+// |                           Filling                            |
+// +--------------------------------------------------------------+
 void Win32_FillMonitorInfo()
 {
 	PlatMonitorInfo_t* monitorToFree = LinkedListFirst(&Platform->monitors.list, PlatMonitorInfo_t);
@@ -74,6 +95,7 @@ void Win32_FillMonitorInfo()
 	{
 		GLFWmonitor* glfwMonitor = glfwMonitors[mIndex];
 		NotNull(glfwMonitor);
+		
 		PlatMonitorInfo_t* newMonitor = LinkedListAdd(&Platform->monitors.list, PlatMonitorInfo_t);
 		NotNull(newMonitor);
 		ClearPointer(newMonitor);
@@ -95,6 +117,7 @@ void Win32_FillMonitorInfo()
 		if (monitorName == nullptr) { monitorName = "[Unnamed]"; }
 		int glfwNumVideoModes = 0;
 		const GLFWvidmode* glfwVideoModes = glfwGetVideoModes(glfwMonitor, &glfwNumVideoModes);
+		Assert(glfwNumVideoModes >= 0);
 		AssertIf(glfwNumVideoModes > 0, glfwVideoModes != nullptr);
 		const GLFWvidmode* glfwCurrentVideoMode = glfwGetVideoMode(glfwMonitor);
 		if (glfwCurrentVideoMode == nullptr && glfwNumVideoModes > 0) { glfwCurrentVideoMode = &glfwVideoModes[0]; }
@@ -104,7 +127,6 @@ void Win32_FillMonitorInfo()
 		newMonitor->designatedNumber = mIndex+1;
 		newMonitor->desktopSpaceRec.topLeft = NewVec2i(positionX, positionY);
 		newMonitor->desktopSpaceRec.size = NewVec2i(glfwCurrentVideoMode->width, glfwCurrentVideoMode->height);
-		//TODO: Is this workAreaX and workAreaY relative to the position of the monitor in desktop space or is it itself a value in desktop space?
 		newMonitor->workAreaRec = NewReci(workAreaX, workAreaY, workAreaWidth, workAreaHeight);
 		newMonitor->physicalSize = NewVec2i(physicalWidth, physicalHeight);
 		newMonitor->contentScale = NewVec2(contentScaleX, contentScaleY);
@@ -123,7 +145,54 @@ void Win32_FillMonitorInfo()
 		else { Platform->monitors.desktopRec = ReciBoth(Platform->monitors.desktopRec, newMonitor->desktopSpaceRec); }
 		
 		bool foundPrimaryVideoMode = false;
-		//TODO: Utilize/store the video mode information
+		CreateVarArray(&newMonitor->videoModes, newMonitor->allocArena, sizeof(PlatMonitorVideoMode_t), (u64)glfwNumVideoModes);
+		CreateVarArray(&newMonitor->framerates, newMonitor->allocArena, sizeof(i64));
+		for (u64 vIndex = 0; vIndex < (u64)glfwNumVideoModes; vIndex++)
+		{
+			const GLFWvidmode* glfwMode = &glfwVideoModes[vIndex];
+			v2i resolution = NewVec2i(glfwMode->width, glfwMode->height);
+			PlatMonitorVideoMode_t* newMode = (PlatMonitorVideoMode_t*)Win32_GetMonitorVideoMode(newMonitor, resolution);
+			if (newMode == nullptr)
+			{
+				newMode = VarArrayAdd(&newMonitor->videoModes, PlatMonitorVideoMode_t);
+				NotNull(newMode);
+				ClearPointer(newMode);
+				newMode->id = Platform->nextMonitorVideoModeId;
+				Platform->nextMonitorVideoModeId++;
+				newMode->index = vIndex;
+				newMode->resolution = resolution;
+				newMode->isCurrent = false;
+				newMode->numFramerates = 0;
+				//TODO: Should we incorporate the redBits, blueBits, greenBits members?
+				//TODO: Will we ever find multiple video modes that share the same attributes besides bit depth changing?
+			}
+			if (newMode->numFramerates < MAX_MONITOR_FRAMERATES_PER_RESOLUTION)
+			{
+				newMode->framerates[newMode->numFramerates] = glfwMode->refreshRate;
+				newMode->numFramerates++;
+			}
+			if (!foundPrimaryVideoMode && Win32_AreGlfwVideoModesEqual(glfwMode, glfwCurrentVideoMode))
+			{
+				newMonitor->currentVideoModeIndex = vIndex;
+				newMode->currentFramerateIndex = newMode->numFramerates-1;
+				newMode->isCurrent = true;
+				foundPrimaryVideoMode = true;
+			}
+			
+			bool isNewFramerate = true;
+			for (u64 fIndex = 0; fIndex < newMonitor->framerates.length; fIndex++)
+			{
+				i64* frameratePntr = VarArrayGetHard(&newMonitor->framerates, fIndex, i64);
+				if (*frameratePntr == glfwMode->refreshRate) { isNewFramerate = false; break; }
+			}
+			if (isNewFramerate)
+			{
+				i64* newFramerateSpace = VarArrayAdd(&newMonitor->framerates, i64);
+				NotNull(newFramerateSpace);
+				*newFramerateSpace = glfwMode->refreshRate;
+			}
+		}
+		VarArraySort(&newMonitor->framerates, CompareFuncI64, nullptr);
 	}
 	
 	if (!foundPrimaryMonitor)

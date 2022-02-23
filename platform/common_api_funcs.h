@@ -138,4 +138,7 @@ typedef GET_PERF_TIME_DIFF_DEFINITION(PlatApiGetPerfTimeDiff_f);
 #define PLAT_API_GET_PROGRAM_TIME_DEFINITION(functionName) u64 functionName(r64* programTimeR64Out)
 typedef PLAT_API_GET_PROGRAM_TIME_DEFINITION(PlatApiGetProgramTime_f);
 
+#define PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(functionName) const PlatMonitorVideoMode_t* functionName(const PlatMonitorInfo_t* monitor, v2i resolution)
+typedef PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(PlatApiGetMonitorVideoMode_f);
+
 #endif //  _COMMON_API_FUNCS_H

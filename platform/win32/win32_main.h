@@ -36,6 +36,7 @@ struct Win32PlatformState_t
 	GlfwVersion_t glfwVersion;
 	
 	u64 nextMonitorId;
+	u64 nextMonitorVideoModeId;
 	u64 nextFileContentsId;
 	u64 nextOpenFileId;
 	u64 nextWatchedFileId;

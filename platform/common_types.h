@@ -150,6 +150,17 @@ struct ProgramArguments_t
 	MyStr_t* args;
 };
 
+#define MAX_MONITOR_FRAMERATES_PER_RESOLUTION 16
+struct PlatMonitorVideoMode_t
+{
+	u64 id;
+	u64 index;
+	bool isCurrent;
+	u64 currentFramerateIndex;
+	v2i resolution;
+	u64 numFramerates;
+	i64 framerates[MAX_MONITOR_FRAMERATES_PER_RESOLUTION];
+};
 struct PlatMonitorInfo_t
 {
 	MemArena_t* allocArena;
@@ -164,7 +175,9 @@ struct PlatMonitorInfo_t
 	v2i physicalSize;
 	v2 contentScale;
 	
-	//TODO: Add supported video mode information
+	u64 currentVideoModeIndex;
+	VarArray_t videoModes; //PlatMonitorVideoMode_t
+	VarArray_t framerates; //i64
 	
 	GLFWmonitor* glfwHandle;
 };
