@@ -100,12 +100,16 @@ struct PlatformApi_t
 	PlatApiDoesFileExist_f*          DoesFileExist;
 	PlatApiReadFileContents_f*       ReadFileContents;
 	PlatApiFreeFileContents_f*       FreeFileContents;
+	PlatApiWriteEntireFile_f*        WriteEntireFile;
+	PlatApiOpenFile_f*               OpenFile;
+	PlatApiWriteToFile_f*            WriteToFile;
+	PlatApiReadFromFile_f*           ReadFromFile;
+	PlatApiCloseFile_f*              CloseFile;
 	PlatApiTryParseImageFile_f*      TryParseImageFile;
 	PlatApiSaveImageDataToFile_f*    SaveImageDataToFile;
 	PlatApiFreeImageData_f*          FreeImageData;
 	PlatApiShowFile_f*               ShowFile;
 	PlatApiShowSourceFile_f*         ShowSourceFile;
-	PlatApiWriteEntireFile_f*        WriteEntireFile;
 	PlatApiIsFileWatched_f*          IsFileWatched;
 	PlatApiWatchFile_f*              WatchFile;
 	PlatApiUnwatchFile_f*            UnwatchFile;

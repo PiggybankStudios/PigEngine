@@ -8,17 +8,16 @@ Description:
 
 #define DBG_FILEPATH_AND_FUNCNAME_SEP_CHAR '|'
 
-void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, const char* message)
+void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, MyStr_t messageStr)
 {
 	if (plat != nullptr && plat->DebugOutput != nullptr)
 	{
-		plat->DebugOutput(message, addNewLine);
+		plat->DebugOutput(messageStr, addNewLine);
 	}
 	
 	if (pig->debugConsole.hasFifo && GetTempArena() != nullptr)
 	{
 		TempPushMark();
-		MyStr_t text = NewStr(message);
 		MyStr_t filePathAndFuncName = TempPrintStr("%s%c%s", filePath, DBG_FILEPATH_AND_FUNCNAME_SEP_CHAR, funcName);
 		DebugConsoleLine_t metaInfo = {};
 		metaInfo.flags = flags;
@@ -29,13 +28,46 @@ void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* 
 		metaInfo.timestamp = LocalTimestamp;
 		metaInfo.thread = plat->GetThisThreadId();
 		
-		StringFifoLine_t* newLine = StringFifoPushLineExt(&pig->debugConsole.fifo, text, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
-		DebugAssert_(newLine != nullptr);
-		if (newLine != nullptr) { DebugConsoleLineAdded(&pig->debugConsole, newLine); }
+		if (addNewLine)
+		{
+			StringFifoLine_t* newLine = StringFifoPushLineExt(&pig->debugConsole.fifo, messageStr, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
+			DebugAssert_(newLine != nullptr);
+			if (newLine != nullptr) { DebugConsoleLineAdded(&pig->debugConsole, newLine); }
+		}
+		else
+		{
+			StringFifoBuildEx(&pig->debugConsole.fifo, messageStr, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
+		}
 		
 		TempPopMark();
 	}
-	
+}
+
+void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, const char* message)
+{
+	NotNull(message);
+	u64 messageLength = MyStrLength64(message);
+	u64 lineStart = 0;
+	for (u64 bIndex = 0; bIndex <= messageLength; )
+	{
+		u32 codepoint = 0;
+		u8 charByteSize = 0;
+		if (bIndex < messageLength)
+		{
+			charByteSize = GetCodepointForUtf8(messageLength - bIndex, &message[bIndex], &codepoint);
+			if (codepoint == '\n')
+			{
+				AppDebugOutput_Internal(flags, filePath, lineNumber, funcName, dbgLevel, true, NewStr(bIndex - lineStart, &message[lineStart]));
+				lineStart = bIndex+1;
+			}
+		}
+		else
+		{
+			charByteSize = 1;
+			AppDebugOutput_Internal(flags, filePath, lineNumber, funcName, dbgLevel, addNewLine, NewStr(bIndex - lineStart, &message[lineStart]));
+		}
+		bIndex += charByteSize;
+	}
 }
 
 void AppDebugPrint(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, const char* formatString, ...)

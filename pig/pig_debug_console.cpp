@@ -12,7 +12,8 @@ Description:
 //TODO: Add debug output lines from the platform layer into the mix
 //TODO: Add pause and clear buttons
 
-#define DBG_CONSOLE_BUFFER_SIZE   Kilobytes(128)
+#define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
+#define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
 
 #define DBG_CONSOLE_OPEN_KEY             Key_Tilde
 #define DBG_CONSOLE_OPEN_TIME            200 //ms
@@ -44,7 +45,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                        Initialization                        |
 // +--------------------------------------------------------------+
-void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace)
+void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace, u64 buildSize, u8* buildSpace)
 {
 	NotNull(console);
 	Assert(fifoSpace != nullptr || fifoSize == 0);
@@ -72,6 +73,7 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 	{
 		console->hasFifo = true;
 		CreateStringFifo(&console->fifo, fifoSize, fifoSpace);
+		StringFifoAddBuildBuffer(&console->fifo, buildSize, buildSpace);
 	}
 	else
 	{

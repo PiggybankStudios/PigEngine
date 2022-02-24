@@ -9,7 +9,7 @@ Description:
 #ifndef _COMMON_API_FUNCS_H
 #define _COMMON_API_FUNCS_H
 
-#define PLAT_API_DEBUG_OUTPUT_DEF(functionName) void functionName(const char* message, bool newLine)
+#define PLAT_API_DEBUG_OUTPUT_DEF(functionName) void functionName(MyStr_t messageStr, bool newLine)
 typedef PLAT_API_DEBUG_OUTPUT_DEF(PlatApiDebugOutput_f);
 
 #define PLAT_API_GET_PROGRAM_ARG_DEF(functionName) bool functionName(MemArena_t* memArena, MyStr_t argName, MyStr_t* valueOut)
@@ -78,6 +78,21 @@ typedef PLAT_API_READ_FILE_CONTENTS_DEF(PlatApiReadFileContents_f);
 #define PLAT_API_FREE_FILE_CONTENTS_DEF(functionName) void functionName(PlatFileContents_t* fileContents)
 typedef PLAT_API_FREE_FILE_CONTENTS_DEF(PlatApiFreeFileContents_f);
 
+#define WRITE_ENTIRE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, const void* memory, u64 memorySize)
+typedef WRITE_ENTIRE_FILE_DEFINITION(PlatApiWriteEntireFile_f);
+
+#define PLAT_API_OPEN_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, bool forWriting, PlatOpenFile_t* openFileOut)
+typedef PLAT_API_OPEN_FILE_DEFINITION(PlatApiOpenFile_f);
+
+#define PLAT_API_WRITE_TO_FILE_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
+typedef PLAT_API_WRITE_TO_FILE_DEFINITION(PlatApiWriteToFile_f);
+
+#define PLAT_API_READ_FROM_FILE_DEFINITION(functionName) u8* functionName(PlatOpenFile_t* openFile, u64 numBytes, bool convertNewLines)
+typedef PLAT_API_READ_FROM_FILE_DEFINITION(PlatApiReadFromFile_f);
+
+#define PLAT_API_CLOSE_FILE_DEFINITION(functionName) void functionName(PlatOpenFile_t* openFile)
+typedef PLAT_API_CLOSE_FILE_DEFINITION(PlatApiCloseFile_f);
+
 #define PLAT_API_TRY_PARSE_IMAGE_FILE_DEF(functionName) bool functionName(const PlatFileContents_t* contents, u8 desiredPixelSize, PlatImageData_t* imageOut)
 typedef PLAT_API_TRY_PARSE_IMAGE_FILE_DEF(PlatApiTryParseImageFile_f);
 
@@ -125,9 +140,6 @@ typedef COPY_TEXT_TO_CLIPBOARD_DEFINITION(PlatApiCopyTextToClipboard_f);
 
 #define PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(functionName) MyStr_t functionName(MemArena_t* memArena)
 typedef PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(PlatApiPasteTextFromClipboard_f);
-
-#define WRITE_ENTIRE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, const void* memory, u64 memorySize)
-typedef WRITE_ENTIRE_FILE_DEFINITION(PlatApiWriteEntireFile_f);
 
 #define GET_PERF_TIME_DEFINITION(functionName) PerfTime_t functionName()
 typedef GET_PERF_TIME_DEFINITION(PlatApiGetPerfTime_f);

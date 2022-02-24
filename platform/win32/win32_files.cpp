@@ -7,8 +7,6 @@ Description:
 	** Functions related to file watching are in win32_file_watching.cpp
 */
 
-//TODO: Add support for opening a file but not reading all of it's contents immediately and keeping it open for a while
-
 //TODO: Handle "/" case a bit better
 //TODO: Convert all forward slashes to back slashes on windows!
 // +==============================+
@@ -251,6 +249,98 @@ PLAT_API_FREE_FILE_CONTENTS_DEF(Win32_FreeFileContents)
 	ClearPointer(fileContents);
 }
 
+//TODO: We should probably convert \n to \r\n on windows so the file can be opened by all widows programs
+// +==============================+
+// |    Win32_WriteEntireFile     |
+// +==============================+
+// bool WriteEntireFile(MyStr_t filePath, const void* memory, u64 memorySize)
+WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
+{
+	NotNullStr(&filePath);
+	Assert(memorySize > 0);
+	NotNull(memory);
+	bool result = false;
+	
+	TempPushMark();
+	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
+	HANDLE fileHandle = CreateFileA(
+		fullPath.pntr,         //Name of the file
+		GENERIC_WRITE,         //Open for writing
+		0,                     //Do not share
+		NULL,                  //Default security
+		CREATE_ALWAYS,         //Always overwrite
+		FILE_ATTRIBUTE_NORMAL, //Default file attributes
+		0                      //No Template File
+	);
+	if (fileHandle != INVALID_HANDLE_VALUE)
+	{
+		//TODO: Should we assert if memorySize > max value of DWORD?
+		DWORD bytesWritten;
+		if (WriteFile(fileHandle, memory, (DWORD)memorySize, &bytesWritten, 0))
+		{
+			if ((u64)bytesWritten == memorySize)
+			{
+				result = true;
+			}
+			else
+			{
+				PrintLine_W("Only wrote %u/%llu bytes to file at \"%.*s\"", bytesWritten, memorySize, fullPath.length, fullPath.pntr);
+			}
+		}
+		else
+		{
+			PrintLine_E("Failed to write %u bytes to file at \"%.*s\"", memorySize, fullPath.length, fullPath.pntr);
+		}
+		CloseHandle(fileHandle);
+	}
+	else
+	{
+		PrintLine_E("Failed to open file for writing at \"%.*s\"", fullPath.length, fullPath.pntr);
+	}
+	TempPopMark();
+	
+	return result;
+}
+
+// +==============================+
+// |        Win32_OpenFile        |
+// +==============================+
+// bool OpenFile(MyStr_t filePath, bool forWriting, PlatOpenFile_t* openFileOut)
+PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
+{
+	Unimplemented(); //TODO: Implement me!
+	return false;
+}
+
+// +==============================+
+// |      Win32_WriteToFile       |
+// +==============================+
+// bool WriteToFile(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
+PLAT_API_WRITE_TO_FILE_DEFINITION(Win32_WriteToFile)
+{
+	Unimplemented(); //TODO: Implement me!
+	return false;
+}
+
+// +==============================+
+// |      Win32_ReadFromFile      |
+// +==============================+
+// u8* ReadFromFile(PlatOpenFile_t* openFile, u64 numBytes, bool convertNewLines)
+PLAT_API_READ_FROM_FILE_DEFINITION(Win32_ReadFromFile)
+{
+	Unimplemented(); //TODO: Implement me!
+	return false;
+}
+
+// +==============================+
+// |       Win32_CloseFile        |
+// +==============================+
+// void CloseFile(PlatOpenFile_t* openFile)
+PLAT_API_CLOSE_FILE_DEFINITION(Win32_CloseFile)
+{
+	Unimplemented(); //TODO: Implement me!
+}
+
 // +==============================+
 // |   Win32_TryParseImageFile    |
 // +==============================+
@@ -456,59 +546,6 @@ PLAT_API_FREE_IMAGE_DATA_DEF(Win32_FreeImageData)
 		}
 	}
 	ClearPointer(imageData);
-}
-
-//TODO: We should probably convert \n to \r\n on windows so the file can be opened by all widows programs
-// +==============================+
-// |    Win32_WriteEntireFile     |
-// +==============================+
-// bool WriteEntireFile(MyStr_t filePath, const void* memory, u64 memorySize)
-WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
-{
-	NotNullStr(&filePath);
-	Assert(memorySize > 0);
-	NotNull(memory);
-	bool result = false;
-	
-	TempPushMark();
-	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
-	HANDLE fileHandle = CreateFileA(
-		fullPath.pntr,         //Name of the file
-		GENERIC_WRITE,         //Open for writing
-		0,                     //Do not share
-		NULL,                  //Default security
-		CREATE_ALWAYS,         //Always overwrite
-		FILE_ATTRIBUTE_NORMAL, //Default file attributes
-		0                      //No Template File
-	);
-	if (fileHandle != INVALID_HANDLE_VALUE)
-	{
-		//TODO: Should we assert if memorySize > max value of DWORD?
-		DWORD bytesWritten;
-		if (WriteFile(fileHandle, memory, (DWORD)memorySize, &bytesWritten, 0))
-		{
-			if ((u64)bytesWritten == memorySize)
-			{
-				result = true;
-			}
-			else
-			{
-				PrintLine_W("Only wrote %u/%llu bytes to file at \"%.*s\"", bytesWritten, memorySize, fullPath.length, fullPath.pntr);
-			}
-		}
-		else
-		{
-			PrintLine_E("Failed to write %u bytes to file at \"%.*s\"", memorySize, fullPath.length, fullPath.pntr);
-		}
-		CloseHandle(fileHandle);
-	}
-	else
-	{
-		PrintLine_E("Failed to open file for writing at \"%.*s\"", fullPath.length, fullPath.pntr);
-	}
-	TempPopMark();
-	
-	return result;
 }
 
 // +==============================+

@@ -102,12 +102,16 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->DoesFileExist          = Win32_DoesFileExist;
 	api->ReadFileContents       = Win32_ReadFileContents;
 	api->FreeFileContents       = Win32_FreeFileContents;
+	api->WriteEntireFile        = Win32_WriteEntireFile;
+	api->OpenFile               = Win32_OpenFile;
+	api->WriteToFile            = Win32_WriteToFile;
+	api->ReadFromFile           = Win32_ReadFromFile;
+	api->CloseFile              = Win32_CloseFile;
 	api->TryParseImageFile      = Win32_TryParseImageFile;
 	api->SaveImageDataToFile    = Win32_SaveImageDataToFile;
 	api->FreeImageData          = Win32_FreeImageData;
 	api->ShowSourceFile         = Win32_ShowSourceFile;
 	api->ShowFile               = Win32_ShowFile;
-	api->WriteEntireFile        = Win32_WriteEntireFile;
 	api->IsFileWatched          = Win32_IsFileWatched;
 	api->WatchFile              = Win32_WatchFile;
 	api->UnwatchFile            = Win32_UnwatchFile;

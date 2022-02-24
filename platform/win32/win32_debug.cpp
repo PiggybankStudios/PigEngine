@@ -6,14 +6,15 @@ Description:
 	** Holds functions that help us reroute and distribute debug output to various destinations
 */
 
-void Win32_DebugOutputInternal(const char* message, bool newLine)
+void Win32_DebugOutputInternal(MyStr_t messageStr, bool newLine)
 {
 	MyStr_t tempMessage;
-	tempMessage.length = MyStrLength64(message);
-	tempMessage.pntr = (char*)malloc(tempMessage.length+1);
-	MyMemCopy(tempMessage.pntr, message, tempMessage.length);
-	tempMessage.pntr[tempMessage.length] = '\0';
-	// u64 StrReplaceInPlace(MyStr_t str, MyStr_t target, MyStr_t replacement, bool ignoreCase = false)
+	tempMessage.length = messageStr.length;
+	tempMessage.pntr = (char*)malloc(messageStr.length+1);
+	MyMemCopy(tempMessage.pntr, messageStr.pntr, messageStr.length);
+	tempMessage.pntr[messageStr.length] = '\0';
+	//NOTE: we use these special characters for easy encoding of style info when rendering text using our font flowing stuff.
+	//      But windows will interpret them specially so we replace them with normal characters
 	StrReplaceInPlace(tempMessage, "\b", "*");
 	StrReplaceInPlace(tempMessage, "\a", "/");
 	StrReplaceInPlace(tempMessage, "\f", "_");
@@ -91,7 +92,7 @@ void Win32_DebugOutputFromPlat(u8 flags, const char* filePath, u32 lineNumber, c
 		Win32_UnlockMutex(&Platform->debugLineMutex);
 	}
 	
-	Win32_DebugOutputInternal(message, newLine);
+	Win32_DebugOutputInternal(NewStr(message), newLine);
 }
 void Win32_DebugPrintFromPlat(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool newLine, const char* formatString, ...)
 {
@@ -205,12 +206,13 @@ void Win32_PassDebugLinesToEngineInput(EngineInput_t* input)
 }
 
 // +==============================+
-// |   Win32_PlatApiDebugOutput   |
+// |      Win32_DebugOutput       |
 // +==============================+
-// void DebugOutput(const char* message, bool newLine)
+// void DebugOutput(MyStr_t messageStr, bool newLine)
 PLAT_API_DEBUG_OUTPUT_DEF(Win32_DebugOutput)
 {
-	Win32_DebugOutputInternal(message, newLine);
+	NotNullStr(&messageStr);
+	Win32_DebugOutputInternal(messageStr, newLine);
 }
 
 // +--------------------------------------------------------------+

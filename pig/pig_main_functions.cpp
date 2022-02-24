@@ -18,14 +18,16 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	//TODO: Change this to a paged heap
-	Assert(memory->persistentDataSize > sizeof(PigState_t) + DBG_CONSOLE_BUFFER_SIZE);
-	InitMemArena_FixedHeap(&pig->mainHeap, memory->persistentDataSize - sizeof(PigState_t) - DBG_CONSOLE_BUFFER_SIZE, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + DBG_CONSOLE_BUFFER_SIZE);
+	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
+	Assert(memory->persistentDataSize > sizeof(PigState_t) + totalConsoleSpaceSize);
+	InitMemArena_FixedHeap(&pig->mainHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	TempPushMark();
 	
 	PerfTime_t initStartTime = plat->GetPerfTime();
-	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t));
+	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
+	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);

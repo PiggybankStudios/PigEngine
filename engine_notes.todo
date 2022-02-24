@@ -2,7 +2,10 @@
 [ ] Worker Thread Pool that can do tasks given to it by the Engine
 
 # A dumping ground for any and all notes and TODO lists
-	[ ] Make sure we select the swap interval properly
+	[!] Make sure we select the swap interval properly
+		// The glfwSwapInterval call seems to have a lot of quirks in various graphics drivers.
+		// Our best bet might be to set it to zero and never touch it since GLFW docs mention some drivers not allowing setting back to zero after non-zero value is passed
+		// Then we need to do some sort of detection of whether the glfwSwapBuffers function is frame syncing us or not and if not then we can do our own frame sync stuff.
 	[ ] Update loop: frame manual flip synchronization
 	{ } Add an installer?
 	[ ] Add support for opening a file without reading all the contents immediately
