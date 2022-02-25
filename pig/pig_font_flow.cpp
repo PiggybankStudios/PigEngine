@@ -421,8 +421,12 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 							if (infoOut->logicalRec.width != 0) { infoOut->logicalRec = RecBoth(infoOut->logicalRec, logicalRec); }
 							else { infoOut->logicalRec = logicalRec; }
 						}
-						if (flowState->lineRec.width != 0) { flowState->lineRec = RecBoth(flowState->lineRec, logicalRec); }
-						else { flowState->lineRec = logicalRec; }
+						if (flowState->lineRec.width == 0)
+						{
+							//TODO: This isn't perfectly aligned (maxAscend doesn't do what we want). Can we somehow determine what the default height lineRec placement should be?
+							flowState->lineRec = NewRec(flowState->position.x, flowState->position.y - flowState->selectedFaceCache->maxAscend, 0, flowState->selectedFaceCache->lineHeight);
+						}
+						flowState->lineRec = RecBoth(flowState->lineRec, logicalRec);
 						
 						if (callbacks != nullptr && callbacks->afterChar != nullptr)
 						{

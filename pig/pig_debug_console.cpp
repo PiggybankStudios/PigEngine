@@ -600,7 +600,7 @@ void DebugConsoleLineLayout(DebugConsole_t* console, StringFifoLine_t* fifoLine,
 	dbgLine->fileLineNumSize = MeasureTextInFont(fileLineNumberStr, &pig->resources.debugFont, SelectDefaultFontFace()).size;
 	dbgLine->gutterNumSize   = MeasureTextInFont(gutterNumberStr,   &pig->resources.debugFont, SelectDefaultFontFace()).size;
 	
-	dbgLine->textPos = textMeasure.offset;
+	dbgLine->textPos = NewVec2(0, textMeasure.offset.y);
 	dbgLine->mainRec.size = dbgLine->textSize;
 	
 	TempPopMark();

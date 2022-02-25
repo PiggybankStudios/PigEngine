@@ -1,5 +1,5 @@
-[ ] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
-( ) Test the thread safety of the debug output using the new worker threads
+( ) Fix tab indentation in the debug console
+( ) Fix highlight spaces between lines in the debug console
 
 # A dumping ground for any and all notes and TODO lists
 	[!] Make sure we select the swap interval properly
@@ -15,6 +15,8 @@
 	[ ] Switch audio devices on primary device changed
 	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
 	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
+	[ ] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
+	( ) Test the thread safety of the debug output using the new worker threads
 
 # Gylib
 	[ ] MemArenaType_PagedHeap
