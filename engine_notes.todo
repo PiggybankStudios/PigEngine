@@ -1,21 +1,20 @@
-[ ] Add support for working line in the StringFifo_t structure
-[ ] Worker Thread Pool that can do tasks given to it by the Engine
+[ ] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
+( ) Test the thread safety of the debug output using the new worker threads
 
 # A dumping ground for any and all notes and TODO lists
 	[!] Make sure we select the swap interval properly
 		// The glfwSwapInterval call seems to have a lot of quirks in various graphics drivers.
 		// Our best bet might be to set it to zero and never touch it since GLFW docs mention some drivers not allowing setting back to zero after non-zero value is passed
 		// Then we need to do some sort of detection of whether the glfwSwapBuffers function is frame syncing us or not and if not then we can do our own frame sync stuff.
+	( ) Having multiple windows opened forces us to wait for the monitor vertical sync multiple times
 	[ ] Update loop: frame manual flip synchronization
 	{ } Add an installer?
-	[ ] Add support for opening a file without reading all the contents immediately
 	[ ] Can we make sure windows don't get lost in the void between monitors when multiple monitors are being used
-	( ) Having multiple windows opened forces us to wait for the monitor vertical sync multiple times
 	[ ] Add a Win32_ShowMessageBox api function that we use in GyLibAssertFailure
 	[ ] Ignore the first click when the window wasn't focused
-	[ ] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
 	[ ] Switch audio devices on primary device changed
 	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
+	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
 
 # Gylib
 	[ ] MemArenaType_PagedHeap
@@ -24,6 +23,7 @@
 	[ ] VarArray max length option
 	[ ] gy_fifo.h
 	( ) There seems to be something wrong with our quaternion implementation. Angles are doubled when trying to do Axis + Angle method to generate a quaternion
+	[ ] Add a cube sphere implementation in gy_primitives.h
 
 # Engine
 	[ ] Improve the audio debug window
@@ -87,6 +87,8 @@
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
 # Finished TODO List Items
+	[X] Add support for opening a file without reading all the contents immediately
+	[X] Add support for working line in the StringFifo_t structure
 	[X] Monitor Info
 	[X] Add in-engine support for GIFs
 	[X] Add in-engine support for screenshots

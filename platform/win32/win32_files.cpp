@@ -308,8 +308,76 @@ WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
 // bool OpenFile(MyStr_t filePath, bool forWriting, PlatOpenFile_t* openFileOut)
 PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 {
-	Unimplemented(); //TODO: Implement me!
-	return false;
+	NotNullStr(&filePath);
+	NotNull(openFileOut);
+	
+	TempPushMark(); //TODO: Make this thread safe!
+	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
+	
+	HANDLE fileHandle = CreateFileA(
+		fullPath.pntr,                               //lpFileName
+		(forWriting ? GENERIC_WRITE : GENERIC_READ), //dwDesiredAccess
+		(forWriting ? 0 : FILE_SHARE_READ),          //dwShareMode
+		NULL,                                        //lpSecurityAttributes
+		(forWriting ? CREATE_ALWAYS : OPEN_ALWAYS),  //dwCreationDisposition
+		FILE_ATTRIBUTE_NORMAL,                       //dwFlagsAndAttributes
+		NULL                                         //hTemplateFile
+	);
+	if (fileHandle == INVALID_HANDLE_VALUE)
+	{
+		PrintLine_E("Failed to %s file at \"%.*s\"", (forWriting ? "Create" : "Open"), fullPath.length, fullPath.pntr);
+		TempPopMark();
+		return false;
+	}
+	
+	//TODO: Seems like this seek to end and back stuff was assuming that we were opening a file for appending when doing writing.
+	//      But we do CREATE_ALWAYS as the option above which ensures we overwrite/reset the file when opening it.
+	//      Should we have an option for appending?? Or should we reframe this code to not act like the length matters for writing?
+	//Seek to the end of the file
+	LONG newCursorPosHighOrder = 0;
+	DWORD newCursorPos = SetFilePointer(
+		fileHandle,             //hFile
+		0,                      //lDistanceToMove
+		&newCursorPosHighOrder, //lDistanceToMoveHigh
+		FILE_END                //dMoveMethod
+	);
+	if (newCursorPos == INVALID_SET_FILE_POINTER)
+	{
+		PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), fullPath.length, fullPath.pntr);
+		CloseHandle(fileHandle);
+		TempPopMark();
+		return false;
+	}
+	
+	u64 fileSize = (((u64)newCursorPosHighOrder << 32) | (u64)newCursorPos);
+	u64 cursorIndex = fileSize;
+	if (!forWriting)
+	{
+		DWORD beginMove = SetFilePointer(
+			fileHandle, //hFile
+			0, //lDistanceToMove,
+			NULL, //lDistanceToMoveHigh
+			FILE_BEGIN
+		);
+		Assert(beginMove != INVALID_SET_FILE_POINTER);
+		cursorIndex = 0;
+	}
+	
+	TempPopMark();
+	
+	ClearPointer(openFileOut);
+	openFileOut->isOpen = true;
+	openFileOut->handle = fileHandle;
+	openFileOut->id = Platform->nextOpenFileId; //TODO: Make this thread safe!
+	Platform->nextOpenFileId++;
+	openFileOut->openedForWriting = forWriting;
+	openFileOut->cursorIndex = cursorIndex;
+	openFileOut->fileSize = fileSize;
+	openFileOut->path = AllocString(&Platform->mainHeap, &filePath);
+	NotNull(openFileOut->path.pntr);
+	openFileOut->fullPath = Win32_GetFullPath(&Platform->mainHeap, filePath, false);
+	NotNull(openFileOut->fullPath.pntr);
+	return true;
 }
 
 // +==============================+
@@ -318,18 +386,156 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 // bool WriteToFile(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
 PLAT_API_WRITE_TO_FILE_DEFINITION(Win32_WriteToFile)
 {
-	Unimplemented(); //TODO: Implement me!
-	return false;
+	NotNull(openFile);
+	if (!openFile->isOpen) { return false; }
+	Assert(openFile->openedForWriting);
+	Assert(openFile->handle != INVALID_HANDLE_VALUE);
+	AssertIf(numBytes > 0, bytesPntr != nullptr);
+	if (numBytes == 0) { return true; } //no bytes to write always succeeds
+	Assert(numBytes <= UINT32_MAX);
+	
+	DWORD numBytesToWrite = (DWORD)numBytes;
+	const void* bytesToWrite = bytesPntr;
+	if (convertNewLines)
+	{
+		//TODO: Make this TempArena usage thread safe!
+		TempPushMark();
+		MyStr_t newLinesReplacedStr = StrReplace(NewStr(numBytesToWrite, (char*)bytesToWrite), "\r\n", "\n", TempArena);
+		NotNullStr(&newLinesReplacedStr);
+		numBytesToWrite = (DWORD)newLinesReplacedStr.length;
+		bytesToWrite = (const void*)newLinesReplacedStr.pntr;
+	}
+	
+	DWORD numBytesWritten = 0;
+	BOOL writeResult = WriteFile(
+		openFile->handle, //hFile
+		bytesToWrite,     //lpBuffer
+		numBytesToWrite,  //nNumberOfBytesToWrite
+		&numBytesWritten, //lpNumberOfnumBytesWritten
+		NULL              //lpOverlapped
+	);
+	if (convertNewLines) { TempPopMark(); }
+	if (writeResult == 0)
+	{
+		DWORD errorCode = GetLastError();
+		PrintLine_E("WriteFile failed: 0x%08X (%u)", errorCode, errorCode);
+		return false;
+	}
+	
+	openFile->cursorIndex += numBytesWritten;
+	openFile->fileSize += numBytesWritten;
+	
+	Assert(numBytesWritten <= numBytesToWrite);
+	if (numBytesWritten < numBytesToWrite)
+	{
+		PrintLine_E("Partial write occurred: %u/%llu", numBytesWritten, numBytesToWrite);
+		return false;
+	}
+	
+	return true;
 }
 
 // +==============================+
 // |      Win32_ReadFromFile      |
 // +==============================+
-// u8* ReadFromFile(PlatOpenFile_t* openFile, u64 numBytes, bool convertNewLines)
+// Return is numBytes actually placed into the bufferPntr. This might be smaller for 3 reasons:
+//  1. End of the file was reached (shouldn't be a problem if fileSize and cursorIndex in OpenFile_t are respected)
+//  2. ReadFile gave a partial read (not sure why this might happen)
+//  3. convertNewLines is true and we replaced 1 or more instances of "\r\n" to "\n"
+// u64 ReadFromFile(PlatOpenFile_t* openFile, u64 numBytes, void* bufferPntr, bool convertNewLines)
 PLAT_API_READ_FROM_FILE_DEFINITION(Win32_ReadFromFile)
 {
-	Unimplemented(); //TODO: Implement me!
+	NotNull(openFile);
+	NotNull(bufferPntr);
+	Assert(numBytes < UINT32_MAX);
+	if (!openFile->isOpen) { return 0; }
+	Assert(!openFile->openedForWriting);
+	if (numBytes == 0) { return 0; }
+	
+	DWORD numBytesToRead = (DWORD)numBytes;
+	if (openFile->cursorIndex + numBytes > openFile->fileSize)
+	{
+		numBytesToRead = (DWORD)(openFile->fileSize - openFile->cursorIndex);
+	}
+	
+	DWORD numBytesRead = 0;
+	BOOL readResult = ReadFile(
+		openFile->handle, //hFile
+		bufferPntr,       //lpBuffer
+		numBytesToRead,   //nNumberOfBytesToRead
+		&numBytesRead,    //lpNumberOfBytesRead
+		NULL              //lpOverlapped
+	);
+	if (readResult == 0)
+	{
+		DWORD errorCode = GetLastError();
+		PrintLine_E("ReadFile failed: 0x%08X (%u)", errorCode, errorCode);
+		return false;
+	}
+	Assert(numBytesRead <= numBytesToRead);
+	
+	openFile->cursorIndex += numBytesRead;
+	
+	u64 result = numBytesRead;
+	if (convertNewLines)
+	{
+		u64 numNewLinesReplaced = StrReplaceInPlace(NewStr(numBytesRead, (char*)bufferPntr), "\r\n", "\n");
+		Assert(result > numNewLinesReplaced);
+		result -= numNewLinesReplaced;  //1 byte smaller for each "\r\n" pair to "\n"
+	}
+	
+	if (numBytesRead < numBytesToRead) { PrintLine_W("Partial read occurred: %u/%llu", numBytesRead, numBytesToRead); }
+	return numBytesRead;
+}
+
+// +==============================+
+// |     Win32_MoveFileCursor     |
+// +==============================+
+// bool MoveFileCursor(PlatOpenFile_t* openFile, i64 moveAmount)
+PLAT_API_MOVE_FILE_CURSOR_DEFINITION(Win32_MoveFileCursor)
+{
+	NotNull(openFile);
+	if (!openFile->isOpen) { return false; }
+	Assert(!openFile->openedForWriting);
+	if (moveAmount == 0) { return true; }
+	Assert(openFile->handle != INVALID_HANDLE_VALUE);
+	if (moveAmount < 0 && (u64)(-moveAmount) > openFile->cursorIndex) { return false; } //seek past beginning
+	if (moveAmount > 0 && openFile->cursorIndex + (u64)moveAmount > openFile->fileSize) { return false; } //seek past end
+	
+	LARGE_INTEGER distanceToMoveLarge = {};
+	distanceToMoveLarge.QuadPart = (LONGLONG)moveAmount;
+	
+	LARGE_INTEGER newCursorPosLarge = {};
+	BOOL setResult = SetFilePointerEx(
+		openFile->handle, //hFile
+		distanceToMoveLarge, //liDistanceToMove
+		&newCursorPosLarge, //lpNewFilePointer
+		FILE_CURRENT //dwMoveMethod
+	);
+	if (setResult == 0)
+	{
+		DWORD errorCode = GetLastError();
+		PrintLine_E("SetFilePointerEx failed: 0x%08X (%u)", errorCode, errorCode);
+		return false;
+	}
+	
+	openFile->cursorIndex += moveAmount;
 	return false;
+}
+
+// +==============================+
+// |   Win32_SeekToOffsetInFile   |
+// +==============================+
+// bool SeekToOffsetInFile(PlatOpenFile_t* openFile, u64 offset)
+PLAT_API_SEEK_TO_OFFSET_IN_FILE_DEFINITION(Win32_SeekToOffsetInFile)
+{
+	NotNull(openFile);
+	if (!openFile->isOpen) { return false; }
+	Assert(offset < openFile->fileSize);
+	i64 moveAmount = 0;
+	if (openFile->cursorIndex >= offset) { moveAmount = -(i64)(openFile->cursorIndex - offset); }
+	else { moveAmount = (i64)(offset - openFile->cursorIndex); }
+	return Win32_MoveFileCursor(openFile, moveAmount);
 }
 
 // +==============================+
@@ -338,7 +544,15 @@ PLAT_API_READ_FROM_FILE_DEFINITION(Win32_ReadFromFile)
 // void CloseFile(PlatOpenFile_t* openFile)
 PLAT_API_CLOSE_FILE_DEFINITION(Win32_CloseFile)
 {
-	Unimplemented(); //TODO: Implement me!
+	NotNull(openFile);
+	if (openFile->handle != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(openFile->handle);
+	}
+	if (openFile->path.pntr != nullptr) { FreeString(&Platform->mainHeap, &openFile->path); }
+	if (openFile->fullPath.pntr != nullptr) { FreeString(&Platform->mainHeap, &openFile->fullPath); }
+	ClearPointer(openFile);
+	openFile->handle = INVALID_HANDLE_VALUE;
 }
 
 // +==============================+

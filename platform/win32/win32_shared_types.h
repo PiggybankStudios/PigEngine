@@ -41,6 +41,8 @@ struct PlatOpenFile_t
 	bool openedForWriting;
 	u64 cursorIndex;
 	u64 fileSize;
+	MyStr_t path;
+	MyStr_t fullPath;
 	
 	HANDLE handle;
 };

@@ -87,8 +87,14 @@ typedef PLAT_API_OPEN_FILE_DEFINITION(PlatApiOpenFile_f);
 #define PLAT_API_WRITE_TO_FILE_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
 typedef PLAT_API_WRITE_TO_FILE_DEFINITION(PlatApiWriteToFile_f);
 
-#define PLAT_API_READ_FROM_FILE_DEFINITION(functionName) u8* functionName(PlatOpenFile_t* openFile, u64 numBytes, bool convertNewLines)
+#define PLAT_API_READ_FROM_FILE_DEFINITION(functionName) u64 functionName(PlatOpenFile_t* openFile, u64 numBytes, void* bufferPntr, bool convertNewLines)
 typedef PLAT_API_READ_FROM_FILE_DEFINITION(PlatApiReadFromFile_f);
+
+#define PLAT_API_MOVE_FILE_CURSOR_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, i64 moveAmount)
+typedef PLAT_API_MOVE_FILE_CURSOR_DEFINITION(PlatApiMoveFileCursor_f);
+
+#define PLAT_API_SEEK_TO_OFFSET_IN_FILE_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, u64 offset)
+typedef PLAT_API_SEEK_TO_OFFSET_IN_FILE_DEFINITION(PlatApiSeekToOffsetInFile_f);
 
 #define PLAT_API_CLOSE_FILE_DEFINITION(functionName) void functionName(PlatOpenFile_t* openFile)
 typedef PLAT_API_CLOSE_FILE_DEFINITION(PlatApiCloseFile_f);

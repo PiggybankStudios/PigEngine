@@ -103,6 +103,8 @@ struct PlatformApi_t
 	PlatApiWriteEntireFile_f*        WriteEntireFile;
 	PlatApiOpenFile_f*               OpenFile;
 	PlatApiWriteToFile_f*            WriteToFile;
+	PlatApiMoveFileCursor_f*         MoveFileCursor;
+	PlatApiSeekToOffsetInFile_f*     SeekToOffsetInFile;
 	PlatApiReadFromFile_f*           ReadFromFile;
 	PlatApiCloseFile_f*              CloseFile;
 	PlatApiTryParseImageFile_f*      TryParseImageFile;

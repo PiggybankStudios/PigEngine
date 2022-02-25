@@ -105,6 +105,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->WriteEntireFile        = Win32_WriteEntireFile;
 	api->OpenFile               = Win32_OpenFile;
 	api->WriteToFile            = Win32_WriteToFile;
+	api->MoveFileCursor         = Win32_MoveFileCursor;
+	api->SeekToOffsetInFile     = Win32_SeekToOffsetInFile;
 	api->ReadFromFile           = Win32_ReadFromFile;
 	api->CloseFile              = Win32_CloseFile;
 	api->TryParseImageFile      = Win32_TryParseImageFile;
