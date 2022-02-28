@@ -22,6 +22,8 @@ void Win32_FillStartupInfo(StartupInfo_t* info)
 	info->defaultAudioDeviceIndex = Platform->defaultAudioDeviceIndex;
 	MyMemCopy(&info->audioDevices, &Platform->audioDevices, sizeof(VarArray_t));
 	
+	info->ShowMessageBox      = Win32_ShowMessageBox;
+	info->HandleAssertion     = Win32_HandleAssertion;
 	info->DebugOutput         = Win32_DebugOutput;
 	info->GetProgramArg       = Win32_GetProgramArg;
 	info->GetThisThreadId     = Win32_GetThisThreadId;
@@ -79,6 +81,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 {
 	NotNull(api);
 	ClearPointer(api);
+	api->ShowMessageBox         = Win32_ShowMessageBox;
+	api->HandleAssertion        = Win32_HandleAssertion;
 	api->DebugOutput            = Win32_DebugOutput;
 	api->GetProgramArg          = Win32_GetProgramArg;
 	api->CreateMutex            = Win32_CreateMutex;

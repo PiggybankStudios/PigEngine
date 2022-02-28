@@ -91,6 +91,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_render_basic.cpp"
 #include "win32/win32_overlays.cpp"
 #include "win32/win32_loading.cpp"
+#include "win32/win32_assert.cpp"
 
 #include "win32/win32_interface_filling.cpp"
 
@@ -332,6 +333,8 @@ int main(int argc, char* argv[])
 	WriteLine_N("Pig_Initialize Complete");
 	Platform->firstUpdateStartTime = Win32_GetPerfTime();
 	
+	Win32_CheckForThreadAssertions();
+	
 	// +==============================+
 	// |      EngineInputFilling      |
 	// +==============================+
@@ -388,6 +391,7 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	
 	TempPushMark();
 	
+	Win32_CheckForThreadAssertions();
 	Win32_UpdateAudio();
 	Win32_UpdateFileWatching();
 	Win32_CheckControllerInputs(&Platform->engineActiveInput);

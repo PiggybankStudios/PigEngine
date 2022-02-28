@@ -9,6 +9,12 @@ Description:
 #ifndef _COMMON_API_FUNCS_H
 #define _COMMON_API_FUNCS_H
 
+#define PLAT_API_SHOW_MESSAGE_BOX_DEFINITION(functionName) void functionName(const char* title, const char* message)
+typedef PLAT_API_SHOW_MESSAGE_BOX_DEFINITION(PlatApiShowMessageBox_f);
+
+#define PLAT_API_HANDLE_ASSERTION_DEFINITION(functionName) void functionName(const char* filePath, int lineNumber, const char* funcName, const char* expressionStr, const char* messageStr)
+typedef PLAT_API_HANDLE_ASSERTION_DEFINITION(PlatApiHandleAssertion_f);
+
 #define PLAT_API_DEBUG_OUTPUT_DEF(functionName) void functionName(MyStr_t messageStr, bool newLine)
 typedef PLAT_API_DEBUG_OUTPUT_DEF(PlatApiDebugOutput_f);
 

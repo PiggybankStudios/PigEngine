@@ -23,9 +23,26 @@ const char* Win32_GetErrorCodeStr(DWORD windowsErrorCode, bool printUnknownValue
 	}
 }
 
+// +==============================+
+// |     Win32_ShowMessageBox     |
+// +==============================+
+// void ShowMessageBox(const char* title, const char* message)
+PLAT_API_SHOW_MESSAGE_BOX_DEFINITION(Win32_ShowMessageBox)
+{
+	NotNull_(title);
+	NotNull_(message);
+	int messageBoxResult = MessageBoxA(
+		NULL,    // hWnd,
+		message, // lpText,
+		title,   // lpCaption,
+		MB_OK    // uType
+	);
+	UNUSED(messageBoxResult);
+}
+
 void Win32_FatalError(const char* errorMessage, const char* messageBoxTitle)
 {
-	MessageBoxA(NULL, errorMessage, messageBoxTitle, MB_OK);
+	Win32_ShowMessageBox(messageBoxTitle, errorMessage);
 	exit(1); //TODO: Turn this into a win32 specific call
 }
 void Win32_InitError(const char* errorMessage) //pre-declared in win32_func_defs.cpp
@@ -265,43 +282,4 @@ PLAT_API_FREE_MEMORY_DEF(Win32_FreeMemory)
 {
 	//TODO: Should we track the programs allocations somehow?
 	FreeMem(&Platform->stdHeap, allocPntr, oldSize, false, oldSizeOut);
-}
-
-// +--------------------------------------------------------------+
-// |                  Assertion Failure Function                  |
-// +--------------------------------------------------------------+
-static bool insideAssertFailure = false;
-void GyLibAssertFailure(const char* filePath, int lineNumber, const char* funcName, const char* expressionStr, const char* messageStr)
-{
-	if (insideAssertFailure) { return; } //try to break accidental recursions
-	insideAssertFailure = true;
-	
-	if (InitPhase < Win32InitPhase_DebugOutputInitialized)
-	{
-		if (!DEBUG_BUILD) { Win32_FatalError(((messageStr != nullptr) ? messageStr : expressionStr), "Assertion failed during initialization"); }
-		insideAssertFailure = false;
-		return;
-	}
-	if (messageStr != nullptr && messageStr[0] != '\0')
-	{
-		PrintLine_E("Assertion Failure! %s (Expression: %s) in %s %s:%d", messageStr, expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
-	}
-	else
-	{
-		PrintLine_E("Assertion Failure! (%s) is not true in %s %s:%d", expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
-	}
-	
-	if (InitPhase < Win32InitPhase_ThreadingInitialized) //Can't do other stuff unless certain things are initialized
-	{
-		if (!DEBUG_BUILD) { Win32_InitError("Assertion occurred during initialization"); }
-		insideAssertFailure = false;
-		return;
-	}
-	//TODO: Implement me! Do a crash dump, throw up a MessageBox, etc
-	
-	insideAssertFailure = false;
-	#if !DEBUG_BUILD
-	MyBreak();
-	exit(1);
-	#endif
 }

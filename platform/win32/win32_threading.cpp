@@ -10,6 +10,7 @@ Description:
 */
 
 THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr);
+GYLIB_GET_TEMP_ARENA_DEF(Win32_GetTempArena);
 
 // +--------------------------------------------------------------+
 // |                       Mutex Functions                        |
@@ -174,6 +175,19 @@ PLAT_API_TRIGGER_SEMAPHORE_DEF(Win32_TriggerSemaphore)
 	return (releaseResult != 0);
 }
 
+PlatThread_t* Win32_GetThreadById(ThreadId_t threadId)
+{
+	for (u64 tIndex = 0; tIndex < PLAT_MAX_NUM_THREADS; tIndex++)
+	{
+		PlatThread_t* thread = &Platform->threads[tIndex];
+		if (thread->win32_id == threadId)
+		{
+			return thread;
+		}
+	}
+	return nullptr;
+}
+
 // +--------------------------------------------------------------+
 // |                    Create/Destroy Threads                    |
 // +--------------------------------------------------------------+
@@ -268,6 +282,8 @@ void Win32_InitThreading()
 		PlatThread_t* thread = &Platform->threads[tIndex];
 		ClearPointer(thread);
 	}
+	
+	GetTempArena = Win32_GetTempArena;
 }
 
 void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenaMarkCount)
@@ -394,6 +410,34 @@ PLAT_API_QUEUE_TASK_DEFINITION(Win32_QueueTask)
 		Win32_TriggerSemaphore(&Platform->threadPoolSemaphore, 1, nullptr);
 	}
 	return result;
+}
+
+// +--------------------------------------------------------------+
+// |                   Gylib TempArena Function                   |
+// +--------------------------------------------------------------+
+// +==============================+
+// |      Win32_GetTempArena      |
+// +==============================+
+GYLIB_GET_TEMP_ARENA_DEF(Win32_GetTempArena) //pre-declared at top of file
+{
+	ThreadId_t thisThreadId = Win32_GetThisThreadId();
+	if (thisThreadId == MainThreadId)
+	{
+		if (TempArena != nullptr && TempArena->size > 0)
+		{
+			return TempArena;
+		}
+		else { return nullptr; }
+	}
+	else
+	{
+		PlatThreadPoolThread_t* threadContext = Win32_GetThreadContext(thisThreadId);
+		if (threadContext != nullptr && threadContext->tempArena.size > 0)
+		{
+			return &threadContext->tempArena;
+		}
+		else { return nullptr; }
+	}
 }
 
 // +--------------------------------------------------------------+

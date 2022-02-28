@@ -22,6 +22,8 @@ struct StartupInfo_t
 	u64 defaultAudioDeviceIndex;
 	VarArray_t audioDevices;
 	
+	PlatApiShowMessageBox_f*      ShowMessageBox;
+	PlatApiHandleAssertion_f*     HandleAssertion;
 	PlatApiDebugOutput_f*         DebugOutput;
 	PlatApiGetProgramArg_f*       GetProgramArg;
 	PlatApiGetThisThreadId_f*     GetThisThreadId;
@@ -79,6 +81,8 @@ struct PlatformInfo_t
 
 struct PlatformApi_t
 {
+	PlatApiShowMessageBox_f*         ShowMessageBox;
+	PlatApiHandleAssertion_f*        HandleAssertion;
 	PlatApiDebugOutput_f*            DebugOutput;
 	PlatApiGetProgramArg_f*          GetProgramArg;
 	PlatApiCreateMutex_f*            CreateMutex;

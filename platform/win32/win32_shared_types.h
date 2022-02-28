@@ -63,6 +63,13 @@ struct PlatThread_t
 	PlatThreadFunction_f* function;
 	void* userPntr;
 	
+	bool assertionFailed;
+	const char* assertionFailedFilepath;
+	int assertionFailedLineNum;
+	const char* assertionFailedFuncName;
+	const char* assertionFailedMessage;
+	const char* assertionFailedExpression;
+	
 	HANDLE handle;
 	DWORD win32_id;
 };

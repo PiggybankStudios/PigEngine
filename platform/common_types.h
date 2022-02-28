@@ -10,6 +10,8 @@ Description:
 #ifndef _COMMON_TYPES_H
 #define _COMMON_TYPES_H
 
+#define EXIT_CODE_ASSERTION_FAILED 2
+
 enum PlatType_t
 {
 	PlatType_Windows,

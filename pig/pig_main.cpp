@@ -251,32 +251,51 @@ PIG_CLOSING_DEF(Pig_Closing)
 static bool insideAssertFailure = false;
 void GyLibAssertFailure(const char* filePath, int lineNumber, const char* funcName, const char* expressionStr, const char* messageStr)
 {
-	if (insideAssertFailure) { return; } //try to break accidental recursions
+	if (insideAssertFailure) { return; } //try to stop accidental recursions
 	insideAssertFailure = true;
 	if (pigEntryPoint == PigEntryPoint_None || pigEntryPoint == PigEntryPoint_GetStartupOptions || pigEntryPoint == PigEntryPoint_GetVersion)
 	{
 		//TODO: Can we do anything about these assertions really?
-		#if !DEBUG_BUILD
 		MyBreak();
-		exit(1);
-		#endif
+		exit(EXIT_CODE_ASSERTION_FAILED);
 		return;
 	}
+	ThreadId_t threadId = (plat != nullptr && plat->GetThisThreadId != nullptr) ? plat->GetThisThreadId() : 0;
+	bool isMainThread = (pig == nullptr || threadId == pig->mainThreadId);
 	
 	//TODO: Check for as much invalid state as possible
-	if (messageStr != nullptr && messageStr[0] != '\0')
+	if (isMainThread)
 	{
-		PrintLine_E("Assertion Failure! %s (Expression: %s) in %s %s:%d", messageStr, expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		if (messageStr != nullptr && messageStr[0] != '\0')
+		{
+			PrintLine_E("Assertion Failure! %s (Expression: %s) in %s %s:%d", messageStr, expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		}
+		else
+		{
+			PrintLine_E("Assertion Failure! (%s) is not true in %s %s:%d", expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		}
 	}
 	else
 	{
-		PrintLine_E("Assertion Failure! (%s) is not true in %s %s:%d", expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		if (messageStr != nullptr && messageStr[0] != '\0')
+		{
+			PrintLine_E("Assertion Failure on thread %u! %s (Expression: %s) in %s %s:%d", threadId, messageStr, expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		}
+		else
+		{
+			PrintLine_E("Assertion Failure on thread %u! (%s) is not true in %s %s:%d", threadId, expressionStr, funcName, filePath, lineNumber); //TODO: Shorten path to just fileName
+		}
 	}
-	//TODO: Implement me! Do a crash dump, throw up a MessageBox, etc
+	
+	if (plat != nullptr && plat->HandleAssertion != nullptr)
+	{
+		plat->HandleAssertion(filePath, lineNumber, funcName, expressionStr, messageStr);
+	}
+	else
+	{
+		MyBreak();
+		exit(EXIT_CODE_ASSERTION_FAILED);
+	}
 	
 	insideAssertFailure = false;
-	#if !DEBUG_BUILD
-	MyBreak();
-	exit(1);
-	#endif
 }

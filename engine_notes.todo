@@ -1,3 +1,6 @@
+[ ] Add some basic tasks that can be carried out on worker threads (like reading or writing from/to a file)
+[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
+( ) Make sure all the platform file functions are thread safe
 
 # A dumping ground for any and all notes and TODO lists
 	[!] Make sure we select the swap interval properly
@@ -13,10 +16,7 @@
 	[ ] Switch audio devices on primary device changed
 	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
 	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
-	( ) Make sure that assertions are handled gracefully while on worker threads
-	[ ] Add some basic tasks that can be carried out on worker threads (like reading or writing from/to a file)
-	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
-	( ) Make sure all the platform file functions are thread safe
+	[ ] Do a debug dump when an assertion fails
 
 # Gylib
 	[ ] MemArenaType_PagedHeap
@@ -89,6 +89,7 @@
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
 # Finished TODO List Items
+	(X) Make sure that assertions are handled gracefully while on worker threads
 	(X) Test the thread safety of the debug output using the new worker threads
 	[X] Add support for queuing tasks that get completed on the worker threads but are implemented by functions in the Engine DLL
 	(X) Fix highlight spaces between lines in the debug console
