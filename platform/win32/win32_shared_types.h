@@ -167,12 +167,22 @@ struct PlatTaskInput_t
 	
 	u64 contextSize;
 	void* contextPntr;
+	MemArena_t* contextArena;
+	
+	MyStr_t inputStr;
+	MemArena_t* inputStrArena;
+	
 	u64 inputSize1;
 	void* inputPntr1;
+	MemArena_t* inputArena1;
+	
 	u64 inputSize2;
 	void* inputPntr2;
+	MemArena_t* inputArena2;
+	
 	u64 inputSize3;
 	void* inputPntr3;
+	MemArena_t* inputArena3;
 	
 	void* callbackFunc;
 	void* callbackContext;

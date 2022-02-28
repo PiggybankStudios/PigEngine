@@ -152,6 +152,7 @@ void PigRenderDebugOverlays()
 
 void PigUpdate()
 {
+	UpdatePigPerfGraphBefore(&pig->perfGraph);
 	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
 	VarArrayLoop(&pigIn->inputEvents, eIndex)
 	{

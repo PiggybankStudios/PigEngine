@@ -70,10 +70,8 @@ void PigPerfGraphMark_(PigPerfGraph_t* graph) //pre-declared in pig_func_defs.h
 	graph->nextFrameMarked = true;
 }
 
-void UpdatePigPerfGraph(PigPerfGraph_t* graph)
+void UpdatePigPerfGraphBefore(PigPerfGraph_t* graph)
 {
-	NotNull(graph);
-	
 	#if PAUSE_PERF_GRAPH_ONCE_FULL
 	if (!graph->hasAutoPaused && graph->msValues[PERF_GRAPH_LENGTH-2] != 0)
 	{
@@ -103,6 +101,11 @@ void UpdatePigPerfGraph(PigPerfGraph_t* graph)
 		graph->isFrameMarked[0] = graph->nextFrameMarked;
 		graph->nextFrameMarked = false;
 	}
+}
+
+void UpdatePigPerfGraph(PigPerfGraph_t* graph)
+{
+	NotNull(graph);
 	
 	// +==============================+
 	// |      Calculate maxValue      |

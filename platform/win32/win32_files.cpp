@@ -151,7 +151,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 	{
 		contentsOut->readSuccess = false;
 		contentsOut->errorCode = GetLastError();
-		Assert(contentsOut->errorCode != ERROR_FILE_NOT_FOUND); //already checked for this
+		// Assert(contentsOut->errorCode != ERROR_FILE_NOT_FOUND); //already checked for this TODO: Re-enable this if we re-enable the check above
 		PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
 		//The file might have permissions that prevent us from reading it
 		TempPopMark();
