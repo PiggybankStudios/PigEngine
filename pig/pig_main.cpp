@@ -30,6 +30,7 @@ Description:
 #include "pig/pig_input.h"
 #include "pig/pig_textbox.h"
 #include "pig/pig_debug_console.h"
+#include "pig/pig_tasks.h"
 
 #include "game_main.h"
 
@@ -108,6 +109,8 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_perf_graph.cpp"
 #include "pig/pig_audio_debug.cpp"
 #include "pig/pig_debug_overlay.cpp"
+
+#include "pig/pig_tasks.cpp"
 
 #include "game_main.cpp"
 
@@ -198,7 +201,14 @@ PIG_SHOULD_WINDOW_CLOSE_DEF(Pig_ShouldWindowClose)
 PIG_PERFORM_TASK_DEF(Pig_PerformTask)
 {
 	//NOTE: This function runs on a thread pool thread
-	PigHandleTask(info, api, thread, task);
+	if (task->input.type >= GameTask_Base)
+	{
+		GameHandleTask(info, api, thread, task);
+	}
+	else
+	{
+		PigHandleTask(info, api, thread, task);
+	}
 	AssertIf(thread->tempArena.size > 0, GetNumMarks(&thread->tempArena) == 0);
 }
 

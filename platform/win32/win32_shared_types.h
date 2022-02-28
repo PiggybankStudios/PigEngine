@@ -166,6 +166,9 @@ struct PlatTaskInput_t
 	void* inputPntr2;
 	u64 inputSize3;
 	void* inputPntr3;
+	
+	void* callbackFunc;
+	void* callbackContext;
 };
 struct PlatTaskResult_t
 {

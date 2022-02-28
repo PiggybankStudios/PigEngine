@@ -153,7 +153,22 @@ void PigRenderDebugOverlays()
 void PigUpdate()
 {
 	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
-	PigHandleCompletedTasks();
+	VarArrayLoop(&pigIn->inputEvents, eIndex)
+	{
+		VarArrayLoopGet(InputEvent_t, inputEvent, &pigIn->inputEvents, eIndex);
+		if (inputEvent->type == InputEventType_TaskCompleted)
+		{
+			if (inputEvent->taskCompleted.task.input.type >= GameTask_Base)
+			{
+				GameHandleCompletedTask(&inputEvent->taskCompleted.task);
+			}
+			else
+			{
+				PigHandleCompletedTask(&inputEvent->taskCompleted.task);
+			}
+			inputEvent->handled = true;
+		}
+	}
 	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();
