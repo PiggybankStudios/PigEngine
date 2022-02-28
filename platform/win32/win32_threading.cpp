@@ -1,3 +1,4 @@
+
 /*
 File:   win32_threading.cpp
 Author: Taylor Robbins
@@ -257,6 +258,7 @@ void Win32_InitThreading()
 	AssertMsg(IsMainThread(), "Our IsMainThread macro must be broken");
 	
 	Platform->nextThreadId = 1;
+	Platform->nextTaskId = 1;
 	Platform->nextMutexId = 1;
 	Platform->nextSemaphoreId = 1;
 	Platform->nextInterlockedIntId = 1;
@@ -268,8 +270,9 @@ void Win32_InitThreading()
 	}
 }
 
-void Win32_InitThreadPool(u64 numThreads)
+void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenaMarkCount)
 {
+	AssertSingleThreaded();
 	Win32_CreateSemaphore(&Platform->threadPoolSemaphore, 0, PLAT_MAX_NUM_TASKS);
 	
 	PrintLine_I("Spinning up %llu thread(s) for the thread pool", numThreads);
@@ -278,11 +281,43 @@ void Win32_InitThreadPool(u64 numThreads)
 	{
 		PlatThreadPoolThread_t* newPoolEntry = &Platform->threadPool[tIndex];
 		ClearPointer(newPoolEntry);
-		newPoolEntry->id = tIndex;
+		newPoolEntry->id = tIndex+1;
 		newPoolEntry->shouldClose = false;
 		newPoolEntry->isClosed = false;
+		newPoolEntry->isAwake = false;
+		void* tempArenaSpace = malloc(tempArenasSize); //TODO: Should we allocate this using a windows specific call?
+		NotNull(tempArenaSpace);
+		InitMemArena_MarkedStack(&newPoolEntry->tempArena, tempArenasSize, tempArenaSpace, tempArenaMarkCount);
 		Win32_CreateThread(Win32_ThreadPoolFunc, newPoolEntry, &newPoolEntry->threadPntr);
 		NotNull(newPoolEntry->threadPntr);
+	}
+	Platform->numQueuedTasks = 0;
+}
+
+// +--------------------------------------------------------------+
+// |                            Update                            |
+// +--------------------------------------------------------------+
+void Win32_PassCompletedTasksToEngineInput(EngineInput_t* engineInput)
+{
+	for (u64 tIndex = 0; tIndex < PLAT_MAX_NUM_TASKS; tIndex++)
+	{
+		PlatTask_t* task = &Platform->queuedTasks[tIndex];
+		if (task->id != 0 && task->finished)
+		{
+			InputEvent_t* inputEvent = VarArrayAdd(&engineInput->inputEvents, InputEvent_t);
+			NotNull(inputEvent);
+			ClearPointer(inputEvent);
+			inputEvent->id = Platform->nextInputEventId;
+			Platform->nextInputEventId++;
+			inputEvent->index = engineInput->inputEvents.length-1;
+			inputEvent->type = InputEventType_TaskCompleted;
+			MyMemCopy(&inputEvent->taskCompleted.task, task, sizeof(PlatTask_t));
+			
+			task->id = 0;
+			task->finished = false;
+			Assert(Platform->numQueuedTasks > 0);
+			Platform->numQueuedTasks--;
+		}
 	}
 }
 
@@ -300,12 +335,65 @@ PLAT_API_GET_THIS_THREAD_ID_DEF(Win32_GetThisThreadId)
 }
 
 // +==============================+
+// |    Win32_GetThreadContext    |
+// +==============================+
+// PlatThreadPoolThread_t* GetThreadContext(ThreadId_t threadId)
+PLAT_API_GET_THREAD_CONTEXT(Win32_GetThreadContext)
+{
+	for (u64 tIndex = 0; tIndex < Platform->threadPoolSize; tIndex++)
+	{
+		PlatThreadPoolThread_t* thread = &Platform->threadPool[tIndex];
+		if (thread->threadPntr != nullptr && thread->threadPntr->win32_id == threadId)
+		{
+			return thread;
+		}
+	}
+	return nullptr;
+}
+
+// +==============================+
 // |       Win32_SleepForMs       |
 // +==============================+
 // void SleepForMs(u64 numMs)
 PLAT_API_SLEEP_FOR_MS_DEF(Win32_SleepForMs)
 {
 	Sleep((DWORD)numMs);
+}
+
+// +==============================+
+// |       Win32_QueueTask        |
+// +==============================+
+// PlatTask_t* QueueTask(PlatTaskInput_t* taskInput)
+PLAT_API_QUEUE_TASK_DEFINITION(Win32_QueueTask)
+{
+	AssertSingleThreaded();
+	NotNull(taskInput);
+	Assert(Platform->threadPoolSize > 0);
+	
+	PlatTask_t* result = nullptr;
+	for (u64 qIndex = 0; qIndex < PLAT_MAX_NUM_TASKS; qIndex++)
+	{
+		PlatTask_t* task = &Platform->queuedTasks[qIndex];
+		if (task->id == 0)
+		{
+			result = task;
+			MyMemCopy(&task->input, taskInput, sizeof(PlatTaskInput_t));
+			ClearStruct(task->result);
+			Win32_CreateInterlockedInt(&task->claimId, 0);
+			task->finished = false;
+			Platform->numQueuedTasks++;
+			ThreadingWriteBarrier();
+			task->id = Platform->nextTaskId;
+			Platform->nextTaskId++;
+			break;
+		}
+	}
+	
+	if (result != nullptr)
+	{
+		Win32_TriggerSemaphore(&Platform->threadPoolSemaphore, 1, nullptr);
+	}
+	return result;
 }
 
 // +--------------------------------------------------------------+
@@ -320,15 +408,36 @@ THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr) //pre-declared at top of fil
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
 	NotNull_(context->threadPntr);
 	PrintLine_I("Thread Pool Thread[%llu] has started! (Thread %llu 0x%08X)", context->id, context->threadPntr->id, context->threadPntr->win32_id);
+	context->isAwake = true;
 	while (!context->shouldClose)
 	{
 		bool anyWorkToDo = false;
-		
-		//TODO: Implement the search through the tasks waiting for work
+		for (u64 qIndex = 0; qIndex < PLAT_MAX_NUM_TASKS; qIndex++)
+		{
+			PlatTask_t* task = &Platform->queuedTasks[qIndex];
+			if (task->id != 0 && task->claimId.value == 0)
+			{
+				anyWorkToDo = true;
+				u32 claimResult = Win32_InterlockedExchange(&task->claimId, (u32)context->id);
+				if (claimResult == 0)
+				{
+					//we got the claim because we saw the 0
+					task->threadId = context->threadPntr->win32_id;
+					task->poolId = context->id;
+					
+					Platform->engine.PerformTask(&Platform->info, &Platform->api, context, task);
+					
+					ThreadingWriteBarrier();
+					task->finished = true;
+				}
+			}
+		}
 		
 		if (!anyWorkToDo && !context->shouldClose)
 		{
+			context->isAwake = false;
 			Win32_WaitOnSemaphore(&Platform->threadPoolSemaphore, SEMAPHORE_WAIT_INFINITE);
+			context->isAwake = true;
 		}
 	}
 	PrintLine_E("Thread Pool Thread[%llu] is closing! (Thread %llu 0x%08X)", context->id, context->threadPntr->id, context->threadPntr->win32_id);

@@ -51,8 +51,14 @@ typedef PLAT_API_DESTROY_INTERLOCKED_INT(PlatApiDestroyInterlockedInt_f);
 #define PLAT_API_GET_THIS_THREAD_ID_DEF(functionName) ThreadId_t functionName()
 typedef PLAT_API_GET_THIS_THREAD_ID_DEF(PlatApiGetThisThreadId_f);
 
+#define PLAT_API_GET_THREAD_CONTEXT(functionName) PlatThreadPoolThread_t* functionName(ThreadId_t threadId)
+typedef PLAT_API_GET_THREAD_CONTEXT(PlatApiGetThreadContext_f);
+
 #define PLAT_API_SLEEP_FOR_MS_DEF(functionName) void functionName(u64 numMs)
 typedef PLAT_API_SLEEP_FOR_MS_DEF(PlatApiSleepForMs_f);
+
+#define PLAT_API_QUEUE_TASK_DEFINITION(functionName) PlatTask_t* functionName(PlatTaskInput_t* taskInput)
+typedef PLAT_API_QUEUE_TASK_DEFINITION(PlatApiQueueTask_f);
 
 #define PLAT_API_ALLOCATE_MEMORY_DEF(functionName) void* functionName(u64 size, AllocAlignment_t alignOverride)
 typedef PLAT_API_ALLOCATE_MEMORY_DEF(PlatApiAllocateMemory_f);

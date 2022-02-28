@@ -153,6 +153,7 @@ void PigRenderDebugOverlays()
 void PigUpdate()
 {
 	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
+	PigHandleCompletedTasks();
 	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();

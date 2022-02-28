@@ -69,6 +69,8 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 	console->mouseHovering = false;
 	CreateVarArray(&console->selectionRecs, mainHeap, sizeof(DebugConsoleSelectionRec_t));
 	
+	plat->CreateMutex(&console->fifoMutex);
+	
 	if (fifoSize > 0)
 	{
 		console->hasFifo = true;

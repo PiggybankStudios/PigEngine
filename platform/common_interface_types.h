@@ -56,6 +56,8 @@ struct StartupOptions_t
 	PlatAudioFormat_t audioOutputFormat;
 	
 	u64 threadPoolSize;
+	u64 threadPoolTempArenasSize;
+	u64 threadPoolTempArenasNumMarks;
 };
 
 struct PlatformInfo_t
@@ -91,7 +93,9 @@ struct PlatformApi_t
 	PlatApiInterlockedExchange_f*    InterlockedExchange;
 	PlatApiDestroyInterlockedInt_f*  DestroyInterlockedInt;
 	PlatApiGetThisThreadId_f*        GetThisThreadId;
+	PlatApiGetThreadContext_f*       GetThreadContext;
 	PlatApiSleepForMs_f*             SleepForMs;
+	PlatApiQueueTask_f*              QueueTask;
 	PlatApiAllocateMemory_f*         AllocateMemory;
 	PlatApiFreeMemory_f*             FreeMemory;
 	PlatApiChangeWindowTarget_f*     ChangeWindowTarget;
@@ -152,6 +156,101 @@ struct AudioServiceInfo_t
 };
 
 #define MAX_NUM_CONTROLLERS  GLFW_JOYSTICK_LAST //this is 16 controllers right now
+
+enum InputEventType_t
+{
+	InputEventType_None = 0,
+	InputEventType_Character,
+	InputEventType_Key,
+	InputEventType_ControllerBtn,
+	InputEventType_MouseBtn,
+	InputEventType_MouseHover,
+	InputEventType_WindowFocus,
+	InputEventType_FileDropped,
+	InputEventType_TaskCompleted,
+	InputEventType_NumTypes,
+};
+const char* GetInputEventTypeStr(InputEventType_t eventType)
+{
+	switch (eventType)
+	{
+		case InputEventType_None:          return "None";
+		case InputEventType_Character:     return "Character";
+		case InputEventType_Key:           return "Key";
+		case InputEventType_ControllerBtn: return "ControllerBtn";
+		case InputEventType_MouseBtn:      return "MouseBtn";
+		case InputEventType_MouseHover:    return "MouseHover";
+		case InputEventType_WindowFocus:   return "WindowFocus";
+		case InputEventType_FileDropped:   return "FileDropped";
+		case InputEventType_TaskCompleted: return "TaskCompleted";
+		default: return "Unknown";
+	}
+}
+
+struct InputEvent_t
+{
+	u64 id;
+	u64 index;
+	InputEventType_t type;
+	bool handled; //can be set by the engine
+	
+	//common data
+	const struct PlatWindow_t* window; //can be nullptr
+	bool hadFocus;
+	bool mouseInsideWindow;
+	v2 mousePos;
+	ModifierKey_t modifiers;
+	i64 pairedEventIndex;
+	
+	union
+	{
+		struct
+		{
+			u32 codepoint;
+		} character;
+		struct
+		{
+			Key_t key;
+			bool pressed;
+			bool released;
+			bool repeated;
+		} key;
+		struct
+		{
+			ControllerBtn_t btn;
+			bool pressed;
+			bool released;
+			bool repeated;
+		} controllerBtn;
+		struct
+		{
+			MouseBtn_t btn;
+			bool pressed;
+			bool released;
+			bool repeated;
+		} mouseBtn;
+		struct
+		{
+			bool focused;
+			const struct PlatWindow_t* oldWindow; //can be nullptr
+			const struct PlatWindow_t* newWindow; //can be nullptr
+		} windowFocus;
+		struct
+		{
+			bool entered;
+			const struct PlatWindow_t* oldWindow; //can be nullptr
+			const struct PlatWindow_t* newWindow; //can be nullptr
+		} mouseHover;
+		struct
+		{
+			MyStr_t filePath;
+		} droppedFile;
+		struct
+		{
+			PlatTask_t task;
+		} taskCompleted;
+	};
+};
 
 struct EngineInput_t
 {
@@ -224,7 +323,7 @@ typedef PIG_PRE_RELOAD_DEF(PigPreReload_f);
 #define PIG_POST_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion)
 typedef PIG_POST_RELOAD_DEF(PigPostReload_f);
 
-#define PIG_PERFORM_TASK_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, PlatTask_t* task)
+#define PIG_PERFORM_TASK_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThreadPoolThread_t* thread, PlatTask_t* task)
 typedef PIG_PERFORM_TASK_DEF(PigPerformTask_f);
 
 #endif //  _COMMON_INTERFACE_TYPES_H

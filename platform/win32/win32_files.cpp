@@ -95,20 +95,18 @@ PLAT_API_DOES_FILE_EXIST_DEF(Win32_DoesFileExist)
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
 	DWORD fileType = GetFileAttributesA(fullPath.pntr);
+	TempPopMark();
 	if (fileType == INVALID_FILE_ATTRIBUTES)
 	{
-		TempPopMark();
 		return false;
 	}
 	else if (fileType & FILE_ATTRIBUTE_DIRECTORY)
 	{
 		if (isFolderOut != nullptr) { *isFolderOut = true; }
-		TempPopMark();
 		return false;
 	}
 	else
 	{
-		TempPopMark();
 		return true;
 	}
 }

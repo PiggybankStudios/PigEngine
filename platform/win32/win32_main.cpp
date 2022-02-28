@@ -204,6 +204,7 @@ int main(int argc, char* argv[])
 	NotEmptyStr(&Platform->startupOptions.loadingImagePath);
 	AssertMsg(Platform->startupOptions.audioDeviceIndex < Platform->startupInfo.audioDevices.length, "Engine chose an invalid audio device index!");
 	AssertMsg(Platform->startupOptions.threadPoolSize <= PLAT_MAX_NUM_THREADS, "Engine wanted too many threads in it's thread pool!");
+	AssertIfMsg(Platform->startupOptions.threadPoolTempArenasSize > 0, Platform->startupOptions.threadPoolTempArenasNumMarks > 0, "TempArenas for thread pools cannot have 0 marks");
 	
 	// +==============================+
 	// |      ThreadPoolCreation      |
@@ -211,7 +212,7 @@ int main(int argc, char* argv[])
 	PerfSection("ThreadPoolCreation");
 	InitPhase = Win32InitPhase_StartupOptionsObtained;
 	
-	Win32_InitThreadPool(Platform->startupOptions.threadPoolSize);
+	Win32_InitThreadPool(Platform->startupOptions.threadPoolSize, Platform->startupOptions.threadPoolTempArenasSize, Platform->startupOptions.threadPoolTempArenasNumMarks);
 	
 	// +==============================+
 	// |        WindowOpening         |
@@ -413,6 +414,7 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	}
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
+	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
 	#if DEBUG_BUILD
 	Platform->engineInput.numAudioFrameDrops = Platform->numAudioFrameDrops;
 	#endif
@@ -438,15 +440,18 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 		Platform->audioWaitForFirstUpdateAfterReload = false;
 		Win32_UnlockMutex(&Platform->audioOutputMutex);
 	}
-	if (Win32_CheckForEngineDllChange(&Platform->engine))
+	if (Platform->numQueuedTasks == 0)
 	{
-		if (Win32_LockMutex(&Platform->audioOutputMutex, MUTEX_LOCK_INFINITE))
+		if (Win32_CheckForEngineDllChange(&Platform->engine))
 		{
-			//TODO: Make sure all of our worker threads are empty/idle before we attempt a reload
-			WriteLine_N("Engine DLL has changed. Attempting to reload....");
-			Win32_ReloadEngineDll(Platform->engineDllPath, Platform->engineDllTempFormatStr, &Platform->engine);
-			Platform->audioWaitForFirstUpdateAfterReload = true;
-			Win32_UnlockMutex(&Platform->audioOutputMutex);
+			if (Win32_LockMutex(&Platform->audioOutputMutex, MUTEX_LOCK_INFINITE))
+			{
+				//TODO: Make sure all of our worker threads are empty/idle before we attempt a reload
+				WriteLine_N("Engine DLL has changed. Attempting to reload....");
+				Win32_ReloadEngineDll(Platform->engineDllPath, Platform->engineDllTempFormatStr, &Platform->engine);
+				Platform->audioWaitForFirstUpdateAfterReload = true;
+				Win32_UnlockMutex(&Platform->audioOutputMutex);
+			}
 		}
 	}
 	#endif

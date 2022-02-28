@@ -71,10 +71,11 @@ struct PlatThreadPoolThread_t
 {
 	u64 id;
 	PlatThread_t* threadPntr;
-	//TODO: Maybe a TempArena?
+	MemArena_t tempArena;
 	
 	bool shouldClose;
 	bool isClosed;
+	bool isAwake;
 };
 
 struct PlatMutex_t
@@ -154,25 +155,39 @@ struct PlatWatchedFile_t
 struct PlatTaskInput_t
 {
 	MemArena_t* memArena;
+	u64 type; //to be filled with enum by application
+	u64 id; //to be filled with some ID by application
+	
+	u64 contextSize;
+	void* contextPntr;
+	u64 inputSize1;
+	void* inputPntr1;
+	u64 inputSize2;
+	void* inputPntr2;
+	u64 inputSize3;
+	void* inputPntr3;
 };
 struct PlatTaskResult_t
 {
 	bool success;
 	u8 resultCode;
 	
-	void* resultPntr1;
 	u64 resultSize1;
-	void* resultPntr2;
+	void* resultPntr1;
 	u64 resultSize2;
-	void* resultPntr3;
+	void* resultPntr2;
 	u64 resultSize3;
+	void* resultPntr3;
 };
 struct PlatTask_t
 {
-	u64 id;
+	u64 id; //used as a filled flag, 0 meaning not filled
+	PlatInterlockedInt_t claimId; //thread interlock point
 	ThreadId_t threadId;
+	u64 poolId;
 	PlatTaskInput_t input;
 	PlatTaskResult_t result;
+	bool finished;
 };
 
 struct PerfTime_t

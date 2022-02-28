@@ -194,14 +194,12 @@ PIG_SHOULD_WINDOW_CLOSE_DEF(Pig_ShouldWindowClose)
 // +==============================+
 // |       Pig_PerformTask        |
 // +==============================+
-// void Pig_PerformTask(const PlatformInfo_t* info, const PlatformApi_t* api, PlatTask_t* task)
+// void Pig_PerformTask(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThreadPoolThread_t* thread, PlatTask_t* task)
 PIG_PERFORM_TASK_DEF(Pig_PerformTask)
 {
 	//NOTE: This function runs on a thread pool thread
-	UNUSED(info);
-	UNUSED(api);
-	UNUSED(task);
-	//TODO: Implement me!
+	PigHandleTask(info, api, thread, task);
+	AssertIf(thread->tempArena.size > 0, GetNumMarks(&thread->tempArena) == 0);
 }
 
 // +==============================+

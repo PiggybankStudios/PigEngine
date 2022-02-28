@@ -72,6 +72,7 @@ struct DebugConsole_t
 	r32 alphaAmount;
 	
 	bool hasFifo;
+	PlatMutex_t fifoMutex;
 	StringFifo_t fifo;
 	
 	bool gutterEnabled;

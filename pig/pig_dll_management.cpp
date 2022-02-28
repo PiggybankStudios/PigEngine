@@ -43,11 +43,20 @@ GYLIB_GET_TEMP_ARENA_DEF(Pig_GetTempArena)
 {
 	if (plat == nullptr) { return nullptr; }
 	if (pig == nullptr) { return nullptr; }
-	if (plat->GetThisThreadId() == pig->mainThreadId)
+	ThreadId_t thisThreadId = plat->GetThisThreadId();
+	if (thisThreadId == pig->mainThreadId)
 	{
 		return &pig->tempArena;
 	}
-	else { return nullptr; } //TODO: Find a temporary memory arena for other threads!
+	else
+	{
+		PlatThreadPoolThread_t* threadContext = plat->GetThreadContext(thisThreadId);
+		if (threadContext != nullptr && threadContext->tempArena.size > 0)
+		{
+			return &threadContext->tempArena;
+		}
+		else { return nullptr; }
+	}
 }
 
 void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)

@@ -100,6 +100,8 @@ struct Win32PlatformState_t
 	u64 threadPoolSize;
 	PlatSemaphore_t threadPoolSemaphore;
 	PlatThreadPoolThread_t threadPool[PLAT_MAX_THREADPOOL_SIZE];
+	u64 numQueuedTasks;
+	PlatTask_t queuedTasks[PLAT_MAX_NUM_TASKS];
 	
 	//Audio
 	IMMDeviceEnumerator* audioDeviceEnumerator;

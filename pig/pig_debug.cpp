@@ -18,6 +18,7 @@ void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, con
 	if (pig->debugConsole.hasFifo && GetTempArena() != nullptr)
 	{
 		TempPushMark();
+		
 		MyStr_t filePathAndFuncName = TempPrintStr("%s%c%s", filePath, DBG_FILEPATH_AND_FUNCNAME_SEP_CHAR, funcName);
 		DebugConsoleLine_t metaInfo = {};
 		metaInfo.flags = flags;
@@ -28,6 +29,7 @@ void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, con
 		metaInfo.timestamp = LocalTimestamp;
 		metaInfo.thread = plat->GetThisThreadId();
 		
+		plat->LockMutex(&pig->debugConsole.fifoMutex, MUTEX_LOCK_INFINITE);
 		if (addNewLine)
 		{
 			StringFifoLine_t* newLine = StringFifoPushLineExt(&pig->debugConsole.fifo, messageStr, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
@@ -38,6 +40,7 @@ void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, con
 		{
 			StringFifoBuildEx(&pig->debugConsole.fifo, messageStr, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
 		}
+		plat->UnlockMutex(&pig->debugConsole.fifoMutex);
 		
 		TempPopMark();
 	}

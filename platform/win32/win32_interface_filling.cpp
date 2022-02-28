@@ -93,7 +93,9 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->InterlockedExchange    = Win32_InterlockedExchange;
 	api->DestroyInterlockedInt  = Win32_DestroyInterlockedInt;
 	api->GetThisThreadId        = Win32_GetThisThreadId;
+	api->GetThreadContext       = Win32_GetThreadContext;
 	api->SleepForMs             = Win32_SleepForMs;
+	api->QueueTask              = Win32_QueueTask;
 	api->AllocateMemory         = Win32_AllocateMemory;
 	api->FreeMemory             = Win32_FreeMemory;
 	api->ChangeWindowTarget     = Win32_ChangeWindowTarget;
