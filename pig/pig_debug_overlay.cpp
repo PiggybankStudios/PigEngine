@@ -21,7 +21,7 @@ void InitializePigDebugOverlay(PigDebugOverlay_t* overlay)
 {
 	NotNull(overlay);
 	ClearPointer(overlay);
-	overlay->enabled = (SHOW_PERF_GRAPH_ON_STARTUP || SHOW_PIE_GRAPHS_ON_STARTUP || SHOW_AUDIO_OUT_GRAPH_ON_STARTUP);
+	overlay->enabled = (SHOW_PERF_GRAPH_ON_STARTUP || SHOW_MEM_GRAPH_ON_STARTUP || SHOW_PIE_GRAPHS_ON_STARTUP || SHOW_AUDIO_OUT_GRAPH_ON_STARTUP);
 	overlay->pieChartsEnabled = SHOW_PIE_GRAPHS_ON_STARTUP;
 	overlay->perfGraphWasEnabled = true;
 }
@@ -86,11 +86,12 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 					switch (bIndex)
 					{
 						case 0: overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   break; //toggleDebugReadoutBtnRec
-						case 1: pig->perfGraph.enabled          = !pig->perfGraph.enabled;          break; //togglePieChartsBtnRec
-						case 2: pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      break; //togglePerfGraphBtnRec
-						case 3: overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       break; //toggleAudioGraphBtnRec
-						case 4: overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     break; //toggleEasingFuncsBtnRec
-						case 5: overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; break; //toggleContollerDebugBtnRec
+						case 1: pig->perfGraph.enabled          = !pig->perfGraph.enabled;          break; //togglePerfGraphBtnRec
+						case 2: pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      break; //toggleAudioGraphBtnRec
+						case 3: pig->memGraph.enabled           = !pig->memGraph.enabled;           break; //toggleMemGraphBtnRec
+						case 4: overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       break; //togglePieChartsBtnRec
+						case 5: overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     break; //toggleEasingFuncsBtnRec
+						case 6: overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; break; //toggleContollerDebugBtnRec
 						default: DebugAssert(false); break;
 					}
 				}
@@ -112,13 +113,16 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 			if (!overlay->enabled)
 			{
 				overlay->perfGraphWasEnabled     = pig->perfGraph.enabled;
+				overlay->memGraphWasEnabled      = pig->memGraph.enabled;
 				overlay->audioOutGraphWasEnabled = pig->audioOutGraph.enabled;
 				pig->perfGraph.enabled     = false;
 				pig->audioOutGraph.enabled = false;
+				pig->memGraph.enabled      = false;
 			}
 			else
 			{
 				pig->perfGraph.enabled     = overlay->perfGraphWasEnabled;
+				pig->memGraph.enabled      = overlay->memGraphWasEnabled;
 				pig->audioOutGraph.enabled = overlay->audioOutGraphWasEnabled;
 			}
 		}
@@ -130,9 +134,10 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_1)) { HandleKey(Key_1); overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_2)) { HandleKey(Key_2); pig->perfGraph.enabled          = !pig->perfGraph.enabled;          overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_3)) { HandleKey(Key_3); pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_4)) { HandleKey(Key_4); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_5)) { HandleKey(Key_5); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_4)) { HandleKey(Key_4); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_5)) { HandleKey(Key_5); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_7)) { HandleKey(Key_7); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 	}
 	
 	// +==============================+
@@ -415,9 +420,10 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				case 0: enabled = overlay->debugReadoutsEnabled;   btnColor = MonokaiLightGray; break;
 				case 1: enabled = pig->perfGraph.enabled;          btnColor = MonokaiYellow;    break;
 				case 2: enabled = pig->audioOutGraph.enabled;      btnColor = MonokaiBlue;      break;
-				case 3: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
-				case 4: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
-				case 5: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
+				case 3: enabled = pig->memGraph.enabled;           btnColor = MonokaiOrange;    break;
+				case 4: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
+				case 5: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
+				case 6: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
 				default: DebugAssert(false);
 			}
 			Color_t outlineColor = Transparent;

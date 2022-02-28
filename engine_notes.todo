@@ -1,4 +1,3 @@
-[ ] Add a debug visual for memory usage in various memory arenas
 [ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
 ( ) Make sure all the platform file functions are thread safe
 
@@ -90,6 +89,7 @@
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
 # Finished TODO List Items
+	[X] Add a debug visual for memory usage in various memory arenas
 	[X] Add a Win32_ShowMessageBox api function that we use in GyLibAssertFailure
 	[X] Add some basic tasks that can be carried out on worker threads (like reading or writing from/to a file)
 	(X) Make sure that assertions are handled gracefully while on worker threads

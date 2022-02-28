@@ -87,6 +87,7 @@ struct PigState_t
 	PigNotificationQueue_t notificationsQueue;
 	PigDebugOverlay_t debugOverlay;
 	PigPerfGraph_t perfGraph;
+	PigMemGraph_t memGraph;
 	PigAudioOutGraph_t audioOutGraph;
 	r64 physicsSimTimeLastFrame;
 	

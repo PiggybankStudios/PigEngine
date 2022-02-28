@@ -29,6 +29,10 @@ void PigInitialize(EngineMemory_t* memory)
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	InitializePigPerfGraph(&pig->perfGraph);
+	InitializePigMemGraph(&pig->memGraph);
+	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"));
+	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"));
+	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"));
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);
@@ -101,12 +105,14 @@ void PigUpdateMainWindow()
 	PigDebugOverlayCaptureMouse(&pig->debugOverlay);
 	PigPerfGraphCaptureMouse(&pig->perfGraph);
 	PigAudioOutGraphCaptureMouse(&pig->audioOutGraph);
+	PigMemGraphCaptureMouse(&pig->memGraph);
 	DebugConsoleCaptureMouse(&pig->debugConsole);
 	
 	PigUpdateNotifications(&pig->notificationsQueue);
 	UpdatePigDebugOverlay(&pig->debugOverlay);
 	UpdatePigPerfGraph(&pig->perfGraph);
 	UpdatePigAudioOutGraph(&pig->audioOutGraph);
+	UpdatePigMemGraph(&pig->memGraph);
 	UpdateDebugConsole(&pig->debugConsole);
 	Pig_HandleScreenshotHotkeys();
 	
@@ -134,6 +140,7 @@ void PigRenderDebugOverlays()
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);
 	RenderPigPerfGraph(&pig->perfGraph);
+	RenderPigMemGraph(&pig->memGraph);
 	Pig_InputRenderDebugInfo();
 	RenderPigDebugOverlay(&pig->debugOverlay);
 	PigRenderNotifications(&pig->notificationsQueue);

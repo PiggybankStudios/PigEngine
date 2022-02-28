@@ -112,7 +112,7 @@ void Pig_UpdateInputAfter()
 
 void Pig_InputRenderDebugInfo()
 {
-	#if 1
+	#if 0
 	if (pig->mouseHit.priority > 0)
 	{
 		if (!IsStrEmpty(pig->mouseHit.name))

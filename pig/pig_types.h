@@ -53,6 +53,46 @@ struct PigPerfGraph_t
 	rec audioOutRec;
 };
 
+struct PigMemGraphArenaPage_t
+{
+	u64 id;
+	u64 size;
+	u64 used;
+	u64 numAllocations;
+	r32 usedPercent;
+	
+	r32 usedPercentDisplay;
+	u64 lastUsedChangeTime;
+	i64 lastUsedChangeAmount;
+	u64 lastAllocationsChangeTime;
+	i64 lastAllocationsChangeAmount;
+	r32 appearAnimTime;
+	
+	rec mainRec;
+};
+struct PigMemGraphArena_t
+{
+	u64 id;
+	MemArena_t* pntr;
+	MyStr_t name;
+	
+	VarArray_t pages; //PigMemGraphArenaPage_t
+	
+	rec mainRec;
+};
+
+struct PigMemGraph_t
+{
+	bool enabled;
+	u64 nextArenaId;
+	u64 nextPageId;
+	u64 selectedPageId;
+	
+	VarArray_t arenas; //PigMemGraphArena_t
+	
+	rec mainRec;
+};
+
 struct PigAudioOutGraph_t
 {
 	bool enabled;
@@ -80,6 +120,7 @@ struct PigDebugOverlay_t
 	bool easingFuncsEnabled;
 	bool controllerDebugEnabled;
 	bool perfGraphWasEnabled;
+	bool memGraphWasEnabled;
 	bool audioOutGraphWasEnabled;
 	
 	bool hotkeyPlusNumberPressed;
@@ -95,12 +136,13 @@ struct PigDebugOverlay_t
 	rec totalToggleBtnsRec;
 	union
 	{
-		rec toggleBtnRecs[6];
+		rec toggleBtnRecs[7];
 		struct
 		{
 			rec toggleDebugReadoutBtnRec;
 			rec togglePerfGraphBtnRec;
 			rec toggleAudioGraphBtnRec;
+			rec toggleMemGraphBtnRec;
 			rec togglePieChartsBtnRec;
 			rec toggleEasingFuncsBtnRec;
 			rec toggleContollerDebugBtnRec;

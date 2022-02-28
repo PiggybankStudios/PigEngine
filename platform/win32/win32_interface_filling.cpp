@@ -49,11 +49,11 @@ void Win32_FillEngineMemory(EngineMemory_t* memory, u64 mainSize, u64 tempSize)
 	}
 	if (tempSize > 0)
 	{
-		memory->tempDataSize = mainSize;
-		memory->tempDataPntr = VirtualAlloc(0, mainSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+		memory->tempDataSize = tempSize;
+		memory->tempDataPntr = VirtualAlloc(0, tempSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 		if (memory->tempDataPntr == nullptr)
 		{
-			PrintLine_E("Failed to allocate %llu bytes for temporary engine memory", mainSize);
+			PrintLine_E("Failed to allocate %llu bytes for temporary engine memory", tempSize);
 			Win32_InitError("Failed to allocate temporary memory block for engine. Does your system have enough RAM to run this application?");
 		}
 	}

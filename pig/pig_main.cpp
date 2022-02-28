@@ -107,6 +107,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"
 #include "pig/pig_perf_graph.cpp"
+#include "pig/pig_mem_graph.cpp"
 #include "pig/pig_audio_debug.cpp"
 #include "pig/pig_debug_overlay.cpp"
 
