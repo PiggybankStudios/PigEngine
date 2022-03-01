@@ -71,6 +71,36 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 			result = SawR64(instanceTime * TwoPi64 * instance->frequency) * GetSoundInstanceCurrentVolume(instance, format, instanceTime);
 		} break;
 		
+		case SoundInstanceType_Samples:
+		{
+			NotNull(instance->sound);
+			NotNull(instance->sound->data);
+			Assert(instance->sound->format.samplesPerSecond == format.samplesPerSecond);
+			
+			if (instance->sound->format.bitsPerSample == 8)
+			{
+				i8* framePntr = &instance->sound->dataI8[instance->frameIndex * instance->sound->format.numChannels];
+				i8 sampleI8 = framePntr[0];
+				result = (r64)sampleI8 / (r64)INT8_MAX;
+			}
+			else if (instance->sound->format.bitsPerSample == 16)
+			{
+				i16* framePntr = &instance->sound->dataI16[instance->frameIndex * instance->sound->format.numChannels];
+				i16 sampleI16 = framePntr[0];
+				result = (r64)sampleI16 / (r64)INT16_MAX;
+			}
+			else if (instance->sound->format.bitsPerSample == 32)
+			{
+				i32* framePntr = &instance->sound->dataI32[instance->frameIndex * instance->sound->format.numChannels];
+				i32 sampleI32 = framePntr[0];
+				result = (r64)sampleI32 / (r64)INT32_MAX;
+			}
+			else { AssertMsg(false, "We don't support a sound's bitsPerSample in the audio mixer!"); }
+			
+			r64 instanceTime = (r64)instance->frameIndex / (r64)format.samplesPerSecond;
+			result *= GetSoundInstanceCurrentVolume(instance, format, instanceTime);
+		} break;
+		
 		default: AssertMsg(false, "Unhandled SoundInstanceType in GetSoundInstanceSample"); break;
 	}
 	instance->frameIndex++;

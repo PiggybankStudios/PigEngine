@@ -56,6 +56,7 @@ struct PigState_t
 	MyPhysRenderer_c physRenderer;
 	
 	//IDs
+	u64 nextSoundId;
 	u64 nextShaderId;
 	u64 nextVertBufferId;
 	u64 nextTextureId;
@@ -63,6 +64,7 @@ struct PigState_t
 	u64 nextVectorImgId;
 	u64 nextSpriteSheetId;
 	u64 nextUiId;
+	u64 nextWavAudioDataId;
 	
 	//Resources
 	Resources_t resources;

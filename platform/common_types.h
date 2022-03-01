@@ -378,6 +378,7 @@ struct PlatAudioFormat_t
 	u64 numChannels;
 	u64 samplesPerSecond;
 };
+inline bool operator == (PlatAudioFormat_t left, PlatAudioFormat_t right)  { return (left.bitsPerSample == right.bitsPerSample && left.numChannels == right.numChannels && left.samplesPerSecond == right.samplesPerSecond); }
 
 enum PlatImageFormat_t
 {

@@ -224,6 +224,24 @@ struct ProcessLog_t
 	StringFifo_t fifo;
 };
 
+struct Sound_t
+{
+	MemArena_t* allocArena;
+	u64 id;
+	PlatAudioFormat_t format;
+	u64 numFrames;
+	u64 dataSize;
+	union
+	{
+		void* data;
+		i8*   dataI8;
+		i16*  dataI16;
+		i32*  dataI32;
+		r32*  dataF32;
+		r64*  dataF64;
+	};
+};
+
 enum SoundInstanceType_t
 {
 	SoundInstanceType_None = 0,
@@ -267,21 +285,25 @@ struct SoundInstance_t
 	bool repeating;
 	r32 volume;
 	u64 numFrames; //frames
+	PlatAudioFormat_t format;
 	u64 falloffTime; //ms
 	EasingStyle_t falloffCurve;
 	u64 attackTime; //ms
 	EasingStyle_t attackCurve;
 	
+	//Generated
 	r64 frequency; //Hz
 	
-	PlatAudioFormat_t format;
-	//TODO: Once we add support for keeping a file open, let's have an OpenFile_t struct in here
+	//Samples
+	const Sound_t* sound;
+	
+	//StreamingSamples
+	PlatOpenFile_t openFile;
 	
 	bool playing;
 	u64 playOnAlignmentSize;
 	u64 numLoops;
 	u64 frameIndex; //frames
-	const void* samples;
 };
 
 struct SoundInstanceHandle_t

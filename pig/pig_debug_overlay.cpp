@@ -291,6 +291,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
 		v2 textPos = NewVec2(10, 10);
 		if (pig->perfGraph.enabled) { textPos.y = pig->perfGraph.infoTextPos.y + 10; }
+		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
 		textPos.y += RcGetMaxAscend();
 		Vec2Align(&textPos);
 		

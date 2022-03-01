@@ -1,5 +1,4 @@
-[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
-( ) Make sure all the platform file functions are thread safe
+[!] OGG audio file parsing
 
 # A dumping ground for any and all notes and TODO lists
 	[!] Make sure we select the swap interval properly
@@ -16,6 +15,10 @@
 	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
 	[ ] Do a debug dump when an assertion fails
 	[ ] Add convertNewLines options to ReadFileContents and WriteEntireFile
+	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
+	[ ] Add support for fullscreen
+	( ) Make sure all the platform file functions are thread safe
+	[ ] Use the line building stuff of the StringFifo_t in the platform debug output Fifo
 	[ ] 
 
 # Gylib
@@ -44,11 +47,8 @@
 	[ ] Add a UI slider implementation
 	[ ] Add a resource loading/parsing system
 	[?] MIDI keyboard support
-	[ ] WAV audio file parsing
-	[!] OGG audio file parsing
 	[!] Add support for mouse based view rotation
 	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
-	[ ] Sampled audio output
 	[ ] Streaming sampled audio output
 	[?] Entity Component System?
 	[ ] Zip compression/decompression
@@ -70,7 +70,9 @@
 		[ ] Animation Data
 		[ ] Using the animation data to actually animate a model
 	[ ] Add a proper AppState system
-	[ ] Make the debug console thread safe! And make it handle building a line from multiple debug outputs before committing to the string fifo
+	[ ] Add a notification for taking screenshots but make sure the notification doesn't show up when rendering a screenshot
+	[!] Add a visual showing that we are recorindg a GIF
+	[ ] Make sure the GIF frames are rendered as if we are running at 50Hz so time is preserved in the GIF output
 	[ ] 
 
 # Twitch Links and Notes
@@ -89,6 +91,9 @@
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
 # Finished TODO List Items
+	[X] Sampled audio output
+	[X] WAV audio file parsing
+	[X] Make the debug console thread safe! And make it handle building a line from multiple debug outputs before committing to the string fifo
 	[X] Add a debug visual for memory usage in various memory arenas
 	[X] Add a Win32_ShowMessageBox api function that we use in GyLibAssertFailure
 	[X] Add some basic tasks that can be carried out on worker threads (like reading or writing from/to a file)

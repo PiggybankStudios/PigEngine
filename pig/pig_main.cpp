@@ -80,6 +80,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_time.cpp"
 
 #include "pig/pig_deserialization.cpp"
+#include "pig/pig_wav.cpp"
 #include "pig/pig_vertex_buffer.cpp"
 #include "pig/pig_shader.cpp"
 #include "pig/pig_texture.cpp"

@@ -127,12 +127,11 @@ void PigMemGraphLayout(PigMemGraph_t* graph)
 	RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
 	
 	rec usableArea = NewRec(Vec2_Zero, ScreenSize);
-	usableArea.y = MaxR32(
-		(pig->perfGraph.mainRec.y + pig->perfGraph.mainRec.height) * (pig->perfGraph.enabled ? 1 : 0),
-		(pig->audioOutGraph.mainRec.y + pig->audioOutGraph.mainRec.height) * (pig->audioOutGraph.enabled ? 1 : 0)
-	);
-	usableArea.height = ScreenSize.height- usableArea.y;
-	//TODO: Collapse the usable area if the perf graph or audio graph are visible
+	if (pig->perfGraph.enabled)
+	{
+		usableArea.y = pig->perfGraph.infoTextPos.y + 5;
+		usableArea.height = ScreenSize.height- usableArea.y;
+	}
 	
 	r32 xPos = PIG_MEM_GRAPH_PAGE_PADDING;
 	graph->mainRec = Rec_Zero;
