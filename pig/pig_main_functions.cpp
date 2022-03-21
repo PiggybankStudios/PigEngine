@@ -17,10 +17,10 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->dllReloaded = false;
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
-	//TODO: Change this to a paged heap
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
 	Assert(memory->persistentDataSize > sizeof(PigState_t) + totalConsoleSpaceSize);
-	InitMemArena_FixedHeap(&pig->mainHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
+	InitMemArena_FixedHeap(&pig->fixedHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
+	InitMemArena_PagedHeapFuncs(&pig->mainHeap, PIG_MAIN_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	TempPushMark();
@@ -31,6 +31,7 @@ void PigInitialize(EngineMemory_t* memory)
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
 	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"));
+	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"));
 	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"));
 	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"));
 	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"));
@@ -261,6 +262,7 @@ void PigPostReload(Version_t oldVersion)
 	NotifyPrint_N("Now running Pig DLL v%u.%02u(%03u)!", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	
 	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
+	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
 	

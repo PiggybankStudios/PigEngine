@@ -9,9 +9,13 @@ Description:
 #ifndef _PIG_DEFINES_H
 #define _PIG_DEFINES_H
 
+#define PIG_PERMANANT_MEM_SIZE     Kilobytes(1024)
+#define PIG_TEMP_ARENA_SIZE        Megabytes(16)
+#define PIG_MAIN_ARENA_PAGE_SIZE   Megabytes(1)
+
 #define PIG_WINDOW_ALWAYS_ON_TOP        false
 #define SHOW_PERF_GRAPH_ON_STARTUP      false
-#define SHOW_MEM_GRAPH_ON_STARTUP       false
+#define SHOW_MEM_GRAPH_ON_STARTUP       true
 #define SHOW_PIE_GRAPHS_ON_STARTUP      false
 #define SHOW_AUDIO_OUT_GRAPH_ON_STARTUP false
 #define PAUSE_PERF_GRAPH_ONCE_FULL      false

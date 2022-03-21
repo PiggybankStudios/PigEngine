@@ -75,10 +75,23 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 			page->numAllocations = arenaPntr->numAllocations;
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
 		} break;
-		// case MemArenaType_PagedHeap:
-		// {
-		// 	Unimplemented(); //TODO: Implement me!
-		// } break;
+		case MemArenaType_PagedHeap:
+		{
+			Assert(pageIndex < arenaPntr->numPages);
+			HeapPageHeader_t* pageHeader = (HeapPageHeader_t*)arenaPntr->headerPntr;
+			for (u64 pIndex = 0; pIndex < pageIndex; pIndex++)
+			{
+				NotNull(pageHeader);
+				pageHeader = pageHeader->next;
+			}
+			NotNull(pageHeader);
+			
+			page->size = pageHeader->size;
+			page->used = pageHeader->used;
+			page->usedPercent = ((r32)page->used / (r32)page->size);
+			page->numAllocations = arenaPntr->numAllocations;
+			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
+		} break;
 		default:
 		{
 			Unimplemented(); //TODO: Implement me!
@@ -97,7 +110,7 @@ void InitializePigMemGraph(PigMemGraph_t* graph)
 	graph->nextArenaId = 1;
 	graph->nextPageId = 1;
 	graph->selectedPageId = 0;
-	CreateVarArray(&graph->arenas, mainHeap, sizeof(PigMemGraphArena_t));
+	CreateVarArray(&graph->arenas, fixedHeap, sizeof(PigMemGraphArena_t));
 }
 
 void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name)
@@ -112,9 +125,9 @@ void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t na
 	newArena->id = graph->nextArenaId;
 	graph->nextArenaId++;
 	newArena->pntr = arenaPntr;
-	newArena->name = AllocString(mainHeap, &name);
+	newArena->name = AllocString(fixedHeap, &name);
 	NotNullStr(&newArena->name);
-	CreateVarArray(&newArena->pages, mainHeap, sizeof(PigMemGraphArenaPage_t), PigMemGraphGetNumPagesForArena(arenaPntr));
+	CreateVarArray(&newArena->pages, fixedHeap, sizeof(PigMemGraphArenaPage_t), PigMemGraphGetNumPagesForArena(arenaPntr));
 }
 
 // +--------------------------------------------------------------+

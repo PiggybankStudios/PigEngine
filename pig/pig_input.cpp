@@ -13,7 +13,7 @@ Description:
 void FreeMouseHitInfo(MouseHitInfo_t* info)
 {
 	NotNull(info);
-	FreeString(mainHeap, &info->name);
+	FreeString(fixedHeap, &info->name);
 	ClearPointer(info);
 }
 void CreateMouseHitInfo(const PlatWindow_t* window, u64 priority, MyStr_t name, const void* pntr, u64 index, MouseHitInfo_t* infoOut)
@@ -22,7 +22,7 @@ void CreateMouseHitInfo(const PlatWindow_t* window, u64 priority, MyStr_t name, 
 	ClearPointer(infoOut);
 	infoOut->window = window;
 	infoOut->priority = priority;
-	infoOut->name = (name.pntr != nullptr) ? AllocString(mainHeap, &name) : MyStr_Empty;
+	infoOut->name = (name.pntr != nullptr) ? AllocString(fixedHeap, &name) : MyStr_Empty;
 	infoOut->pntr = pntr;
 	infoOut->index = index;
 }
@@ -64,7 +64,7 @@ void Pig_UpdateBtnHandlingInfoBefore(BtnHandlingInfo_t* info, const PlatBtnState
 		#if DEBUG_BUILD
 		if (!IsStrEmpty(info->filePath))
 		{
-			FreeString(mainHeap, &info->filePath);
+			FreeString(fixedHeap, &info->filePath);
 		}
 		#endif
 	}
@@ -427,8 +427,8 @@ void HandleKey_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(mainHeap, &pig->keyHandled[key].filePath); }
-		pig->keyHandled[key].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
 	#endif
@@ -441,8 +441,8 @@ void HandleKeyRelease_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(mainHeap, &pig->keyHandled[key].filePath); }
-		pig->keyHandled[key].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
 	#endif
@@ -457,8 +457,8 @@ void HandleKeyExtended_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(mainHeap, &pig->keyHandled[key].filePath); }
-		pig->keyHandled[key].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
 	#endif
@@ -604,8 +604,8 @@ void HandleMouse_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(mainHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
-		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
 	#endif
@@ -618,8 +618,8 @@ void HandleMouseRelease_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNumb
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(mainHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
-		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
 	#endif
@@ -634,8 +634,8 @@ void HandleMouseExtended_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNum
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(mainHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
-		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
 	#endif
@@ -759,8 +759,8 @@ void HandleMouseScrollX_(const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->scrollXHandled.filePath)) { FreeString(mainHeap, &pig->scrollXHandled.filePath); }
-		pig->scrollXHandled.filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->scrollXHandled.filePath)) { FreeString(fixedHeap, &pig->scrollXHandled.filePath); }
+		pig->scrollXHandled.filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->scrollXHandled.lineNumber = lineNumber;
 	}
 	#endif
@@ -773,8 +773,8 @@ void HandleMouseScrollY_(const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->scrollYHandled.filePath)) { FreeString(mainHeap, &pig->scrollYHandled.filePath); }
-		pig->scrollYHandled.filePath = NewStringInArenaNt(mainHeap, filePath);
+		if (!IsStrEmpty(pig->scrollYHandled.filePath)) { FreeString(fixedHeap, &pig->scrollYHandled.filePath); }
+		pig->scrollYHandled.filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->scrollYHandled.lineNumber = lineNumber;
 	}
 	#endif

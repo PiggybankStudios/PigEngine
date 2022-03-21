@@ -69,9 +69,9 @@ void CreateSoundFromWavAudioData(const WavAudioData_t* wavData, PlatAudioFormat_
 					{
 						switch (wavData->format.bitsPerSample)
 						{
-							case  8: { i8 sampleI8   = ((i8*)samples)[(fIndex * inNumChannels) + chIndex];  inSamples[chIndex] = ((r64)sampleI8  / (r64)INT8_MAX);  } break;
-							case 16: { i16 sampleI16 = ((i16*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ((r64)sampleI16 / (r64)INT16_MAX); } break;
-							case 32: { i32 sampleI32 = ((i32*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ((r64)sampleI32 / (r64)INT32_MAX); } break;
+							case  8: { i8 sampleI8   = ((i8*)samples)[(fIndex * inNumChannels) + chIndex];  inSamples[chIndex] = ConvertSampleI8ToR64(sampleI8);   } break;
+							case 16: { i16 sampleI16 = ((i16*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ConvertSampleI16ToR64(sampleI16); } break;
+							case 32: { i32 sampleI32 = ((i32*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ConvertSampleI32ToR64(sampleI32); } break;
 							default: Unimplemented(); break;
 						}
 					}
@@ -79,9 +79,9 @@ void CreateSoundFromWavAudioData(const WavAudioData_t* wavData, PlatAudioFormat_
 					{
 						switch (outFormat.bitsPerSample)
 						{
-							case 8:  { i8*  sampleI8  = &soundOut->dataI8[sampleIndex  + fIndex * outFormat.numChannels + chIndex]; *sampleI8  = (i8)RoundR64i(inSamples[chIndex % inNumChannels]  * INT8_MAX);  } break;
-							case 16: { i16* sampleI16 = &soundOut->dataI16[sampleIndex + fIndex * outFormat.numChannels + chIndex]; *sampleI16 = (i16)RoundR64i(inSamples[chIndex % inNumChannels] * INT16_MAX); } break;
-							case 32: { i32* sampleI32 = &soundOut->dataI32[sampleIndex + fIndex * outFormat.numChannels + chIndex]; *sampleI32 = (i32)RoundR64i(inSamples[chIndex % inNumChannels] * INT32_MAX); } break;
+							case 8:  { i8*  sampleI8  = &soundOut->dataI8[sampleIndex  + fIndex * outFormat.numChannels + chIndex]; *sampleI8  = ConvertSampleR64ToI8(inSamples[chIndex  % inNumChannels]); } break;
+							case 16: { i16* sampleI16 = &soundOut->dataI16[sampleIndex + fIndex * outFormat.numChannels + chIndex]; *sampleI16 = ConvertSampleR64ToI16(inSamples[chIndex % inNumChannels]); } break;
+							case 32: { i32* sampleI32 = &soundOut->dataI32[sampleIndex + fIndex * outFormat.numChannels + chIndex]; *sampleI32 = ConvertSampleR64ToI32(inSamples[chIndex % inNumChannels]); } break;
 							default: Unimplemented(); break;
 						}
 					}

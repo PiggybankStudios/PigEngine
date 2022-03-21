@@ -485,7 +485,7 @@ void RcBegin_OpenGL()
 void InitRenderContext()
 {
 	NotNull(rc);
-	CreateVarArray(&rc->vertexArrayObjs, mainHeap, sizeof(VertexArrayObject_t));
+	CreateVarArray(&rc->vertexArrayObjs, fixedHeap, sizeof(VertexArrayObject_t));
 }
 
 void RcSetFaceCulling(bool enabled)
@@ -1322,7 +1322,7 @@ void RcLoadBasicResources()
 		{ {0, 0, 0}, ToVec4(White), {0, 0}, {0, 1, 0}, }, //top-left
 		{ {1, 0, 0}, ToVec4(White), {1, 0}, {0, 1, 0}, }, //top-right
 	};
-	if (!CreateVertBuffer3D(mainHeap, &rc->lineBuffer, false, ArrayCount(lineVerts), lineVerts, true))
+	if (!CreateVertBuffer3D(fixedHeap, &rc->lineBuffer, false, ArrayCount(lineVerts), lineVerts, true))
 	{
 		PrintLine_E("Failed to create the line vertex buffer!");
 		DebugAssert(false);
@@ -1339,7 +1339,7 @@ void RcLoadBasicResources()
 		{ {0, 1, 0}, ToVec4(White), {0, 1}, }, //bottom-left
 		{ {1, 0, 0}, ToVec4(White), {1, 0}, }, //top-right
 	};
-	if (!CreateVertBuffer2D(mainHeap, &rc->squareBuffer, false, ArrayCount(squareVerts), squareVerts, true))
+	if (!CreateVertBuffer2D(fixedHeap, &rc->squareBuffer, false, ArrayCount(squareVerts), squareVerts, true))
 	{
 		PrintLine_E("Failed to create the square vertex buffer!");
 		DebugAssert(false);
@@ -1349,7 +1349,7 @@ void RcLoadBasicResources()
 	{
 		TempPushMark();
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
-		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(mainHeap, &rc->cubeBuffer, false, &primVerts, White, true))
+		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->cubeBuffer, false, &primVerts, White, true))
 		{
 			PrintLine_E("Failed to create the cube vertex buffer!");
 			DebugAssert(false);
@@ -1384,7 +1384,7 @@ void RcLoadBasicResources()
 			if (flipYAxis) { index->texCoord.y = (1 - index->texCoord.y); }
 			index->texCoord = faceSourceRec.topLeft + Vec2Multiply(index->texCoord, faceSourceRec.size);
 		}
-		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(mainHeap, &rc->skyboxBuffer, false, &primVerts, White, true))
+		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->skyboxBuffer, false, &primVerts, White, true))
 		{
 			PrintLine_E("Failed to create the skybox vertex buffer!");
 			DebugAssert(false);
@@ -1403,7 +1403,8 @@ void RcLoadBasicResources()
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForSphere(NewSphere(Vec3_Zero, 1), sphereRingCounts[sIndex], sphereSegmentCounts[sIndex], true, TempArena);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
-		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(mainHeap, &rc->sphereBuffers[sIndex], false, &primVerts, White, true))
+		const bool copyVertices = false; //these vertices take up a decent amount of space, we won't enable this unless needed for some reason
+		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->sphereBuffers[sIndex], false, &primVerts, White, copyVertices))
 		{
 			PrintLine_E("Failed to create the sphere vertex buffer!");
 			DebugAssert(false);
@@ -1419,7 +1420,7 @@ void RcLoadBasicResources()
 		{  { 0.0f,           0.5f, 0.0f}, ToVec4(White), {0.0f, 1.0f} },
 		{  { 0.0f,          -0.5f, 0.0f}, ToVec4(White), {0.0f, 0.0f} },
 	};
-	if (!CreateVertBuffer2D(mainHeap, &rc->equilTriangleBuffer, false, ArrayCount(equilTriangleVertices), equilTriangleVertices, true))
+	if (!CreateVertBuffer2D(fixedHeap, &rc->equilTriangleBuffer, false, ArrayCount(equilTriangleVertices), equilTriangleVertices, true))
 	{
 		PrintLine_E("Failed to create the equilateral triangle vertex buffer!");
 		DebugAssert(false);
@@ -1427,7 +1428,7 @@ void RcLoadBasicResources()
 	
 	Vertex3D_t scratchBuffer3DVerts[RC_SCRATCH_BUFFER_SIZE];
 	MyMemSet(&scratchBuffer3DVerts[0], 0x00, sizeof(Vertex3D_t) * RC_SCRATCH_BUFFER_SIZE);
-	if (!CreateVertBuffer3D(mainHeap, &rc->scratchBuffer3D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer3DVerts[0], true))
+	if (!CreateVertBuffer3D(fixedHeap, &rc->scratchBuffer3D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer3DVerts[0], true))
 	{
 		PrintLine_E("Failed to create the scratch buffer 3D!");
 		DebugAssert(false);
@@ -1435,13 +1436,13 @@ void RcLoadBasicResources()
 	
 	Vertex2D_t scratchBuffer2DVerts[RC_SCRATCH_BUFFER_SIZE];
 	MyMemSet(&scratchBuffer2DVerts[0], 0x00, sizeof(Vertex2D_t) * RC_SCRATCH_BUFFER_SIZE);
-	if (!CreateVertBuffer2D(mainHeap, &rc->scratchBuffer2D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer2DVerts[0], true))
+	if (!CreateVertBuffer2D(fixedHeap, &rc->scratchBuffer2D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer2DVerts[0], true))
 	{
 		PrintLine_E("Failed to create the scratch buffer 2D!");
 		DebugAssert(false);
 	}
 	
-	if (!LoadTexture(mainHeap, &rc->invalidTexture, NewStr("Resources/Textures/invalid.png"), true, true))
+	if (!LoadTexture(fixedHeap, &rc->invalidTexture, NewStr("Resources/Textures/invalid.png"), true, true))
 	{
 		PrintLine_E("Failed to load invalid texture! Error %s%s%s", GetTextureErrorStr(rc->invalidTexture.error), (rc->invalidTexture.error == TextureError_ApiError) ? ": " : "", (rc->invalidTexture.error == TextureError_ApiError) ? rc->invalidTexture.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->invalidTexture);
@@ -1462,7 +1463,7 @@ void RcLoadBasicResources()
 	gradientImageData.rowSize = gradientImageData.pixelSize * gradientImageData.width;
 	gradientImageData.dataSize = gradientImageData.rowSize * gradientImageData.height;
 	gradientImageData.data32 = (u32*)&gradientColors[0];
-	if (!CreateTexture(mainHeap, &rc->gradientHorizontal, &gradientImageData, false, true, false))
+	if (!CreateTexture(fixedHeap, &rc->gradientHorizontal, &gradientImageData, false, true, false))
 	{
 		PrintLine_E("Failed to load gradientHorizontal texture! Error %s%s%s", GetTextureErrorStr(rc->gradientHorizontal.error), (rc->gradientHorizontal.error == TextureError_ApiError) ? ": " : "", (rc->gradientHorizontal.error == TextureError_ApiError) ? rc->gradientHorizontal.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientHorizontal);
@@ -1470,7 +1471,7 @@ void RcLoadBasicResources()
 	}
 	gradientImageData.size = NewVec2i(1, ArrayCount(gradientColors));
 	gradientImageData.rowSize = gradientImageData.pixelSize * gradientImageData.width;
-	if (!CreateTexture(mainHeap, &rc->gradientVertical, &gradientImageData, false, true, false))
+	if (!CreateTexture(fixedHeap, &rc->gradientVertical, &gradientImageData, false, true, false))
 	{
 		PrintLine_E("Failed to load gradientVertical texture! Error %s%s%s", GetTextureErrorStr(rc->gradientVertical.error), (rc->gradientVertical.error == TextureError_ApiError) ? ": " : "", (rc->gradientVertical.error == TextureError_ApiError) ? rc->gradientVertical.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientVertical);
@@ -1484,7 +1485,7 @@ void RcLoadBasicResources()
 	dotTextureData.pixelSize = sizeof(u32);
 	dotTextureData.rowSize = dotTextureData.pixelSize * dotTextureData.width;
 	dotTextureData.dataSize = dotTextureData.rowSize * dotTextureData.height;
-	if (!CreateTexture(mainHeap, &rc->dotTexture, &dotTextureData, true, true))
+	if (!CreateTexture(fixedHeap, &rc->dotTexture, &dotTextureData, true, true))
 	{
 		PrintLine_E("Failed to create dotTexture! Error %s%s%s", GetTextureErrorStr(rc->dotTexture.error), (rc->dotTexture.error == TextureError_ApiError) ? ": " : "", (rc->dotTexture.error == TextureError_ApiError) ? rc->dotTexture.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->dotTexture);

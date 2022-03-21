@@ -72,11 +72,10 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 		NotNull_(memory->persistentDataPntr);
 		Assert_(memory->persistentDataSize >= sizeof(PigState_t));
 		pig = (PigState_t*)memory->persistentDataPntr;
+		fixedHeap = &pig->fixedHeap;
 		mainHeap = &pig->mainHeap;
 		platHeap = &pig->platHeap;
 		rc = &pig->renderContext;
-		mainHeap->allocFunc = PlatAllocFunc;
-		mainHeap->freeFunc = PlatFreeFunc;
 		//TODO: Update the gylib debug output pointers
 		TempArena = &pig->tempArena;
 		GetTempArena = Pig_GetTempArena;

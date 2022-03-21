@@ -101,6 +101,13 @@ void CreateVectorImgPartFromSvgGroup(VectorImg_t* image, VectorImgPart_t* partOu
 	
 	image->totalNumParts++;
 	
+	u64 numChildren = 0;
+	VarArrayLoop(&svgData->groups, gIndex)
+	{
+		VarArrayLoopGet(SvgGroup_t, svgSubGroup, &svgData->groups, gIndex);
+		if (gIndex != groupIndex && svgSubGroup->parentIndex == groupIndex) { numChildren++; }
+	}
+	
 	ClearPointer(partOut);
 	partOut->id = image->nextPartId;
 	image->nextPartId++;
@@ -109,8 +116,10 @@ void CreateVectorImgPartFromSvgGroup(VectorImg_t* image, VectorImgPart_t* partOu
 	partOut->idStr = AllocString(image->allocArena, &svgGroup->idStr);
 	partOut->name = AllocString(image->allocArena, &svgGroup->label);
 	partOut->origin = svgGroup->origin;
-	CreateVarArray(&partOut->shapes, image->allocArena, sizeof(VectorImgShape_t));
-	CreateVarArray(&partOut->children, image->allocArena, sizeof(VectorImgPart_t));
+	CreateVarArray(&partOut->shapes, image->allocArena, sizeof(VectorImgShape_t), svgGroup->shapes.length, false, 1);
+	CreateVarArray(&partOut->children, image->allocArena, sizeof(VectorImgPart_t), numChildren, false, 1);
+	// CreateVarArray(&partOut->shapes, image->allocArena, sizeof(VectorImgShape_t));
+	// CreateVarArray(&partOut->children, image->allocArena, sizeof(VectorImgPart_t)); TODO: Remove these lines!
 	
 	bool boundsStarted = false;
 	partOut->bounds = Rec_Zero;

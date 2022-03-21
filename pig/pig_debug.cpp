@@ -114,7 +114,6 @@ void AppDebugPrint(u8 flags, const char* filePath, u32 lineNumber, const char* f
 	}
 }
 
-//TODO: Should we add any flags that indicate this message comes from mylib?
 // +==============================+
 // | Pig_GyLibDebugOutputHandler  |
 // +==============================+
@@ -129,33 +128,42 @@ GYLIB_DEBUG_OUTPUT_HANDLER_DEF(Pig_GyLibDebugOutputHandler)
 // void Pig_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* formatString, ...);
 GYLIB_DEBUG_PRINT_HANDLER_DEF(Pig_GyLibDebugPrintHandler)
 {
-	AssertSingleThreaded();
-	//TODO: Make this thread safe!
-	//TODO: Print into the thread's temporary memory
-	char* resultStr = nullptr;
-	va_list args;
-	va_start(args, formatString);
-	int printLength = MyVaListPrintf(resultStr, 0, formatString, args); //Measure first
-	if (printLength < 0)
+	if (GetTempArena() != nullptr)
 	{
-		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), false, "[Failed Print]: ");
-		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
-		return;
+		TempPushMark();
+		va_list args;
+		va_start(args, formatString);
+		int formattedStrLength = PrintVa_Measure((formatString), args);
+		va_end(args);
+		if (formattedStrLength >= 0)
+		{
+			char* formattedStr = TempArray(char, formattedStrLength+1); //Allocate
+			if (formattedStr != nullptr)
+			{
+				va_start(args, formatString);
+				PrintVa_Print(formatString, args, formattedStr, formattedStrLength);
+				va_end(args);
+				formattedStr[formattedStrLength] = '\0';
+				
+				AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formattedStr);
+			}
+			else
+			{
+				//failed print, just send out the formatString
+				AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+			}
+		}
+		else
+		{
+			//failed print, just send out the formatString
+			AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+		}
+		TempPopMark();
 	}
-	va_end(args);
-	resultStr = AllocArray(mainHeap, char, printLength+1); //Allocate
-	if (resultStr == nullptr)
+	else
 	{
-		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), false, "[Failed Print Allocation]: ");
-		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
-		return;
+		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, "[No TempMem For Print]");
 	}
-	va_start(args, formatString);
-	MyVaListPrintf(resultStr, printLength+1, formatString, args); //Real printf
-	va_end(args);
-	resultStr[printLength] = '\0';
-	AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, resultStr);
-	FreeMem(mainHeap, resultStr, sizeof(char) * printLength+1);
 }
 
 // +--------------------------------------------------------------+

@@ -36,6 +36,7 @@ r64 GetSoundInstanceCurrentVolume(SoundInstance_t* instance, PlatAudioFormat_t f
 	return result;
 }
 
+//TODO: Add support for multi-channel audio!
 r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, u64 globalSampleIndex)
 {
 	NotNull(instance);
@@ -80,20 +81,17 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 			if (instance->sound->format.bitsPerSample == 8)
 			{
 				i8* framePntr = &instance->sound->dataI8[instance->frameIndex * instance->sound->format.numChannels];
-				i8 sampleI8 = framePntr[0];
-				result = (r64)sampleI8 / (r64)INT8_MAX;
+				result = ConvertSampleI8ToR64(framePntr[0]);
 			}
 			else if (instance->sound->format.bitsPerSample == 16)
 			{
 				i16* framePntr = &instance->sound->dataI16[instance->frameIndex * instance->sound->format.numChannels];
-				i16 sampleI16 = framePntr[0];
-				result = (r64)sampleI16 / (r64)INT16_MAX;
+				result = ConvertSampleI16ToR64(framePntr[0]);
 			}
 			else if (instance->sound->format.bitsPerSample == 32)
 			{
 				i32* framePntr = &instance->sound->dataI32[instance->frameIndex * instance->sound->format.numChannels];
-				i32 sampleI32 = framePntr[0];
-				result = (r64)sampleI32 / (r64)INT32_MAX;
+				result = ConvertSampleI32ToR64(framePntr[0]);
 			}
 			else { AssertMsg(false, "We don't support a sound's bitsPerSample in the audio mixer!"); }
 			

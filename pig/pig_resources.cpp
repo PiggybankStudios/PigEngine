@@ -15,7 +15,7 @@ void Pig_InitResources()
 {
 	ClearStruct(pig->resources);
 	#if DEBUG_BUILD
-	CreateVarArray(&pig->resources.watches, mainHeap, sizeof(ResourceWatch_t), TOTAL_NUM_RESOURCES);
+	CreateVarArray(&pig->resources.watches, fixedHeap, sizeof(ResourceWatch_t), TOTAL_NUM_RESOURCES);
 	#endif
 }
 
@@ -90,7 +90,7 @@ void Pig_LoadTextureResource(u64 textureIndex)
 	NotNull(texturePath);
 	MyStr_t texturePathStr = NewStr(texturePath);
 	Texture_t newTexture = {};
-	if (!LoadTexture(mainHeap, &newTexture, texturePathStr, true, true))
+	if (!LoadTexture(fixedHeap, &newTexture, texturePathStr, true, true))
 	{
 		PrintLine_E("Failed to load texture[%u] from \"%s\"! Error %s%s%s",
 			textureIndex,
@@ -138,9 +138,10 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 		return;
 	}
 	
+	u64 fixedHeapUsageBefore = fixedHeap->used; //TODO: Remove me!
 	TempPushMark();
 	ProcessLog_t svgParseLog = {};
-	CreateProcessLog(&svgParseLog, Kilobytes(8), TempArena, mainHeap);
+	CreateProcessLog(&svgParseLog, Kilobytes(8), TempArena, fixedHeap);
 	
 	SvgData_t svgData = {};
 	if (!TryDeserSvgFile(NewStr(svgFile.size, svgFile.chars), &svgParseLog, &svgData, mainHeap))
@@ -155,6 +156,7 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 		);
 		DumpProcessLog(&svgParseLog, "SVG Parse Log", DbgLevel_Warning);
 		FreeProcessLog(&svgParseLog);
+		FreeSvgData(&svgData);
 		TempPopMark();
 		plat->FreeFileContents(&svgFile);
 		return;
@@ -167,13 +169,16 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 	plat->FreeFileContents(&svgFile);
 	
 	VectorImg_t newImage = {};
-	if (!CreateVectorImgFromSvg(mainHeap, &newImage, &svgData))
+	if (!CreateVectorImgFromSvg(fixedHeap, &newImage, &svgData))
 	{
 		PrintLine_E("Failed to load vector image[%llu] from \"%s\"!", vectorImgIndex, GetFileNamePart(vectorImgPathStr).pntr);
 		DestroyVectorImg(&newImage);
+		FreeSvgData(&svgData);
 		TempPopMark();
 		return;
 	}
+	FreeSvgData(&svgData);
+	
 	VectorImg_t* image = &pig->resources.vectorImgs[vectorImgIndex];
 	if (image->isValid)
 	{
@@ -185,6 +190,8 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 	WatchFileForResource(ResourceType_VectorImage, vectorImgIndex, vectorImgPathStr);
 	
 	TempPopMark();
+	u64 fixedHeapUsageAfter = fixedHeap->used; //TODO: Remove me!
+	PrintLine_D("Vector image[%llu] took %s", vectorImgIndex, FormatBytesNt(fixedHeapUsageAfter - fixedHeapUsageBefore, TempArena));
 }
 void Pig_LoadAllVectorImgs()
 {

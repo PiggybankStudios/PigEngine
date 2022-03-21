@@ -40,6 +40,7 @@ struct PigState_t
 	
 	//Memory Arenas
 	MemArena_t platHeap;
+	MemArena_t fixedHeap;
 	MemArena_t mainHeap;
 	MemArena_t stdHeap;
 	MemArena_t tempArena;

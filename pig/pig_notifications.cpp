@@ -91,7 +91,7 @@ PigNotification_t* PigPushNotification(PigNotificationQueue_t* queue, const char
 	
 	AppDebugOutput(DbgFlag_Inverted, filePath, fileLine, functionName, dbgLevel, true, message);
 	
-	PigNotification_t* notification = PigAllocNotification(queue, mainHeap, dbgLevel, message);
+	PigNotification_t* notification = PigAllocNotification(queue, fixedHeap, dbgLevel, message);
 	if (notification != nullptr)
 	{
 		if (filePath != nullptr)
