@@ -159,8 +159,6 @@ struct AudioServiceInfo_t
 	bool fillWithSilence; //can be set to true by the engine
 };
 
-#define MAX_NUM_CONTROLLERS  GLFW_JOYSTICK_LAST //this is 16 controllers right now
-
 enum InputEventType_t
 {
 	InputEventType_None = 0,

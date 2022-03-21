@@ -135,7 +135,7 @@ typedef PLAT_API_WATCH_FILE_DEF(PlatApiWatchFile_f);
 #define PLAT_API_UNWATCH_FILE_DEF(functionName) bool functionName(const PlatWatchedFile_t* watchedFile)
 typedef PLAT_API_UNWATCH_FILE_DEF(PlatApiUnwatchFile_f);
 
-#define PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(functionName) GLADloadproc functionName()
+#define PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(functionName) GlLoadProc_f functionName()
 typedef PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(PlatApiGetLoadProcAddressFunc_f);
 
 #define PLAT_API_RENDER_LOADING_SCREEN(functionName) bool functionName(r32 completionPercent)

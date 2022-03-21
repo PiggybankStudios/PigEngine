@@ -181,7 +181,9 @@ struct PlatMonitorInfo_t
 	VarArray_t videoModes; //PlatMonitorVideoMode_t
 	VarArray_t framerates; //i64
 	
+	#if WINDOWS_COMPILATION
 	GLFWmonitor* glfwHandle;
+	#endif
 };
 struct PlatMonitorList_t
 {

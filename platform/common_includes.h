@@ -47,7 +47,6 @@ Date:   09\14\2021
 // +--------------------------------------------------------------+
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
-#define GY_STD_LIB_ALLOWED
 #include "gylib/gy_defines_check.h"
 
 // +--------------------------------------------------------------+
@@ -90,6 +89,8 @@ Date:   09\14\2021
 	// 	#include <AL/al.h>
 	// 	#include <AL/alc.h>
 	// #endif
+#elif WASM_COMPILATION
+	// TODO: Anything we want to #include here? There really isn't a whole lot of built-in "platform" header files
 #endif
 
 // +--------------------------------------------------------------+
@@ -165,6 +166,8 @@ Date:   09\14\2021
 #include "osx/osx_shared_types.h"
 #elif LINUX_COMPILATION
 #include "linux/linux_shared_types.h"
+#elif WASM_COMPILATION
+#include "web/web_shared_types.h"
 #endif
 
 #include "common_api_funcs.h"
@@ -172,12 +175,15 @@ Date:   09\14\2021
 //NOTE: common_performance.h is included later in pig_main.cpp and win32_main.cpp
 
 #if WINDOWS_COMPILATION
+#include "win32/win32_glfw.h"
 #include "win32/win32_dll_loading.h"
 #include "win32/win32_file_watching.h"
 #elif OSX_COMPILATION
-// #include "osx/osx_dll_loading.h" //TODO: Implement me!
+// TODO: Include any other files that need to declare functions or types
 #elif LINUX_COMPILATION
-// #include "linux/linux_dll_loading.h" //TODO: Implement me!
+// TODO: Include any other files that need to declare functions or types
+#elif WASM_COMPILATION
+// TODO: Include any other files that need to declare functions or types
 #endif
 
 #endif //  _COMMON_INCLUDES_H

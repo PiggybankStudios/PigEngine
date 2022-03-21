@@ -12,6 +12,8 @@ Date:   01\14\2022
 #define PLAT_MAX_NUM_TASKS           128 //tasks
 
 #define PLAT_MAIN_HEAP_SIZE                     Megabytes(1) //TODO: Measure our usage and size accordingly
+#define PLAT_MAIN_HEAP_PAGE_SIZE                Kilobytes(64) //TODO: Measure our usage and size accordingly
+#define PLAT_THREAD_SAFE_HEAP_SIZE              Kilobytes(64) //TODO: Measure our usage and size accordingly
 #define PLAT_TEMP_ARENA_SIZE                    Kilobytes(512) //TODO: Measure our usage and size accordingly
 #define PLAT_TEMP_ARENA_MAX_MARKS               256
 #define PLAT_DEBUG_OUTPUT_FIFO_SIZE             Kilobytes(32)
