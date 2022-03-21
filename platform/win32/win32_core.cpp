@@ -160,6 +160,14 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	
 	InitMemArena_MarkedStack(&Platform->tempArena, tempArenaSize, tempArenaMem, PLAT_TEMP_ARENA_MAX_MARKS);
 	TempArena = &Platform->tempArena;
+	
+	void* threadSafeHeapMem = malloc(PLAT_THREAD_SAFE_HEAP_SIZE);
+	if (threadSafeHeapMem == nullptr)
+	{
+		Win32_InitError("Failed to allocate memory for Platform Thread Safe Heap");
+	}
+	InitMemArena_FixedHeap(&Platform->threadSafeHeap, PLAT_THREAD_SAFE_HEAP_SIZE, threadSafeHeapMem);
+	Win32_CreateMutex(&Platform->threadSafeHeapMutex);
 }
 
 // +--------------------------------------------------------------+
@@ -267,7 +275,7 @@ void Win32_LoadCursors()
 // +==============================+
 // |     Win32_AllocateMemory     |
 // +==============================+
-// void* Win32_AllocateMemory(u64 size, AllocAlignment_t alignOverride)
+// void* AllocateMemory(u64 size, AllocAlignment_t alignOverride)
 PLAT_API_ALLOCATE_MEMORY_DEF(Win32_AllocateMemory)
 {
 	//TODO: Should we track the programs allocations somehow?
@@ -277,7 +285,7 @@ PLAT_API_ALLOCATE_MEMORY_DEF(Win32_AllocateMemory)
 // +==============================+
 // |       Win32_FreeMemory       |
 // +==============================+
-// void Win32_FreeMemory(void* allocPntr, u64 oldSize, u64* oldSizeOut)
+// void FreeMemory(void* allocPntr, u64 oldSize, u64* oldSizeOut)
 PLAT_API_FREE_MEMORY_DEF(Win32_FreeMemory)
 {
 	//TODO: Should we track the programs allocations somehow?

@@ -215,4 +215,25 @@ struct Win32_DebugReadoutLine_t
 	u64 windowId;
 };
 
+// +--------------------------------------------------------------+
+// |                Callback Interface Declaration                |
+// +--------------------------------------------------------------+
+// +==============================+
+// |     AudioCallbackClass_c     |
+// +==============================+
+class AudioCallbackClass_c : public IMMNotificationClient
+{
+	//IUnknown
+	ULONG AddRef();
+	HRESULT QueryInterface(REFIID riid, void** ppvObject);
+	ULONG Release();
+	
+	//IMMNotificationClient
+	HRESULT OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDeviceId);
+	HRESULT OnDeviceAdded(LPCWSTR pwstrDeviceId);
+	HRESULT OnDeviceRemoved(LPCWSTR pwstrDeviceId);
+	HRESULT OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD dwNewState);
+	HRESULT OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key);
+};
+
 #endif //  _WIN_32_TYPES_H

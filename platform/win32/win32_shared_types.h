@@ -135,9 +135,31 @@ struct PlatWindow_t
 // +--------------------------------------------------------------+
 // |                            Audio                             |
 // +--------------------------------------------------------------+
+enum PlatAudioDeviceState_t
+{
+	PlatAudioDeviceState_Unknown = 0,
+	PlatAudioDeviceState_Unplugged,
+	PlatAudioDeviceState_NotPresent,
+	PlatAudioDeviceState_Disabled,
+	PlatAudioDeviceState_Active,
+	PlatAudioDeviceState_NumStates,
+};
+const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState)
+{
+	switch (deviceState)
+	{
+		case PlatAudioDeviceState_Unknown:    return "Unknown";
+		case PlatAudioDeviceState_Unplugged:  return "Unplugged";
+		case PlatAudioDeviceState_NotPresent: return "NotPresent";
+		case PlatAudioDeviceState_Disabled:   return "Disabled";
+		case PlatAudioDeviceState_Active:     return "Active";
+		default: return "Unknown";
+	}
+}
 struct PlatAudioDevice_t
 {
 	MemArena_t* allocArena;
+	PlatAudioDeviceState_t state;
 	bool isDefaultDevice;
 	MyStr_t name;
 	MyStr_t deviceId;
@@ -148,6 +170,10 @@ struct PlatAudioDevice_t
 // +--------------------------------------------------------------+
 // |                            Other                             |
 // +--------------------------------------------------------------+
+typedef GLADloadproc GlLoadProc_f;
+
+#define MAX_NUM_CONTROLLERS  GLFW_JOYSTICK_LAST //this is 16 controllers right now
+
 struct PlatWatchedFile_t
 {
 	u64 id;

@@ -10,6 +10,7 @@ Description:
 // |                           Includes                           |
 // +--------------------------------------------------------------+
 #define PLATFORM_LAYER
+#define GY_STD_LIB_ALLOWED
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #include "common_includes.h"
 

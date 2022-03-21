@@ -17,6 +17,8 @@ struct Win32PlatformState_t
 	MemArena_t stdHeap;
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
+	PlatMutex_t threadSafeHeapMutex;
+	MemArena_t threadSafeHeap;
 	
 	PlatMutex_t debugLineMutex;
 	StringFifo_t debugLineFifo;
@@ -105,6 +107,7 @@ struct Win32PlatformState_t
 	
 	//Audio
 	IMMDeviceEnumerator* audioDeviceEnumerator;
+	AudioCallbackClass_c audioDeviceCallback;
 	u64 defaultAudioDeviceIndex;
 	VarArray_t audioDevices; //PlatAudioDevice_t
 	IAudioClient* audioClient;

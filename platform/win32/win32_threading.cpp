@@ -451,7 +451,7 @@ THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr) //pre-declared at top of fil
 	NotNull_(userPntr);
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
 	NotNull_(context->threadPntr);
-	PrintLine_I("Thread Pool Thread[%llu] has started! (Thread %llu 0x%08X)", context->id, context->threadPntr->id, context->threadPntr->win32_id);
+	PrintLine_I("Thread Pool Thread[%llu] has started! (Thread %llu 0x%08X or %u)", context->id, context->threadPntr->id, context->threadPntr->win32_id, context->threadPntr->win32_id);
 	context->isAwake = true;
 	while (!context->shouldClose)
 	{
