@@ -9,6 +9,11 @@ body
 	text-align: center;
 }
 
+#canvas_container
+{
+	display: inline-block;
+}
+
 canvas
 {
 	border: 1px solid black;

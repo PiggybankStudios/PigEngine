@@ -28,7 +28,7 @@ extern void js_GrowHeap(int numBytes);
 // +--------------------------------------------------------------+
 // |                        Console Output                        |
 // +--------------------------------------------------------------+
-extern const char* js_TestFunc();
+extern void js_TestFunc();
 extern void js_PrintNumber(int number);
 extern void js_ConsoleDebug(const char* str);
 extern void js_ConsoleLog(const char* str);
@@ -42,7 +42,8 @@ extern void js_ConsoleError(const char* str);
 // |                     Canvas Manipulation                      |
 // +--------------------------------------------------------------+
 extern void js_ClearCanvas();
-extern void js_DrawRectangle(float x, float y, float width, float height, float radius, int red, int green, int blue, int alpha);
+extern void js_DrawRectangle(float x, float y, float width, float height, int red, int green, int blue, int alpha);
+extern void js_DrawRoundedRectangle(float x, float y, float width, float height, float radius, int red, int green, int blue, int alpha);
 extern void js_DrawLine(float x1, float y1, float x2, float y2, float thickness, int red, int green, int blue, int alpha);
 
 EXTERN_C_END

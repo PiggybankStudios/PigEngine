@@ -55,7 +55,7 @@ void Web_MemoryInit(int heapBaseAddress)
 	u8* tempArenaSpace = (u8*)malloc(PLAT_TEMP_ARENA_SIZE);
 	NotNull_(tempArenaSpace);
 	
-	Web_PlatformState_t* Platform = (Web_PlatformState_t*)malloc(sizeof(Web_PlatformState_t));
+	Platform = (Web_PlatformState_t*)malloc(sizeof(Web_PlatformState_t));
 	NotNull_(Platform);
 	ClearPointer(Platform);
 	Platform->initialized = true;
