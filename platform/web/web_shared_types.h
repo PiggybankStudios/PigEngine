@@ -163,7 +163,7 @@ typedef GL_LOAD_PROC_DEFINITION(GlLoadProcBase_f);
 typedef GlLoadProcBase_f* GlLoadProc_f;
 
 //TODO: Is this even a thing on web? Do we have any controller support at all?
-#define MAX_NUM_CONTROLLERS  4 //this is 16 controllers right now
+#define MAX_NUM_CONTROLLERS  4 //this is just hardcoded for now until we learn more about controller support on web
 
 struct PlatWatchedFile_t
 {

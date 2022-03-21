@@ -26,6 +26,10 @@ Web_PlatformState_t* Platform = nullptr;
 // +--------------------------------------------------------------+
 #include "web/web_memory.cpp"
 #include "web/web_debug.cpp"
+#include "web/web_input.cpp"
+
+#define EXPORTED_FUNC(returnType, functionName, ...) extern "C" returnType __attribute__((export_name(#functionName))) functionName(__VA_ARGS__)
+#include "web/web_callbacks.cpp"
 
 // +--------------------------------------------------------------+
 // |                       Library Includes                       |
@@ -45,7 +49,6 @@ r32 OscillateSawBy(u64 timeSource, r32 min, r32 max, u64 periodMs, u64 offset = 
 // +--------------------------------------------------------------+
 // |                      Exported Functions                      |
 // +--------------------------------------------------------------+
-#define EXPORTED_FUNC(returnType, functionName, ...) extern "C" returnType __attribute__((export_name(#functionName))) functionName(__VA_ARGS__)
 
 // +==============================+
 // |          Initialize          |
@@ -65,6 +68,10 @@ EXPORTED_FUNC(void, Initialize, int heapBaseAddress)
 	Platform->testPos = NewVec2(100, 40);
 	
 	CreateVarArray(&Platform->drawnLines, &Platform->mainHeap, sizeof(Line_t));
+	
+	Web_FillEngineInput(&Platform->engineActiveInput);
+	Web_CopyEngineInput(&Platform->engineInput, &Platform->engineActiveInput);
+	Web_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
 }
 
 // +==============================+
@@ -78,12 +85,12 @@ EXPORTED_FUNC(void, TestFunc, r64 testArg)
 // +==============================+
 // |         GetStackBase         |
 // +==============================+
-EXPORTED_FUNC(int, GetStackBase)
+EXPORTED_FUNC(size_t, GetStackBase)
 {
 	int var1 = 10;
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wreturn-stack-address"
-	return (int)&var1;
+	return (size_t)&var1;
 	#pragma clang diagnostic pop
 }
 
@@ -92,12 +99,16 @@ EXPORTED_FUNC(int, GetStackBase)
 // +==============================+
 EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 {
-	static int frameNum = 0;
-	frameNum++;
-	
 	// PrintLine_D("Rendering to %gx%g canvas", canvasWidth, canvasHeight);
 	
-	// if (Platform->mouseLeftBtnPressed)
+	Web_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
+	Web_CopyEngineInput(&Platform->engineInput, &Platform->engineActiveInput);
+	Web_ResetEngineInput(&Platform->engineActiveInput);
+	Web_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput);
+	
+	
+	
+	#if 1
 	if (Platform->mouseMoved && Platform->mouseLeftBtnDown)
 	{
 		Platform->testPos.x += 10;
@@ -108,13 +119,8 @@ EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 		newLine->end = Platform->mousePos;
 	}
 	
-	if (Platform->mouseLeftBtnPressed)
-	{
-		js_TestFunc();
-	}
-	
 	js_ClearCanvas();
-	js_DrawRectangle(OscillateSawBy(frameNum, 10, 90, 1000), 10, 100, 200, (frameNum % 255), 0, 0, 255);
+	js_DrawRectangle(OscillateSawBy(Platform->engineInput.programTime, 10, 90, 1000), 10, 100, 200, ((Platform->engineInput.programTime/10) % 255), 0, 0, 255);
 	
 	rec graphRec = NewRec(Platform->testPos.x, Platform->testPos.y, 400, 400);
 	js_DrawRectangle(graphRec.x, graphRec.y, graphRec.width, graphRec.height, 0, 0, 0, 255);
@@ -154,55 +160,7 @@ EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 	Platform->mouseMiddleBtnReleased = false;
 	Platform->mouseRightBtnReleased = false;
 	Platform->prevMousePos = Platform->mousePos;
-}
-
-// +--------------------------------------------------------------+
-// |                       Input Functions                        |
-// +--------------------------------------------------------------+
-// +==============================+
-// |          MouseMoved          |
-// +==============================+
-EXPORTED_FUNC(void, MouseMoved, r64 mouseX, r64 mouseY)
-{
-	if (Platform->mousePos.x != mouseX || Platform->mousePos.y != mouseY)
-	{
-		Platform->mouseMoved = true;
-		Platform->mousePos = NewVec2((r32)mouseX, (r32)mouseY);
-	}
-}
-
-// +==============================+
-// |       MouseBtnChanged        |
-// +==============================+
-EXPORTED_FUNC(void, MouseBtnChanged, int button, bool isDown, r64 mouseX, r64 mouseY)
-{
-	if (button == 0) //left
-	{
-		Platform->mouseLeftBtnDown = isDown;
-		if (isDown) { Platform->mouseLeftBtnPressed = true; }
-		else { Platform->mouseLeftBtnReleased = true; }
-	}
-	else if (button == 1) //middle
-	{
-		Platform->mouseMiddleBtnDown = isDown;
-		if (isDown) { Platform->mouseMiddleBtnPressed = true; }
-		else { Platform->mouseMiddleBtnReleased = true; }
-	}
-	else if (button == 2) //right
-	{
-		Platform->mouseRightBtnDown = isDown;
-		if (isDown) { Platform->mouseRightBtnPressed = true; }
-		else { Platform->mouseRightBtnReleased = true; }
-	}
-	else
-	{
-		PrintLine_E("WARNING: Unknown mouse button index %d in MouseBtnChanged!", button);
-	}
-	if (Platform->mousePos.x != mouseX || Platform->mousePos.y != mouseY)
-	{
-		Platform->mouseMoved = true;
-		Platform->mousePos = NewVec2((r32)mouseX, (r32)mouseY);
-	}
+	#endif
 }
 
 // +--------------------------------------------------------------+

@@ -19,8 +19,25 @@ struct Web_PlatformState_t
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
 	
-	v2 testPos;
+	StartupInfo_t startupInfo;
+	StartupOptions_t startupOptions;
+	PlatformInfo_t info;
+	PlatformApi_t api;
+	EngineMemory_t engineMemory;
+	EngineInput_t enginePreviousInput;
+	EngineInput_t engineInput;
+	EngineInput_t engineActiveInput;
+	EngineOutput_t engineOutput;
 	
+	r32 loadingPercent;
+	
+	PlatCursor_t currentCursorType;
+	
+	//Debug Output
+	LinkedList_t debugReadoutLines;
+	
+	// TODO: Remove the stuff below this
+	v2 testPos;
 	VarArray_t drawnLines; //Line_t
 	
 	v2 mousePos;

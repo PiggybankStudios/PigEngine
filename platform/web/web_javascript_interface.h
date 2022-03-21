@@ -39,6 +39,11 @@ extern void js_ConsoleWarn(const char* str);
 extern void js_ConsoleError(const char* str);
 
 // +--------------------------------------------------------------+
+// |                       Other Functions                        |
+// +--------------------------------------------------------------+
+extern double js_GetTime();
+
+// +--------------------------------------------------------------+
 // |                     Canvas Manipulation                      |
 // +--------------------------------------------------------------+
 extern void js_ClearCanvas();
