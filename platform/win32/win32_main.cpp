@@ -46,6 +46,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #define STBTT_ifloor(x) FloorR32i(x)
 #define STBTT_iceil(x)  CeilR32i(x)
 #define STBTT_sqrt(x)   SqrtR32(x)
+#define STBTT_pow(x, exp)    PowR32((x), (exp))
 #define STBTT_fabs(x)   AbsR32(x)
 #define STBTT_malloc(numBytes, user) AllocMem((MemArena_t*)(user), (numBytes))
 #define STBTT_free(pointer, user)    FreeMem((MemArena_t*)(user), (pointer), 0, true) //ignoreNullper: true

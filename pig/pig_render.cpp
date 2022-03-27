@@ -56,7 +56,7 @@ void RcBindVertexArrayObject_OpenGL(VertexArrayObject_t* vao)
 	Assert(vao->vertexType == rc->state.boundShader->vertexType);
 	
 	glBindVertexArray(vao->glId); AssertNoOpenGlError();
-	if (!vao->boundOnce)
+	if (!vao->boundOnce || true) //TODO: Remove me when we figure out why the assertion in the else statement is firing on laptop
 	{
 		for (u64 attIndex = 0; attIndex < MAX_NUM_VERTEX_ATTRIBUTES; attIndex++)
 		{
