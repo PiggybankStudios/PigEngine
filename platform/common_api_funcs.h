@@ -69,6 +69,9 @@ typedef PLAT_API_QUEUE_TASK_DEFINITION(PlatApiQueueTask_f);
 #define PLAT_API_ALLOCATE_MEMORY_DEF(functionName) void* functionName(u64 size, AllocAlignment_t alignOverride)
 typedef PLAT_API_ALLOCATE_MEMORY_DEF(PlatApiAllocateMemory_f);
 
+#define PLAT_API_REALLOC_MEMORY_DEF(functionName) void* functionName(void* allocPntr, u64 newSize, u64 oldSize, AllocAlignment_t alignOverride)
+typedef PLAT_API_REALLOC_MEMORY_DEF(PlatApiReallocMemory_f);
+
 #define PLAT_API_FREE_MEMORY_DEF(functionName) void functionName(void* allocPntr, u64 oldSize, u64* oldSizeOut)
 typedef PLAT_API_FREE_MEMORY_DEF(PlatApiFreeMemory_f);
 

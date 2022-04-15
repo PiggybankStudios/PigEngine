@@ -877,6 +877,8 @@ void RcSetViewport(rec viewportRec, bool fakeScreenSpaceCoordinates = true)
 			rc->state.viewportRec = viewportRec;
 		} break;
 		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetViewport!"); break;
 	}
 	
 	//NOTE: For 2D rendering it can be nice to pretend like our coordinate space hasn't changed when rendering

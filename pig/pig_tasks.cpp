@@ -131,7 +131,7 @@ void PigAsyncReadFileContents(MyStr_t filePath, ReadFileContentsCallback_f* call
 	taskInput.inputPntr1 = AllocStruct(mainHeap, PlatFileContents_t);
 	taskInput.inputArena1 = mainHeap;
 	
-	taskInput.callbackFunc = callbackFunc;
+	taskInput.callbackFunc = (void*)callbackFunc;
 	taskInput.callbackContext = callbackContext;
 	
 	if (plat->QueueTask(&taskInput) == nullptr)
@@ -159,7 +159,7 @@ void PigAsyncWriteEntireFile(MyStr_t filePath, u64 contentsSize, void* contentsP
 	taskInput.inputPntr1 = contentsPntr;
 	taskInput.inputArena1 = contentsArena;
 	
-	taskInput.callbackFunc = callbackFunc;
+	taskInput.callbackFunc = (void*)callbackFunc;
 	taskInput.callbackContext = callbackContext;
 	
 	if (plat->QueueTask(&taskInput) == nullptr)

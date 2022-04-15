@@ -148,7 +148,7 @@ SoundInstance_t* NewSoundInstance(SoundInstanceType_t type)
 			result->playing = false;
 			result->format = platInfo->audioFormat;
 			result->volume = 1.0f;
-			result->nextInstanceToStart = false;
+			result->nextInstanceToStart = nullptr;
 			result->playOnAlignmentSize = 0;
 		}
 		

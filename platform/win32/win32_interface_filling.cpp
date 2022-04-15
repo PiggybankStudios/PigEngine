@@ -101,6 +101,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->SleepForMs             = Win32_SleepForMs;
 	api->QueueTask              = Win32_QueueTask;
 	api->AllocateMemory         = Win32_AllocateMemory;
+	api->ReallocMemory          = Win32_ReallocMemory;
 	api->FreeMemory             = Win32_FreeMemory;
 	api->ChangeWindowTarget     = Win32_ChangeWindowTarget;
 	api->SwapBuffers            = Win32_SwapBuffers;

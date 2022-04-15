@@ -11,11 +11,20 @@ Description:
 // +--------------------------------------------------------------+
 #define ENGINE_LAYER
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
+#if WASM_COMPILATION
+#define GY_CUSTOM_STD_LIB
+#define GY_WASM_STD_LIB
+#endif
 #include "common_includes.h"
 
+#define Q3_NO_STDLIB
 #include "qu3e/src/q3.h"
-#define MSF_GIF_IMPL
+
+#define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
+
+#define STB_SPRINTF_IMPLEMENTATION
+#include "stb/stb_sprintf.h"
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
@@ -39,7 +48,9 @@ Description:
 // +--------------------------------------------------------------+
 // |                         GLAD Source                          |
 // +--------------------------------------------------------------+
+#if OPENGL_SUPPORTED
 #include "glad/glad.c"
+#endif
 
 // +--------------------------------------------------------------+
 // |                           Globals                            |
@@ -121,6 +132,11 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_audio_mixer.cpp"
 #include "pig/pig_main_functions.cpp"
 
+#define MSF_GIF_MALLOC(contextPointer, newSize) PlatAllocFunc(newSize)
+#define MSF_GIF_REALLOC(contextPointer, oldMemory, oldSize, newSize) PlatReallocFunc((oldMemory), (newSize), (oldSize))
+#define MSF_GIF_FREE(contextPointer, oldMemory, oldSize) PlatFreeFunc(oldMemory)
+#define MSF_GIF_IMPL
+#include "msf_gif/msf_gif.h"
 
 // +--------------------------------------------------------------+
 // |                      Exported Functions                      |

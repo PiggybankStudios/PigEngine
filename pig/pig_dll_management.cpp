@@ -12,6 +12,11 @@ void* PlatAllocFunc(u64 size)
 	AssertNormalEntry();
 	return plat->AllocateMemory(size, AllocAlignment_None);
 }
+void* PlatReallocFunc(void* allocPntr, u64 newSize, u64 oldSize = 0)
+{
+	AssertNormalEntry();
+	return plat->ReallocMemory(allocPntr, newSize, oldSize, AllocAlignment_None);
+}
 void PlatFreeFunc(void* allocPntr)
 {
 	AssertNormalEntry();
@@ -28,12 +33,14 @@ void PigClearGlobals()
 void PigInitGlad()
 {
 	NotNull(plat);
+	#if OPENGL_SUPPORTED
 	if (!pig->initialized) { WriteLine_R("Initializing Engine GLAD..."); }
-	if (!gladLoadGLLoader((GLADloadproc)plat->GetLoadProcAddressFunc()))
+	if (!gladLoadGLLoader((GlLoadProc_f)plat->GetLoadProcAddressFunc()))
 	{
 		AssertMsg(false, "Could not initialize GLAD in Engine. gladLoadGLLoader failed");
 	}
 	if (!pig->initialized) { WriteLine_R("Engine GLAD Init Succeeded!"); }
+	#endif
 }
 
 // +==============================+

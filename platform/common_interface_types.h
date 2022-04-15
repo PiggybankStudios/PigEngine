@@ -101,6 +101,7 @@ struct PlatformApi_t
 	PlatApiSleepForMs_f*             SleepForMs;
 	PlatApiQueueTask_f*              QueueTask;
 	PlatApiAllocateMemory_f*         AllocateMemory;
+	PlatApiReallocMemory_f*          ReallocMemory;
 	PlatApiFreeMemory_f*             FreeMemory;
 	PlatApiChangeWindowTarget_f*     ChangeWindowTarget;
 	PlatApiSwapBuffers_f*            SwapBuffers;

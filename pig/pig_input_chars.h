@@ -9,7 +9,7 @@ Description:
 	** Miscellaneous Symbols page that starts at 0x2600 and goes to 0x26FF
 */
 
-#ifndef _PIG_INPUT_DISP_CHARS_H
+#ifndef _PIG_INPUT_CHARS_H
 #define _PIG_INPUT_CHARS_H
 
 #define INPUT_DISP_CHAR_ESCAPE_CODEPOINT             0x00002600
@@ -693,4 +693,4 @@ u32 GetDisplayCharCodepointForControllerBtn(ControllerType_t type, ControllerBtn
 	}
 }
 
-#endif //  _PIG_INPUT_DISP_CHARS_H
+#endif //  _PIG_INPUT_CHARS_H

@@ -153,29 +153,52 @@ bool ChangeVertBufferVertices_(VertBuffer_t* buffer, u64 startIndex, u64 numVert
 	Assert(startIndex + numVertices <= buffer->numVertices);
 	if (numVertices == 0) { return true; }
 	
-	glBindBuffer(GL_ARRAY_BUFFER, buffer->glId);
-	const char* errorStr = CheckOpenGlError();
-	if (errorStr != nullptr)
+	bool result = false;
+	switch (pig->renderApi)
 	{
-		PrintLine_E("ChangeVertBufferVertices glBindBuffer failed: %s", errorStr);
-		return false;
+		// +==============================+
+		// |            OpenGL            |
+		// +==============================+
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, buffer->glId);
+			const char* errorStr = CheckOpenGlError();
+			if (errorStr != nullptr)
+			{
+				PrintLine_E("ChangeVertBufferVertices glBindBuffer failed: %s", errorStr);
+				return false;
+			}
+			
+			glBufferSubData(GL_ARRAY_BUFFER, startIndex * vertexSize, numVertices * vertexSize, verticesPntr);
+			errorStr = CheckOpenGlError();
+			if (errorStr != nullptr)
+			{
+				PrintLine_E("ChangeVertBufferVertices glBufferSubData(%u startIndex, %u vertices, %u bytes) failed: %s", startIndex, numVertices, numVertices * vertexSize, errorStr);
+				return false;
+			}
+			
+			if (buffer->hasVerticesCopy)
+			{
+				NotNull(buffer->vertsVoidPntr);
+				MyMemCopy(((u8*)buffer->vertsVoidPntr) + (startIndex * buffer->vertexSize), verticesPntr, numVertices * buffer->vertexSize);
+			}
+			
+			result = true;
+		} break;
+		#endif
+		
+		// +==============================+
+		// |       Unsupported API        |
+		// +==============================+
+		default:
+		{
+			WriteLine_E("Unsupported render API in ChangeVertBufferVertices!");
+			result = false;
+		} break;
 	}
 	
-	glBufferSubData(GL_ARRAY_BUFFER, startIndex * vertexSize, numVertices * vertexSize, verticesPntr);
-	errorStr = CheckOpenGlError();
-	if (errorStr != nullptr)
-	{
-		PrintLine_E("ChangeVertBufferVertices glBufferSubData(%u startIndex, %u vertices, %u bytes) failed: %s", startIndex, numVertices, numVertices * vertexSize, errorStr);
-		return false;
-	}
-	
-	if (buffer->hasVerticesCopy)
-	{
-		NotNull(buffer->vertsVoidPntr);
-		MyMemCopy(((u8*)buffer->vertsVoidPntr) + (startIndex * buffer->vertexSize), verticesPntr, numVertices * buffer->vertexSize);
-	}
-	
-	return true;
+	return result;
 }
 #define ChangeVertBufferVertices2D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default2D, VertexType_Default2D_Size)
 #define ChangeVertBufferVertices3D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default3D, VertexType_Default3D_Size)

@@ -283,6 +283,16 @@ PLAT_API_ALLOCATE_MEMORY_DEF(Win32_AllocateMemory)
 }
 
 // +==============================+
+// |     Win32_ReallocMemory      |
+// +==============================+
+// void* ReallocMemory(void* allocPntr, u64 newSize, u64 oldSize, AllocAlignment_t alignOverride)
+PLAT_API_REALLOC_MEMORY_DEF(Win32_ReallocMemory)
+{
+	//TODO: Should we track the programs allocations somehow?
+	return ReallocMem(&Platform->stdHeap, allocPntr, newSize, oldSize, alignOverride);
+}
+
+// +==============================+
 // |       Win32_FreeMemory       |
 // +==============================+
 // void FreeMemory(void* allocPntr, u64 oldSize, u64* oldSizeOut)

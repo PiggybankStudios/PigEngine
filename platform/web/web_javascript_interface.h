@@ -14,7 +14,7 @@ EXTERN_C_START
 // +--------------------------------------------------------------+
 // NOTE: By using the __builtin functions in gy_std_wasm.h we implicitly import these functions from javascript
 //       fminf, fmin, fmaxf, fmax, fmodf, fmod, roundf, round, sinf, sin, asinf, asin, cosf, cos, acosf, acos
-//       tanf, tan, atanf, atan, atan2f, atan2, powf, pow, cbrtf, cbrt
+//       tanf, tan, atanf, atan, atan2f, atan2, powf, pow, cbrtf, cbrt, scalbn, copysign
 
 // NOTE: But the following functions actually don't need to get imported since they have instructions in web assembly
 //       absf, abs, floorf, floor, ceilf, ceil, sqrtf, sqrt, isnan, isinf
@@ -39,6 +39,11 @@ extern void js_ConsoleWarn(const char* str);
 extern void js_ConsoleError(const char* str);
 
 // +--------------------------------------------------------------+
+// |                            Files                             |
+// +--------------------------------------------------------------+
+extern void js_LoadFile(const char* filePath);
+
+// +--------------------------------------------------------------+
 // |                       Other Functions                        |
 // +--------------------------------------------------------------+
 extern double js_GetTime();
@@ -46,10 +51,14 @@ extern double js_GetTime();
 // +--------------------------------------------------------------+
 // |                     Canvas Manipulation                      |
 // +--------------------------------------------------------------+
+#if BASIC_DRAWING_CONTEXT
 extern void js_ClearCanvas();
 extern void js_DrawRectangle(float x, float y, float width, float height, int red, int green, int blue, int alpha);
 extern void js_DrawRoundedRectangle(float x, float y, float width, float height, float radius, int red, int green, int blue, int alpha);
 extern void js_DrawLine(float x1, float y1, float x2, float y2, float thickness, int red, int green, int blue, int alpha);
+#else
+#include "web/web_javascript_webgl.h"
+#endif
 
 EXTERN_C_END
 

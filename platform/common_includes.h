@@ -48,6 +48,7 @@ Date:   09\14\2021
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
 #include "gylib/gy_defines_check.h"
+#include "gylib/gy_basic_macros.h"
 
 // +--------------------------------------------------------------+
 // |                   Platform Layer Includes                    |

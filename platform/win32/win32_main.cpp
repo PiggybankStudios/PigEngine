@@ -18,6 +18,9 @@ Description:
 #include "win32/win32_main.h"
 #include "win32/win32_controller_types.h"
 
+#include <float.h>
+#include "gylib/gy_test_floatscan.h"
+
 // +--------------------------------------------------------------+
 // |                       Platform Globals                       |
 // +--------------------------------------------------------------+
@@ -132,6 +135,32 @@ int main(int argc, char* argv[])
 	WriteLine_O("+==============================+");
 	PrintLine_O("|     PigEngine v%u.%02u(%03u)     |", Platform->version.major, Platform->version.minor, Platform->version.build);
 	WriteLine_O("+==============================+");
+	
+	//TODO: Remove this test
+	const char* tests[] = {
+		"1.0",
+		"1.1",
+		"1.5",
+		"0.1",
+		"0.0",
+		"0",
+		"100",
+		"125",
+		"1234567890",
+		"0.00001",
+		"0.000025",
+		"0.100025",
+		".0",
+		"0.",
+		"1234.5678",
+	};
+	for (int testIndex = 0; testIndex < ArrayCount(tests); testIndex++)
+	{
+		const char* testStr = tests[testIndex];
+		// double testValue = strtod(testStr, nullptr);
+		double testValue = (double)strtox(testStr, nullptr, FloatSize_64);
+		PrintLine_I("Test[%d]: \"%s\" -> %f (%.g)", testIndex, testStr, testValue, testValue);
+	}
 	
 	#if USED_WIN_MAIN_ENTRY_POINT
 	Win32_ProcessProgramArguments(lpCmdLine, nCmdShow);
