@@ -24,6 +24,8 @@ var canvasContext2d = null;
 var canvasContextGl = null;
 var glShaders = [];
 var glPrograms = [];
+var glBuffers = [];
+var glVaos = [];
 var pixelRatio = 0;
 
 const assembFilePath = "assembFuncs.wasm";
@@ -286,7 +288,7 @@ const webglDrawingFunctions =
 		let newShader = canvasContextGl.createShader(type);
 		let result = glShaders.length;
 		glShaders.push(newShader);
-		console.log("Created shader[" + result + "]");
+		// console.log("Created shader[" + result + "]");
 		return result;
 	},
 	glCreateProgram: () =>
@@ -294,17 +296,42 @@ const webglDrawingFunctions =
 		let newProgram = canvasContextGl.createProgram();
 		let result = glPrograms.length;
 		glPrograms.push(newProgram);
-		console.log("Created program[" + result + "]");
+		// console.log("Created program[" + result + "]");
+		return result;
+	},
+	// glDeleteBuffers: (count, buffers)                 => { canvasContextGl.deleteBuffers(count, buffers); },
+	glCreateBuffer: () =>
+	{
+		let newBuffer = canvasContextGl.createBuffer();
+		let result = glBuffers.length;
+		glBuffers.push(newBuffer);
+		// console.log("Created buffer[" + result + "]");
+		return result;
+	},
+	glCreateVertexArray: () =>
+	{
+		let newVao = canvasContextGl.createVertexArray(); 
+		let result = glVaos.length;
+		glVaos.push(newVao);
+		// console.log("Created vao[" + result + "]");
 		return result;
 	},
 	
-	glClearColor:    (r, g, b, a)                     => { canvasContextGl.clearColor(r, g, b, a); },
-	glClear:         (mask)                           => { canvasContextGl.clear(mask); },
-	glViewport:      (x, y, width, height)            => { canvasContextGl.viewport(x, y, width, height); },
-	glShaderSource:  (shaderIndex, count, stringPntr) => { canvasContextGl.shaderSource(glShaders[shaderIndex], wasmPntrToJsString(wasmMemory, stringPntr)); },
-	glCompileShader: (shaderIndex)                    => { canvasContextGl.compileShader(glShaders[shaderIndex]); },
-	glAttachShader:  (programIndex, shaderIndex)      => { canvasContextGl.attachShader(glPrograms[programIndex], glShaders[shaderIndex]); },
-	glLinkProgram:   (programIndex)                   => { canvasContextGl.linkProgram(glPrograms[programIndex]); },
+	glClearColor:              (r, g, b, a)                                    => { canvasContextGl.clearColor(r, g, b, a); },
+	glClear:                   (mask)                                          => { canvasContextGl.clear(mask); },
+	glViewport:                (x, y, width, height)                           => { canvasContextGl.viewport(x, y, width, height); },
+	glShaderSource:            (shaderIndex, count, stringPntr)                => { canvasContextGl.shaderSource(glShaders[shaderIndex], wasmPntrToJsString(wasmMemory, stringPntr)); },
+	glCompileShader:           (shaderIndex)                                   => { canvasContextGl.compileShader(glShaders[shaderIndex]); },
+	glAttachShader:            (programIndex, shaderIndex)                     => { canvasContextGl.attachShader(glPrograms[programIndex], glShaders[shaderIndex]); },
+	glLinkProgram:             (programIndex)                                  => { canvasContextGl.linkProgram(glPrograms[programIndex]); },
+	glGetAttribLocation:       (programIndex, namePntr)                        => { canvasContextGl.getAttribLocation(glPrograms[programIndex], wasmPntrToJsString(wasmMemory, namePntr)); },
+	glUseProgram:              (programIndex)                                  => { canvasContextGl.useProgram(glPrograms[programIndex]); },
+	glBindBuffer:              (target, bufferIndex)                           => { canvasContextGl.bindBuffer(target, glBuffers[bufferIndex]); },
+	glBufferData:              (target, size, data, usage)                     => { canvasContextGl.bufferData(target, new Uint8Array(wasmMemory.buffer, data), usage, 0, size); },
+	glBindVertexArray:         (vaoIndex)                                      => { canvasContextGl.bindVertexArray(glVaos[vaoIndex]); },
+	glEnableVertexAttribArray: (index)                                         => { canvasContextGl.enableVertexAttribArray(index); },
+	glVertexAttribPointer:     (index, size, type, normalized, stride, offset) => { canvasContextGl.vertexAttribPointer(index, size, type, normalized, stride, offset); },
+	glDrawArrays:              (mode, first, count)                            => { canvasContextGl.drawArrays(mode, first, count); },
 };
 
 // +--------------------------------------------------------------+

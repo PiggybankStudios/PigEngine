@@ -15,6 +15,7 @@
 #include "web/web_defines.h"
 #include "web/web_javascript_interface.h"
 #include "web/web_engine_exports.h"
+#include "web/web_helpers.h"
 #include "web/web_main.h"
 
 // +--------------------------------------------------------------+
@@ -70,7 +71,23 @@ EXPORTED_FUNC(void, Initialize, int heapBaseAddress)
 	Web_CopyEngineInput(&Platform->engineInput, &Platform->engineActiveInput);
 	Web_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
 	
-	Shader_t testShader = CreateShader(simpleVertexShader, simpleFragmentShader);
+	Platform->testShader = CreateShader(simpleVertexShader, simpleFragmentShader);
+	
+	Vertex2D_t squareVerts[] = {
+		{ { 0, 0, 0 }, { 1, 1, 1, 1 }, { 0, 0 }, },
+		{ { 1, 0, 0 }, { 1, 1, 1, 1 }, { 1, 0 }, },
+		{ { 0, 1, 0 }, { 1, 1, 1, 1 }, { 0, 1 }, },
+		
+		{ { 1, 1, 0 }, { 1, 1, 1, 1 }, { 1, 1 }, },
+		{ { 0, 1, 0 }, { 1, 1, 1, 1 }, { 0, 1 }, },
+		{ { 1, 0, 0 }, { 1, 1, 1, 1 }, { 1, 0 }, },
+	};
+	if (!CreateVertBuffer2D(&Platform->mainHeap, &Platform->squareBuffer, false, 6, &squareVerts, true))
+	{
+		WriteLine_E("Failed to create VertBuffer!");
+	}
+	
+	Platform->testVao = CreateVertexArrayObject(VertexType_Default2D);
 }
 
 // +==============================+
@@ -179,7 +196,7 @@ EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 	{
 		// PrintLine_D("ProgramTime: %llf", ProgramTime);
 		// js_TestFunc();
-		js_LoadFile("Resources/Text/gamecontrollerdb.txt");
+		// js_LoadFile("Resources/Text/gamecontrollerdb.txt");
 	}
 	
 	// +==============================+
@@ -230,7 +247,11 @@ EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 		glClearColor(OscillateBy(ProgramTime, 0, 1, (Platform->mouseLeftBtnDown ? 200 : 1000)), 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 		
+		glUseProgram(Platform->testShader.glId);
+		glBindBuffer(GL_ARRAY_BUFFER, Platform->squareBuffer.glId);
+		BindVertexArrayObject(&Platform->testVao, &Platform->testShader, &Platform->squareBuffer);
 		
+		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)Platform->squareBuffer.numVertices);
 	}
 	#endif
 	

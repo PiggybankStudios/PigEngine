@@ -36,6 +36,10 @@ struct Web_PlatformState_t
 	//Debug Output
 	LinkedList_t debugReadoutLines;
 	
+	Shader_t testShader;
+	VertBuffer_t squareBuffer;
+	VertexArrayObject_t testVao;
+	
 	// TODO: Remove the stuff below this
 	v2 testPos;
 	VarArray_t drawnLines; //Line_t
