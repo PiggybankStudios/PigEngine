@@ -12,37 +12,148 @@ r32 OscillateBy(u64 timeSource, r32 min, r32 max, u64 periodMs, u64 offset = 0)
 	return min + (max - min) * lerpValue;
 }
 
-const char* simpleVertexShader = "#version 300 es\nin vec3 inPosition;\nin vec4 inColor;\nout vec3 fPosition;\nout vec4 fColor;\nvoid main()\n{\n\tfPosition = inPosition;\n\tfColor = inColor;\n\tgl_Position = vec4(inPosition, 1.0);\n}\n";
-const char* simpleFragmentShader = "#version 300 es\nprecision highp float;\nin vec3 fPosition;\nin vec4 fColor;\nout vec4 fragColor;\nvoid main()\n{\n\tfragColor = fColor;\n\tfragColor.gb = fPosition.xy;\n}";
+const char* GetOpenGlErrorStr(GLenum glError, bool printUnkown = false)
+{
+	switch (glError)
+	{
+		case GL_NO_ERROR:                      return "NO_ERROR";
+		case GL_INVALID_ENUM:                  return "INVALID_ENUM";
+		case GL_INVALID_VALUE:                 return "INVALID_VALUE";
+		case GL_INVALID_OPERATION:             return "INVALID_OPERATION";
+		case GL_STACK_UNDERFLOW:               return "STACK_UNDERFLOW";
+		case GL_STACK_OVERFLOW:                return "STACK_OVERFLOW";
+		case GL_OUT_OF_MEMORY:                 return "OUT_OF_MEMORY";
+		case GL_INVALID_FRAMEBUFFER_OPERATION: return "INVALID_FRAMEBUFFER_OPERATION";
+		case GL_CONTEXT_LOST:                  return "GL_CONTEXT_LOST";
+		case GL_TABLE_TOO_LARGE:               return "GL_TABLE_TOO_LARGE";
+		default: const char* result = (printUnkown ? TempPrint("[0x%08X]", glError) : "Unknown"); NotNull(result); return result;
+	}
+}
+
+const char* CheckOpenGlError(bool printUnkown = false)
+{
+	GLenum glError = glGetError();
+	if (glError != GL_NO_ERROR) { return GetOpenGlErrorStr(glError, printUnkown); }
+	else { return nullptr; }
+}
+#define AssertNoOpenGlError() do                                               \
+{                                                                              \
+	GLenum glError = glGetError();                                             \
+	if (glError != GL_NO_ERROR)                                                \
+	{                                                                          \
+		PrintLine_E("Got OpenGL Error: %s", GetOpenGlErrorStr(glError, true)); \
+	}                                                                          \
+	Assert(glError == GL_NO_ERROR);                                            \
+} while(0)
+
+#if DEBUG_BUILD
+#define DebugAssertNoOpenGlError() AssertNoOpenGlError()
+#else
+#define DebugAssertNoOpenGlError() //nothing
+#endif
+
+const char* simpleVertexShader =
+	"#version 300 es\n"
+	"uniform mat4 WorldMatrix;\n"
+	"uniform mat4 ViewMatrix;\n"
+	"uniform mat4 ProjectionMatrix;\n"
+	"in vec3 inPosition;\n"
+	"in vec4 inColor;\n"
+	"in vec2 inTexCoord;\n"
+	"out vec3 fPosition;\n"
+	"out vec4 fColor;\n"
+	"out vec2 fSampleCoord;\n"
+	"void main()\n"
+	"{\n"
+	"	fPosition = inPosition;\n"
+	"	fColor = inColor;\n"
+	"	fSampleCoord = inTexCoord;\n"
+	"	mat4 transformMatrix = ProjectionMatrix * (ViewMatrix * WorldMatrix);\n"
+	"	gl_Position = transformMatrix * vec4(inPosition, 1.0);\n"
+	"}\n";
+
+const char* simpleFragmentShader =
+	"#version 300 es\n"
+	"precision highp float;\n"
+	"uniform vec4 Color1;\n"
+	"uniform sampler2D Texture;\n"
+	"uniform vec2 TextureSize;\n"
+	"in vec3 fPosition;\n"
+	"in vec4 fColor;\n"
+	"in vec2 fSampleCoord;\n"
+	"out vec4 fragColor;\n"
+	"void main()\n"
+	"{\n"
+	"	vec4 sampleColor = texture(Texture, fSampleCoord);\n"
+	"	fragColor = Color1 * fColor * sampleColor;\n"
+	"	fragColor.g *= fPosition.x;\n"
+	"	fragColor.r *= fPosition.y;\n"
+	"}\n";
 
 Shader_t CreateShader(const char* vertShaderStr, const char* fragShaderStr)
 {
 	Shader_t result = {};
 	
-	result.vertId = glCreateShader(GL_VERTEX_SHADER);
+	result.vertId = glCreateShader(GL_VERTEX_SHADER); AssertNoOpenGlError();
 	// PrintLine_D("vertId: %d", result.vertId);
-	glShaderSource(result.vertId, 1, vertShaderStr);
-	glCompileShader(result.vertId);
+	glShaderSource(result.vertId, 1, vertShaderStr); AssertNoOpenGlError();
+	glCompileShader(result.vertId); AssertNoOpenGlError();
 	
-	result.fragId = glCreateShader(GL_FRAGMENT_SHADER);
+	result.fragId = glCreateShader(GL_FRAGMENT_SHADER); AssertNoOpenGlError();
 	// PrintLine_D("fragId: %d", result.fragId);
-	glShaderSource(result.fragId, 1, fragShaderStr);
-	glCompileShader(result.fragId);
+	glShaderSource(result.fragId, 1, fragShaderStr); AssertNoOpenGlError();
+	glCompileShader(result.fragId); AssertNoOpenGlError();
 	
-	result.glId = glCreateProgram();
-	glAttachShader(result.glId, result.vertId);
-	glAttachShader(result.glId, result.fragId);
-	glLinkProgram(result.glId);
+	result.glId = glCreateProgram(); AssertNoOpenGlError();
+	glAttachShader(result.glId, result.vertId); AssertNoOpenGlError();
+	glAttachShader(result.glId, result.fragId); AssertNoOpenGlError();
+	glLinkProgram(result.glId); AssertNoOpenGlError();
 	
-	result.attribLocations.position  = glGetAttribLocation(result.glId, "inPosition");
-	result.attribLocations.color1    = glGetAttribLocation(result.glId, "inColor1");
-	result.attribLocations.color2    = glGetAttribLocation(result.glId, "inColor2");
-	result.attribLocations.texCoord1 = glGetAttribLocation(result.glId, "inTexCoord1");
-	result.attribLocations.texCoord2 = glGetAttribLocation(result.glId, "inTexCoord2");
-	result.attribLocations.normal1   = glGetAttribLocation(result.glId, "inNormal1");
-	result.attribLocations.normal2   = glGetAttribLocation(result.glId, "inNormal2");
-	result.attribLocations.tangent   = glGetAttribLocation(result.glId, "inTangent");
+	result.attribLocations.position  = glGetAttribLocation(result.glId, "inPosition"); AssertNoOpenGlError();
+	result.attribLocations.color     = glGetAttribLocation(result.glId, "inColor"); AssertNoOpenGlError();
+	result.attribLocations.texCoord  = glGetAttribLocation(result.glId, "inTexCoord"); AssertNoOpenGlError();
+	result.attribLocations.normal    = glGetAttribLocation(result.glId, "inNormal"); AssertNoOpenGlError();
+	result.attribLocations.tangent   = glGetAttribLocation(result.glId, "inTangent"); AssertNoOpenGlError();
 	
+	result.uniforms.worldMatrix      = glGetUniformLocation(result.glId, "WorldMatrix"); AssertNoOpenGlError();
+	result.uniforms.viewMatrix       = glGetUniformLocation(result.glId, "ViewMatrix"); AssertNoOpenGlError();
+	result.uniforms.projectionMatrix = glGetUniformLocation(result.glId, "ProjectionMatrix"); AssertNoOpenGlError();
+	result.uniforms.texture          = glGetUniformLocation(result.glId, "Texture"); AssertNoOpenGlError();
+	result.uniforms.textureSize      = glGetUniformLocation(result.glId, "TextureSize"); AssertNoOpenGlError();
+	result.uniforms.sourceRec        = glGetUniformLocation(result.glId, "SourceRec"); AssertNoOpenGlError();
+	result.uniforms.color1           = glGetUniformLocation(result.glId, "Color1"); AssertNoOpenGlError();
+	result.uniforms.color2           = glGetUniformLocation(result.glId, "Color2"); AssertNoOpenGlError();
+	result.uniforms.time             = glGetUniformLocation(result.glId, "Time"); AssertNoOpenGlError();
+	
+	return result;
+}
+
+Texture_t CreateTexture(v2i size, const u8* pixelData, bool pixelated, bool repeating)
+{
+	Texture_t result = {};
+	
+	result.glId = glCreateTexture();
+	glBindTexture(GL_TEXTURE_2D, result.glId);
+	
+	glTexImage2D(
+		GL_TEXTURE_2D,      //bound texture type
+		0,                  //image level
+		GL_RGBA,            //internal format
+		size.width,         //image width
+		size.height,        //image height
+		0,                  //border
+		GL_RGBA,            //format
+		GL_UNSIGNED_BYTE,   //type
+		pixelData           //data
+	);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (pixelated ? GL_NEAREST : GL_LINEAR));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	result.isValid = true;
 	return result;
 }
 
@@ -55,9 +166,9 @@ bool CreateVertBuffer_(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynam
 	Assert(vertexSize > 0);
 	ClearPointer(bufferOut);
 	
-	GLuint bufferId = glCreateBuffer();
-	glBindBuffer(GL_ARRAY_BUFFER, bufferId);
-	glBufferData(GL_ARRAY_BUFFER, numVertices * vertexSize, verticesPntr, (dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW));
+	GLuint bufferId = glCreateBuffer(); AssertNoOpenGlError();
+	glBindBuffer(GL_ARRAY_BUFFER, bufferId); AssertNoOpenGlError();
+	glBufferData(GL_ARRAY_BUFFER, numVertices * vertexSize, verticesPntr, (dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW)); AssertNoOpenGlError();
 	
 	if (copyVertices)
 	{
@@ -84,7 +195,7 @@ VertexArrayObject_t CreateVertexArrayObject(VertexType_t vertexType)
 {
 	VertexArrayObject_t result = {};
 	
-	result.glId = glCreateVertexArray();
+	result.glId = glCreateVertexArray(); AssertNoOpenGlError();
 	result.vertexType = vertexType;
 	result.boundOnce = false;
 	
@@ -100,7 +211,7 @@ void BindVertexArrayObject(VertexArrayObject_t* vao, const Shader_t* boundShader
 		{
 			if (boundShader->attribLocations.values[attIndex] >= 0)
 			{
-				glEnableVertexAttribArray(boundShader->attribLocations.values[attIndex]);
+				glEnableVertexAttribArray(boundShader->attribLocations.values[attIndex]); AssertNoOpenGlError();
 			}
 		}
 		vao->boundOnce = true;
@@ -109,42 +220,42 @@ void BindVertexArrayObject(VertexArrayObject_t* vao, const Shader_t* boundShader
 	u8* attribOffset = nullptr;
 	if (IsFlagSet(boundBuffer->vertexType, VertexType_PositionBit))
 	{
-		glVertexAttribPointer(boundShader->attribLocations.position, 3, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset);
+		if (boundShader->attribLocations.position >= 0)
+		{
+			glVertexAttribPointer(boundShader->attribLocations.position, 3, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset); AssertNoOpenGlError();
+		}
 		attribOffset += sizeof(v3);
 	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_Color1Bit))
+	if (IsFlagSet(boundBuffer->vertexType, VertexType_ColorBit))
 	{
-		glVertexAttribPointer(boundShader->attribLocations.color1, 4, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset);
+		if (boundShader->attribLocations.color >= 0)
+		{
+			glVertexAttribPointer(boundShader->attribLocations.color, 4, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset); AssertNoOpenGlError();
+		}
 		attribOffset += sizeof(v4);
 	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_Color2Bit))
+	if (IsFlagSet(boundBuffer->vertexType, VertexType_TexCoordBit))
 	{
-		glVertexAttribPointer(boundShader->attribLocations.color2, 4, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset);
-		attribOffset += sizeof(v4);
-	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_TexCoord1Bit))
-	{
-		glVertexAttribPointer(boundShader->attribLocations.texCoord1, 2, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset);
+		if (boundShader->attribLocations.texCoord >= 0)
+		{
+			glVertexAttribPointer(boundShader->attribLocations.texCoord, 2, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset); AssertNoOpenGlError();
+		}
 		attribOffset += sizeof(v2);
 	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_TexCoord2Bit))
+	if (IsFlagSet(boundBuffer->vertexType, VertexType_NormalBit))
 	{
-		glVertexAttribPointer(boundShader->attribLocations.texCoord2, 2, GL_FLOAT, GL_FALSE, (GLsizei)boundBuffer->vertexSize, attribOffset);
-		attribOffset += sizeof(v2);
-	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_Normal1Bit))
-	{
-		glVertexAttribPointer(boundShader->attribLocations.normal1, 3, GL_FLOAT, GL_TRUE, (GLsizei)boundBuffer->vertexSize, attribOffset);
-		attribOffset += sizeof(v3);
-	}
-	if (IsFlagSet(boundBuffer->vertexType, VertexType_Normal2Bit))
-	{
-		glVertexAttribPointer(boundShader->attribLocations.normal2, 3, GL_FLOAT, GL_TRUE, (GLsizei)boundBuffer->vertexSize, attribOffset);
+		if (boundShader->attribLocations.normal >= 0)
+		{
+			glVertexAttribPointer(boundShader->attribLocations.normal, 3, GL_FLOAT, GL_TRUE, (GLsizei)boundBuffer->vertexSize, attribOffset); AssertNoOpenGlError();
+		}
 		attribOffset += sizeof(v3);
 	}
 	if (IsFlagSet(boundBuffer->vertexType, VertexType_TangentBit))
 	{
-		glVertexAttribPointer(boundShader->attribLocations.tangent, 3, GL_FLOAT, GL_TRUE, (GLsizei)boundBuffer->vertexSize, attribOffset);
+		if (boundShader->attribLocations.tangent >= 0)
+		{
+			glVertexAttribPointer(boundShader->attribLocations.tangent, 3, GL_FLOAT, GL_TRUE, (GLsizei)boundBuffer->vertexSize, attribOffset); AssertNoOpenGlError();
+		}
 		attribOffset += sizeof(v3);
 	}
 }

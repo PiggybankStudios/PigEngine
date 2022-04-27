@@ -17,37 +17,61 @@ struct Shader_t
 	
 	union
 	{
-		GLint values[8];
+		GLint values[5];
 		struct
 		{
 			GLint position;
-			GLint color1;
-			GLint color2;
-			GLint texCoord1;
-			GLint texCoord2;
-			GLint normal1;
-			GLint normal2;
+			GLint color;
+			GLint texCoord;
+			GLint normal;
 			GLint tangent;
 		};
 	} attribLocations;
+	
+	struct
+	{
+		GLint worldMatrix;
+		GLint viewMatrix;
+		GLint projectionMatrix;
+		GLint texture;
+		GLint textureSize;
+		GLint sourceRec;
+		GLint color1;
+		GLint color2;
+		GLint time;
+	} uniforms;
+};
+
+struct Texture_t
+{
+	bool isValid;
+	GLint glId;
+	
+	union
+	{
+		v2 size;
+		struct { r32 width, height; };
+	};
+	union
+	{
+		v2i sizei;
+		struct { i32 widthi, heighti; };
+	};
 };
 
 enum VertexType_t
 {
 	VertexType_None = 0x00,
-	VertexType_All  = 0xFF,
+	VertexType_All  = 0x1F,
 	
 	VertexType_PositionBit  = 0x01,
-	VertexType_Color1Bit    = 0x02,
-	VertexType_Color2Bit    = 0x04,
-	VertexType_TexCoord1Bit = 0x08,
-	VertexType_TexCoord2Bit = 0x10,
-	VertexType_Normal1Bit   = 0x20,
-	VertexType_Normal2Bit   = 0x40,
-	VertexType_TangentBit   = 0x80,
+	VertexType_ColorBit     = 0x02,
+	VertexType_TexCoordBit  = 0x04,
+	VertexType_NormalBit    = 0x08,
+	VertexType_TangentBit   = 0x10,
 	
-	VertexType_Default2D = (VertexType_PositionBit|VertexType_Color1Bit|VertexType_TexCoord1Bit),
-	VertexType_Default3D = (VertexType_PositionBit|VertexType_Color1Bit|VertexType_TexCoord1Bit|VertexType_Normal1Bit),
+	VertexType_Default2D = (VertexType_PositionBit|VertexType_ColorBit|VertexType_TexCoordBit),
+	VertexType_Default3D = (VertexType_PositionBit|VertexType_ColorBit|VertexType_TexCoordBit|VertexType_NormalBit),
 };
 
 // VertexType_Default2D
@@ -121,7 +145,7 @@ struct VertBuffer_t
 	GLuint glId;
 };
 
-#define MAX_NUM_VERTEX_ATTRIBUTES 8
+#define MAX_NUM_VERTEX_ATTRIBUTES 5
 struct VertexAttribLocations_t
 {
 	union
@@ -130,12 +154,9 @@ struct VertexAttribLocations_t
 		struct
 		{
 			GLint position;
-			GLint color1;
-			GLint color2;
-			GLint texCoord1;
-			GLint texCoord2;
-			GLint normal1;
-			GLint normal2;
+			GLint color;
+			GLint texCoord;
+			GLint normal;
 			GLint tangent;
 		};
 	} gl;

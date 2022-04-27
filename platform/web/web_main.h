@@ -37,6 +37,7 @@ struct Web_PlatformState_t
 	LinkedList_t debugReadoutLines;
 	
 	Shader_t testShader;
+	Texture_t testTexture;
 	VertBuffer_t squareBuffer;
 	VertexArrayObject_t testVao;
 	

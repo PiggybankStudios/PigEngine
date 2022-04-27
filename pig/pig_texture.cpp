@@ -155,6 +155,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 			
 			if (imageData->pixelSize == 1)
 			{
+				//TODO: This is not supported by WebGL! We need to figure out an alternative or only use this when running on OpenGL proper?
 				GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_RED};
 				glTexParameteriv(targetEnum, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
 				CreateTexture_CheckOpenGlError("glTexParameteriv(GL_TEXTURE_SWIZZLE_RGBA)") { break; }

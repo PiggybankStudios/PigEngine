@@ -24,8 +24,11 @@ var canvasContext2d = null;
 var canvasContextGl = null;
 var glShaders = [];
 var glPrograms = [];
+var glTextures = [];
 var glBuffers = [];
 var glVaos = [];
+var glAttribLocations = [];
+var glUniformLocations = [];
 var pixelRatio = 0;
 
 const assembFilePath = "assembFuncs.wasm";
@@ -299,6 +302,14 @@ const webglDrawingFunctions =
 		// console.log("Created program[" + result + "]");
 		return result;
 	},
+	glCreateTexture: () =>
+	{
+		let newTexture = canvasContextGl.createTexture(); 
+		let result = glTextures.length;
+		glTextures.push(newTexture);
+		// console.log("Created texture[" + result + "]");
+		return result;
+	},
 	// glDeleteBuffers: (count, buffers)                 => { canvasContextGl.deleteBuffers(count, buffers); },
 	glCreateBuffer: () =>
 	{
@@ -316,21 +327,55 @@ const webglDrawingFunctions =
 		// console.log("Created vao[" + result + "]");
 		return result;
 	},
+	glGetAttribLocation: (programIndex, namePntr) =>
+	{
+		let newLocation = canvasContextGl.getAttribLocation(glPrograms[programIndex], wasmPntrToJsString(wasmMemory, namePntr));
+		if (newLocation === -1) { return -1; }
+		let result = glAttribLocations.length;
+		glAttribLocations.push(newLocation);
+		return result;
+	},
+	glGetUniformLocation: (programIndex, namePntr) =>
+	{
+		let newLocation = canvasContextGl.getUniformLocation(glPrograms[programIndex], wasmPntrToJsString(wasmMemory, namePntr));
+		if (newLocation === -1) { return -1; }
+		let result = glUniformLocations.length;
+		glUniformLocations.push(newLocation);
+		return result;
+	},
 	
+	glGetError:                ()                                              => { canvasContextGl.getError(); },
 	glClearColor:              (r, g, b, a)                                    => { canvasContextGl.clearColor(r, g, b, a); },
 	glClear:                   (mask)                                          => { canvasContextGl.clear(mask); },
 	glViewport:                (x, y, width, height)                           => { canvasContextGl.viewport(x, y, width, height); },
+	glEnable:                  (cap)                                           => { canvasContextGl.enable(cap); },
+	glDisable:                 (cap)                                           => { canvasContextGl.disable(cap); },
+	glBlendFunc:               (sfactor, dfactor)                              => { canvasContextGl.blendFunc(sfactor, dfactor); },
+	glBlendFuncSeparate:       (sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha) => { canvasContextGl.blendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha); },
+	glDepthFunc:               (func)                                          => { canvasContextGl.depthFunc(func); },
+	glFrontFace:               (mode)                                          => { canvasContextGl.frontFace(mode); },
+	glLineWidth:               (width)                                         => { canvasContextGl.lineWidth(width); },
 	glShaderSource:            (shaderIndex, count, stringPntr)                => { canvasContextGl.shaderSource(glShaders[shaderIndex], wasmPntrToJsString(wasmMemory, stringPntr)); },
 	glCompileShader:           (shaderIndex)                                   => { canvasContextGl.compileShader(glShaders[shaderIndex]); },
 	glAttachShader:            (programIndex, shaderIndex)                     => { canvasContextGl.attachShader(glPrograms[programIndex], glShaders[shaderIndex]); },
 	glLinkProgram:             (programIndex)                                  => { canvasContextGl.linkProgram(glPrograms[programIndex]); },
-	glGetAttribLocation:       (programIndex, namePntr)                        => { canvasContextGl.getAttribLocation(glPrograms[programIndex], wasmPntrToJsString(wasmMemory, namePntr)); },
+	glUniform1i:               (locationIndex, v0)                             => { canvasContextGl.uniform1i(glUniformLocations[locationIndex], v0); },
+	glUniform1f:               (locationIndex, v0)                             => { canvasContextGl.uniform1f(glUniformLocations[locationIndex], v0); },
+	glUniform2f:               (locationIndex, v0, v1)                         => { canvasContextGl.uniform2f(glUniformLocations[locationIndex], v0, v1); },
+	glUniform3f:               (locationIndex, v0, v1, v2)                     => { canvasContextGl.uniform3f(glUniformLocations[locationIndex], v0, v1, v2); },
+	glUniform4f:               (locationIndex, v0, v1, v2, v3)                 => { canvasContextGl.uniform4f(glUniformLocations[locationIndex], v0, v1, v2, v3); },
+	glUniformMatrix4fv:        (locationIndex, count, transpose, valuePntr)    => { canvasContextGl.uniformMatrix4fv(glUniformLocations[locationIndex], transpose, new Float32Array(wasmMemory.buffer, valuePntr, count * (4*4))); },
 	glUseProgram:              (programIndex)                                  => { canvasContextGl.useProgram(glPrograms[programIndex]); },
+	glBindTexture:             (target, textureIndex)                          => { canvasContextGl.bindTexture(target, glTextures[textureIndex]); },
+	glTexImage2D:              (target, level, internalformat, width, height, border, format, type, pixelsPntr) => { canvasContextGl.texImage2D(target, level, internalformat, width, height, border, format, type, new Uint8Array(wasmMemory.buffer, pixelsPntr)); },
+	glTexParameteri:           (target, pname, param)                          => { canvasContextGl.texParameteri(target, pname, param); },
+	glGenerateMipmap:          (target)                                        => { canvasContextGl.generateMipmap(target); },
+	glActiveTexture:           (texture)                                       => { canvasContextGl.activeTexture(texture); },
 	glBindBuffer:              (target, bufferIndex)                           => { canvasContextGl.bindBuffer(target, glBuffers[bufferIndex]); },
 	glBufferData:              (target, size, data, usage)                     => { canvasContextGl.bufferData(target, new Uint8Array(wasmMemory.buffer, data), usage, 0, size); },
 	glBindVertexArray:         (vaoIndex)                                      => { canvasContextGl.bindVertexArray(glVaos[vaoIndex]); },
-	glEnableVertexAttribArray: (index)                                         => { canvasContextGl.enableVertexAttribArray(index); },
-	glVertexAttribPointer:     (index, size, type, normalized, stride, offset) => { canvasContextGl.vertexAttribPointer(index, size, type, normalized, stride, offset); },
+	glEnableVertexAttribArray: (index)                                         => { canvasContextGl.enableVertexAttribArray(glAttribLocations[index]); },
+	glVertexAttribPointer:     (index, size, type, normalized, stride, offset) => { canvasContextGl.vertexAttribPointer(glAttribLocations[index], size, type, normalized, stride, offset); },
 	glDrawArrays:              (mode, first, count)                            => { canvasContextGl.drawArrays(mode, first, count); },
 };
 

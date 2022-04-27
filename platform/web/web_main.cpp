@@ -22,6 +22,7 @@
 // |                           Globals                            |
 // +--------------------------------------------------------------+
 Web_PlatformState_t* Platform = nullptr;
+u64 ProgramTime = 0;
 #include "gylib/gy_temp_memory.cpp"
 
 // +--------------------------------------------------------------+
@@ -88,6 +89,30 @@ EXPORTED_FUNC(void, Initialize, int heapBaseAddress)
 	}
 	
 	Platform->testVao = CreateVertexArrayObject(VertexType_Default2D);
+	
+	// u32 testTextureData[] = {
+	// 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+	// 	0xFFFFFFFF, 0xFF40FFFF, 0xFFEF44FF, 0xFFFFFFFF,
+	// 	0xFFFFFFFF, 0xFF40FFFF, 0xFFEF44FF, 0xFFFFFFFF,
+	// 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+	// };
+	u32 testTextureData[] = {
+		0x00000000,         PureRed_Value,    PureOrange_Value, 0x00000000,
+		MonokaiBrown_Value, 0x00000000,       0x00000000,       PureYellow_Value,
+		PalPink_Value,      0x00000000,       0x00000000,       PureGreen_Value,
+		0x00000000,         PurePurple_Value, PureBlue_Value,   0x00000000,
+	};
+	Platform->testTexture = CreateTexture(NewVec2i(4, 4), (u8*)testTextureData, true, false);
+	
+	glFrontFace(GL_CCW); //TODO: Change me back to clockwise once we've gotten coordinate space figured out
+	glEnable(GL_CULL_FACE);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_DEPTH_TEST);
+	
+	// glAlphaFunc(GL_GEQUAL, 0.01f); //TODO: This isn't supported in WebGL2??
+	// glEnable(GL_ALPHA_TEST); //TODO: This isn't supported in WebGL2??
 }
 
 // +==============================+
@@ -174,8 +199,7 @@ EXPORTED_FUNC(void, FileLoadedCallback, const char* filePath, const void* fileCo
 EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 {
 	// PrintLine_D("Rendering to %gx%g canvas", canvasWidth, canvasHeight);
-	
-	u64 ProgramTime = (u64)ModR64(js_GetTime(), 60000);
+	ProgramTime = (u64)ModR64(js_GetTime(), 60000);
 	
 	Web_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
 	Web_CopyEngineInput(&Platform->engineInput, &Platform->engineActiveInput);
@@ -242,12 +266,23 @@ EXPORTED_FUNC(void, RenderFrame, r64 canvasWidth, r64 canvasHeight)
 	// +==============================+
 	#else
 	{
-		// glViewport(10, 10, 100, 100);
+		glViewport(0, 0, canvasWidth, canvasHeight);
 		
 		glClearColor(OscillateBy(ProgramTime, 0, 1, (Platform->mouseLeftBtnDown ? 200 : 1000)), 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 		
 		glUseProgram(Platform->testShader.glId);
+		mat4 worldMatrix = Mat4RotateZ(OscillateBy(ProgramTime, 0, TwoPi32, (Platform->mouseLeftBtnDown ? 2000 : 10000)));
+		mat4 viewMatrix = Mat4_Identity;
+		mat4 projectionMatrix = Mat4_Identity;
+		glUniform4f(Platform->testShader.uniforms.color1, 1, 1, OscillateBy(ProgramTime, 0, 1, 1000), 1);
+		glUniformMatrix4fv(Platform->testShader.uniforms.worldMatrix,      1, GL_FALSE, (GLfloat*)&worldMatrix);
+		glUniformMatrix4fv(Platform->testShader.uniforms.viewMatrix,       1, GL_FALSE, (GLfloat*)&viewMatrix);
+		glUniformMatrix4fv(Platform->testShader.uniforms.projectionMatrix, 1, GL_FALSE, (GLfloat*)&projectionMatrix);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, Platform->testTexture.glId);
+		glUniform1i(Platform->testShader.uniforms.texture, 0);
+		glUniform2f(Platform->testShader.uniforms.textureSize, Platform->testTexture.width, Platform->testTexture.height);
 		glBindBuffer(GL_ARRAY_BUFFER, Platform->squareBuffer.glId);
 		BindVertexArrayObject(&Platform->testVao, &Platform->testShader, &Platform->squareBuffer);
 		
