@@ -398,6 +398,8 @@ ULONG AudioCallbackClass_c::AddRef()
 }
 HRESULT AudioCallbackClass_c::QueryInterface(REFIID riid, void** ppvObject)
 {
+	UNUSED(riid);
+	UNUSED(ppvObject);
 	Unimplemented(); //TODO: Implement me!
 	return 0;
 }
@@ -482,6 +484,7 @@ HRESULT AudioCallbackClass_c::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD 
 }
 HRESULT AudioCallbackClass_c::OnPropertyValueChanged(LPCWSTR pwstrDeviceId, const PROPERTYKEY key)
 {
+	UNUSED(key);
 	NotNull(pwstrDeviceId);
 	// WriteLine_N("OnPropertyValueChanged");
 	// Unimplemented(); //TODO: Implement me!

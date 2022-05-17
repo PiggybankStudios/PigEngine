@@ -252,7 +252,6 @@ void PrepareFrameBufferTexture(FrameBuffer_t* buffer)
 	NotNull(buffer);
 	Assert(buffer->isValid);
 	
-	const char* errorStr = nullptr;
 	switch (pig->renderApi)
 	{
 		// +==============================+

@@ -88,7 +88,7 @@ void Win32_DebugOutputFromPlat(u8 flags, const char* filePath, u32 lineNumber, c
 		
 		Win32_LockMutex(&Platform->debugLineMutex, MUTEX_LOCK_INFINITE);
 		StringFifoLine_t* newFifoLine = StringFifoPushLineExt(&Platform->debugLineFifo, text, sizeof(metaInfo), &metaInfo, filePathAndFuncName);
-		DebugAssert_(newFifoLine != nullptr);
+		DebugAssertAndUnused_(newFifoLine != nullptr, newFifoLine);
 		Win32_UnlockMutex(&Platform->debugLineMutex);
 	}
 	

@@ -149,6 +149,7 @@ Date:   09\14\2021
 #include "gylib/gy_sorting.h"
 #include "gylib/gy_linked_list.h"
 #include "gylib/gy_variable_array.h"
+#include "gylib/gy_word_tree.h"
 #include "gylib/gy_bezier.h"
 #include "gylib/gy_bucket_array.h"
 #include "gylib/gy_string_fifo.h"

@@ -175,6 +175,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 
 void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatControllerState_t* controller, rec drawRec)
 {
+	UNUSED(overlay);
 	RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
 	
 	RcDrawRectangleOutline(drawRec, White, 1);

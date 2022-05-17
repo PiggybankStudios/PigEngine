@@ -205,6 +205,7 @@ GY_STRING_FIFO_PUSH_LINES_AFTER_CALLBACK_DEF(ProcessLogAddLinesAfterCallback)
 	UNUSED(srcFifo);
 	UNUSED(srcLine);
 	DumpProcessLogContext_t* context = (DumpProcessLogContext_t*)userPntr;
+	UNUSED(context);
 	DebugConsoleLine_t* newMetaStruct = GetFifoLineMetaStruct(newLine, DebugConsoleLine_t);
 	FlagSet(newMetaStruct->flags, DbgFlag_New);
 }

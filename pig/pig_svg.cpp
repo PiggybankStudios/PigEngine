@@ -875,7 +875,6 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 	bool foundSvgToken = false;
 	SvgGroup_t* currentGroup = nullptr;
 	SvgTransform_t currentGroupTransform = {};
-	SvgShape_t* currentShape = nullptr;
 	
 	XmlParser_t xmlParser = NewXmlParser(mainHeap, fileContents);
 	XmlParseResult_t parse = {};

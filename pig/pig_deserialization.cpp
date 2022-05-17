@@ -462,6 +462,7 @@ bool XmlParserGetToken(XmlParser_t* parser, XmlParseResult_t* result, ProcessLog
 				{
 					u32 nextCodepoint = 0;
 					u8 nextCodepointByteSize = GetCodepointForUtf8Str(workingLine, 0, &nextCodepoint);
+					UNUSED(nextCodepointByteSize);
 					if (!(nextCodepoint >= 'A' && nextCodepoint <= 'Z') &&
 						!(nextCodepoint >= 'a' && nextCodepoint <= 'z') &&
 						nextCodepoint != '_')

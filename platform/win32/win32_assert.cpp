@@ -136,5 +136,7 @@ void GyLibAssertFailure(const char* filePath, int lineNumber, const char* funcNa
 	
 	Win32_HandleAssertion(filePath, lineNumber, funcName, expressionStr, messageStr);
 	
+	#if DEBUG_BUILD
 	insideAssertFailure = false;
+	#endif
 }

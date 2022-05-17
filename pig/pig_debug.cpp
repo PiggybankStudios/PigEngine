@@ -179,8 +179,11 @@ struct HandlePlatformLinesContext_t
 // u64 PigPlatDebugLinesSortCallback(StringFifo_t* fifo, const StringFifo_t* srcFifo, const StringFifoLine_t* fifoLine, void* userPntr)
 GY_STRING_FIFO_PUSH_LINES_SORT_CALLBACK_DEF(PigPlatDebugLinesSortCallback)
 {
+	UNUSED(fifo);
+	UNUSED(srcFifo);
 	NotNull(userPntr);
 	HandlePlatformLinesContext_t* context = (HandlePlatformLinesContext_t*)userPntr;
+	UNUSED(context);
 	if (fifoLine->metaStructSize == sizeof(DebugConsoleLine_t))
 	{
 		DebugConsoleLine_t* metaStruct = GetFifoLineMetaStruct(fifoLine, DebugConsoleLine_t);
@@ -199,6 +202,10 @@ GY_STRING_FIFO_PUSH_LINES_SORT_CALLBACK_DEF(PigPlatDebugLinesSortCallback)
 // bool PigPlatDebugLinesBeforeCallback(StringFifo_t* fifo, const StringFifo_t* srcFifo, const StringFifoLine_t* srcLine, u64* metaStructSize, void* userPntr)
 GY_STRING_FIFO_PUSH_LINES_BEFORE_CALLBACK_DEF(PigPlatDebugLinesBeforeCallback)
 {
+	UNUSED(fifo);
+	UNUSED(srcFifo);
+	UNUSED(srcLine);
+	UNUSED(userPntr);
 	if (metaStructSize != nullptr)
 	{
 		*metaStructSize = sizeof(DebugConsoleLine_t);
@@ -211,8 +218,11 @@ GY_STRING_FIFO_PUSH_LINES_BEFORE_CALLBACK_DEF(PigPlatDebugLinesBeforeCallback)
 // void PigPlatDebugLinesAfterCallback(StringFifo_t* fifo, const StringFifo_t* srcFifo, const StringFifoLine_t* srcLine, StringFifoLine_t* newLine, void* userPntr)
 GY_STRING_FIFO_PUSH_LINES_AFTER_CALLBACK_DEF(PigPlatDebugLinesAfterCallback)
 {
+	UNUSED(fifo);
+	UNUSED(srcFifo);
 	NotNull(userPntr);
 	HandlePlatformLinesContext_t* context = (HandlePlatformLinesContext_t*)userPntr;
+	UNUSED(context);
 	DebugConsoleLine_t* newMetaStruct = GetFifoLineMetaStruct(newLine, DebugConsoleLine_t);
 	PlatDebugLine_t* platMetaStruct = GetFifoLineMetaStruct(srcLine, PlatDebugLine_t);
 	ClearPointer(newMetaStruct);

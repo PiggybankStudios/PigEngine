@@ -450,6 +450,7 @@ void RcDrawPieChartTest(rec rectangle)
 
 void RcDrawVectorImgShape(VectorImgShape_t* shape, Color_t color)
 {
+	UNUSED(color); //TODO: Remove this once we use color
 	NotNull(shape);
 	switch (shape->type)
 	{
@@ -550,6 +551,7 @@ void RcDrawVectorImgShape(VectorImgShape_t* shape, Color_t color)
 }
 void RcDrawVectorImgPartInRec(VectorImgPart_t* part, rec rectangle, Color_t color, bool drawChildren = true)
 {
+	UNUSED(drawChildren); //TODO: Remove me once we use drawChildren
 	NotNull(part);
 	
 	v2 scale = Vec2Divide(rectangle.size, part->bounds.size);
@@ -571,6 +573,7 @@ void RcDrawVectorImgPartInRec(VectorImgPart_t* part, rec rectangle, Color_t colo
 }
 void RcDrawVectorImgPartInObb(VectorImgPart_t* part, obb2 boundingBox, Color_t color, bool drawChildren = true)
 {
+	UNUSED(drawChildren); //TODO: Remove me once we use drawChildren
 	NotNull(part);
 	
 	v2 scale = Vec2Divide(boundingBox.size, part->bounds.size);
