@@ -451,6 +451,14 @@ THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr) //pre-declared at top of fil
 	NotNull_(userPntr);
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
 	NotNull_(context->threadPntr);
+	
+	//Give the thread a name in windows so thread list in debugger is easier to read
+	char namePrintBuffer[32];
+	MyBufferPrintf(namePrintBuffer, sizeof(namePrintBuffer), "Worker Thread %llu", context->id);
+	CreateBufferArenaOnStack(nameWideStringBufferArena, nameWideStringBuffer, 32);
+	MyWideStr_t nameWideString = ConvertUtf8StrToUcs2(&nameWideStringBufferArena, NewStr(namePrintBuffer));
+    HRESULT setDescriptionResult = SetThreadDescription(GetCurrentThread(), nameWideString.chars);
+	
 	PrintLine_I("Thread Pool Thread[%llu] has started! (Thread %llu 0x%08X or %u)", context->id, context->threadPntr->id, context->threadPntr->win32_id, context->threadPntr->win32_id);
 	context->isAwake = true;
 	while (!context->shouldClose)

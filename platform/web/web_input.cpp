@@ -170,7 +170,7 @@ void Web_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* newI
 	// newInput->localTimezoneOffset = -((i64)timezoneInfo.Bias * NUM_SEC_PER_MINUTE);
 	// localTimestamp = unixTimestamp + newInput->localTimezoneOffset;
 	// newInput->localTimezoneDoesDst = (timezoneInfo.DaylightBias != 0);
-	// MyStr_t timezoneName = ConvertWideStrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
+	// MyStr_t timezoneName = ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
 	// if (StrCompareIgnoreCase(Platform->localTimezoneName, timezoneName) != 0)
 	// {
 	// 	if (!IsStrEmpty(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }

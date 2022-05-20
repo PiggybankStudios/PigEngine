@@ -62,7 +62,7 @@ PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(Win32_PasteTextFromClipboard)
 			wchar_t* wideStr = (wchar_t*)GlobalLock(dataHandle);
 			NotNull(wideStr);
 			u64 wideStrLength = MyWideStrLength(wideStr);
-			result = ConvertWideStrToUtf8(memArena, wideStr, wideStrLength);
+			result = ConvertUcs2StrToUtf8(memArena, wideStr, wideStrLength);
 			NotNullStr(&result);
 			GlobalUnlock(dataHandle);
 		}
