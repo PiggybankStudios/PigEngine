@@ -29,20 +29,22 @@ const char* GetVertBufferPrimitiveStr(VertBufferPrimitive_t primitive)
 
 enum VertexType_t
 {
-	VertexType_None = 0x00,
-	VertexType_All  = 0xFF,
+	VertexType_None = 0x0000,
+	VertexType_All  = 0x00FF,
 	
-	VertexType_PositionBit  = 0x01,
-	VertexType_Color1Bit    = 0x02,
-	VertexType_Color2Bit    = 0x04,
-	VertexType_TexCoord1Bit = 0x08,
-	VertexType_TexCoord2Bit = 0x10,
-	VertexType_Normal1Bit   = 0x20,
-	VertexType_Normal2Bit   = 0x40,
-	VertexType_TangentBit   = 0x80,
+	VertexType_PositionBit  = 0x0001,
+	VertexType_Color1Bit    = 0x0002,
+	VertexType_Color2Bit    = 0x0004,
+	VertexType_TexCoord1Bit = 0x0008,
+	VertexType_TexCoord2Bit = 0x0010,
+	VertexType_Normal1Bit   = 0x0020,
+	VertexType_Normal2Bit   = 0x0040,
+	VertexType_TangentBit   = 0x0080,
+	VertexType_SlugBit      = 0x0100, //slug vertices contain 4x Vector4D and 1x Color4U (position, texcoord, jacobian, banding, color)
 	
 	VertexType_Default2D = (VertexType_PositionBit|VertexType_Color1Bit|VertexType_TexCoord1Bit),
 	VertexType_Default3D = (VertexType_PositionBit|VertexType_Color1Bit|VertexType_TexCoord1Bit|VertexType_Normal1Bit),
+	VertexType_Slug      = (VertexType_SlugBit),
 };
 
 // VertexType_Default2D
@@ -114,6 +116,14 @@ struct VertexAttribLocations_t
 			GLint normal2;
 			GLint tangent;
 		};
+		struct
+		{
+			GLint attrib0;
+			GLint attrib1;
+			GLint attrib2;
+			GLint attrib3;
+			GLint attrib4;
+		} slug;
 	} gl;
 	#endif
 };
@@ -196,6 +206,8 @@ enum ShaderError_t
 	ShaderError_VertexArrayCreationFailed,
 	ShaderError_MissingAttribute,
 	ShaderError_MissingUniform,
+	ShaderError_NoVertShaderPieces,
+	ShaderError_NoFragShaderPieces,
 	ShaderError_NumErrors,
 };
 const char* GetShaderErrorStr(ShaderError_t error)
@@ -218,6 +230,8 @@ const char* GetShaderErrorStr(ShaderError_t error)
 		case ShaderError_VertexArrayCreationFailed: return "VertexArrayCreationFailed";
 		case ShaderError_MissingAttribute:          return "MissingAttribute";
 		case ShaderError_MissingUniform:            return "MissingUniform";
+		case ShaderError_NoVertShaderPieces:        return "NoVertShaderPieces";
+		case ShaderError_NoFragShaderPieces:        return "NoFragShaderPieces";
 		default: return "Unknown";
 	}
 }
@@ -239,8 +253,12 @@ struct Shader_t
 	MyStr_t apiErrorStr;
 	MemArena_t* allocArena;
 	VertexType_t vertexType;
+	VertexType_t actualVertexType;
 	u32 requiredUniforms;
 	u32 uniformFlags;
+	
+	VarArray_t vertexCodePieces; //MyStr_t
+	VarArray_t fragmentCodePieces; //MyStr_t
 	
 	VarArray_t dynamicUniforms; //ShaderDynamicUniform_t
 	
@@ -302,8 +320,8 @@ struct VertBuffer_t
 	MemArena_t* allocArena;
 	bool isValid;
 	u64 id;
-	
 	bool isDynamic;
+	
 	u64 numVertices;
 	VertexType_t vertexType;
 	u64 vertexSize;
@@ -315,8 +333,23 @@ struct VertBuffer_t
 		Vertex3D_t* verts3D;
 	};
 	
+	u64 numIndices;
+	u64 indexSize;
+	bool hasIndicesCopy;
+	union
+	{
+		void* indicesVoidPntr;
+		i16* indicesI16;
+		u16* indicesU16;
+		i32* indicesI32;
+		u32* indicesU32;
+		i64* indicesI64;
+		u64* indicesU64;
+	};
+	
 	#if OPENGL_SUPPORTED
 	GLuint glId;
+	GLuint glIndexId;
 	#endif
 };
 
@@ -355,6 +388,7 @@ struct Texture_t
 	bool isPixelated;
 	bool isRepeating;
 	bool hasAlpha;
+	bool isHdrTexture;
 	u64 antialiasingNumSamples;
 	bool isFlippedY;
 	bool singleChannel;
@@ -423,6 +457,7 @@ struct FrameBuffer_t
 		struct { i32 width, height; };
 	};
 	u64 antialiasingNumSamples;
+	bool isHdrBuffer;
 	u8 channelFlags;
 	
 	#if OPENGL_SUPPORTED
@@ -430,6 +465,19 @@ struct FrameBuffer_t
 	GLuint glOutId;
 	GLuint glRenderBuffId;
 	#endif
+};
+
+struct PostProcessingChain_t
+{
+	MemArena_t* allocArena;
+	v2i size;
+	u8 channelFlags;
+	u64 antialiasingNumSamples;
+	
+	u64 passIndex;
+	FrameBuffer_t mainBuffer;
+	FrameBuffer_t secondaryBuffer;
+	BktArray_t inputBuffers; //FrameBuffer_t
 };
 
 enum SpriteSheetError_t

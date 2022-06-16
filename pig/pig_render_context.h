@@ -43,8 +43,11 @@ struct RenderContextState_t
 	v2 shiftVec;
 	
 	Color_t color1;
+	Colorf_t color1f;
 	Color_t color2;
+	Colorf_t color2f;
 	Color_t replaceColors[16];
+	Colorf_t replaceColorsf[16];
 	
 	r32 time;
 	r32 brightness;

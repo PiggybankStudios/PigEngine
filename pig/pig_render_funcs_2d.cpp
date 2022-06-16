@@ -171,6 +171,31 @@ void RcDrawObb2(obb2 boundingBox, Color_t color)
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+void RcDrawObb2(obb2 boundingBox, Colorf_t colorf)
+{
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
+	Mat4Transform(worldMatrix, Mat4Scale2(boundingBox.size));
+	Mat4Transform(worldMatrix, Mat4RotateZ(boundingBox.rotation));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, rc->state.depth));
+	RcSetWorldMatrix(worldMatrix);
+	RcBindTexture1(&rc->dotTexture);
+	RcSetSourceRec1(Rec_Default);
+	RcSetColor1(colorf);
+	RcBindVertBuffer(&rc->squareBuffer);
+	RcDrawBuffer(VertBufferPrimitive_Triangles);
+}
+void RcDrawObb2Outline(obb2 boundingBox, Color_t color, r32 thickness, bool outsideBox = false)
+{
+	obb2 topBox    = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
+	obb2 bottomBox = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, boundingBox.height - thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
+	obb2 leftBox   = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
+	obb2 rightBox  = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width - thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
+	RcDrawObb2(topBox,    color);
+	RcDrawObb2(bottomBox, color);
+	RcDrawObb2(leftBox,   color);
+	RcDrawObb2(rightBox,  color);
+}
 //TODO: Add textured version of this function
 void RcDrawRoundedObb2(obb2 boundingBox, r32 cornerRadius, Color_t color, bool bindShader = true)
 {
@@ -223,6 +248,11 @@ void RcDrawLine(v2 start, v2 end, r32 thickness, Color_t color)
 {
 	obb2 lineRec = Obb2Line(start, end, thickness);
 	RcDrawObb2(lineRec, color);
+}
+void RcDrawLine(v2 start, v2 end, r32 thickness, Colorf_t colorf)
+{
+	obb2 lineRec = Obb2Line(start, end, thickness);
+	RcDrawObb2(lineRec, colorf);
 }
 
 void RcDrawBezier3WithLines(v2 start, v2 control, v2 end, r32 thickness, Color_t color, u32 numVerts)
@@ -599,4 +629,126 @@ void RcDrawVectorImgPartAt(VectorImgPart_t* part, v2 position, r32 rotation, r32
 	obb2 drawBox = NewObb2D(position, part->bounds.size * scale, rotation);
 	drawBox.center -= Vec2Rotate(part->origin * scale, rotation);
 	RcDrawVectorImgPartInObb(part, drawBox, color, drawChildren);
+}
+
+// +--------------------------------------------------------------+
+// |                    Post Processing Chain                     |
+// +--------------------------------------------------------------+
+FrameBuffer_t* RenderToPostProcessingChainInput(PostProcessingChain_t* chain, u64 inputIndex)
+{
+	NotNull(chain);
+	NotNull(chain->allocArena);
+	FrameBuffer_t* targetBuffer = PostProcessingChainAddInputBuffer(chain, inputIndex);
+	Assert(targetBuffer->isValid);
+	RcBindFrameBuffer(targetBuffer);
+	return targetBuffer;
+}
+
+// Call this once for first pass, up to 2 input buffers can be used to feed the shader (bind shader first)
+void PostProcessingChainFirstPassPntrs(PostProcessingChain_t* chain, Color_t clearColor, Color_t color, FrameBuffer_t* firstInputBuffer, FrameBuffer_t* secondInputBuffer = nullptr)
+{
+	NotNull(chain);
+	NotNull(firstInputBuffer);
+	chain->passIndex = 0;
+	RcBindFrameBuffer(nullptr);
+	PrepareFrameBufferTexture(firstInputBuffer);
+	if (secondInputBuffer != nullptr) { PrepareFrameBufferTexture(secondInputBuffer); }
+	RcBindTexture1(&firstInputBuffer->outTexture);
+	if (secondInputBuffer != nullptr)
+	{
+		RcBindTexture2(&secondInputBuffer->outTexture);
+		RcSetSourceRec2(NewRec(Vec2_Zero, secondInputBuffer->outTexture.size));
+	}
+	RcBindFrameBuffer(&chain->mainBuffer);
+	RcSetViewport(NewRec(Vec2_Zero, ToVec2(chain->mainBuffer.size)));
+	RcClearColor(clearColor);
+	RcClearDepth(1.0f);
+	RcDrawTexturedRectangle(NewRec(Vec2_Zero, ToVec2(chain->size)), color);
+	chain->passIndex++;
+}
+void PostProcessingChainFirstPass(PostProcessingChain_t* chain, Color_t clearColor, Color_t color, u64 inputIndex1, u64 inputIndex2 = UINT64_MAX)
+{
+	NotNull(chain);
+	PostProcessingChainFirstPassPntrs(
+		chain,
+		clearColor,
+		color,
+		GetPostProcessingChainInputBuffer(chain, inputIndex1),
+		(inputIndex2 < chain->inputBuffers.length ? GetPostProcessingChainInputBuffer(chain, inputIndex2) : nullptr)
+	);
+}
+
+// Call this for subsequent passes. Texture1 is filled with result from previous pass and second input buffer is optional (bind shader first)
+void PostProcessingChainNextPassPntr(PostProcessingChain_t* chain, Color_t clearColor, Color_t color, FrameBuffer_t* secondInputBuffer = nullptr)
+{
+	NotNull(chain);
+	FrameBuffer_t* targetBuffer = ((chain->passIndex%2) == 0 ? &chain->mainBuffer : &chain->secondaryBuffer);
+	FrameBuffer_t* sourceBuffer = ((chain->passIndex%2) == 0 ? &chain->secondaryBuffer : &chain->mainBuffer);
+	RcBindFrameBuffer(nullptr);
+	PrepareFrameBufferTexture(sourceBuffer);
+	RcBindFrameBuffer(targetBuffer);
+	RcSetViewport(NewRec(Vec2_Zero, ToVec2(targetBuffer->size)));
+	RcClearColor(clearColor);
+	RcClearDepth(1.0f);
+	if (secondInputBuffer != nullptr) { PrepareFrameBufferTexture(secondInputBuffer); }
+	RcBindTexture1(&sourceBuffer->outTexture);
+	if (secondInputBuffer != nullptr)
+	{
+		RcBindTexture2(&secondInputBuffer->outTexture);
+		RcSetSourceRec2(NewRec(Vec2_Zero, secondInputBuffer->outTexture.size));
+	}
+	RcDrawTexturedRectangle(NewRec(Vec2_Zero, ToVec2(chain->size)), color);
+	chain->passIndex++;
+}
+void PostProcessingChainNextPass(PostProcessingChain_t* chain, Color_t clearColor, Color_t color, u64 inputIndex2 = UINT64_MAX)
+{
+	NotNull(chain);
+	PostProcessingChainNextPassPntr(
+		chain,
+		clearColor,
+		color,
+		(inputIndex2 < chain->inputBuffers.length ? GetPostProcessingChainInputBuffer(chain, inputIndex2) : nullptr)
+	);
+}
+
+// call this once after, bind the actual target framebuffer+shader, then draw to wherever you want using Texture1 (or look into the chain yourself and pull out and bind as needed)
+void PostProcessingChainEnd(PostProcessingChain_t* chain, FrameBuffer_t* outputBuffer, Shader_t* outputShader, bool bindTexture = true)
+{
+	NotNull(chain);
+	FrameBuffer_t* sourceBuffer = ((chain->passIndex%2) == 0 ? &chain->secondaryBuffer : &chain->mainBuffer);
+	RcBindFrameBuffer(nullptr);
+	PrepareFrameBufferTexture(sourceBuffer);
+	RcBindFrameBuffer(outputBuffer);
+	RcBindShader(outputShader);
+	RcSetViewport(NewRec(Vec2_Zero, (outputBuffer != nullptr ? ToVec2(outputBuffer->size) : ScreenSize)));
+	if (bindTexture)
+	{
+		RcBindTexture1(&sourceBuffer->outTexture);
+	}
+}
+
+void BindPostProcessingChainInputTexture(PostProcessingChain_t* chain, u64 inputIndex, bool bindToTexture2 = false)
+{
+	NotNull(chain);
+	Assert(inputIndex < chain->inputBuffers.length);
+	FrameBuffer_t* inputBuffer = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex);
+	Assert(inputBuffer->isValid);
+	PrepareFrameBufferTexture(inputBuffer);
+	if (bindToTexture2) { RcBindTexture2(&inputBuffer->outTexture); }
+	else { RcBindTexture1(&inputBuffer->outTexture); }
+}
+
+void DoubleBindPostProcessingChainInputTexture(PostProcessingChain_t* chain, u64 inputIndex1, u64 inputIndex2)
+{
+	NotNull(chain);
+	Assert(inputIndex1 < chain->inputBuffers.length);
+	Assert(inputIndex2 < chain->inputBuffers.length);
+	FrameBuffer_t* inputBuffer1 = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex1);
+	Assert(inputBuffer1->isValid);
+	FrameBuffer_t* inputBuffer2 = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex2);
+	Assert(inputBuffer2->isValid);
+	PrepareFrameBufferTexture(inputBuffer1);
+	PrepareFrameBufferTexture(inputBuffer2);
+	RcBindTexture1(&inputBuffer1->outTexture);
+	RcBindTexture2(&inputBuffer2->outTexture);
 }

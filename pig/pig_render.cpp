@@ -53,18 +53,29 @@ void RcCreateVertexArrayObject_OpenGL(u64 windowId, VertexType_t vertexType, Ver
 void RcBindVertexArrayObject_OpenGL(VertexArrayObject_t* vao)
 {
 	NotNull(rc->state.boundShader);
-	Assert(vao->vertexType == rc->state.boundShader->vertexType);
+	Assert(vao->vertexType == rc->state.boundShader->actualVertexType);
 	
 	glBindVertexArray(vao->glId); AssertNoOpenGlError();
 	if (!vao->boundOnce || true) //TODO: Remove me when we figure out why the assertion in the else statement is firing on laptop
 	{
-		for (u64 attIndex = 0; attIndex < MAX_NUM_VERTEX_ATTRIBUTES; attIndex++)
+		if (IsFlagSet(vao->vertexType, VertexType_SlugBit))
 		{
-			if (rc->state.boundShader->attribLocations.gl.values[attIndex] >= 0)
+			glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.slug.attrib0); AssertNoOpenGlError();
+			glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.slug.attrib1); AssertNoOpenGlError();
+			glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.slug.attrib2); AssertNoOpenGlError();
+			glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.slug.attrib3); AssertNoOpenGlError();
+			glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.slug.attrib4); AssertNoOpenGlError();
+		}
+		else
+		{
+			for (u64 attIndex = 0; attIndex < MAX_NUM_VERTEX_ATTRIBUTES; attIndex++)
 			{
-				glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.values[attIndex]); AssertNoOpenGlError();
+				if (rc->state.boundShader->attribLocations.gl.values[attIndex] >= 0)
+				{
+					glEnableVertexAttribArray(rc->state.boundShader->attribLocations.gl.values[attIndex]); AssertNoOpenGlError();
+				}
+				vao->attribLocations.gl.values[attIndex] = rc->state.boundShader->attribLocations.gl.values[attIndex];
 			}
-			vao->attribLocations.gl.values[attIndex] = rc->state.boundShader->attribLocations.gl.values[attIndex];
 		}
 		vao->boundOnce = true;
 	}
@@ -153,60 +164,74 @@ void RcBindVertBuffer_OpenGL(const VertBuffer_t* buffer)
 {
 	NotNull(rc);
 	NotNull(rc->state.boundShader);
+	NotNull(rc->state.boundVao);
 	
 	if (buffer != nullptr)
 	{
+		NotNull(rc->state.boundVao);
 		glBindVertexArray(rc->state.boundVao->glId); AssertNoOpenGlError(); //TODO: We don't really need to do this?
 		glBindBuffer(GL_ARRAY_BUFFER, buffer->glId); AssertNoOpenGlError();
-		u8* attribOffset = nullptr;
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_PositionBit))
+		if (buffer->numIndices > 0) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->glIndexId); AssertNoOpenGlError(); }
+		if (IsFlagSet(rc->state.boundVao->vertexType, VertexType_SlugBit))
 		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_PositionBit), "Tried to bind vertex buffer with no Position attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.position, 3, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			glVertexAttribPointer(0, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex),   nullptr); AssertNoOpenGlError();
+			glVertexAttribPointer(1, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)16); AssertNoOpenGlError();
+			glVertexAttribPointer(2, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)32); AssertNoOpenGlError();
+			glVertexAttribPointer(3, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)48); AssertNoOpenGlError();
+			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true,  sizeof(Terathon::Slug::Vertex), (char*)64); AssertNoOpenGlError();
 		}
-		if (IsFlagSet(buffer->vertexType, VertexType_PositionBit)) { attribOffset += sizeof(v3); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_Color1Bit))
+		else
 		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Color1Bit), "Tried to bind vertex buffer with no Color1 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.color1, 4, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			u8* attribOffset = nullptr;
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_PositionBit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_PositionBit), "Tried to bind vertex buffer with no Position attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.position, 3, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_PositionBit)) { attribOffset += sizeof(v3); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_Color1Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Color1Bit), "Tried to bind vertex buffer with no Color1 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.color1, 4, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_Color1Bit)) { attribOffset += sizeof(v4); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_Color2Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Color2Bit), "Tried to bind vertex buffer with no Color2 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.color2, 4, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_Color2Bit)) { attribOffset += sizeof(v4); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_TexCoord1Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TexCoord1Bit), "Tried to bind vertex buffer with no TexCoord1 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.texCoord1, 2, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_TexCoord1Bit)) { attribOffset += sizeof(v2); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_TexCoord2Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TexCoord2Bit), "Tried to bind vertex buffer with no TexCoord2 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.texCoord2, 2, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_TexCoord2Bit)) { attribOffset += sizeof(v2); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_Normal1Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Normal1Bit), "Tried to bind vertex buffer with no Normal1 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.normal1, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_Normal1Bit)) { attribOffset += sizeof(v3); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_Normal2Bit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Normal2Bit), "Tried to bind vertex buffer with no Normal2 attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.normal2, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_Normal2Bit)) { attribOffset += sizeof(v3); }
+			if (IsFlagSet(rc->state.boundShader->actualVertexType, VertexType_TangentBit))
+			{
+				AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TangentBit), "Tried to bind vertex buffer with no Tangent attribute to shader that requires it");
+				glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.tangent, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
+			}
+			if (IsFlagSet(buffer->vertexType, VertexType_TangentBit)) { attribOffset += sizeof(v3); }
 		}
-		if (IsFlagSet(buffer->vertexType, VertexType_Color1Bit)) { attribOffset += sizeof(v4); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_Color2Bit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Color2Bit), "Tried to bind vertex buffer with no Color2 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.color2, 4, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_Color2Bit)) { attribOffset += sizeof(v4); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_TexCoord1Bit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TexCoord1Bit), "Tried to bind vertex buffer with no TexCoord1 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.texCoord1, 2, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_TexCoord1Bit)) { attribOffset += sizeof(v2); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_TexCoord2Bit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TexCoord2Bit), "Tried to bind vertex buffer with no TexCoord2 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.texCoord2, 2, GL_FLOAT, GL_FALSE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_TexCoord2Bit)) { attribOffset += sizeof(v2); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_Normal1Bit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Normal1Bit), "Tried to bind vertex buffer with no Normal1 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.normal1, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_Normal1Bit)) { attribOffset += sizeof(v3); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_Normal2Bit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_Normal2Bit), "Tried to bind vertex buffer with no Normal2 attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.normal2, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_Normal2Bit)) { attribOffset += sizeof(v3); }
-		if (IsFlagSet(rc->state.boundShader->vertexType, VertexType_TangentBit))
-		{
-			AssertMsg(IsFlagSet(buffer->vertexType, VertexType_TangentBit), "Tried to bind vertex buffer with no Tangent attribute to shader that requires it");
-			glVertexAttribPointer(rc->state.boundShader->attribLocations.gl.tangent, 3, GL_FLOAT, GL_TRUE, (GLsizei)buffer->vertexSize, attribOffset); AssertNoOpenGlError();
-		}
-		if (IsFlagSet(buffer->vertexType, VertexType_TangentBit)) { attribOffset += sizeof(v3); }
 	}
 	else
 	{
@@ -451,7 +476,6 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 	NotNull(rc->state.boundBuffer);
 	Assert(startIndex < rc->state.boundBuffer->numVertices);
 	Assert(startIndex+numVertices <= rc->state.boundBuffer->numVertices);
-	if (numVertices == 0) { numVertices = rc->state.boundBuffer->numVertices; }
 	GLenum glPrimitive = GL_FALSE;
 	switch (primitive)
 	{
@@ -460,8 +484,33 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 		//TODO: Add other primitive types here
 		default: AssertMsg(false, "Unsupported primitive type in RcDrawBuffer_OpenGL"); break;
 	}
-	//TODO: Make sure our u64 indices aren't too large for GLint and GLsizei
-	glDrawArrays(glPrimitive, (GLint)startIndex, (GLsizei)numVertices);
+	if (rc->state.boundBuffer->numIndices > 0)
+	{
+		if (numVertices == 0)
+		{
+			numVertices = rc->state.boundBuffer->numIndices;
+		}
+		GLenum glIndexType = GL_UNSIGNED_INT;
+		switch (rc->state.boundBuffer->indexSize)
+		{
+			case 1: glIndexType = GL_UNSIGNED_BYTE; break;
+			case 2: glIndexType = GL_UNSIGNED_SHORT; break;
+			case 4: glIndexType = GL_UNSIGNED_INT; break;
+			//TODO: Add other index types here
+			default: AssertMsg(false, "Unsupported index size in RcDrawBuffer_OpenGL"); break;
+		}
+		//TODO: Make sure our u64 numVertices isn't too large for GLsizei
+		glDrawElements(glPrimitive, (GLsizei)numVertices, glIndexType, (const void*)(startIndex * rc->state.boundBuffer->indexSize));
+	}
+	else
+	{
+		if (numVertices == 0)
+		{
+			numVertices = rc->state.boundBuffer->numVertices;
+		}
+		//TODO: Make sure our u64 indices aren't too large for GLint and GLsizei
+		glDrawArrays(glPrimitive, (GLint)startIndex, (GLsizei)numVertices);
+	}
 	AssertNoOpenGlError();
 }
 
@@ -568,7 +617,7 @@ void RcBindShader(Shader_t* shader)
 			RcBindShader_OpenGL(shader);
 			rc->state.boundShader = shader;
 			NotNull(rc->currentWindow);
-			VertexArrayObject_t* compatibleVao = RcGetVertexArrayObj(rc->currentWindow->id, shader->vertexType);
+			VertexArrayObject_t* compatibleVao = RcGetVertexArrayObj(rc->currentWindow->id, shader->actualVertexType);
 			NotNull(compatibleVao);
 			RcBindVertexArrayObject_OpenGL(compatibleVao);
 			rc->state.boundVao = compatibleVao;
@@ -580,8 +629,8 @@ void RcBindShader(Shader_t* shader)
 			RcSetViewMatrix_OpenGL(rc->state.viewMatrix);
 			RcSetProjectionMatrix_OpenGL(rc->state.projectionMatrix);
 			RcSetCameraPosition_OpenGL(rc->state.cameraPosition);
-			RcSetColor1_OpenGL(ToColorf(rc->state.color1));
-			RcSetColor2_OpenGL(ToColorf(rc->state.color2));
+			RcSetColor1_OpenGL(rc->state.color1f);
+			RcSetColor2_OpenGL(rc->state.color2f);
 			if (rc->state.boundTexture1 != nullptr) { RcSetSourceRec1_OpenGL(rc->state.sourceRec1, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height); }
 			if (rc->state.boundTexture2 != nullptr) { RcSetSourceRec2_OpenGL(rc->state.sourceRec2, rc->state.boundTexture2->isFlippedY, rc->state.boundTexture2->height); }
 			RcSetShiftVec_OpenGL(rc->state.shiftVec);
@@ -906,6 +955,25 @@ void RcSetColor1(Color_t color)
 		{
 			RcSetColor1_OpenGL(ToColorf(color));
 			rc->state.color1 = color;
+			rc->state.color1f = ToColorf(color);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetColor1!"); break;
+	}
+}
+void RcSetColor1(Colorf_t color)
+{
+	NotNull(rc);
+	if (rc->state.color1f == color) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetColor1_OpenGL(color);
+			rc->state.color1 = ToColor(color);
+			rc->state.color1f = color;
 		} break;
 		#endif
 		
@@ -923,6 +991,25 @@ void RcSetColor2(Color_t color)
 		{
 			RcSetColor2_OpenGL(ToColorf(color));
 			rc->state.color2 = color;
+			rc->state.color2f = ToColorf(color);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetColor2!"); break;
+	}
+}
+void RcSetColor2(Colorf_t color)
+{
+	NotNull(rc);
+	if (rc->state.color2f == color) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetColor2_OpenGL(color);
+			rc->state.color2 = ToColor(color);
+			rc->state.color2f = color;
 		} break;
 		#endif
 		
@@ -1226,8 +1313,7 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 // +==============================+
 // |            Begin             |
 // +==============================+
-//TODO: Add support for rendering to a offscreen framebuffer
-void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor)
+void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = 1.0f, i32 clearStencil = 0)
 {
 	NotNull(pig);
 	NotNull(rc);
@@ -1239,9 +1325,9 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	
 	RcBindFrameBuffer(frameBuffer, true);
 	RcClearColor(clearColor);
-	RcClearDepth(1.0f);
+	RcClearDepth(clearDepth);
 	//TODO: Should we check if the current window actually has a stencil buffer?
-	RcClearStencil(0);
+	RcClearStencil(clearStencil);
 	
 	// +======================================+
 	// | API Specific Initialization/Options  |
@@ -1292,10 +1378,13 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	rc->state.shiftVec = Vec2_Zero;
 	
 	rc->state.color1 = White;
+	rc->state.color1f = ToColorf(rc->state.color1);
 	rc->state.color2 = White;
+	rc->state.color2f = ToColorf(rc->state.color2);
 	for (u64 cIndex = 0; cIndex < ArrayCount(rc->state.replaceColors); cIndex++)
 	{
 		rc->state.replaceColors[cIndex] = White;
+		rc->state.replaceColorsf[cIndex] = ToColorf(rc->state.replaceColors[cIndex]);
 	}
 	
 	rc->state.time = 0.0f;
@@ -1312,6 +1401,13 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	RcBindShader(initialShader);
 	RcSetViewport(NewRec(Vec2_Zero, window->input.renderResolution));
 }
+//Overload with a PostProcessingChain_t* rather than FrameBuffer_t*
+void RcBegin(const PlatWindow_t* window, PostProcessingChain_t* postProcessingChain, u64 inputIndex, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = 1.0f, i32 clearStencil = 0)
+{
+	NotNull(postProcessingChain);
+	RcBegin(window, GetPostProcessingChainInputBuffer(postProcessingChain, inputIndex), initialShader, clearColor, clearDepth, clearStencil);
+}
+
 
 // +==============================+
 // |       Basic Resources        |

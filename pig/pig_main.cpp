@@ -26,14 +26,23 @@ Description:
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
 
+// #define TERATHON_NO_SYSTEM
+// #define SLUG_WINDOWS
+// #define SLUG_D3D11
+// #define SLUG_DEBUG
+#include "slug/SlugCode/SLSlug.h"
+#include "slug/TerathonCode/TSCompression.h"
+
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
 #include "pig/pig_input_chars.h"
 #include "pig/pig_render.h"
 #include "pig/pig_types.h"
+#include "pig/pig_slug_types.h"
 #include "pig/pig_svg.h"
 #include "pig/pig_vector_img.h"
 #include "pig/pig_font.h"
+#include "pig/pig_slug.h"
 #include "pig/pig_render_context.h"
 #include "pig/pig_resources.h"
 #include "pig/pig_input.h"
@@ -102,6 +111,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_svg.cpp"
 #include "pig/pig_vector_img.cpp"
 #include "pig/pig_font.cpp"
+#include "pig/pig_slug.cpp"
 #include "pig/pig_model_obj.cpp"
 #include "pig/pig_model.cpp"
 #include "pig/pig_resources.cpp"
@@ -111,6 +121,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_sounds.cpp"
 
 #include "pig/pig_render.cpp"
+#include "pig/pig_slug_render.cpp"
 #include "pig/pig_render_funcs_2d.cpp"
 #include "pig/pig_font_flow.cpp"
 #include "pig/pig_render_funcs_3d.cpp"

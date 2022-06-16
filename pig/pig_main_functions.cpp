@@ -53,6 +53,7 @@ void PigInitialize(EngineMemory_t* memory)
 	PigInitSounds();
 	Pig_InitializeInput();
 	Pig_InitializeWindowStates();
+	Pig_ChangeWindow(platInfo->mainWindow);
 	
 	pig->nextUiId = 1;
 	pig->nextShaderId = 1;
@@ -61,7 +62,6 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->nextVectorImgId = 1;
 	pig->nextVertBufferId = 1;
 	pig->nextSpriteSheetId = 1;
-	plat->ChangeWindowTarget(platInfo->mainWindow);
 	
 	RcLoadBasicResources();
 	Pig_InitResources();
@@ -266,6 +266,7 @@ void PigPostReload(Version_t oldVersion)
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
 	
+	Pig_ChangeWindow(platInfo->mainWindow);
 	GameHandleReload();
 }
 

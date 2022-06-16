@@ -45,6 +45,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 	Assert(imageData->width > 0);
 	Assert(imageData->height > 0);
 	Assert(antialiasingNumSamples == 0 || antialiasingNumSamples == 4 || antialiasingNumSamples == 8);
+	Assert(!(imageData->floatChannels && antialiasingNumSamples > 0));
 	// NotNull(imageData->data8); //This can actually be null if you want to create a texture without filling it immediately
 	
 	ClearPointer(textureOut);
@@ -53,6 +54,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 	pig->nextTextureId++;
 	textureOut->isPixelated = pixelated;
 	textureOut->isRepeating = repeating;
+	textureOut->isHdrTexture = imageData->floatChannels;
 	textureOut->antialiasingNumSamples = antialiasingNumSamples;
 	textureOut->sizei = imageData->size;
 	textureOut->size = ToVec2(imageData->size);
@@ -90,18 +92,18 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 			CreateTexture_CheckOpenGlError("glBindTexture()") { break; }
 			
 			GLenum dataFormat = reverseByteOrder ? GL_BGRA : GL_RGBA;
-			GLenum internalFormat = GL_RGBA;
+			GLenum internalFormat = imageData->floatChannels ? GL_RGBA32F : GL_RGBA;
 			textureOut->hasAlpha = true;
 			if (imageData->pixelSize == 1)
 			{
 				dataFormat = GL_RED;
-				internalFormat = GL_RED;
+				internalFormat = imageData->floatChannels ? GL_R32F : GL_RED;
 				textureOut->hasAlpha = false;
 			}
 			if (imageData->pixelSize == 3) //no-alpha
 			{
 				dataFormat = reverseByteOrder ? GL_BGR : GL_RGB;
-				internalFormat = GL_RGB;
+				internalFormat = imageData->floatChannels ? GL_RGB32F : GL_RGB;
 				textureOut->hasAlpha = false;
 			}
 			
@@ -128,7 +130,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 					imageData->height,  //image height
 					0,                  //border
 					dataFormat,         //format
-					GL_UNSIGNED_BYTE,   //type
+					(imageData->floatChannels ? GL_FLOAT : GL_UNSIGNED_BYTE), //type
 					imageData->data8    //data
 				);
 				CreateTexture_CheckOpenGlError("glTexImage2D(...)") { break; }
@@ -136,9 +138,16 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 			
 			if (!hasAntialiasing)
 			{
-				//TODO: Should these go inside the "if (generateMipmap)"?
-				glTexParameteri(targetEnum, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR));
-				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MIN_FILTER)") { break; }
+				if (generateMipmap)
+				{
+					glTexParameteri(targetEnum, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR));
+					CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MIN_FILTER)") { break; }
+				}
+				else
+				{
+					glTexParameteri(targetEnum, GL_TEXTURE_MIN_FILTER, (pixelated ? GL_NEAREST : GL_LINEAR));
+					CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MIN_FILTER)") { break; }
+				}
 				glTexParameteri(targetEnum, GL_TEXTURE_MAG_FILTER, (pixelated ? GL_NEAREST : GL_LINEAR));
 				CreateTexture_CheckOpenGlError("glTexParameteri(GL_TEXTURE_MAG_FILTER)") { break; }
 				glTexParameteri(targetEnum, GL_TEXTURE_WRAP_S, (repeating ? GL_REPEAT : GL_CLAMP_TO_EDGE));
@@ -224,6 +233,21 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	plat->FreeFileContents(&textureFile);
 	
 	return result;
+}
+
+void TextureGenerateMipmaps(Texture_t* texture)
+{
+	if (texture->antialiasingNumSamples == 0)
+	{
+		glBindTexture(GL_TEXTURE_2D, texture->glId);
+		AssertNoOpenGlError();
+		glGenerateMipmap(GL_TEXTURE_2D);
+		AssertNoOpenGlError();
+	}
+	else
+	{
+		WriteLine_W("Warning: Trying to generate mipmaps for texture with antialiasing, which doesn't support mipmaps");
+	}
 }
 
 const char* PrintTextureError(const Texture_t* texture)

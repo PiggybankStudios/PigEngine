@@ -15,7 +15,7 @@ Description:
 
 #define PIG_WINDOW_ALWAYS_ON_TOP        false
 #define SHOW_PERF_GRAPH_ON_STARTUP      false
-#define SHOW_MEM_GRAPH_ON_STARTUP       true
+#define SHOW_MEM_GRAPH_ON_STARTUP       false
 #define SHOW_PIE_GRAPHS_ON_STARTUP      false
 #define SHOW_AUDIO_OUT_GRAPH_ON_STARTUP false
 #define PAUSE_PERF_GRAPH_ONCE_FULL      false

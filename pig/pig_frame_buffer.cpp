@@ -4,7 +4,11 @@ Author: Taylor Robbins
 Date:   02\20\2022
 Description: 
 	** Holds functions that help us create frame buffers, targets that we can bind and render to
+	** Also holds functions for PostProcessingChain_t which makes the process of combining FrameBuffers_t to achieve post process effects easier
 */
+
+//TODO: Our textures that are attached to our framebuffers seem to only get mipmap level 0 filled. This causes problems if we try and use those textures in scenarios where
+//      it might want to sample from other mipmap levels (like smaller on screen than the same size as the texture/framebuffer)
 
 void DestroyFrameBuffer(FrameBuffer_t* buffer)
 {
@@ -46,7 +50,7 @@ void DestroyFrameBuffer(FrameBuffer_t* buffer)
 	ClearPointer(buffer);
 }
 
-bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size, u64 antialiasingNumSamples, u8 channelFlags = FrameBufferChannel_Default)
+bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size, u64 antialiasingNumSamples, bool isHdrBuffer = false, u8 channelFlags = FrameBufferChannel_Default)
 {
 	AssertSingleThreaded();
 	NotNull(memArena);
@@ -60,6 +64,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 	bufferOut->isValid = false;
 	bufferOut->size = size;
 	bufferOut->antialiasingNumSamples = antialiasingNumSamples;
+	bufferOut->isHdrBuffer = isHdrBuffer;
 	bufferOut->channelFlags = channelFlags;
 	bufferOut->error = FrameBufferError_None;
 	bool hasMsaa = (antialiasingNumSamples > 0);
@@ -85,6 +90,8 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
+			bool mainTextureIsHdr = (isHdrBuffer && !hasMsaa);
+			
 			glGenFramebuffers((GLsizei)1, &bufferOut->glId);
 			CreateFrameBuffer_CheckOpenGlError("glGenFramebuffers(1)") { break; }
 			
@@ -94,7 +101,8 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 			//this is reused below for the outTexture
 			PlatImageData_t emptyImageData = {};
 			emptyImageData.size = size;
-			emptyImageData.pixelSize = (IsFlagSet(channelFlags, FrameBufferChannel_Opacity) ? 4 : 3); //either 32 pixel depth or 24
+			emptyImageData.floatChannels = mainTextureIsHdr;
+			emptyImageData.pixelSize = (IsFlagSet(channelFlags, FrameBufferChannel_Opacity) ? 4 : 3) * (mainTextureIsHdr ? sizeof(float) : sizeof(u8));
 			emptyImageData.rowSize = (u64)size.width * emptyImageData.pixelSize; //TODO: This is technically unneeded by CreateTexture right now. Can we enforce that assumption?
 			emptyImageData.dataSize = (u64)size.height * emptyImageData.rowSize; //TODO: This is technically unneeded by CreateTexture right now. Can we enforce that assumption?
 			emptyImageData.data8 = nullptr;
@@ -172,6 +180,10 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 				glBindFramebuffer(GL_FRAMEBUFFER, bufferOut->glOutId);
 				CreateFrameBuffer_CheckOpenGlError("glBindFramebuffer(GL_FRAMEBUFFER, glOutId)") { break; }
 				
+				emptyImageData.floatChannels = isHdrBuffer;
+				emptyImageData.pixelSize = (IsFlagSet(channelFlags, FrameBufferChannel_Opacity) ? 4 : 3) * (isHdrBuffer ? sizeof(float) : sizeof(u8));
+				emptyImageData.rowSize = (u64)size.width * emptyImageData.pixelSize; //TODO: This is technically unneeded by CreateTexture right now. Can we enforce that assumption?
+				emptyImageData.dataSize = (u64)size.height * emptyImageData.rowSize; //TODO: This is technically unneeded by CreateTexture right now. Can we enforce that assumption?
 				const bool outPixelated = false, outRepeating = false;
 				if (!CreateTexture(memArena, &bufferOut->outTexture, &emptyImageData, outPixelated, outRepeating))
 				{
@@ -247,6 +259,24 @@ const char* PrintFrameBufferError(const FrameBuffer_t* buffer)
 	}
 }
 
+void ResizeFrameBuffer(FrameBuffer_t* buffer, v2i newSize)
+{
+	NotNull(buffer);
+	NotNull(buffer->allocArena);
+	Assert(newSize.width > 0 && newSize.height > 0);
+	
+	if (buffer->size != newSize)
+	{
+		//TODO: Rather than destroy and recreate, we should just request a resize of buffers through OpenGL calls
+		FrameBuffer_t bufferCopy;
+		MyMemCopy(&bufferCopy, buffer, sizeof(FrameBuffer_t));
+		DestroyFrameBuffer(buffer);
+		CreateFrameBuffer(bufferCopy.allocArena, buffer, newSize, bufferCopy.antialiasingNumSamples, bufferCopy.isHdrBuffer, bufferCopy.channelFlags);
+		buffer->id = bufferCopy.id; //retain ID in case someone was using that
+		pig->nextFrameBufferId--; //keep next ID from going up
+	}
+}
+
 void PrepareFrameBufferTexture(FrameBuffer_t* buffer)
 {
 	NotNull(buffer);
@@ -268,9 +298,11 @@ void PrepareFrameBufferTexture(FrameBuffer_t* buffer)
 				AssertNoOpenGlError();
 				glBlitFramebuffer(0, 0, buffer->width, buffer->height, 0, 0, buffer->width, buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 				AssertNoOpenGlError();
+				TextureGenerateMipmaps(&buffer->outTexture);
 			}
 			else
 			{
+				TextureGenerateMipmaps(&buffer->texture);
 				//For non-msaa buffers there is only one texture, but usage code is going to look at
 				//outTexture so we're just gonna copy texture over there
 				buffer->outTexture = buffer->texture;
@@ -279,4 +311,103 @@ void PrepareFrameBufferTexture(FrameBuffer_t* buffer)
 		#endif
 		default: AssertMsg(false, "Unsupported API in PrepareFrameBufferTexture"); break;
 	}
+}
+
+void DestroyPostProcessingChain(PostProcessingChain_t* chain)
+{
+	NotNull(chain);
+	DestroyFrameBuffer(&chain->mainBuffer);
+	DestroyFrameBuffer(&chain->secondaryBuffer);
+	for (u64 bIndex = 0; bIndex < chain->inputBuffers.length; bIndex++)
+	{
+		FrameBuffer_t* inputBuffer = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, bIndex);
+		DestroyFrameBuffer(inputBuffer);
+	}
+	FreeBktArray(&chain->inputBuffers);
+	ClearPointer(chain);
+}
+
+// +--------------------------------------------------------------+
+// |                    Post Processing Chain                     |
+// +--------------------------------------------------------------+
+void CreatePostProcessingChain(PostProcessingChain_t* chain, MemArena_t* memArena, v2i size, u64 antialiasingNumSamples, u8 channelFlags = FrameBufferChannel_Default)
+{
+	NotNull(chain);
+	ClearPointer(chain);
+	chain->allocArena = memArena;
+	chain->size = size;
+	chain->antialiasingNumSamples = antialiasingNumSamples;
+	chain->channelFlags = channelFlags;
+	CreateFrameBuffer(memArena, &chain->mainBuffer, size, antialiasingNumSamples, channelFlags);
+	CreateFrameBuffer(memArena, &chain->secondaryBuffer, size, antialiasingNumSamples, channelFlags);
+	CreateBktArray(&chain->inputBuffers, memArena, sizeof(FrameBuffer_t));
+}
+
+void ResizePostProcessingChain(PostProcessingChain_t* chain, v2i newSize)
+{
+	NotNull(chain);
+	NotNull(chain->allocArena);
+	Assert(newSize.width > 0 && newSize.height > 0);
+	if (newSize != chain->size)
+	{
+		ResizeFrameBuffer(&chain->mainBuffer, newSize);
+		ResizeFrameBuffer(&chain->secondaryBuffer, newSize);
+		
+		for (u64 bIndex = 0; bIndex < chain->inputBuffers.length; bIndex++)
+		{
+			FrameBuffer_t* inputBuffer = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, bIndex);
+			ResizeFrameBuffer(inputBuffer, newSize);
+		}
+		chain->size = newSize;
+	}
+}
+
+FrameBuffer_t* PostProcessingChainAddInputBufferEx(PostProcessingChain_t* chain, u64 inputIndex, bool hdrBuffer, u8 channelFlags)
+{
+	NotNull(chain);
+	NotNull(chain->allocArena);
+	if (chain->inputBuffers.length <= inputIndex)
+	{
+		BktArrayAddBulk(&chain->inputBuffers, FrameBuffer_t, ((inputIndex+1) - chain->inputBuffers.length), true);
+	}
+	
+	FrameBuffer_t* targetBuffer = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex);
+	if (!targetBuffer->isValid)
+	{
+		CreateFrameBuffer(chain->allocArena, targetBuffer, chain->size, chain->antialiasingNumSamples, hdrBuffer, channelFlags);
+	}
+	else
+	{
+		Assert(targetBuffer->isHdrBuffer == hdrBuffer);
+		Assert(targetBuffer->channelFlags == channelFlags);
+	}
+	
+	return targetBuffer;
+}
+
+FrameBuffer_t* PostProcessingChainAddInputBuffer(PostProcessingChain_t* chain, u64 inputIndex)
+{
+	NotNull(chain);
+	NotNull(chain->allocArena);
+	if (chain->inputBuffers.length <= inputIndex)
+	{
+		BktArrayAddBulk(&chain->inputBuffers, FrameBuffer_t, ((inputIndex+1) - chain->inputBuffers.length), true);
+	}
+	
+	FrameBuffer_t* targetBuffer = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex);
+	if (!targetBuffer->isValid)
+	{
+		CreateFrameBuffer(chain->allocArena, targetBuffer, chain->size, chain->antialiasingNumSamples, false, chain->channelFlags);
+	}
+	
+	return targetBuffer;
+}
+
+FrameBuffer_t* GetPostProcessingChainInputBuffer(PostProcessingChain_t* chain, u64 inputIndex)
+{
+	NotNull(chain);
+	Assert(inputIndex < chain->inputBuffers.length);
+	FrameBuffer_t* result = BktArrayGet(&chain->inputBuffers, FrameBuffer_t, inputIndex);
+	Assert(result->isValid);
+	return result;
 }

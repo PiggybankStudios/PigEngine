@@ -98,6 +98,25 @@
 	@Mouth:         "M 52.919365,289.24918 C 41.159506,289.51645 40.090428,277.48932 40.090428,277.48932 h 25.123336 c 0,0 0.53454,11.75986 -12.294399,11.75986 z"
 	@Curvy Line:    "m 15.497024,274.32143 c 35.907736,-5.29167 4.157738,-24.19048 20.788691,-37.04167 16.630951,-12.85119 21.544642,20.78869 35.52976,5.29167 13.985118,-15.49703 -8.693452,-35.52976 -8.693452,-35.52976"
 
+# GLSL Preprocessor Default Definitions
+	[ ] __METAL_VERSION__ = 120 (Metal version 1.2 patch 0) - (only defined for metal compiler)
+	[ ] __METAL_MACOS__ - Defined if compiled with the MacOS Metal Language
+	[ ] __METAL_IOS__ - Defined if compiled with the iOS Metal Language
+	[ ] GL_SPIRV = 100 - Defined when compiling for OpenGL SPIR-V
+	[ ] VULKAN = 100 - Defined when targeting Vulkan
+	[ ] GL_ES = 1 - Defined if compiling in OpenGL ES context
+	[ ] GL_core_profile = 1 - All profiles have this macro?
+	[ ] GL_compatibility_profile = 1 - Only defined if a compatibility implementation is being used
+	[ ] GL_es_profile = 1 - Only defined if ES implementation is being used
+	[ ] GL_NV_gpu_shader5 - ?
+	[ ] __VERSION__ = 330 (GLSL #version 330) - Will always be defined?
+	[ ] __PSSL__ - Defined for Playstation Shading Language?
+
+# GLSL Pragmas
+	[ ] #version ### core/compatibility/es
+	[ ] #pragma optimize(on/off)
+	[ ] #pragma debug(on/off)
+
 # Finished TODO List Items
 	[X] Sampled audio output
 	[X] WAV audio file parsing
@@ -206,6 +225,29 @@
 	[ ] "https://frehberg.wordpress.com/webassembly-and-dynamic-memory/"
 	[ ] "https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/Grow"
 	[ ] "https://github.com/wingo/walloc/blob/master/test.js"
+
+# Physics Engines List:
+	! 3D:
+		@ "https://github.com/bulletphysics/bullet3"
+		@ "https://github.com/deepmind/mujoco"
+		@ "https://github.com/simbody/simbody"
+		@ "https://github.com/projectchrono/chrono"
+		@ "https://github.com/DanielChappuis/reactphysics3d"
+		@ "https://github.com/google-research/tiny-differentiable-simulator"
+		@ "https://github.com/RandyGaul/qu3e"
+		@ "https://github.com/MADEAPPS/newton-dynamics"
+		@ "https://github.com/dartsim/dart"
+		@ "https://github.com/sofa-framework/sofa"
+		@ "https://bitbucket.org/odedevs/ode"
+	! 2D:
+		@ "https://github.com/erincatto/box2d"
+		@ "https://github.com/google/liquidfun"
+		@ "https://github.com/slembcke/Chipmunk2D"
+		@ "https://github.com/erincatto/box2d-lite"
+		@ "https://github.com/victorfisac/Physac"
+	! Here are some articles comparing a few of them:
+		@ "https://homes.cs.washington.edu/~todorov/papers/ErezICRA15.pdf"
+		@ "https://leggedrobotics.github.io/SimBenchmark/"
 
 Web Assembly Memory
 - 0x00000

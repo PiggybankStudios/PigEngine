@@ -219,6 +219,7 @@ struct PlatImageData_t
 {
 	u64 id;
 	MemArena_t* allocArena;
+	bool floatChannels;
 	u8 pixelSize;
 	u64 rowSize;
 	union
