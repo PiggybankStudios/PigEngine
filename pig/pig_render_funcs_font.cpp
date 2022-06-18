@@ -8,8 +8,104 @@ Description:
 */
 
 // +--------------------------------------------------------------+
+// |                      Callback Functions                      |
+// +--------------------------------------------------------------+
+struct RcRenderTextWithColoredRegionCallbackContext_t
+{
+	Color_t color;
+	Color_t regionColor;
+	u64 startIndex;
+	u64 numBytes;
+};
+// bool RcRenderTextWithColoredRegionBeforeCharCallback(u32 codepoint, const FontCharInfo_t* charInfo, rec logicalRec, rec renderRec, FontFlowState_t* state, void* context)
+FFCB_BEFORE_CHAR_DEFINITION(RcRenderTextWithColoredRegionBeforeCharCallback) // | RcRenderTextWithColoredRegionBeforeCharCallback |
+{
+	NotNull(context);
+	RcRenderTextWithColoredRegionCallbackContext_t* contextPntr = (RcRenderTextWithColoredRegionCallbackContext_t*)context;
+	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
+	{
+		state->color = contextPntr->regionColor;
+	}
+	else
+	{
+		state->color = contextPntr->color;
+	}
+	return true;
+}
+
+struct RcRenderTextWithSelectionCallbackContext_t
+{
+	Color_t selectionColor;
+	u64 startIndex;
+	u64 numBytes;
+	bool insideSelection;
+	v2 selectionStartPos;
+};
+void RcRenderTextWithSelectionDrawSelectionRec(v2 startPos, v2 currentPos, Color_t selectionColor)
+{
+	rec selectionRec = NewRec(startPos.x, startPos.y - RcGetMaxAscend(), currentPos.x - startPos.x, RcGetMaxAscend() + RcGetMaxDescend());
+	selectionRec = RecInflateX(selectionRec, 1);
+	RcDrawRectangle(selectionRec, selectionColor);
+}
+// void RcRenderTextWithSelectionBetweenCharCallback(u64 byteIndex, u64 charIndex, v2 position, FontFlowState_t* state, void* context)
+FFCB_BETWEEN_CHAR_DEFINITION(RcRenderTextWithSelectionBetweenCharCallback) // | RcRenderTextWithSelectionBetweenCharCallback |
+{
+	NotNull(context);
+	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
+	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
+	{
+		if (!contextPntr->insideSelection)
+		{
+			contextPntr->insideSelection = true;
+			contextPntr->selectionStartPos = state->position;
+		}
+	}
+	else
+	{
+		if (contextPntr->insideSelection)
+		{
+			contextPntr->insideSelection = false;
+			RcRenderTextWithSelectionDrawSelectionRec(contextPntr->selectionStartPos, state->position, contextPntr->selectionColor);
+		}
+	}
+}
+// void RcRenderTextWithSelectionBeforeLineCallback(u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
+FFCB_BEFORE_LINE_DEFINITION(RcRenderTextWithSelectionBeforeLineCallback) // | RcRenderTextWithSelectionBeforeLineCallback |
+{
+	NotNull(context);
+	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
+	if (contextPntr->insideSelection)
+	{
+		contextPntr->selectionStartPos = state->position;
+	}
+}
+// void RcRenderTextWithSelectionAfterLineCallback(bool isLineWrap, u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
+FFCB_AFTER_LINE_DEFINITION(RcRenderTextWithSelectionAfterLineCallback) // | RcRenderTextWithSelectionAfterLineCallback |
+{
+	NotNull(context);
+	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
+	if (contextPntr->insideSelection)
+	{
+		RcRenderTextWithSelectionDrawSelectionRec(contextPntr->selectionStartPos, state->position, contextPntr->selectionColor);
+		if (byteIndex >= contextPntr->startIndex + contextPntr->numBytes)
+		{
+			contextPntr->insideSelection = false;
+		}
+	}
+}
+
+// +--------------------------------------------------------------+
 // |                       Render Functions                       |
 // +--------------------------------------------------------------+
+TextMeasure_t RcMeasureText(MyStr_t text, r32 maxWidth = 0, FontFlowInfo_t* infoOut = nullptr)
+{
+	return MeasureTextInFont(text, rc->state.boundFont, rc->state.faceSelector, rc->state.fontScale, maxWidth, infoOut, &rc->state.flowCallbacks);
+}
+TextMeasure_t RcMeasureText(const char* nulltermStr, r32 maxWidth = 0, FontFlowInfo_t* infoOut = nullptr)
+{
+	return RcMeasureText(NewStr(nulltermStr), maxWidth, infoOut);
+}
+
 void RcDrawText(const char* str, v2 position, Color_t color, TextAlignment_t alignment = TextAlignment_Left, r32 maxWidth = 0)
 {
 	NotNull(str);
@@ -60,13 +156,65 @@ void RcDrawTextPrint(v2 position, Color_t color, const char* formatString, ...)
 	}
 }
 
-TextMeasure_t RcMeasureText(MyStr_t text, r32 maxWidth = 0, FontFlowInfo_t* infoOut = nullptr)
+void RcDrawTextPrintWithBackground(v2 position, Color_t textColor, Color_t backgroundColor, v2 padding, const char* formatString, ...)
 {
-	return MeasureTextInFont(text, rc->state.boundFont, rc->state.faceSelector, rc->state.fontScale, maxWidth, infoOut, &rc->state.flowCallbacks);
+	TempPrintVa(textPntr, textLength, formatString);
+	MyStr_t textStr = MyStr_Empty;
+	if (textPntr != nullptr) { textStr = NewStr(textLength, textPntr); }
+	else { textStr = NewStr(formatString); }
+	TextMeasure_t textMeasure = RcMeasureText(textPntr);
+	rec backgroundRec = NewRec(position.x - textMeasure.offset.x, position.y - textMeasure.offset.y, textMeasure.size.width, textMeasure.size.height);
+	backgroundRec = RecInflate(backgroundRec, padding);
+	RcDrawRectangle(backgroundRec, backgroundColor);
+	RcDrawText(textStr, position, textColor);
 }
-TextMeasure_t RcMeasureText(const char* nulltermStr, r32 maxWidth = 0, FontFlowInfo_t* infoOut = nullptr)
+
+void RcDrawTextWithColoredRegion(MyStr_t str, v2 position,
+	Color_t color, Color_t regionColor, u64 regionStart, u64 regionNumBytes,
+	TextAlignment_t alignment = TextAlignment_Left, r32 maxWidth = 0)
 {
-	return RcMeasureText(NewStr(nulltermStr), maxWidth, infoOut);
+	RcRenderTextWithColoredRegionCallbackContext_t context = {};
+	context.startIndex = regionStart;
+	context.numBytes = regionNumBytes;
+	context.color = color;
+	context.regionColor = regionColor;
+	FontFlowCallbacks_t flowCallbacks = {};
+	flowCallbacks.beforeChar = RcRenderTextWithColoredRegionBeforeCharCallback;
+	flowCallbacks.context = &context;
+	FontFlow_RenderText(
+		str,
+		rc->state.boundFont, rc->state.faceSelector, color, position,
+		alignment, rc->state.fontScale, maxWidth,
+		&flowCallbacks, &rc->flowInfo
+	);
+}
+
+void RcDrawTextWithSelection(MyStr_t str, v2 position,
+	Color_t textColor, Color_t selectionTextColor, Color_t selectionColor, u64 selectionStart, u64 selectionNumBytes,
+	TextAlignment_t alignment = TextAlignment_Left, r32 maxWidth = 0)
+{
+	RcRenderTextWithSelectionCallbackContext_t context = {};
+	context.startIndex = selectionStart;
+	context.numBytes = selectionNumBytes;
+	context.selectionColor = selectionColor;
+	context.insideSelection = false;
+	
+	FontFlowCallbacks_t flowCallbacks = {};
+	flowCallbacks.betweenChar = RcRenderTextWithSelectionBetweenCharCallback;
+	flowCallbacks.beforeLine = RcRenderTextWithSelectionBeforeLineCallback;
+	flowCallbacks.afterLine = RcRenderTextWithSelectionAfterLineCallback;
+	flowCallbacks.context = &context;
+	
+	FontFlowState_t flowState;
+	FontFlow_Initialize(&flowState, str, rc->state.boundFont, rc->state.faceSelector, textColor, position, alignment, rc->state.fontScale, maxWidth);
+	flowState.justMeasuring = true;
+	FontFlow_Main(&flowState, &flowCallbacks, &rc->flowInfo);
+	if (context.insideSelection)
+	{
+		RcRenderTextWithSelectionDrawSelectionRec(context.selectionStartPos, flowState.position, selectionColor);
+	}
+	
+	RcDrawTextWithColoredRegion(str, position, textColor, selectionTextColor, selectionStart, selectionNumBytes, alignment, maxWidth);
 }
 
 void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec rectangle, Color_t tintColor, bool showPieceTextOnHover = false)

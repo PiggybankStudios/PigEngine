@@ -380,11 +380,11 @@ MyStr_t SerializeSpriteSheetMeta(const SpriteSheet_t* sheet, MemArena_t* memAren
 		VarArrayLoop(&sheet->frames, fIndex)
 		{
 			VarArrayLoopGet(SpriteSheetFrame_t, frame, &sheet->frames, fIndex);
-			if (!IsStrEmpty(frame->name) || frame->points.length > 0 || frame->codepoint != 0 ||
+			if (!IsEmptyStr(frame->name) || frame->points.length > 0 || frame->codepoint != 0 ||
 				frame->advanceX != 0 || frame->charBounds != Reci_Zero || frame->logicalBounds != Reci_Zero || frame->charOffset != Vec2i_Zero)
 			{
 				TwoPassPrint(result.pntr, result.length, &byteIndex, "(%d, %d)\n", frame->gridPos.x, frame->gridPos.y);
-				if (!IsStrEmpty(frame->name))
+				if (!IsEmptyStr(frame->name))
 				{
 					TwoPassPrint(result.pntr, result.length, &byteIndex, "\tName: %.*s\n", frame->name.length, frame->name.pntr);
 				}
@@ -419,7 +419,7 @@ MyStr_t SerializeSpriteSheetMeta(const SpriteSheet_t* sheet, MemArena_t* memAren
 				{
 					VarArrayLoopGet(SpriteSheetFramePoint_t, point, &frame->points, pIndex);
 					TwoPassPrint(result.pntr, result.length, &byteIndex, "\tPoint: (%g, %g)\n", point->point.x, point->point.y);
-					if (!IsStrEmpty(point->name))
+					if (!IsEmptyStr(point->name))
 					{
 						TwoPassPrint(result.pntr, result.length, &byteIndex, "\t\tName: %.*s\n", point->name.length, point->name.pntr);
 					}

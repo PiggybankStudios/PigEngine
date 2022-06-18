@@ -138,6 +138,14 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_5)) { HandleKey(Key_5); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_7)) { HandleKey(Key_7); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		
+		if (KeyPressed(Key_Num1)) { HandleKey(Key_Num1); overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num2)) { HandleKey(Key_Num2); pig->perfGraph.enabled          = !pig->perfGraph.enabled;          overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num3)) { HandleKey(Key_Num3); pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num4)) { HandleKey(Key_Num4); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num5)) { HandleKey(Key_Num5); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num6)) { HandleKey(Key_Num6); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num7)) { HandleKey(Key_Num7); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 	}
 	
 	// +==============================+
@@ -295,27 +303,44 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
 		textPos.y += RcGetMaxAscend();
 		Vec2Align(&textPos);
+		Color_t backgroundColor = ColorTransparent(Black, 0.5f);
+		v2 backgroundPadding = NewVec2(3, 1);
+		r32 stepY = RoundR32(RcGetLineHeight());
 		
 		// +==============================+
 		// |    Render Debug Readouts     |
 		// +==============================+
 		if (overlay->debugReadoutsEnabled)
 		{
-			RcDrawTextPrint(textPos, MonokaiWhite, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
-			textPos.y += RoundR32(RcGetLineHeight());
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
+			textPos.y += stepY;
 			
-			RcDrawTextPrint(textPos, MonokaiWhite, "Unix Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->unixTime), pigIn->unixTime.timestamp);
-			textPos.y += RoundR32(RcGetLineHeight());
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Unix Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->unixTime), pigIn->unixTime.timestamp);
+			textPos.y += stepY;
 			
-			RcDrawTextPrint(textPos, MonokaiWhite, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
-			textPos.y += RoundR32(RcGetLineHeight());
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
+			textPos.y += stepY;
 			
-			RcDrawTextPrint(textPos, MonokaiWhite,
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
+			textPos.y += stepY;
+			
+			if (pig->mouseHit.priority > 0)
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", pig->mouseHit.name.length, pig->mouseHit.name.pntr, pig->mouseHit.priority, pig->mouseHit.pntr);
+				textPos.y += stepY;
+			}
+			else
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
+				textPos.y += stepY;
+			}
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
 				"Timezone: %.*s %s%s",
 				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
 				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
 			);
-			textPos.y += RoundR32(RcGetLineHeight());
+			textPos.y += stepY;
 		}
 		
 		// +==============================+
@@ -445,10 +470,20 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				RcDrawRectangleOutline(btnRec, outlineColor, 2);
 			}
 			
-			RcBindFont(&pig->resources.debugFont, SelectFontFace(12, true));
-			v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
-			Vec2Align(&textPos, 2);
-			RcDrawTextPrintEx(textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0, "Press %s to hide", GetKeyStr(DEBUG_OVERLAY_TOGGLE_KEY));
 		}
+		
+		MyStr_t displayText = TempPrintStr("Press %s to hide", GetKeyStr(DEBUG_OVERLAY_TOGGLE_KEY));
+		if (IsMouseOverNamed("DebugOverlayToggleBtn0")) { displayText = NewStr("Debug Readouts"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn1")) { displayText = NewStr("Perf Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn2")) { displayText = NewStr("Audio Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn3")) { displayText = NewStr("Memory Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn4")) { displayText = NewStr("Pie Charts"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Easing Functions"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Controller Debug"); }
+		
+		RcBindFont(&pig->resources.debugFont, SelectFontFace(12, true));
+		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
+		Vec2Align(&textPos, 2);
+		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);
 	}
 }

@@ -81,7 +81,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 		material->ambientColor     = objMaterial->ambientColor;
 		material->diffuseColor     = objMaterial->diffuseColor;
 		material->specularColor    = objMaterial->specularColor;
-		if (!IsStrEmpty(objMaterial->diffuseMapPath))
+		if (!IsEmptyStr(objMaterial->diffuseMapPath))
 		{
 			MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, objMaterial->diffuseMapPath.length, objMaterial->diffuseMapPath.pntr);
 			bool loadSuccess = LoadTexture(memArena, &material->diffuseTexture, texturePath, false, true);

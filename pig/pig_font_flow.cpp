@@ -235,12 +235,6 @@ void FontFlow_DoLineBreak(FontFlowState_t* flowState, FontFlowCallbacks_t* callb
 		}
 	}
 	
-	if (!flowState->calledBetweenCharOnThisLine && callbacks != nullptr && callbacks->betweenChar != nullptr)
-	{
-		callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-		flowState->calledBetweenCharOnThisLine = true;
-	}
-	
 	flowState->position.x = flowState->startPos.x;
 	flowState->position.y += flowState->thisLineHeight * flowState->scale;
 	flowState->lineRec = Rec_Zero;
@@ -314,11 +308,17 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 			charColumnWidth = 4 - (flowState->columnIndex % 4);
 		}
 		
+		if (callbacks != nullptr && callbacks->betweenChar != nullptr)
+		{
+			callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
+		}
+		
 		bool renderChar = false;
 		bool wasWhitespace = false;
 		if (codepoint == '\n')
 		{
 			if (infoOut != nullptr) { infoOut->numLines++; infoOut->numNewLineCharacters++; }
+			
 			if (callbacks != nullptr && callbacks->afterLine != nullptr)
 			{
 				callbacks->afterLine(false, flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
@@ -398,12 +398,6 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 					}
 					if (renderChar)
 					{
-						if (flowState->columnIndex == 0 && callbacks != nullptr && callbacks->betweenChar != nullptr)
-						{
-							callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-							flowState->calledBetweenCharOnThisLine = true;
-						}
-						
 						if (!flowState->justMeasuring)
 						{
 							Color_t drawColor = (IsFlagSet(flowState->selectedBakeCache->flags, FontBakeFlag_IsColored) ? White : flowState->color);
@@ -459,12 +453,6 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 				rec renderRec = NewRec(flowState->position + NewVec2(0, -invalidCharRecSize.height * 0.9f * flowState->scale), invalidCharRecSize * flowState->scale);
 				rec logicalRec = renderRec;
 				
-				if (flowState->columnIndex == 0 && callbacks != nullptr && callbacks->betweenChar != nullptr)
-				{
-					callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-					flowState->calledBetweenCharOnThisLine = true;
-				}
-				
 				if (!flowState->justMeasuring)
 				{
 					RcDrawRectangle(renderRec, PalVioletDarker);
@@ -489,12 +477,7 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 		flowState->charIndex++;
 		flowState->byteIndex += numBytesInCodepoint;
 		
-		if ((renderChar || wasWhitespace) && callbacks != nullptr && callbacks->betweenChar != nullptr)
-		{
-			callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-			flowState->calledBetweenCharOnThisLine = true;
-		}
-		
+		// Handle Line Wrap
 		if (flowState->byteIndex == flowState->nextLineBreakIndex && flowState->nextLineBreakIndex < flowState->text.length)
 		{
 			Assert(flowState->maxWidth > 0 || flowState->alignment != TextAlignment_Left); //we shouldn't be in here if there is no maxWidth and no alignment is needed
@@ -524,6 +507,10 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 			{
 				callbacks->afterLine(!isCausedByNewLine, flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
 				flowState->calledAfterLineOnThisLine = true;
+			}
+			if (callbacks != nullptr && callbacks->betweenChar != nullptr)
+			{
+				callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
 			}
 			
 			FontFlow_DoLineBreak(flowState, callbacks);
@@ -566,10 +553,9 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 		callbacks->beforeLine(flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
 		flowState->calledBeforeLineOnThisLine = true;
 	}
-	if (!flowState->calledBetweenCharOnThisLine && callbacks != nullptr && callbacks->betweenChar != nullptr)
+	if (callbacks != nullptr && callbacks->betweenChar != nullptr)
 	{
 		callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-		flowState->calledBetweenCharOnThisLine = true;
 	}
 	if (!flowState->calledAfterLineOnThisLine && callbacks != nullptr && callbacks->afterLine != nullptr)
 	{
@@ -603,7 +589,6 @@ void FontFlow_Initialize(FontFlowState_t* flowStateOut, MyStr_t text, const Font
 	flowStateOut->consumeCharAtLineBreak = false;
 	flowStateOut->nextLineBreakIndex = 0;
 	flowStateOut->widthToLineBreak = 0;
-	flowStateOut->calledBetweenCharOnThisLine = false;
 	flowStateOut->calledBeforeLineOnThisLine = false;
 	flowStateOut->calledAfterLineOnThisLine = false;
 	flowStateOut->position = position;
@@ -645,4 +630,63 @@ TextMeasure_t MeasureTextInFont(MyStr_t text, const Font_t* font, FontFaceSelect
 TextMeasure_t MeasureTextInFont(const char* nullptrText, const Font_t* font, FontFaceSelector_t faceSelector, r32 scale = 1.0f, r32 maxWidth = 0.0f, FontFlowInfo_t* flowInfoOut = nullptr, FontFlowCallbacks_t* callbacks = nullptr)
 {
 	return MeasureTextInFont(NewStr(nullptrText), font, faceSelector, scale, maxWidth, flowInfoOut, callbacks);
+}
+
+// +--------------------------------------------------------------+
+// |                       FindCursorIndex                        |
+// +--------------------------------------------------------------+
+//TODO: This needs a little more fixup to make it work truly nicely.
+//      It really should prioritize positions on the line this is shares a y-value with.
+//      Right now it does that when deciding when line to do the index check against but it doesn't do
+//      the same logic for multiple lines in a single dbgLine (like ones caused by a line wrap)
+struct FindCursorIndexInFlowedTextContext_t
+{
+	v2 relativePixelPos;
+	bool foundPosition;
+	v2 closestPosition;
+	u64 closestByteIndex;
+	r32 closestDistance;
+};
+// | FindCursorIndexInFlowedTextBetweenCharCallback  |
+// void FindCursorIndexInFlowedTextBetweenCharCallback(u64 byteIndex, u64 charIndex, v2 position, FontFlowState_t* state, void* context)
+FFCB_BETWEEN_CHAR_DEFINITION(FindCursorIndexInFlowedTextBetweenCharCallback)
+{
+	UNUSED(charIndex);
+	UNUSED(state);
+	NotNull(context);
+	FindCursorIndexInFlowedTextContext_t* contextPntr = (FindCursorIndexInFlowedTextContext_t*)context;
+	r32 distanceToMouse = Vec2Length(contextPntr->relativePixelPos - position);
+	if (!contextPntr->foundPosition || (distanceToMouse < contextPntr->closestDistance))
+	{
+		contextPntr->foundPosition = true;
+		contextPntr->closestPosition = position;
+		contextPntr->closestByteIndex = byteIndex;
+		contextPntr->closestDistance = distanceToMouse;
+	}
+}
+
+//returns a byteIndex, not a character index. Returns -1 when no suitable index is found (TODO: Should this, like, not happen??)
+i64 FindCursorIndexInFlowedText(MyStr_t text, const Font_t* font, FontFaceSelector_t faceSelector, v2 relativePixelPos, r32 scale = 1.0f, r32 maxWidth = 0.0f, v2* foundPixelPosOut = nullptr, FontFlowInfo_t* flowInfoOut = nullptr)
+{
+	NotNullStr(&text);
+	NotNull(font);
+	
+	FontFlowState_t flowState;
+	FontFlow_Initialize(&flowState, text, font, faceSelector, White, Vec2_Zero, TextAlignment_Left, scale, maxWidth);
+	flowState.justMeasuring = true;
+	
+	FindCursorIndexInFlowedTextContext_t context = {};
+	context.foundPosition = false;
+	context.relativePixelPos = relativePixelPos;
+	
+	FontFlowCallbacks_t flowCallbacks = {};
+	flowCallbacks.context = (void*)&context;
+	flowCallbacks.betweenChar = FindCursorIndexInFlowedTextBetweenCharCallback;
+	
+	FontFlowInfo_t flowInfo = {};
+	FontFlow_Main(&flowState, &flowCallbacks, &flowInfo);
+	
+	if (flowInfoOut != nullptr) { MyMemCopy(flowInfoOut, &flowInfo, sizeof(FontFlowInfo_t)); }
+	if (foundPixelPosOut != nullptr) { *foundPixelPosOut = context.closestPosition; }
+	return (context.foundPosition ? context.closestByteIndex : -1);
 }

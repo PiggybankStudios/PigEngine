@@ -230,7 +230,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 	if (sheet->isValid) { DestroySpriteSheet(sheet); }
 	MyMemCopy(sheet, &tempSheet, sizeof(SpriteSheet_t));
 	
-	if (!IsStrEmpty(metaInfo.metaFilePath))
+	if (!IsEmptyStr(metaInfo.metaFilePath))
 	{
 		PlatFileContents_t metaFile = {};
 		if (plat->ReadFileContents(metaInfo.metaFilePath, &metaFile))
@@ -261,7 +261,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 	
 	StopWatchingFilesForResource(ResourceType_Sheet, sheetIndex);
 	WatchFileForResource(ResourceType_Sheet, sheetIndex, sheetPathStr);
-	if (!IsStrEmpty(metaInfo.metaFilePath)) 
+	if (!IsEmptyStr(metaInfo.metaFilePath)) 
 	{
 		WatchFileForResource(ResourceType_Sheet, sheetIndex, metaInfo.metaFilePath);
 	}
@@ -344,7 +344,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 		return result;
 	}
 	
-	if (!IsStrEmpty(metaFilePath))
+	if (!IsEmptyStr(metaFilePath))
 	{
 		PlatFileContents_t metaFile = {};
 		if (plat->ReadFileContents(metaFilePath, &metaFile))
@@ -399,7 +399,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 				MyStr_t pngFilePath = faceMetaInfo->filePaths[bIndex];
 				MyStr_t metaFilePath = faceMetaInfo->metaFilePaths[bIndex];
 				
-				if (IsStrEmpty(pngFilePath)) { break; } //that's the end
+				if (IsEmptyStr(pngFilePath)) { break; } //that's the end
 				numBakesFound++;
 				
 				SpriteSheet_t spriteSheet = {};
@@ -498,6 +498,8 @@ void Pig_LoadFontResource(u64 fontIndex)
 			if (faceIndex == 0) { MakeFontFaceDefault(font, face); }
 		}
 	}
+	
+	EndFont(font);
 }
 void Pig_LoadAllFonts()
 {

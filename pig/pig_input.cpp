@@ -35,6 +35,12 @@ void Pig_InitializeInput()
 	NotNull(pig);
 	CreateMouseHitInfo(nullptr, 0, MyStr_Empty, nullptr, 0, &pig->mouseHit);
 	CreateMouseHitInfo(nullptr, 0, MyStr_Empty, nullptr, 0, &pig->prevMouseHit);
+	
+	pig->focusedItemPntr = nullptr;
+	pig->focusedItemName = MyStr_Empty;
+	pig->isFocusedItemTyping = false;
+	
+	CreateVarArray(&pig->unfocusedItems, mainHeap, sizeof(const void*));
 }
 
 // +--------------------------------------------------------------+
@@ -62,7 +68,7 @@ void Pig_UpdateBtnHandlingInfoBefore(BtnHandlingInfo_t* info, const PlatBtnState
 	{
 		info->pressHandled = false;
 		#if DEBUG_BUILD
-		if (!IsStrEmpty(info->filePath))
+		if (!IsEmptyStr(info->filePath))
 		{
 			FreeString(fixedHeap, &info->filePath);
 		}
@@ -101,6 +107,8 @@ void Pig_UpdateInputBefore()
 	}
 	Pig_UpdateBtnHandlingInfoBefore(&pig->scrollXHandled, nullptr);
 	Pig_UpdateBtnHandlingInfoBefore(&pig->scrollYHandled, nullptr);
+	
+	VarArrayClear(&pig->unfocusedItems);
 }
 
 void Pig_UpdateInputAfter()
@@ -115,7 +123,7 @@ void Pig_InputRenderDebugInfo()
 	#if 0
 	if (pig->mouseHit.priority > 0)
 	{
-		if (!IsStrEmpty(pig->mouseHit.name))
+		if (!IsEmptyStr(pig->mouseHit.name))
 		{
 			if (pig->mouseHit.index != 0)
 			{
@@ -152,7 +160,7 @@ void Pig_InputRenderDebugInfo()
 	// #if DEBUG_BUILD
 	// if (pig->keyHandled[Key_Space].extendedHandled)
 	// {
-	// 	if (!IsStrEmpty(pig->keyHandled[Key_Space].filePath))
+	// 	if (!IsEmptyStr(pig->keyHandled[Key_Space].filePath))
 	// 	{
 	// 		plat->DebugReadout(TempPrintStr("Space Handled: %s:%llu", pig->keyHandled[Key_Space].filePath.pntr, pig->keyHandled[Key_Space].lineNumber), White, 1.0f);
 	// 	}
@@ -163,6 +171,77 @@ void Pig_InputRenderDebugInfo()
 	// }
 	// #endif
 	#endif
+}
+
+// +--------------------------------------------------------------+
+// |                        Focus Tracking                        |
+// +--------------------------------------------------------------+
+bool IsSomethingFocused()
+{
+	return (pig->focusedItemPntr != nullptr);
+}
+bool IsFocusedItemTyping()
+{
+	return (IsSomethingFocused() && pig->isFocusedItemTyping);
+}
+const void* GetFocusedItemPntr()
+{
+	return pig->focusedItemPntr;
+}
+bool IsFocused(const void* itemPntr)
+{
+	return (pig->focusedItemPntr == itemPntr);
+}
+bool WasUnfocused(const void* itemPntr)
+{
+	VarArrayLoop(&pig->unfocusedItems, iIndex)
+	{
+		VarArrayLoopGet(const void*, unfocusedItemPntrPntr, &pig->unfocusedItems, iIndex);
+		if (*unfocusedItemPntrPntr == itemPntr)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void ClearFocus()
+{
+	if (pig->focusedItemPntr != nullptr)
+	{
+		const void** unfocusedItemPntrPntr = VarArrayAdd(&pig->unfocusedItems, const void*);
+		*unfocusedItemPntrPntr = pig->focusedItemPntr;
+	}
+	FreeString(mainHeap, &pig->focusedItemName);
+	pig->focusedItemPntr = nullptr;
+	pig->isFocusedItemTyping = false;
+	pig->focusedItemName = MyStr_Empty;
+}
+
+void FocusItem(const void* itemPntr, MyStr_t itemName)
+{
+	NotNull(itemPntr);
+	NotNullStr(&itemName);
+	
+	ClearFocus();
+	
+	pig->focusedItemPntr = itemPntr;
+	if (!IsEmptyStr(itemName))
+	{
+		pig->focusedItemName = AllocString(mainHeap, &itemName);
+	}
+	else { pig->focusedItemName = MyStr_Empty; }
+}
+void FocusItem(const void* itemPntr, const char* itemName)
+{
+	return FocusItem(itemPntr, NewStr(itemName));
+}
+void FocusItemPrint(const void* itemPntr, const char* formatString, ...)
+{
+	TempPrintVa(printResult, printLength, formatString);
+	DebugAssert(printResult != nullptr);
+	if (printResult == nullptr) { printResult = (char*)formatString; printLength = (i32)MyStrLength32(formatString); }
+	FocusItem(itemPntr, NewStr(printLength, printResult));
 }
 
 // +--------------------------------------------------------------+
@@ -298,7 +377,7 @@ bool IsMouseOverNamed(const char* expectedName, bool mustBeIndex0 = false)
 	NotNull(expectedName);
 	if (pig->mouseHit.priority == 0) { return false; }
 	if (mustBeIndex0 && pig->mouseHit.index != 0) { return false; }
-	if (IsStrEmpty(pig->mouseHit.name)) { return false; }
+	if (IsEmptyStr(pig->mouseHit.name)) { return false; }
 	u64 expectedNameLength = MyStrLength64(expectedName);
 	if (pig->mouseHit.name.length != expectedNameLength) { return false; }
 	if (MyStrCompare(pig->mouseHit.name.pntr, expectedName, expectedNameLength) != 0) { return false; }
@@ -325,7 +404,7 @@ bool IsMouseOverNamedPartial(const char* expectedName, bool mustBeIndex0 = false
 	NotNull(expectedName);
 	if (pig->mouseHit.priority == 0) { return false; }
 	if (mustBeIndex0 && pig->mouseHit.index != 0) { return false; }
-	if (IsStrEmpty(pig->mouseHit.name)) { return false; }
+	if (IsEmptyStr(pig->mouseHit.name)) { return false; }
 	u64 expectedNameLength = MyStrLength64(expectedName);
 	if (pig->mouseHit.name.length < expectedNameLength) { return false; }
 	if (MyStrCompare(pig->mouseHit.name.pntr, expectedName, expectedNameLength) != 0) { return false; }
@@ -335,6 +414,12 @@ bool IsMouseOverNamedPartial(const char* expectedName, bool mustBeIndex0 = false
 // +--------------------------------------------------------------+
 // |                      Keyboard Handling                       |
 // +--------------------------------------------------------------+
+bool IsKeyHandled(Key_t key, bool checkPress = true, bool checkRelease = true)
+{
+	Assert(key < Key_NumKeys);
+	return ((checkPress && pig->keyHandled[key].pressHandled) || (checkRelease && pig->keyHandled[key].releaseHandled));
+}
+
 // +==============================+
 // |      No Handled Regard       |
 // +==============================+
@@ -387,31 +472,31 @@ bool KeyRepeatedRaw(Key_t key, u64 delay, u64 period)
 bool KeyDown(Key_t key)
 {
 	Assert(key < Key_NumKeys);
-	if (pig->keyHandled[key].pressHandled) { return false; }
+	if (IsKeyHandled(key, true, false)) { return false; }
 	return KeyDownRaw(key);
 }
 bool KeyReleased(Key_t key)
 {
 	Assert(key < Key_NumKeys);
-	if (pig->keyHandled[key].releaseHandled) { return false; }
+	if (IsKeyHandled(key, false, true)) { return false; }
 	return KeyReleasedRaw(key);
 }
 bool KeyPressed(Key_t key)
 {
 	Assert(key < Key_NumKeys);
-	if (pig->keyHandled[key].pressHandled) { return false; }
+	if (IsKeyHandled(key, true, false)) { return false; }
 	return KeyPressedRaw(key);
 }
 bool KeyPressedPlatRepeating(Key_t key)
 {
 	Assert(key < Key_NumKeys);
-	if (pig->keyHandled[key].pressHandled) { return false; }
+	if (IsKeyHandled(key, true, false)) { return false; }
 	return KeyPressedPlatRepeatingRaw(key);
 }
 bool KeyPressedRepeating(Key_t key, u64 repeatDelay, u64 repeatPeriod)
 {
 	Assert(key < Key_NumKeys);
-	if (pig->keyHandled[key].pressHandled) { return false; }
+	if (IsKeyHandled(key, true, false)) { return false; }
 	return KeyRepeatedRaw(key, repeatDelay, repeatPeriod);
 }
 
@@ -427,7 +512,7 @@ void HandleKey_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		if (!IsEmptyStr(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
 		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
@@ -441,7 +526,7 @@ void HandleKeyRelease_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		if (!IsEmptyStr(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
 		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
@@ -457,7 +542,7 @@ void HandleKeyExtended_(Key_t key, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
+		if (!IsEmptyStr(pig->keyHandled[key].filePath)) { FreeString(fixedHeap, &pig->keyHandled[key].filePath); }
 		pig->keyHandled[key].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->keyHandled[key].lineNumber = lineNumber;
 	}
@@ -526,6 +611,12 @@ bool KeyReleasedAndHandle_(Key_t key, const char* filePath, u64 lineNumber)
 // +--------------------------------------------------------------+
 // |                    Mouse Button Handling                     |
 // +--------------------------------------------------------------+
+bool IsMouseHandled(MouseBtn_t mouseBtn, bool checkPress = true, bool checkRelease = true)
+{
+	Assert(mouseBtn < MouseBtn_NumBtns);
+	return ((checkPress && pig->mouseBtnHandled[mouseBtn].pressHandled) || (checkRelease && pig->mouseBtnHandled[mouseBtn].releaseHandled));
+}
+
 // +==============================+
 // |      No Handled Regard       |
 // +==============================+
@@ -570,25 +661,25 @@ bool MouseRepeatedRaw(MouseBtn_t mouseBtn, u64 delay, u64 period)
 bool MouseDown(MouseBtn_t mouseBtn)
 {
 	Assert(mouseBtn < MouseBtn_NumBtns);
-	if (pig->mouseBtnHandled[mouseBtn].pressHandled) { return false; }
+	if (IsMouseHandled(mouseBtn, true, false)) { return false; }
 	return MouseDownRaw(mouseBtn);
 }
 bool MouseReleased(MouseBtn_t mouseBtn)
 {
 	Assert(mouseBtn < MouseBtn_NumBtns);
-	if (pig->mouseBtnHandled[mouseBtn].releaseHandled) { return false; }
+	if (IsMouseHandled(mouseBtn, false, true)) { return false; }
 	return MouseReleasedRaw(mouseBtn);
 }
 bool MousePressed(MouseBtn_t mouseBtn)
 {
 	Assert(mouseBtn < MouseBtn_NumBtns);
-	if (pig->mouseBtnHandled[mouseBtn].pressHandled) { return false; }
+	if (IsMouseHandled(mouseBtn, true, false)) { return false; }
 	return MousePressedRaw(mouseBtn);
 }
 bool MousePressedRepeating(MouseBtn_t mouseBtn, u64 repeatDelay, u64 repeatPeriod)
 {
 	Assert(mouseBtn < MouseBtn_NumBtns);
-	if (pig->mouseBtnHandled[mouseBtn].pressHandled) { return false; }
+	if (IsMouseHandled(mouseBtn, true, false)) { return false; }
 	return MouseRepeatedRaw(mouseBtn, repeatDelay, repeatPeriod);
 }
 
@@ -604,7 +695,7 @@ void HandleMouse_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		if (!IsEmptyStr(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
 		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
@@ -618,7 +709,7 @@ void HandleMouseRelease_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNumb
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		if (!IsEmptyStr(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
 		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
@@ -634,7 +725,7 @@ void HandleMouseExtended_(MouseBtn_t mouseBtn, const char* filePath, u64 lineNum
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
+		if (!IsEmptyStr(pig->mouseBtnHandled[mouseBtn].filePath)) { FreeString(fixedHeap, &pig->mouseBtnHandled[mouseBtn].filePath); }
 		pig->mouseBtnHandled[mouseBtn].filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->mouseBtnHandled[mouseBtn].lineNumber = lineNumber;
 	}
@@ -759,7 +850,7 @@ void HandleMouseScrollX_(const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->scrollXHandled.filePath)) { FreeString(fixedHeap, &pig->scrollXHandled.filePath); }
+		if (!IsEmptyStr(pig->scrollXHandled.filePath)) { FreeString(fixedHeap, &pig->scrollXHandled.filePath); }
 		pig->scrollXHandled.filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->scrollXHandled.lineNumber = lineNumber;
 	}
@@ -773,7 +864,7 @@ void HandleMouseScrollY_(const char* filePath, u64 lineNumber)
 	#if DEBUG_BUILD
 	if (filePath != nullptr)
 	{
-		if (!IsStrEmpty(pig->scrollYHandled.filePath)) { FreeString(fixedHeap, &pig->scrollYHandled.filePath); }
+		if (!IsEmptyStr(pig->scrollYHandled.filePath)) { FreeString(fixedHeap, &pig->scrollYHandled.filePath); }
 		pig->scrollYHandled.filePath = NewStringInArenaNt(fixedHeap, filePath);
 		pig->scrollYHandled.lineNumber = lineNumber;
 	}
@@ -832,6 +923,74 @@ bool MouseScrolledAndHandle_(const char* filePath, u64 lineNumber)
 #define MouseScrolledYAndHandle()  MouseScrolledYAndHandle_(nullptr, 0)
 #define MouseScrolledAndHandle()   MouseScrolledAndHandle_(nullptr, 0)
 #endif
+
+//TODO: Add controller support for handling!
+
+// +--------------------------------------------------------------+
+// |                     Input Event Handling                     |
+// +--------------------------------------------------------------+
+bool CheckIfInputEventWasHandled(InputEvent_t* inputEvent)
+{
+	NotNull(inputEvent);
+	bool isHandled = false;
+	
+	if (inputEvent->handled) { isHandled = true; }
+	if (inputEvent->type == InputEventType_Key && IsKeyHandled(inputEvent->key.key, (inputEvent->key.pressed || inputEvent->key.repeated), inputEvent->key.released)) { isHandled = true; }
+	if (inputEvent->type == InputEventType_MouseBtn && IsMouseHandled(inputEvent->mouseBtn.btn, (inputEvent->mouseBtn.pressed || inputEvent->mouseBtn.repeated), inputEvent->mouseBtn.released)) { isHandled = true; }
+	//TODO: Add support for InputEventType_ControllerBtn
+	
+	if (inputEvent->pairedEventIndex >= 0 && (u64)inputEvent->pairedEventIndex < pigIn->inputEvents.length)
+	{
+		InputEvent_t* pairedEvent = VarArrayGet(&pigIn->inputEvents, inputEvent->pairedEventIndex, InputEvent_t);
+		if (pairedEvent->handled) { isHandled = true; }
+		if (pairedEvent->type == InputEventType_Key && IsKeyHandled(pairedEvent->key.key, (pairedEvent->key.pressed || pairedEvent->key.repeated), pairedEvent->key.released)) { isHandled = true; }
+		if (pairedEvent->type == InputEventType_MouseBtn && IsMouseHandled(pairedEvent->mouseBtn.btn, (pairedEvent->mouseBtn.pressed || pairedEvent->mouseBtn.repeated), pairedEvent->mouseBtn.released)) { isHandled = true; }
+		//TODO: Add support for InputEventType_ControllerBtn
+		
+		if (isHandled) { pairedEvent->handled = true; }
+	}
+	
+	if (isHandled) { inputEvent->handled = true; }
+	return isHandled;
+}
+
+void HandleInputEvent(InputEvent_t* inputEvent, bool extended = false)
+{
+	NotNull(inputEvent);
+	inputEvent->handled = true;
+	if (inputEvent->type == InputEventType_Key)
+	{
+		if (extended) { HandleKeyExtended(inputEvent->key.key); }
+		else if (inputEvent->key.pressed || inputEvent->key.repeated) { HandleKey(inputEvent->key.key); }
+		else { HandleKeyRelease(inputEvent->key.key); }
+	}
+	if (inputEvent->type == InputEventType_MouseBtn)
+	{
+		if (extended) { HandleMouseExtended(inputEvent->mouseBtn.btn); }
+		else if (inputEvent->mouseBtn.pressed || inputEvent->mouseBtn.repeated) { HandleMouse(inputEvent->mouseBtn.btn); }
+		else { HandleMouseRelease(inputEvent->mouseBtn.btn); }
+	}
+	//TODO: Add support for InputEventType_ControllerBtn
+	
+	if (inputEvent->pairedEventIndex >= 0 && (u64)inputEvent->pairedEventIndex < pigIn->inputEvents.length)
+	{
+		InputEvent_t* pairedEvent = VarArrayGet(&pigIn->inputEvents, inputEvent->pairedEventIndex, InputEvent_t);
+		pairedEvent->handled = true;
+		if (pairedEvent->type == InputEventType_Key)
+		{
+			if (extended) { HandleKeyExtended(pairedEvent->key.key); }
+			else if (pairedEvent->key.pressed || pairedEvent->key.repeated) { HandleKey(pairedEvent->key.key); }
+			else { HandleKeyRelease(pairedEvent->key.key); }
+		}
+		if (pairedEvent->type == InputEventType_MouseBtn)
+		{
+			if (extended) { HandleMouseExtended(pairedEvent->mouseBtn.btn); }
+			else if (pairedEvent->mouseBtn.pressed || pairedEvent->mouseBtn.repeated) { HandleMouse(pairedEvent->mouseBtn.btn); }
+			else { HandleMouseRelease(pairedEvent->mouseBtn.btn); }
+		}
+		//TODO: Add support for InputEventType_ControllerBtn
+	}
+}
 
 // +--------------------------------------------------------------+
 // |                         Text Editing                         |
@@ -900,4 +1059,3 @@ bool HandleBasicTypingToEditString(MemArena_t* allocAndFreeArena, MyStr_t* editS
 	}
 	return result;
 }
-

@@ -180,7 +180,7 @@ void Win32_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* ne
 	MyStr_t timezoneName = ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
 	if (StrCompareIgnoreCase(Platform->localTimezoneName, timezoneName) != 0)
 	{
-		if (!IsStrEmpty(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }
+		if (!IsEmptyStr(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }
 		Platform->localTimezoneName = AllocString(&Platform->mainHeap, &timezoneName);
 	}
 	newInput->localTimezoneName = Platform->localTimezoneName;

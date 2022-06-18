@@ -9,21 +9,21 @@ Description:
 */
 
 //TODO: Add support for hovering over a line to see the timestamp and/or programTime comparison
-//TODO: Add debug output lines from the platform layer into the mix
 //TODO: Add pause and clear buttons
 
 #define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
 #define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
 
-#define DBG_CONSOLE_OPEN_KEY             Key_Tilde
-#define DBG_CONSOLE_OPEN_TIME            200 //ms
-#define DBG_CONSOLE_FADE_IN_TIME         300 //ms
-#define DBG_CONSOLE_NORMAL_OPEN_AMOUNT   0.33f //percent
-#define DBG_CONSOLE_LARGE_OPEN_AMOUNT    0.75f //percent
-#define DBG_CONSOLE_OVERLAY_ALPHA        0.50f //alpha
-#define DBG_CONSOLE_OPEN_AMOUNT_RATIO    (DBG_CONSOLE_NORMAL_OPEN_AMOUNT / DBG_CONSOLE_LARGE_OPEN_AMOUNT)
-#define DBG_CONSOLE_SCROLL_SPEED         50 //multiplier
-#define DBG_CONSOLE_SCROLL_LAG           4 //divisor
+#define DBG_CONSOLE_OPEN_KEY                Key_Tilde
+#define DBG_CONSOLE_INPUT_HISTORY_LENGTH  16 //items
+#define DBG_CONSOLE_OPEN_TIME               200 //ms
+#define DBG_CONSOLE_FADE_IN_TIME            300 //ms
+#define DBG_CONSOLE_NORMAL_OPEN_AMOUNT      0.33f //percent
+#define DBG_CONSOLE_LARGE_OPEN_AMOUNT       0.75f //percent
+#define DBG_CONSOLE_OVERLAY_ALPHA           0.50f //alpha
+#define DBG_CONSOLE_OPEN_AMOUNT_RATIO       (DBG_CONSOLE_NORMAL_OPEN_AMOUNT / DBG_CONSOLE_LARGE_OPEN_AMOUNT)
+#define DBG_CONSOLE_SCROLL_SPEED            50 //multiplier
+#define DBG_CONSOLE_SCROLL_LAG              4 //divisor
 
 #define DBG_CONSOLE_INPUT_LABEL_STR            "\bInput:\b"
 #define DBG_CONSOLE_JUMP_TO_END_STR            "\bJump to End\b"
@@ -69,6 +69,12 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 	console->mouseHovering = false;
 	CreateVarArray(&console->selectionRecs, mainHeap, sizeof(DebugConsoleSelectionRec_t));
 	
+	CreateTextbox(&console->inputTextbox, mainHeap, 0, false, false);
+	SetTextboxHintText(&console->inputTextbox, NewStr("Enter Command... (or type \"help\")"));
+	console->inputTextbox.autoSelectOnFocus = true;
+	
+	CreateVarArray(&console->inputHistory, mainHeap, sizeof(MyStr_t), DBG_CONSOLE_INPUT_HISTORY_LENGTH, false);
+	
 	plat->CreateMutex(&console->fifoMutex);
 	
 	if (fifoSize > 0)
@@ -99,6 +105,51 @@ void DebugConsoleClose(DebugConsole_t* console)
 	}
 	console->state = DbgConsoleState_Closed;
 	console->overlayMode = false;
+	if (IsFocused(&console->inputTextbox))
+	{
+		ClearFocus();
+	}
+}
+
+void DebugConsoleClearInputHistory(DebugConsole_t* console)
+{
+	NotNull(console);
+	VarArrayLoop(&console->inputHistory, hIndex)
+	{
+		VarArrayLoopGet(MyStr_t, pastCommandStr, &console->inputHistory, hIndex);
+		FreeString(mainHeap, pastCommandStr);
+	}
+	VarArrayClear(&console->inputHistory);
+}
+
+bool DebugConsolePushInputHistory(DebugConsole_t* console, MyStr_t newInputStr)
+{
+	NotNull(console);
+	
+	bool isDuplicate = false;
+	if (console->inputHistory.length > 0)
+	{
+		MyStr_t* previousInput = VarArrayGet(&console->inputHistory, 0, MyStr_t);
+		if (StrEquals(newInputStr, *previousInput))
+		{
+			isDuplicate = true;
+		}
+	}
+	
+	if (!isDuplicate)
+	{
+		if (console->inputHistory.length >= DBG_CONSOLE_INPUT_HISTORY_LENGTH)
+		{
+			MyStr_t* lastItem = VarArrayGet(&console->inputHistory, console->inputHistory.length-1, MyStr_t);
+			FreeString(mainHeap, lastItem);
+			VarArrayPop(&console->inputHistory, MyStr_t);
+		}
+		
+		MyStr_t* newStrPntr = VarArrayPushFront(&console->inputHistory, MyStr_t);
+		*newStrPntr = AllocString(mainHeap, &newInputStr);
+	}
+	
+	return !isDuplicate;
 }
 
 bool SplitDebugLineFileAndFuncStr(MyStr_t filePathAndFuncName, bool fullPath, MyStr_t* filePathOut, MyStr_t* funcNameOut)
@@ -474,10 +525,15 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	TextMeasure_t inputLabelMeasure = MeasureTextInFont(DBG_CONSOLE_INPUT_LABEL_STR, &pig->resources.debugFont, SelectDefaultFontFace());
 	console->inputLabelRec.size = inputLabelMeasure.size;
 	
-	console->inputRec.height = DBG_CONSOLE_INPUT_BOX_HEIGHT;
+	console->inputRec.height = console->inputTextbox.mainRec.height;
 	RecLayoutTopOf(&console->inputRec, console->mainRec.y + console->mainRec.height, DBG_CONSOLE_ELEM_MARGIN);
-	RecLayoutBetweenX(&console->inputRec, console->mainRec.x, console->mainRec.x + console->mainRec.width, DBG_CONSOLE_ELEM_MARGIN*2 + console->inputLabelRec.width, DBG_CONSOLE_ELEM_MARGIN);
+	RecLayoutBetweenX(&console->inputRec,
+		console->mainRec.x + DBG_CONSOLE_ELEM_MARGIN + console->inputLabelRec.width,
+		console->mainRec.x + console->mainRec.width,
+		DBG_CONSOLE_ELEM_MARGIN, DBG_CONSOLE_ELEM_MARGIN
+	);
 	RecAlign(&console->inputRec);
+	TextboxMove(&console->inputTextbox, console->inputRec);
 	
 	RecLayoutLeftOf(&console->inputLabelRec, console->inputRec.x, DBG_CONSOLE_ELEM_MARGIN);
 	RecLayoutVerticalCenter(&console->inputLabelRec, console->inputRec);
@@ -624,6 +680,7 @@ void DebugConsoleCaptureMouse(DebugConsole_t* console)
 		}
 		if (!console->overlayMode)
 		{
+			TextboxCaptureMouse(&console->inputTextbox);
 			MouseHitRecNamed(console->closeBtnRec,             "DebugConsoleCloseBtn");
 			MouseHitRecNamed(console->toggleGutterBtnRec,      "DebugConsoleToggleGutterBtn");
 			MouseHitRecNamed(console->toggleFileNameBtnRec,    "DebugConsoleToggleFileNameBtn");
@@ -631,7 +688,6 @@ void DebugConsoleCaptureMouse(DebugConsole_t* console)
 			MouseHitRecNamed(console->toggleFuncNameBtnRec,    "DebugConsoleToggleFuncNameBtn");
 			MouseHitRecNamed(console->toggleTimeBtnRec,        "DebugConsoleToggleTimeBtn");
 			MouseHitRecNamed(console->exportBtnRec,            "DebugConsoleExportBtn");
-			MouseHitRecNamed(console->inputRec, "DebugConsoleInput");
 			if (console->gutterEnabled)            { MouseHitRecNamed(console->gutterRec,            "DebugConsoleViewGutter");            }
 			if (console->fileNameGutterEnabled)    { MouseHitRecNamed(console->fileNameGutterRec,    "DebugConsoleViewFileNameGutter");    }
 			if (console->fileLineNumGutterEnabled) { MouseHitRecNamed(console->fileLineNumGutterRec, "DebugConsoleViewFileLineNumGutter"); }
@@ -655,6 +711,98 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	{
 		console->linesNeedResize = true;
 		if (console->selectionActive) { console->selectionChanged = true; }
+	}
+	
+	// We need to handle this before the inputBox gets a chance to treat it as text input
+	// (because it's bound to Tilde which is a valid character)
+	bool openKeyWasPressed = KeyPressed(DBG_CONSOLE_OPEN_KEY);
+	if (openKeyWasPressed) { HandleKeyExtended(DBG_CONSOLE_OPEN_KEY); }
+	bool escapeKeyWasPressed = KeyPressed(Key_Escape);
+	if (escapeKeyWasPressed) { HandleKeyExtended(Key_Escape); }
+	
+	// +==============================+
+	// |     Update Input Textbox     |
+	// +==============================+
+	if (console->state != DbgConsoleState_Closed && !console->overlayMode)
+	{
+		UpdateTextbox(&console->inputTextbox);
+		
+		// +==============================+
+		// |         Handle Enter         |
+		// +==============================+
+		if (KeyPressed(Key_Enter))
+		{
+			HandleKeyExtended(Key_Enter);
+			if (IsFocused(&console->inputTextbox))
+			{
+				if (console->inputTextbox.text.length > 0)
+				{
+					bool wasValidCommand = PigParseDebugCommand(console->inputTextbox.text);
+					UNUSED(wasValidCommand);
+					DebugConsolePushInputHistory(console, console->inputTextbox.text);
+					TextboxSetText(&console->inputTextbox, NewStr(""));
+				}
+				else
+				{
+					bool wasValidCommand = PigParseDebugCommand(NewStr("help"));
+					UNUSED(wasValidCommand);
+				}
+				
+				console->recallIndex = 0;
+				FreeString(mainHeap, &console->suspendedInputStr);
+				console->suspendedInputStr = MyStr_Empty;
+			}
+			else
+			{
+				FocusTextbox(&console->inputTextbox);
+			}
+		}
+		
+		// +==============================+
+		// |    Handle Up Arrow Recall    |
+		// +==============================+
+		if (KeyPressed(Key_Up) && IsFocused(&console->inputTextbox))
+		{
+			HandleKeyExtended(Key_Up);
+			FocusTextbox(&console->inputTextbox);
+			if (console->recallIndex == 0)
+			{
+				// PrintLine_D("Storing in suspension: \"%*.s\"", console->inputTextbox.text.length, console->inputTextbox.text.pntr);
+				console->suspendedInputStr = AllocString(mainHeap, &console->inputTextbox.text);
+			}
+			if (console->recallIndex < console->inputHistory.length)
+			{
+				// PrintLine_D("Recalling previous input %llu", console->recallIndex);
+				MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex, MyStr_t);
+				TextboxSetText(&console->inputTextbox, *previousInputPntr);
+				console->recallIndex++;
+			}
+		}
+		// +==============================+
+		// |  Handle Down Arrow Unrecall  |
+		// +==============================+
+		if (KeyPressed(Key_Down) && IsFocused(&console->inputTextbox))
+		{
+			HandleKeyExtended(Key_Down);
+			FocusTextbox(&console->inputTextbox);
+			if (console->recallIndex > 0)
+			{
+				console->recallIndex--;
+				if (console->recallIndex == 0)
+				{
+					// PrintLine_D("Recalling suspended text: \"%.*s\"", console->suspendedInputStr.length, console->suspendedInputStr.pntr);
+					TextboxSetText(&console->inputTextbox, console->suspendedInputStr);
+					FreeString(mainHeap, &console->suspendedInputStr);
+					console->suspendedInputStr = MyStr_Empty;
+				}
+				else
+				{
+					// PrintLine_D("Recalling previous input %llu", console->recallIndex);
+					MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex-1, MyStr_t);
+					TextboxSetText(&console->inputTextbox, *previousInputPntr);
+				}
+			}
+		}
 	}
 	
 	// +==============================+
@@ -748,6 +896,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		if (MousePressedAndHandleExtended(MouseBtn_Left))
 		{
 			console->overlayMode = false;
+			FocusTextbox(&console->inputTextbox);
 		}
 	}
 	
@@ -1137,16 +1286,17 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +==============================+
 	// |       Handle Open Key        |
 	// +==============================+
-	if (KeyPressed(DBG_CONSOLE_OPEN_KEY))
+	if (openKeyWasPressed)
 	{
-		HandleKeyExtended(DBG_CONSOLE_OPEN_KEY);
 		if (console->state == DbgConsoleState_Closed)
 		{
 			console->state = DbgConsoleState_Open;
+			FocusTextbox(&console->inputTextbox);
 		}
 		else if (console->overlayMode)
 		{
 			console->overlayMode = false;
+			FocusTextbox(&console->inputTextbox);
 		}
 		else if (console->state == DbgConsoleState_Open)
 		{
@@ -1163,9 +1313,8 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +==============================+
 	// |       Handle Close Key       |
 	// +==============================+
-	if (KeyPressed(Key_Escape) && console->state != DbgConsoleState_Closed && !console->overlayMode)
+	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode)
 	{
-		HandleKeyExtended(Key_Escape);
 		DebugConsoleClose(console);
 	}
 	
@@ -1230,8 +1379,6 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		}
 		TempPopMark();
 	}
-	
-	//TODO: Add an input textbox and handle interaction with it
 }
 
 // +--------------------------------------------------------------+
@@ -1300,8 +1447,9 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// +==============================+
 		if (!console->overlayMode)
 		{
-			RcDrawRoundedRectangle(RecInflate(console->inputRec, 1, 1), 4, ColorTransparent(MonokaiWhite, console->alphaAmount));
-			RcDrawRoundedRectangle(console->inputRec, 4, ColorTransparent(MonokaiDarkGray, console->alphaAmount));
+			RenderTextbox(&console->inputTextbox);
+			// RcDrawRoundedRectangle(RecInflate(console->inputRec, 1, 1), 4, ColorTransparent(MonokaiWhite, console->alphaAmount));
+			// RcDrawRoundedRectangle(console->inputRec, 4, ColorTransparent(MonokaiDarkGray, console->alphaAmount));
 		}
 		
 		// +==============================+

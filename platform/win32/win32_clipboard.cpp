@@ -14,7 +14,7 @@ Description:
 COPY_TEXT_TO_CLIPBOARD_DEFINITION(Win32_CopyTextToClipboard)
 {
 	NotNullStr(&text);
-	HGLOBAL globalCopy = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)text.length); 
+	HGLOBAL globalCopy = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)text.length+1); 
 	if (globalCopy == nullptr)
 	{
 		WriteLine_E("Couldn't allocate space for clipboard data!");
@@ -23,6 +23,7 @@ COPY_TEXT_TO_CLIPBOARD_DEFINITION(Win32_CopyTextToClipboard)
 	
 	u8* lockPntr = (u8*)GlobalLock(globalCopy);
 	MyMemCopy(lockPntr, text.pntr, text.length);
+	lockPntr[text.length] = '\0';
 	GlobalUnlock(globalCopy);
 	
 	if (OpenClipboard(Platform->windowHandle) == false)

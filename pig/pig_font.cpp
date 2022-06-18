@@ -50,6 +50,21 @@ void StartFont(Font_t* font, MemArena_t* memArena, u64 numFacesExpected = 0)
 	font->hasFailures = false;
 	font->allocArena = memArena;
 }
+void EndFont(Font_t* font)
+{
+	NotNull(font);
+	//If we have one valid face, then we are a valid font
+	font->isValid = false;
+	VarArrayLoop(&font->faces, fIndex)
+	{
+		VarArrayLoopGet(FontFace_t, fontFace, &font->faces, fIndex);
+		if (IsFlagSet(fontFace->flags, FontFaceFlag_IsValid))
+		{
+			font->isValid = true;
+			break;
+		}
+	}
+}
 
 FontFace_t* FontStartFace(Font_t* font, MyStr_t fontName, i32 fontSize, bool bold, bool italic, u64 numBakesExpected = 0)
 {

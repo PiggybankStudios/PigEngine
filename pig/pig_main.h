@@ -85,6 +85,12 @@ struct PigState_t
 	BtnHandlingInfo_t scrollXHandled;
 	BtnHandlingInfo_t scrollYHandled;
 	
+	//Focus Tracking
+	VarArray_t unfocusedItems; //const void*
+	const void* focusedItemPntr;
+	MyStr_t focusedItemName;
+	bool isFocusedItemTyping;
+	
 	//Debug Menus
 	DebugConsole_t debugConsole;
 	PigNotificationQueue_t notificationsQueue;

@@ -176,7 +176,6 @@ struct FontFlowState_t
 	bool consumeCharAtLineBreak;
 	u64 nextLineBreakIndex;
 	r32 widthToLineBreak;
-	bool calledBetweenCharOnThisLine;
 	bool calledBeforeLineOnThisLine;
 	bool calledAfterLineOnThisLine;
 	v2 position;

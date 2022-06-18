@@ -96,7 +96,7 @@ PLAT_API_GET_PROGRAM_ARG_DEF(Win32_GetProgramArg)
 			}
 		}
 		
-		if (!IsStrEmpty(currArgName) && !IsStringValidIdentifier(currArgName.length, currArgName.pntr))
+		if (!IsEmptyStr(currArgName) && !IsStringValidIdentifier(currArgName.length, currArgName.pntr))
 		{
 			//Invalid argument name
 			continue;
@@ -105,7 +105,7 @@ PLAT_API_GET_PROGRAM_ARG_DEF(Win32_GetProgramArg)
 		UnescapeQuotedStringInPlace(&currArgValue, true); //removeQuotes: true
 		
 		if ((isNamedArg && StrEquals(currArgName, argName)) ||
-			(!isNamedArg && IsStrEmpty(argName)))
+			(!isNamedArg && IsEmptyStr(argName)))
 		{
 			if (valueOut != nullptr)
 			{

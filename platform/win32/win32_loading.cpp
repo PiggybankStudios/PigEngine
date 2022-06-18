@@ -22,11 +22,11 @@ void Win32_LoadBasicResources(const StartupOptions_t* options)
 	Platform->dotTexture = Win32_CreateTexture_OpenGL(&dotImageData, true, true);
 	//TODO: Check if the dotTexture isValid
 	
-	if (!IsStrEmpty(options->loadingImagePath))
+	if (!IsEmptyStr(options->loadingImagePath))
 	{
 		Platform->loadingImage = Win32_LoadTexture(options->loadingImagePath, true, false);
 	}
-	if (!IsStrEmpty(options->loadingBackPath))
+	if (!IsEmptyStr(options->loadingBackPath))
 	{
 		Platform->loadingBackground = Win32_LoadTexture(options->loadingBackPath, true, true);
 	}

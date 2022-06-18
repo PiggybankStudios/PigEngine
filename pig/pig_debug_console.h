@@ -101,6 +101,11 @@ struct DebugConsole_t
 	DebugConsoleTextPos_t selectionEnd;
 	VarArray_t selectionRecs; //DebugConsoleSelectionRec_t
 	
+	Textbox_t inputTextbox;
+	VarArray_t inputHistory; //MyStr_t
+	u64 recallIndex = 0;
+	MyStr_t suspendedInputStr;
+	
 	rec mainRec;
 	rec viewRec;
 	rec viewUsableRec;

@@ -42,4 +42,7 @@ Description:
 
 #define PIG_MAX_NUM_NOTIFICATIONS     10 //notifications at one time
 
+#define PIG_DOUBLE_CLICK_TIME         400 //ms TODO: Does this need any tuning? Is there a common accepted value?
+#define PIG_DOUBLE_CLICK_MAX_DIST     5 //px TODO: Does this need any tuning? Is there a common accepted value?
+
 #endif //  _PIG_DEFINES_H

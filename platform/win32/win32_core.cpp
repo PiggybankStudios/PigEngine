@@ -179,7 +179,7 @@ void Win32_FindExePathAndWorkingDir()
 	AssertSingleThreaded();
 	TempPushMark();
 	MyStr_t tempExePath = Win32_GetExecutablePath(GetTempArena());
-	if (IsStrEmpty(tempExePath))
+	if (IsEmptyStr(tempExePath))
 	{
 		Win32_InitError("Failed to get executable directory. This could be due to the exe being in a location with too long of a path.");
 	}
@@ -194,7 +194,7 @@ void Win32_FindExePathAndWorkingDir()
 	TempPopMark();
 	
 	Platform->workingDirectory = Win32_GetWorkingDirectory(&Platform->mainHeap);
-	if (IsStrEmpty(Platform->workingDirectory))
+	if (IsEmptyStr(Platform->workingDirectory))
 	{
 		Win32_InitError("Failed to get working directory");
 	}

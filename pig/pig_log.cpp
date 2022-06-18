@@ -19,12 +19,12 @@ void FreeProcessLog(ProcessLog_t* log)
 	{
 		DestroyStringFifo(&log->fifo);
 	}
-	if (!IsStrEmpty(log->filePath))
+	if (!IsEmptyStr(log->filePath))
 	{
 		NotNull(log->allocArena);
 		FreeString(log->allocArena, &log->filePath);
 	}
-	if (!IsStrEmpty(log->processName))
+	if (!IsEmptyStr(log->processName))
 	{
 		NotNull(log->allocArena);
 		FreeString(log->allocArena, &log->processName);
@@ -60,7 +60,7 @@ void SetProcessLogFilePath(ProcessLog_t* log, MyStr_t filePath)
 	NotNull(log);
 	NotNullStr(&filePath);
 	NotNull(log->allocArena);
-	if (!IsStrEmpty(log->filePath))
+	if (!IsEmptyStr(log->filePath))
 	{
 		FreeString(log->allocArena, &log->filePath);
 	}
@@ -71,7 +71,7 @@ void SetProcessLogName(ProcessLog_t* log, MyStr_t processName)
 	NotNull(log);
 	NotNullStr(&processName);
 	NotNull(log->allocArena);
-	if (!IsStrEmpty(log->processName))
+	if (!IsEmptyStr(log->processName))
 	{
 		FreeString(log->allocArena, &log->processName);
 	}

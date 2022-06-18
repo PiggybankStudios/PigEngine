@@ -691,7 +691,7 @@ void Win32_LoadWindowIcon(PlatWindow_t* window, u64 numIconFiles, MyStr_t* iconF
 // +--------------------------------------------------------------+
 ControllerType_t Win32_GetControllerTypeByGuidStr(MyStr_t guidStr)
 {
-	if (IsStrEmpty(guidStr)) { return ControllerType_Unknown; }
+	if (IsEmptyStr(guidStr)) { return ControllerType_Unknown; }
 	for (u64 guidIndex = 0; guidIndex < ArrayCount(win32_PlaystationControllerGuids); guidIndex++)
 	{
 		if (StrCompareIgnoreCase(guidStr, win32_PlaystationControllerGuids[guidIndex]) == 0)

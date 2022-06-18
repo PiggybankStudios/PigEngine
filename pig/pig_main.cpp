@@ -47,6 +47,7 @@ Description:
 #include "pig/pig_resources.h"
 #include "pig/pig_input.h"
 #include "pig/pig_textbox.h"
+#include "pig/pig_debug_commands.h"
 #include "pig/pig_debug_console.h"
 #include "pig/pig_tasks.h"
 
@@ -128,6 +129,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_render_funcs_font.cpp"
 #include "pig/pig_phys_debug_render.cpp"
 #include "pig/pig_textbox.cpp"
+#include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"
 #include "pig/pig_perf_graph.cpp"
