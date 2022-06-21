@@ -297,6 +297,7 @@ struct EngineInput_t
 struct EngineOutput_t
 {
 	PlatCursor_t cursorType;
+	PlatMouseMode_t mouseMode;
 };
 
 #define PIG_GET_VERSION_DEF(functionName) Version_t functionName()

@@ -82,6 +82,8 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	InPlaceNew(MyPhysRenderer_c, &pig->physRenderer); //TODO: Do we need this?
 	
+	GameInitAppGlobals(&pig->appGlobals);
+	
 	// +==============================+
 	// |     Initialize AppState      |
 	// +==============================+
@@ -137,7 +139,7 @@ void PigRenderDebugOverlays()
 	RcBindShader(&pig->resources.mainShader2D);
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
-	RcClearDepth(1.0f);
+	RcClearDepth(-1.0f);
 	
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);
@@ -159,10 +161,8 @@ void PigRenderDebugOverlays()
 	}
 }
 
-void PigUpdate()
+void PigHandleTaskCompletedInputEvents()
 {
-	UpdatePigPerfGraphBefore(&pig->perfGraph);
-	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
 	VarArrayLoop(&pigIn->inputEvents, eIndex)
 	{
 		VarArrayLoopGet(InputEvent_t, inputEvent, &pigIn->inputEvents, eIndex);
@@ -179,6 +179,13 @@ void PigUpdate()
 			inputEvent->handled = true;
 		}
 	}
+}
+
+void PigUpdate()
+{
+	UpdatePigPerfGraphBefore(&pig->perfGraph);
+	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
+	PigHandleTaskCompletedInputEvents();
 	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();

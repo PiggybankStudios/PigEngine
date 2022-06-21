@@ -46,6 +46,7 @@ struct PigState_t
 	MemArena_t tempArena;
 	
 	AppStateStructs_t appStates;
+	AppGlobals_t appGlobals;
 	
 	AppState_t currentAppState;
 	bool changeAppStateRequested;

@@ -12,6 +12,8 @@ Date:   12\30\2021
 struct RenderContextState_t
 {
 	bool faceCulling;
+	bool depthTestEnabled;
+	PolygonFillMode_t fillMode;
 	r32 lineThickness;
 	
 	FrameBuffer_t* boundFrameBuffer;

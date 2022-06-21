@@ -253,6 +253,8 @@ void Win32_GlfwCursorPosCallback(GLFWwindow* glfwWindowPntr, double mouseX, doub
 	if (!BasicallyEqualR32(window->activeInput.mousePos.x, (r32)mouseX) || !BasicallyEqualR32(window->activeInput.mousePos.y, (r32)mouseY))
 	{
 		//TODO: Do we need to do any manipulations of this value for high DPI screens?
+		window->activeInput.mouseDelta.x += (r32)(mouseX - window->activeInput.mousePos.x);
+		window->activeInput.mouseDelta.y += (r32)(mouseY - window->activeInput.mousePos.y);
 		window->activeInput.mousePos = NewVec2((r32)mouseX, (r32)mouseY);
 		window->activeInput.mousePosi = Vec2Roundi(window->activeInput.mousePos);
 		window->activeInput.mouseMoved = true;

@@ -141,13 +141,14 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 void Win32_FillEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
-	output->cursorType = PlatCursor_Default;
+	output->cursorType = Platform->currentCursorType;
+	output->mouseMode = Platform->currentMouseMode;
 }
 
 void Win32_ClearEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
-	output->cursorType = PlatCursor_Default;
+	//TODO: Anything that needs to get reset or cleared each frame before passing this structure to the engine?
 }
 
 void Win32_ProcessEngineOutput(EngineOutput_t* output)
@@ -159,5 +160,14 @@ void Win32_ProcessEngineOutput(EngineOutput_t* output)
 		Assert(output->cursorType < PlatCursor_NumCursors);
 		glfwSetCursor(Platform->currentWindow->handle, Platform->glfwCursors[output->cursorType]);
 		Platform->currentCursorType = output->cursorType;
+	}
+	
+	if (output->mouseMode != Platform->currentMouseMode)
+	{
+		int glfwNewValue = GLFW_CURSOR_NORMAL;
+		if (output->mouseMode == PlatMouseMode_Invisible) { glfwNewValue = GLFW_CURSOR_HIDDEN; }
+		if (output->mouseMode == PlatMouseMode_FirstPersonCamera) { glfwNewValue = GLFW_CURSOR_DISABLED; } //TODO: We may want to also set GLFW_RAW_MOUSE_MOTION to true on some platforms to disable mouse motion scaling and acceleration?
+		glfwSetInputMode(Platform->currentWindow->handle, GLFW_CURSOR, glfwNewValue);
+		Platform->currentMouseMode = output->mouseMode;
 	}
 }

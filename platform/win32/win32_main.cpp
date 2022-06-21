@@ -339,6 +339,7 @@ int main(int argc, char* argv[])
 	Win32_FillPlatformInfo(&Platform->info, initStartTime);
 	Win32_FillPlatformApi(&Platform->api);
 	Win32_FillEngineMemory(&Platform->engineMemory, Platform->startupOptions.mainMemoryRequest, Platform->startupOptions.tempMemoryRequest);
+	Win32_FillEngineOutput(&Platform->engineOutput);
 	
 	Platform->loadingPercent = 1.0f;
 	Win32_RenderLoadingScreen(0.0f);

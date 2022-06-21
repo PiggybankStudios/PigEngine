@@ -10,6 +10,7 @@ Description:
 
 //TODO: Add support for hovering over a line to see the timestamp and/or programTime comparison
 //TODO: Add pause and clear buttons
+//TODO: Add an autocomplete menu that pops up when you start typing in a command. Maybe even add support for showing which argument you are on
 
 #define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
 #define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)

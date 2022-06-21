@@ -27,6 +27,26 @@ void RcSetFaceCulling_OpenGL(bool enabled)
 	}
 }
 
+void RcSetDepthTestEnabled_OpenGL(bool enabled)
+{
+	if (enabled) { glEnable(GL_DEPTH_TEST); }
+	else { glDisable(GL_DEPTH_TEST); }
+	AssertNoOpenGlError();
+}
+
+void RcSetFillMode_OpenGL(PolygonFillMode_t fillMode)
+{
+	GLenum glFillMode = GL_FILL;
+	switch (fillMode)
+	{
+		case PolygonFillMode_Points:    glFillMode = GL_POINT; break;
+		case PolygonFillMode_Wireframe: glFillMode = GL_LINE; break;
+		case PolygonFillMode_Default:   glFillMode = GL_FILL; break;
+	}
+	glPolygonMode(GL_FRONT_AND_BACK, glFillMode);
+	AssertNoOpenGlError();
+}
+
 void RcSetLineThickness_OpenGL(r32 thickness)
 {
 	glLineWidth(thickness);
@@ -519,11 +539,18 @@ void RcBegin_OpenGL()
 	NotNull(rc);
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA); AssertNoOpenGlError();
 	glEnable(GL_BLEND); AssertNoOpenGlError();
+	#if 1 //Left-Handed
+	glDepthFunc(GL_GEQUAL); AssertNoOpenGlError();
+	#else //Right-Handed
 	glDepthFunc(GL_LEQUAL); AssertNoOpenGlError();
-	glEnable(GL_DEPTH_TEST); AssertNoOpenGlError();
+	#endif
+	RcSetDepthTestEnabled_OpenGL(true);
+	RcSetFillMode_OpenGL(PolygonFillMode_Default);
 	glAlphaFunc(GL_GEQUAL, 0.01f); AssertNoOpenGlError();
 	glEnable(GL_ALPHA_TEST); AssertNoOpenGlError();
 	RcSetFaceCulling_OpenGL(true);
+	
+	
 }
 
 #endif //OPENGL_SUPPORTED
@@ -552,6 +579,42 @@ void RcSetFaceCulling(bool enabled)
 		#endif
 		
 		default: DebugAssertMsg(false, "Unsupported render API in RcSetFaceCulling!"); break;
+	}
+}
+
+void RcSetDepthTestEnabled(bool enabled)
+{
+	NotNull(rc);
+	
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetDepthTestEnabled_OpenGL(enabled);
+			rc->state.depthTestEnabled = enabled;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetDepthTestEnabled!"); break;
+	}
+}
+
+void RcSetFillMode(PolygonFillMode_t fillMode)
+{
+	NotNull(rc);
+	
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetFillMode_OpenGL(fillMode);
+			rc->state.fillMode = fillMode;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetDepthTestEnabled!"); break;
 	}
 }
 
@@ -1348,6 +1411,8 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	// | Set Default Values for State |
 	// +==============================+
 	rc->state.faceCulling = true;
+	rc->state.depthTestEnabled = true;
+	rc->state.fillMode = PolygonFillMode_Default;
 	rc->state.lineThickness = 1.0f;
 	
 	rc->state.boundShader = nullptr;
@@ -1447,6 +1512,7 @@ void RcLoadBasicResources()
 	{
 		TempPushMark();
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
+		InvertPrimitiveVerts(&primVerts);
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->cubeBuffer, false, &primVerts, White, true))
 		{
 			PrintLine_E("Failed to create the cube vertex buffer!");

@@ -251,6 +251,7 @@ void Win32_ResetWindowEngineInput(WindowEngineInput_t* input)
 	input->isFocusedChanged = false;
 	input->mouseInsideWindowChanged = false;
 	input->mouseMoved = false;
+	input->mouseDelta = Vec2_Zero;
 }
 
 // +--------------------------------------------------------------+

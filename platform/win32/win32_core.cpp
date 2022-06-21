@@ -267,6 +267,9 @@ void Win32_LoadCursors()
 	Platform->glfwCursors[PlatCursor_ResizeVertical]   = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 	glfwSetCursor(Platform->mainWindow->handle, Platform->glfwCursors[PlatCursor_Default]);
 	Platform->currentCursorType = PlatCursor_Default;
+	
+	//TODO: Should we find a proper home for this?
+	Platform->currentMouseMode = PlatMouseMode_Default;
 }
 
 // +--------------------------------------------------------------+

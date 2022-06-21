@@ -580,4 +580,22 @@ struct Model_t
 	VarArray_t parts; //ModelPart_t
 };
 
+enum PolygonFillMode_t
+{
+	PolygonFillMode_Default = 0,
+	PolygonFillMode_Wireframe,
+	PolygonFillMode_Points,
+	PolygonFillMode_NumModes,
+};
+const char* GetPolygonFillModeStr(PolygonFillMode_t mode)
+{
+	switch (mode)
+	{
+		case PolygonFillMode_Default:   return "Default";
+		case PolygonFillMode_Wireframe: return "Wireframe";
+		case PolygonFillMode_Points:    return "Points";
+		default: return "Unknown";
+	}
+}
+
 #endif //  _PIG_RENDER_H

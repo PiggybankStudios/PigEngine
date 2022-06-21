@@ -79,6 +79,16 @@ void Pig_UpdateInputBefore()
 {
 	NotNull(pig);
 	NotNull(pigIn);
+	NotNull(pigOut);
+	
+	// +==================================+
+	// | Update cursorType and mouseMode  |
+	// +==================================+
+	// This makes it so if we don't set these to a value on any frame, they will default back to these values
+	// Generally this makes our life easier since it's more of a constant opt-in and we never are at risk
+	// of getting stuck with a non-default cursorType or mouseMode when some branch of update logic stops running
+	pigOut->cursorType = PlatCursor_Default;
+	pigOut->mouseMode = PlatMouseMode_Default;
 	
 	// +==============================+
 	// |       Update MouseHit        |

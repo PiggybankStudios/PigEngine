@@ -66,7 +66,7 @@ DebugCommandInfoList_t CreateDebugCommandInfoList(const char** infoStrsArray, u6
 			{
 				result.commands[commandIndex].description = NewStr(infoStr);
 			}
-			if (commandStrIndex >= 2)
+			else if (commandStrIndex >= 2)
 			{
 				Assert(argumentIndex < result.totalNumArguments);
 				result.commands[commandIndex].numArguments++;
@@ -120,8 +120,9 @@ void DebugPrintArenaInfo(MemArena_t* memArena, const char* arenaName)
 // +--------------------------------------------------------------+
 const char* PigDebugCommandInfoStrs[] = {
 	//"command", "description", "arg1", "arg2", ... "\n",
-	"help", "Displays this list of commands", "\n",
+	"help", "Displays this list of commands", "{command}", "\n",
 	"break", "Runs MyDebugBreak", "\n",
+	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
 	// "template", "description", "\n",
 };
 DebugCommandInfoList_t PigGetDebugCommandInfoList()
@@ -141,7 +142,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	if (StrCompareIgnoreCase(command, "help") == 0)
 	{
-		PrintLine_W("The help command is not implemented yet! (You passed %llu arguments)", numArguments);
+		//TODO: Add support for an optional argument that specifies which command you want detailed info on
 		
 		DebugCommandInfoList_t engineCommands = PigGetDebugCommandInfoList();
 		DebugCommandInfoList_t gameCommands = GameGetDebugCommandInfoList();

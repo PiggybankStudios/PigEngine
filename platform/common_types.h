@@ -351,6 +351,7 @@ struct WindowEngineInput_t
 	bool mouseMoved;
 	v2i mousePosi;
 	v2 mousePos;
+	v2 mouseDelta; //useful for PlatMouseMode_FirstPersonCamera
 };
 
 enum PlatCursor_t
@@ -371,6 +372,24 @@ const char* GetPlatCursorStr(PlatCursor_t platCursor)
 		case PlatCursor_Pointer:          return "Pointer";
 		case PlatCursor_ResizeHorizontal: return "ResizeHorizontal";
 		case PlatCursor_ResizeVertical:   return "ResizeVertical";
+		default: return "Unknown";
+	}
+}
+
+enum PlatMouseMode_t
+{
+	PlatMouseMode_Default = 0,
+	PlatMouseMode_Invisible,
+	PlatMouseMode_FirstPersonCamera, //mouse is invisible, centered every frame, and position info is delta only
+	PlatMouseMode_NumModes,
+};
+const char* GetPlatMouseModeStr(PlatMouseMode_t mouseMode)
+{
+	switch (mouseMode)
+	{
+		case PlatMouseMode_Default:           return "Default";
+		case PlatMouseMode_Invisible:         return "Invisible";
+		case PlatMouseMode_FirstPersonCamera: return "FirstPersonCamera";
 		default: return "Unknown";
 	}
 }

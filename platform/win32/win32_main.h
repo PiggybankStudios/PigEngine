@@ -92,6 +92,7 @@ struct Win32PlatformState_t
 	r32 loadingPercent;
 	
 	PlatCursor_t currentCursorType;
+	PlatMouseMode_t currentMouseMode;
 	GLFWcursor* glfwCursors[PlatCursor_NumCursors];
 	
 	//Debug Output
