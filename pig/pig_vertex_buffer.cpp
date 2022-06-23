@@ -6,6 +6,8 @@ Description:
 	** Holds functions that help us create and manipulate vertex buffers
 */
 
+//TODO: We need a system for the VertBuffer_t to keep track of how many vertices it has that are valid to render SEPARATE from how much space it has to store vertices (and indices)
+
 void DestroyVertBuffer(VertBuffer_t* buffer)
 {
 	NotNull(buffer);
@@ -186,8 +188,8 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 	return result;
 }
 
-#define CreateVertBufferWithIndices2D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default2D, VertexType_Default2D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntr), (copyIndices))
-#define CreateVertBufferWithIndices3D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default3D, VertexType_Default3D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntr), (copyIndices))
+#define CreateVertBufferWithIndices2D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default2D, VertexType_Default2D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
+#define CreateVertBufferWithIndices3D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default3D, VertexType_Default3D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
 
 bool CreateVertBufferFromIndexedPrimitiveVerts3D(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynamic, const PrimitiveIndexedVerts_t* primVerts, Color_t color, bool copyVertices)
 {
@@ -276,3 +278,5 @@ bool ChangeVertBufferVertices_(VertBuffer_t* buffer, u64 startIndex, u64 numVert
 }
 #define ChangeVertBufferVertices2D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default2D, VertexType_Default2D_Size)
 #define ChangeVertBufferVertices3D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default3D, VertexType_Default3D_Size)
+
+//TODO: Implement ChangeVertBufferIndices

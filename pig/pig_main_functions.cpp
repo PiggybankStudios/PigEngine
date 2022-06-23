@@ -63,6 +63,8 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->nextVertBufferId = 1;
 	pig->nextSpriteSheetId = 1;
 	
+	pig->firstUpdate = true;
+	
 	RcLoadBasicResources();
 	Pig_InitResources();
 	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup 
@@ -235,6 +237,7 @@ void PigUpdate()
 	}
 	
 	Pig_UpdateInputAfter();
+	pig->firstUpdate = false;
 }
 
 // +--------------------------------------------------------------+

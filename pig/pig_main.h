@@ -35,6 +35,7 @@ struct PigWindowState_t
 struct PigState_t
 {
 	bool initialized;
+	bool firstUpdate;
 	bool dllReloaded;
 	ThreadId_t mainThreadId;
 	

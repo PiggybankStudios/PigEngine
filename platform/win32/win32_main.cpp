@@ -282,6 +282,7 @@ int main(int argc, char* argv[])
 		if (wIndex == 0)
 		{
 			Platform->mainWindow = newWindow;
+			newWindow->activeInput.isFocused = true;
 			Win32_GladInit();
 		}
 	}
