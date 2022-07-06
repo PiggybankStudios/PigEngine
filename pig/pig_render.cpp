@@ -1527,7 +1527,7 @@ void RcLoadBasicResources()
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
-		InvertPrimitiveVerts(&primVerts);
+		// InvertPrimitiveVerts(&primVerts);
 		for (u64 iIndex = 0; iIndex < primVerts.numIndices; iIndex++)
 		{
 			PrimitiveIndex3D_t* index = &primVerts.indices[iIndex];
@@ -1567,6 +1567,7 @@ void RcLoadBasicResources()
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForSphere(NewSphere(Vec3_Zero, 1), sphereRingCounts[sIndex], sphereSegmentCounts[sIndex], true, TempArena);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
+		InvertPrimitiveVerts(&primVerts);
 		const bool copyVertices = false; //these vertices take up a decent amount of space, we won't enable this unless needed for some reason
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->sphereBuffers[sIndex], false, &primVerts, White, copyVertices))
 		{

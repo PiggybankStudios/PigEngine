@@ -264,6 +264,27 @@ void RcDrawPoint3D(v3 point, r32 radius, Color_t color, bool useBox = false)
 	}
 }
 
+void RcDrawBoxWireframe(box boundingBox, Color_t color, r32 thickness)
+{
+	v3 min = boundingBox.bottomLeft;
+	v3 max = boundingBox.bottomLeft + boundingBox.size;
+	// Vertical lines
+	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(min.x, max.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, max.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, max.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(max.x, max.y, max.z), thickness, color);
+	// Bottom Loop
+	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(max.x, min.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, min.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(min.x, min.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, min.y, min.z), thickness, color);
+	// Top Loop
+	RcDrawLine3D(NewVec3(min.x, max.y, min.z), NewVec3(max.x, max.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, max.y, min.z), NewVec3(max.x, max.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(max.x, max.y, max.z), NewVec3(min.x, max.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, max.y, max.z), NewVec3(min.x, max.y, min.z), thickness, color);
+}
+
 void RcApplyModelMaterial(ModelMaterial_t* material, bool changeTexture = true)
 {
 	if (changeTexture)

@@ -102,9 +102,19 @@ struct DebugConsole_t
 	VarArray_t selectionRecs; //DebugConsoleSelectionRec_t
 	
 	Textbox_t inputTextbox;
+	
 	VarArray_t inputHistory; //MyStr_t
-	u64 recallIndex = 0;
+	u64 recallIndex;
 	MyStr_t suspendedInputStr;
+	
+	//TODO: Implement autocomplete stuff!
+	bool autocompleteActive;
+	i64 autocompleteSelectionIndex;
+	bool autocompleteItemsChanged;
+	VarArray_t autocompleteItems; //MyStr_t
+	v2 autocompleteItemsSize;
+	r32 autocompleteScroll;
+	r32 autocompleteScrollMax;
 	
 	rec mainRec;
 	rec viewRec;
@@ -121,6 +131,7 @@ struct DebugConsole_t
 	rec jumpToEndBtnRec;
 	v2 jumpToEndBtnTextPos;
 	rec inputRec;
+	rec autocompleteRec;
 	rec closeBtnRec;
 	rec toggleGutterBtnRec;
 	rec toggleFileNameBtnRec;
