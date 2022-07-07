@@ -22,6 +22,9 @@ Date:   09\14\2021
 #if !defined(DIRECTX_SUPPORTED)
 #error You must define DIRECTX_SUPPORTED in the build options
 #endif
+#if !defined(SLUG_SUPPORTED)
+#error You must define SLUG_SUPPORTED in the build options
+#endif
 
 #ifdef PLATFORM_LAYER
 #undef PLATFORM_LAYER

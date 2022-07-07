@@ -210,6 +210,7 @@ u64 FontFlow_FindNextLineBreak(const FontFlowState_t* flowState, r32* widthOut =
 
 void FontFlow_DoLineBreak(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = nullptr)
 {
+	UNUSED(callbacks);
 	NotNull(flowState);
 	NotNull(flowState->font);
 	

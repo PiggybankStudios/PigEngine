@@ -82,8 +82,6 @@ void PigInitialize(EngineMemory_t* memory)
 	}
 	#endif
 	
-	InPlaceNew(MyPhysRenderer_c, &pig->physRenderer); //TODO: Do we need this?
-	
 	GameInitAppGlobals(&pig->appGlobals);
 	
 	// +==============================+

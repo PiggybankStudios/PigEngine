@@ -150,28 +150,6 @@ struct PigDebugOverlay_t
 	};
 };
 
-// +==============================+
-// |       MyPhysRenderer_c       |
-// +==============================+
-class MyPhysRenderer_c : q3Render
-{
-	private:
-	Color_t drawColor;
-	v3 drawPos;
-	v3 drawScale;
-	v3 drawNormal;
-	
-	public:
-	void SetPenColor(f32 r, f32 g, f32 b, f32 a = 1.0f) override;
-	void SetPenPosition(f32 x, f32 y, f32 z) override;
-	void SetScale(f32 sx, f32 sy, f32 sz) override;
-	void SetTriNormal(f32 x, f32 y, f32 z) override;
-	
-	void Point() override;
-	void Line(f32 x, f32 y, f32 z) override;
-	void Triangle(f32 x1, f32 y1, f32 z1, f32 x2, f32 y2, f32 z2, f32 x3, f32 y3, f32 z3) override;
-};
-
 enum XmlParsingError_t
 {
 	XmlParsingError_None = 0,

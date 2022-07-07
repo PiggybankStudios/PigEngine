@@ -17,21 +17,20 @@ Description:
 #endif
 #include "common_includes.h"
 
-#define Q3_NO_STDLIB
-#include "qu3e/src/q3.h"
-
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
 
+#if SLUG_SUPPORTED
 // #define TERATHON_NO_SYSTEM
 // #define SLUG_WINDOWS
 // #define SLUG_D3D11
 // #define SLUG_DEBUG
 #include "slug/SlugCode/SLSlug.h"
 #include "slug/TerathonCode/TSCompression.h"
+#endif
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
@@ -127,7 +126,6 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_font_flow.cpp"
 #include "pig/pig_render_funcs_3d.cpp"
 #include "pig/pig_render_funcs_font.cpp"
-#include "pig/pig_phys_debug_render.cpp"
 #include "pig/pig_textbox.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"

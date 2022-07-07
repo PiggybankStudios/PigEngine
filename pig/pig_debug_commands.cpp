@@ -135,6 +135,7 @@ DebugCommandInfoList_t PigGetDebugCommandInfoList()
 // +--------------------------------------------------------------+
 bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr)
 {
+	UNUSED(fullInputStr);
 	bool validCommand = true;
 	
 	// +==============================+

@@ -6,6 +6,8 @@ Description:
 	** Holds functions that help us interop with the Slug font rendering library
 */
 
+#if SLUG_SUPPORTED
+
 #define SLUG_COMPRESSION_TYPE1 'TCMP'
 
 bool CreateSlugPipelineShader(MemArena_t* memArena, Shader_t* shaderOut, u32 slugRenderFlags)
@@ -637,3 +639,5 @@ SlugText_t CreateSlugText(MemArena_t* memArena, MyStr_t text, SlugFont_t* font, 
 	
 	return result;
 }
+
+#endif //SLUG_SUPPORTED

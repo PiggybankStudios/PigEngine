@@ -194,11 +194,15 @@ void RcBindVertBuffer_OpenGL(const VertBuffer_t* buffer)
 		if (buffer->numIndices > 0) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->glIndexId); AssertNoOpenGlError(); }
 		if (IsFlagSet(rc->state.boundVao->vertexType, VertexType_SlugBit))
 		{
+			#if SLUG_SUPPORTED
 			glVertexAttribPointer(0, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex),   nullptr); AssertNoOpenGlError();
 			glVertexAttribPointer(1, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)16); AssertNoOpenGlError();
 			glVertexAttribPointer(2, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)32); AssertNoOpenGlError();
 			glVertexAttribPointer(3, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)48); AssertNoOpenGlError();
 			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true,  sizeof(Terathon::Slug::Vertex), (char*)64); AssertNoOpenGlError();
+			#else
+			AssertMsg(false, "Slug support is not enabled but this vertex buffer is marked with VertexType_SlugBit");
+			#endif
 		}
 		else
 		{

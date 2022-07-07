@@ -126,8 +126,8 @@ void CreateShaderMultiPieceStart(MemArena_t* memArena, Shader_t* shaderOut, Vert
 	shaderOut->requiredUniforms = requiredUniforms;
 	CreateVarArray(&shaderOut->dynamicUniforms, memArena, sizeof(ShaderDynamicUniform_t));
 	
-	CreateVarArray(&shaderOut->vertexCodePieces, memArena, sizeof(MyStr_t));
-	CreateVarArray(&shaderOut->fragmentCodePieces, memArena, sizeof(MyStr_t));
+	CreateVarArray(&shaderOut->vertexCodePieces, memArena, sizeof(MyStr_t), numVertexPieces);
+	CreateVarArray(&shaderOut->fragmentCodePieces, memArena, sizeof(MyStr_t), numFragmentPieces);
 	
 	const char* errorStr = nullptr;
 	switch (pig->renderApi)
@@ -262,7 +262,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			}
 			if (totalVertexCodeLength == 0) { shaderOut->error = ShaderError_Empty; return false; }
 			
-			glShaderSource(shaderOut->glVertId, shaderOut->vertexCodePieces.length, glVertexCodePiecePntrs, glVertexCodePieceLengths);
+			glShaderSource(shaderOut->glVertId, (GLsizei)shaderOut->vertexCodePieces.length, glVertexCodePiecePntrs, glVertexCodePieceLengths);
 			CreateShader_CheckOpenGlError("glShaderSource(vertId)") { return false; }
 			glCompileShader(shaderOut->glVertId);
 			CreateShader_CheckOpenGlError("glCompileShader(vertId)") { return false; }
@@ -324,7 +324,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			}
 			if (totalFragmentCodeLength == 0) { shaderOut->error = ShaderError_Empty; return false; }
 			
-			glShaderSource(shaderOut->glFragId, shaderOut->fragmentCodePieces.length, glFragmentCodePiecePntrs, glFragmentCodePieceLengths);
+			glShaderSource(shaderOut->glFragId, (GLsizei)shaderOut->fragmentCodePieces.length, glFragmentCodePiecePntrs, glFragmentCodePieceLengths);
 			CreateShader_CheckOpenGlError("glShaderSource(fragId)") { return false; }
 			glCompileShader(shaderOut->glFragId);
 			CreateShader_CheckOpenGlError("glCompileShader(fragId)") { return false; }

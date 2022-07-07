@@ -446,6 +446,8 @@ struct Textbox_FontFlowContext_t
 //void TextBox_FontFlowBetweenCharCallback(u64 byteIndex, u64 charIndex, v2 position, FontFlowState_t* state, void* context)
 FFCB_BETWEEN_CHAR_DEFINITION(TextBox_FontFlowBetweenCharCallback) // | TextBox_FontFlowBetweenCharCallback |
 {
+	UNUSED(charIndex);
+	UNUSED(state);
 	NotNull(context);
 	Textbox_FontFlowContext_t* contextPntr = (Textbox_FontFlowContext_t*)context;
 	Textbox_t* tb = contextPntr->tb;
@@ -929,7 +931,6 @@ void RenderTextbox(Textbox_t* tb)
 	TextboxLayout(tb);
 	
 	const FontFace_t* fontFace = GetFontFace(tb->font, tb->fontFaceSelector);
-	r32 fontLineHeight = (fontFace != nullptr) ? (fontFace->lineHeight * tb->fontScale) : 0;
 	r32 fontMaxAscend = (fontFace != nullptr) ? (fontFace->maxAscend * tb->fontScale) : 0;
 	r32 fontMaxDescend = (fontFace != nullptr) ? (fontFace->maxDescend * tb->fontScale) : 0;
 	

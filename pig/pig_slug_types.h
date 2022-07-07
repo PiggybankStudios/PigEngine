@@ -9,6 +9,8 @@ Description:
 #ifndef _PIG_SLUG_TYPES_H
 #define _PIG_SLUG_TYPES_H
 
+#if SLUG_SUPPORTED
+
 //TODO: Add these types?
 // Matrix2D
 // Bivector3D
@@ -111,5 +113,7 @@ Terathon::Color4U ToSlugColor4U(Color_t color)
 // 		slugMatrix4d(3, 0), slugMatrix4d(3, 1), slugMatrix4d(3, 2), slugMatrix4d(3, 3)
 // 	);
 // }
+
+#endif //SLUG_SUPPORTED
 
 #endif //  _PIG_SLUG_TYPES_H

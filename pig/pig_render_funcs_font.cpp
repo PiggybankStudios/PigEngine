@@ -20,6 +20,10 @@ struct RcRenderTextWithColoredRegionCallbackContext_t
 // bool RcRenderTextWithColoredRegionBeforeCharCallback(u32 codepoint, const FontCharInfo_t* charInfo, rec logicalRec, rec renderRec, FontFlowState_t* state, void* context)
 FFCB_BEFORE_CHAR_DEFINITION(RcRenderTextWithColoredRegionBeforeCharCallback) // | RcRenderTextWithColoredRegionBeforeCharCallback |
 {
+	UNUSED(codepoint);
+	UNUSED(charInfo);
+	UNUSED(logicalRec);
+	UNUSED(renderRec);
 	NotNull(context);
 	RcRenderTextWithColoredRegionCallbackContext_t* contextPntr = (RcRenderTextWithColoredRegionCallbackContext_t*)context;
 	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
@@ -50,6 +54,9 @@ void RcRenderTextWithSelectionDrawSelectionRec(v2 startPos, v2 currentPos, Color
 // void RcRenderTextWithSelectionBetweenCharCallback(u64 byteIndex, u64 charIndex, v2 position, FontFlowState_t* state, void* context)
 FFCB_BETWEEN_CHAR_DEFINITION(RcRenderTextWithSelectionBetweenCharCallback) // | RcRenderTextWithSelectionBetweenCharCallback |
 {
+	UNUSED(byteIndex);
+	UNUSED(charIndex);
+	UNUSED(position);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
@@ -72,6 +79,8 @@ FFCB_BETWEEN_CHAR_DEFINITION(RcRenderTextWithSelectionBetweenCharCallback) // | 
 // void RcRenderTextWithSelectionBeforeLineCallback(u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
 FFCB_BEFORE_LINE_DEFINITION(RcRenderTextWithSelectionBeforeLineCallback) // | RcRenderTextWithSelectionBeforeLineCallback |
 {
+	UNUSED(lineIndex);
+	UNUSED(byteIndex);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (contextPntr->insideSelection)
@@ -82,6 +91,8 @@ FFCB_BEFORE_LINE_DEFINITION(RcRenderTextWithSelectionBeforeLineCallback) // | Rc
 // void RcRenderTextWithSelectionAfterLineCallback(bool isLineWrap, u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
 FFCB_AFTER_LINE_DEFINITION(RcRenderTextWithSelectionAfterLineCallback) // | RcRenderTextWithSelectionAfterLineCallback |
 {
+	UNUSED(isLineWrap);
+	UNUSED(lineIndex);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (contextPntr->insideSelection)

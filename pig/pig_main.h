@@ -56,7 +56,6 @@ struct PigState_t
 	//Rendering
 	RenderApi_t renderApi;
 	RenderContext_t renderContext;
-	MyPhysRenderer_c physRenderer;
 	
 	//IDs
 	u64 nextSoundId;

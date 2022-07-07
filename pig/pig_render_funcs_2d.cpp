@@ -187,14 +187,21 @@ void RcDrawObb2(obb2 boundingBox, Colorf_t colorf)
 }
 void RcDrawObb2Outline(obb2 boundingBox, Color_t color, r32 thickness, bool outsideBox = false)
 {
-	obb2 topBox    = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
-	obb2 bottomBox = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, boundingBox.height - thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
-	obb2 leftBox   = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
-	obb2 rightBox  = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width - thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
-	RcDrawObb2(topBox,    color);
-	RcDrawObb2(bottomBox, color);
-	RcDrawObb2(leftBox,   color);
-	RcDrawObb2(rightBox,  color);
+	if (outsideBox)
+	{
+		Unimplemented(); //TODO: Implement me!
+	}
+	else
+	{
+		obb2 topBox    = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
+		obb2 bottomBox = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width/2, boundingBox.height - thickness/2)), NewVec2(boundingBox.width, thickness), boundingBox.rotation);
+		obb2 leftBox   = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
+		obb2 rightBox  = NewObb2D(GetObb2DWorldPoint(boundingBox, NewVec2(boundingBox.width - thickness/2, boundingBox.height/2)), NewVec2(thickness, boundingBox.height), boundingBox.rotation);
+		RcDrawObb2(topBox,    color);
+		RcDrawObb2(bottomBox, color);
+		RcDrawObb2(leftBox,   color);
+		RcDrawObb2(rightBox,  color);
+	}
 }
 //TODO: Add textured version of this function
 void RcDrawRoundedObb2(obb2 boundingBox, r32 cornerRadius, Color_t color, bool bindShader = true)
