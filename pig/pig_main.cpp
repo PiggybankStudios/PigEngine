@@ -53,6 +53,7 @@ Description:
 
 #include "game_main.h"
 
+#include "pig/pig_app_states.h"
 #include "pig/pig_main.h"
 
 // +--------------------------------------------------------------+
@@ -136,6 +137,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_mem_graph.cpp"
 #include "pig/pig_audio_debug.cpp"
 #include "pig/pig_debug_overlay.cpp"
+#include "pig/pig_app_states.cpp"
 
 #include "pig/pig_tasks.cpp"
 

@@ -83,13 +83,16 @@ void PigInitialize(EngineMemory_t* memory)
 	}
 	#endif
 	
-	GameInitAppGlobals(&pig->appGlobals);
 	
 	// +==============================+
 	// |     Initialize AppState      |
 	// +==============================+
-	pig->currentAppState = INITIAL_APP_STATE;
-	InitializeAppState(pig->currentAppState);
+	GameInitAppGlobals(&pig->appGlobals);
+	GameAllocateAppStateStructs(&pig->appStateStructs);
+	GameUpdateGlobals();
+	Pig_InitializeAppStateStack();
+	PushAppState(INITIAL_APP_STATE);
+	Pig_HandleAppStateChanges(true);
 	
 	pig->initialized = true;
 	PerfTime_t initEndTime = plat->GetPerfTime();
@@ -121,14 +124,7 @@ void PigUpdateMainWindow()
 	UpdateDebugConsole(&pig->debugConsole);
 	Pig_HandleScreenshotHotkeys();
 	
-	if (pig->changeAppStateRequested)
-	{
-		DeinitializeAppState(pig->currentAppState);
-		InitializeAppState(pig->newAppState);
-		pig->currentAppState = pig->newAppState;
-		pig->newAppState = AppState_None;
-		pig->changeAppStateRequested = false;
-	}
+	Pig_HandleAppStateChanges(false);
 	UpdateAppState(pig->currentAppState);
 }
 

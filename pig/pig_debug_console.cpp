@@ -719,7 +719,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	bool openKeyWasPressed = KeyPressed(DBG_CONSOLE_OPEN_KEY);
 	if (openKeyWasPressed) { HandleKeyExtended(DBG_CONSOLE_OPEN_KEY); }
 	bool escapeKeyWasPressed = KeyPressed(Key_Escape);
-	if (escapeKeyWasPressed) { HandleKeyExtended(Key_Escape); }
+	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode) { HandleKeyExtended(Key_Escape); }
 	
 	// +==============================+
 	// |     Update Input Textbox     |

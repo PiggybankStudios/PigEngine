@@ -47,11 +47,17 @@ struct PigState_t
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	
-	AppStateStructs_t appStates;
+	//AppStates
 	AppGlobals_t appGlobals;
+	AppStateStructs_t appStateStructs;
+	bool appStateInitialized[AppState_NumStates];
 	
-	AppState_t currentAppState;
-	bool changeAppStateRequested;
+	//AppState Stack
+	u64 appStateStackSize;
+	AppState_t appStateStack[MAX_APP_STATE_STACK_SIZE];
+	AppState_t currentAppState; //the one at the top of appStateStack
+	AppState_t thisAppState; //the one we are currently calling update/render/etc on
+	AppStateChange_t appStateChange;
 	AppState_t newAppState;
 	
 	//Rendering
