@@ -37,6 +37,7 @@ struct PigState_t
 	bool initialized;
 	bool firstUpdate;
 	bool dllReloaded;
+	u64 reloadIndex;
 	ThreadId_t mainThreadId;
 	
 	//Memory Arenas
@@ -82,7 +83,7 @@ struct PigState_t
 	u64 prevProgramTime;
 	BtnHandlingInfo_t keyHandled[Key_NumKeys];
 	BtnHandlingInfo_t mouseBtnHandled[MouseBtn_NumBtns];
-	BtnHandlingInfo_t controllerBtnHandled[ControllerBtn_NumBtns];
+	BtnHandlingInfo_t controllerBtnHandled[MAX_NUM_CONTROLLERS][ControllerBtn_NumBtns];
 	BtnHandlingInfo_t scrollXHandled;
 	BtnHandlingInfo_t scrollYHandled;
 	

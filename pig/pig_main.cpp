@@ -46,6 +46,7 @@ Description:
 #include "pig/pig_resources.h"
 #include "pig/pig_input.h"
 #include "pig/pig_textbox.h"
+#include "pig/pig_value_slider.h"
 #include "pig/pig_debug_commands.h"
 #include "pig/pig_debug_console.h"
 #include "pig/pig_tasks.h"
@@ -127,6 +128,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_render_funcs_3d.cpp"
 #include "pig/pig_render_funcs_font.cpp"
 #include "pig/pig_textbox.cpp"
+#include "pig/pig_value_slider.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"
@@ -256,10 +258,11 @@ PIG_PRE_RELOAD_DEF(Pig_PreReload)
 // +==============================+
 // |        Pig_PostReload        |
 // +==============================+
-// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion)
+// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime)
 PIG_POST_RELOAD_DEF(Pig_PostReload)
 {
 	PigEntryPoint(PigEntryPoint_PostReload, info, api, memory, nullptr, nullptr);
+	ProgramTime = programTime;
 	PigPostReload(oldVersion);
 	PigExitPoint(PigEntryPoint_PostReload);
 }

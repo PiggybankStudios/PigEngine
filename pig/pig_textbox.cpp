@@ -53,7 +53,7 @@ void CreateTextbox(Textbox_t* tb, MemArena_t* memArena, u64 textBufferSize, bool
 	tb->isMultiline = isMultiline;
 	tb->isFixedSizedBuffer = fixedTextBuffer;
 	tb->hintText = MyStr_Empty;
-	tb->font = &pig->resources.debugFont;
+	tb->font = GetFontHandle(&pig->resources.fonts->debug);
 	tb->fontFaceSelector = SelectDefaultFontFace();
 	tb->fontScale = 1.0f;
 	tb->selectionActive = false;
@@ -333,7 +333,7 @@ void SetTextboxFont(Textbox_t* tb, Font_t* font, FontFaceSelector_t faceSelector
 	NotNull(tb);
 	NotNull(tb->allocArena);
 	NotNull(font);
-	tb->font = font;
+	tb->font = GetFontHandle(font);
 	tb->fontFaceSelector = faceSelector;
 	tb->needToRemeasure = true;
 }
@@ -358,7 +358,7 @@ bool IsMouseOverTextbox(Textbox_t* tb)
 r32 TextboxGetAutoHeight(Textbox_t* tb)
 {
 	NotNull(tb);
-	const FontFace_t* fontFace = GetFontFace(tb->font, tb->fontFaceSelector);
+	const FontFace_t* fontFace = GetFontFace(GetPointer(&tb->font), tb->fontFaceSelector);
 	r32 fontLineHeight = (fontFace != nullptr) ? (fontFace->lineHeight * tb->fontScale) : 0;
 	return (fontLineHeight + tb->innerMargin.y*2);
 }
@@ -473,7 +473,7 @@ FFCB_BETWEEN_CHAR_DEFINITION(TextBox_FontFlowBetweenCharCallback) // | TextBox_F
 void TextboxLayout(Textbox_t* tb)
 {
 	NotNull(tb);
-	NotNull(tb->font);
+	AssertFilledHandle(&tb->font);
 	
 	if (tb->needToRemeasure)
 	{
@@ -486,7 +486,7 @@ void TextboxLayout(Textbox_t* tb)
 		FontFlowCallbacks_t flowCallbacks = {};
 		flowCallbacks.context = &context;
 		flowCallbacks.betweenChar = TextBox_FontFlowBetweenCharCallback;
-		tb->textMeasure = MeasureTextInFont(tb->text, tb->font, tb->fontFaceSelector, tb->fontScale, 0.0f, &tb->flowInfo, &flowCallbacks);
+		tb->textMeasure = MeasureTextInFont(tb->text, GetPointer(&tb->font), tb->fontFaceSelector, tb->fontScale, 0.0f, &tb->flowInfo, &flowCallbacks);
 		if (tb->text.length == 0) { tb->selectionEndPos = Vec2_Zero; tb->selectionStartPos = Vec2_Zero; }
 		else if (tb->selectionActive) { Assert(context.foundStartPos); Assert(context.foundEndPos); }
 		tb->needToRemeasure = false;
@@ -509,7 +509,7 @@ void TextboxLayout(Textbox_t* tb)
 	
 	tb->usableRec = RecDeflate(tb->mainRec, tb->innerMargin);
 	
-	const FontFace_t* fontFace = GetFontFace(tb->font, tb->fontFaceSelector);
+	const FontFace_t* fontFace = GetFontFace(GetPointer(&tb->font), tb->fontFaceSelector);
 	r32 fontMaxAscend = (fontFace != nullptr) ? (fontFace->maxAscend * tb->fontScale) : 0;
 	tb->textPos = tb->mainRec.topLeft + tb->innerMargin + NewVec2(0, fontMaxAscend);
 	Vec2Align(&tb->textPos);
@@ -562,7 +562,7 @@ void UpdateTextbox(Textbox_t* tb)
 		pigOut->cursorType = PlatCursor_TextIBeam;
 		
 		tb->mouseHovering = true;
-		i64 findCursorResult = FindCursorIndexInFlowedText(tb->text, tb->font, tb->fontFaceSelector, MousePos - tb->textPos, tb->fontScale, 0.0f, &tb->mouseHoverPos);
+		i64 findCursorResult = FindCursorIndexInFlowedText(tb->text, GetPointer(&tb->font), tb->fontFaceSelector, MousePos - tb->textPos, tb->fontScale, 0.0f, &tb->mouseHoverPos);
 		if (findCursorResult >= 0)
 		{
 			tb->mouseHoverIndex = (u64)findCursorResult;
@@ -930,7 +930,7 @@ void RenderTextbox(Textbox_t* tb)
 	NotNull(tb);
 	TextboxLayout(tb);
 	
-	const FontFace_t* fontFace = GetFontFace(tb->font, tb->fontFaceSelector);
+	const FontFace_t* fontFace = GetFontFace(GetPointer(&tb->font), tb->fontFaceSelector);
 	r32 fontMaxAscend = (fontFace != nullptr) ? (fontFace->maxAscend * tb->fontScale) : 0;
 	r32 fontMaxDescend = (fontFace != nullptr) ? (fontFace->maxDescend * tb->fontScale) : 0;
 	
@@ -949,7 +949,7 @@ void RenderTextbox(Textbox_t* tb)
 	RcSetViewport(tb->mainRec);
 	if (!IsEmptyStr(tb->text))
 	{
-		RcBindFont(tb->font, tb->fontFaceSelector, tb->fontScale);
+		RcBindFont(GetPointer(&tb->font), tb->fontFaceSelector, tb->fontScale);
 		Color_t textColor = MonokaiWhite;
 		Color_t selectionColor = IsFocused(tb) ? MonokaiWhite : MonokaiGray1;
 		Color_t selectionTextColor = MonokaiDarkGray;

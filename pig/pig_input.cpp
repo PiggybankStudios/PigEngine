@@ -112,7 +112,7 @@ void Pig_UpdateInputBefore()
 	{
 		for (u64 btnIndex = 0; btnIndex < ControllerBtn_NumBtns; btnIndex++)
 		{
-			Pig_UpdateBtnHandlingInfoBefore(&pig->controllerBtnHandled[btnIndex], &pigIn->controllerStates[cIndex].btnStates[btnIndex]);
+			Pig_UpdateBtnHandlingInfoBefore(&pig->controllerBtnHandled[cIndex][btnIndex], &pigIn->controllerStates[cIndex].btnStates[btnIndex]);
 		}
 	}
 	Pig_UpdateBtnHandlingInfoBefore(&pig->scrollXHandled, nullptr);
@@ -934,7 +934,369 @@ bool MouseScrolledAndHandle_(const char* filePath, u64 lineNumber)
 #define MouseScrolledAndHandle()   MouseScrolledAndHandle_(nullptr, 0)
 #endif
 
-//TODO: Add controller support for handling!
+// +--------------------------------------------------------------+
+// |                     Controller Handling                      |
+// +--------------------------------------------------------------+
+#define CONTROLLER_INDEX_ANY -1
+bool IsControllerBtnHandled(i32 controllerIndex, ControllerBtn_t btn, bool checkPress = true, bool checkRelease = true)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if ((checkPress && pig->controllerBtnHandled[cIndex][btn].pressHandled) || (checkRelease && pig->controllerBtnHandled[cIndex][btn].releaseHandled)) { return true; }
+		}
+		return false;
+	}
+	else
+	{
+		return ((checkPress && pig->controllerBtnHandled[controllerIndex][btn].pressHandled) || (checkRelease && pig->controllerBtnHandled[controllerIndex][btn].releaseHandled));
+	}
+}
+
+// +==============================+
+// |      No Handled Regard       |
+// +==============================+
+bool ControllerBtnDownRaw(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (pigIn == nullptr) { return false; }
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if (pigIn->controllerStates[cIndex].connected && pigIn->controllerStates[cIndex].btnStates[btn].isDown) { return true; }
+		}
+		return false;
+	}
+	else
+	{
+		return (pigIn->controllerStates[controllerIndex].connected && pigIn->controllerStates[controllerIndex].btnStates[btn].isDown);
+	}
+}
+bool ControllerBtnReleasedRaw(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (pigIn == nullptr) { return false; }
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if (pigIn->controllerStates[cIndex].connected && pigIn->controllerStates[cIndex].btnStates[btn].numReleases > 0) { return true; }
+		}
+		return false;
+	}
+	else
+	{
+		return (pigIn->controllerStates[controllerIndex].connected && pigIn->controllerStates[controllerIndex].btnStates[btn].numReleases > 0);
+	}
+}
+bool ControllerBtnPressedRaw(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (pigIn == nullptr) { return false; }
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if (pigIn->controllerStates[cIndex].connected && pigIn->controllerStates[cIndex].btnStates[btn].numPresses > 0) { return true; }
+		}
+		return false;
+	}
+	else
+	{
+		return (pigIn->controllerStates[controllerIndex].connected && pigIn->controllerStates[controllerIndex].btnStates[btn].numPresses > 0);
+	}
+}
+bool ControllerBtnPressedPlatRepeatingRaw(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (pigIn == nullptr) { return false; }
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if (pigIn->controllerStates[cIndex].connected && (pigIn->controllerStates[cIndex].btnStates[btn].numPresses > 0 || pigIn->controllerStates[controllerIndex].btnStates[btn].numRepeats > 0)) { return true; }
+		}
+		return false;
+	}
+	else
+	{
+		return (pigIn->controllerStates[controllerIndex].connected && (pigIn->controllerStates[controllerIndex].btnStates[btn].numPresses > 0 || pigIn->controllerStates[controllerIndex].btnStates[btn].numRepeats > 0));
+	}
+}
+//TODO: Does this work correctly? Seems like delay makes no difference?
+bool ControllerBtnRepeatedRaw(i32 controllerIndex, ControllerBtn_t btn, u64 delay, u64 period)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	Assert(period > 0);
+	if (pigIn == nullptr) { return false; }
+	if (ControllerBtnPressedRaw(controllerIndex, btn)) { return true; }
+	if (pig->prevProgramTime == ProgramTime) { return false; }
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			PlatControllerState_t* controller = &pigIn->controllerStates[cIndex];
+			if (controller->connected && controller->btnStates[btn].isDown)
+			{
+				u64 timeSince = TimeSince(controller->btnStates[btn].lastChangeTime);
+				u64 timeSincePrev = TimeSinceBy(pig->prevProgramTime, controller->btnStates[btn].lastChangeTime);
+				if (timeSince < delay) { continue; }
+				if (timeSincePrev < delay) { return true; }
+				timeSince -= delay;
+				timeSincePrev -= delay;
+				if ((timeSince / period) != (timeSincePrev / period)) { return true; }
+			}
+		}
+		return false;
+	}
+	else
+	{
+		if (!pigIn->controllerStates[controllerIndex].connected) { return false; }
+		if (!pigIn->controllerStates[controllerIndex].btnStates[btn].isDown) { return false; }
+		u64 timeSince = TimeSince(pigIn->controllerStates[controllerIndex].btnStates[btn].lastChangeTime);
+		u64 timeSincePrev = TimeSinceBy(pig->prevProgramTime, pigIn->controllerStates[controllerIndex].btnStates[btn].lastChangeTime);
+		if (timeSince < delay) { return false; }
+		if (timeSincePrev < delay) { return true; }
+		timeSince -= delay;
+		timeSincePrev -= delay;
+		if ((timeSince / period) != (timeSincePrev / period)) { return true; }
+		return false;
+	}
+	
+}
+
+// +==============================+
+// |    With Regard to Handled    |
+// +==============================+
+bool ControllerBtnDown(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (IsControllerBtnHandled(controllerIndex, btn, true, false)) { return false; }
+	return ControllerBtnDownRaw(controllerIndex, btn);
+}
+bool ControllerBtnReleased(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (IsControllerBtnHandled(controllerIndex, btn, false, true)) { return false; }
+	return ControllerBtnReleasedRaw(controllerIndex, btn);
+}
+bool ControllerBtnPressed(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (IsControllerBtnHandled(controllerIndex, btn, true, false)) { return false; }
+	return ControllerBtnPressedRaw(controllerIndex, btn);
+}
+bool ControllerBtnPressedPlatRepeating(i32 controllerIndex, ControllerBtn_t btn)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (IsControllerBtnHandled(controllerIndex, btn, true, false)) { return false; }
+	return ControllerBtnPressedPlatRepeatingRaw(controllerIndex, btn);
+}
+bool ControllerBtnPressedRepeating(i32 controllerIndex, ControllerBtn_t btn, u64 repeatDelay, u64 repeatPeriod)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (IsControllerBtnHandled(controllerIndex, btn, true, false)) { return false; }
+	return ControllerBtnRepeatedRaw(controllerIndex, btn, repeatDelay, repeatPeriod);
+}
+
+// +==============================+
+// |       Handle Functions       |
+// +==============================+
+//TODO: Set handled flags on related Key and Character events
+void HandleControllerBtn_(i32 controllerIndex, ControllerBtn_t btn, const char* filePath, u64 lineNumber)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			pig->controllerBtnHandled[cIndex][btn].pressHandled = true;
+			#if DEBUG_BUILD
+			if (filePath != nullptr)
+			{
+				if (!IsEmptyStr(pig->controllerBtnHandled[cIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[cIndex][btn].filePath); }
+				pig->controllerBtnHandled[cIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+				pig->controllerBtnHandled[cIndex][btn].lineNumber = lineNumber;
+			}
+			#else
+			UNUSED(filePath);
+			UNUSED(lineNumber);
+			#endif
+		}
+	}
+	else
+	{
+		pig->controllerBtnHandled[controllerIndex][btn].pressHandled = true;
+		#if DEBUG_BUILD
+		if (filePath != nullptr)
+		{
+			if (!IsEmptyStr(pig->controllerBtnHandled[controllerIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[controllerIndex][btn].filePath); }
+			pig->controllerBtnHandled[controllerIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+			pig->controllerBtnHandled[controllerIndex][btn].lineNumber = lineNumber;
+		}
+		#else
+		UNUSED(filePath);
+		UNUSED(lineNumber);
+		#endif
+	}
+	
+}
+void HandleControllerBtnRelease_(i32 controllerIndex, ControllerBtn_t btn, const char* filePath, u64 lineNumber)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			pig->controllerBtnHandled[cIndex][btn].releaseHandled = true;
+			#if DEBUG_BUILD
+			if (filePath != nullptr)
+			{
+				if (!IsEmptyStr(pig->controllerBtnHandled[cIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[cIndex][btn].filePath); }
+				pig->controllerBtnHandled[cIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+				pig->controllerBtnHandled[cIndex][btn].lineNumber = lineNumber;
+			}
+			#else
+			UNUSED(filePath);
+			UNUSED(lineNumber);
+			#endif
+		}
+	}
+	else
+	{
+		pig->controllerBtnHandled[controllerIndex][btn].releaseHandled = true;
+		#if DEBUG_BUILD
+		if (filePath != nullptr)
+		{
+			if (!IsEmptyStr(pig->controllerBtnHandled[controllerIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[controllerIndex][btn].filePath); }
+			pig->controllerBtnHandled[controllerIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+			pig->controllerBtnHandled[controllerIndex][btn].lineNumber = lineNumber;
+		}
+		#else
+		UNUSED(filePath);
+		UNUSED(lineNumber);
+		#endif
+	}
+}
+void HandleControllerBtnExtended_(i32 controllerIndex, ControllerBtn_t btn, const char* filePath, u64 lineNumber)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	Assert(btn < ControllerBtn_NumBtns);
+	UNUSED(filePath);
+	UNUSED(lineNumber);
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			pig->controllerBtnHandled[cIndex][btn].pressHandled = true;
+			pig->controllerBtnHandled[cIndex][btn].releaseHandled = true;
+			pig->controllerBtnHandled[cIndex][btn].extendedHandled = true;
+			#if DEBUG_BUILD
+			if (filePath != nullptr)
+			{
+				if (!IsEmptyStr(pig->controllerBtnHandled[cIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[cIndex][btn].filePath); }
+				pig->controllerBtnHandled[cIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+				pig->controllerBtnHandled[cIndex][btn].lineNumber = lineNumber;
+			}
+			#else
+			UNUSED(filePath);
+			UNUSED(lineNumber);
+			#endif
+		}
+	}
+	else
+	{
+		pig->controllerBtnHandled[controllerIndex][btn].pressHandled = true;
+		pig->controllerBtnHandled[controllerIndex][btn].releaseHandled = true;
+		pig->controllerBtnHandled[controllerIndex][btn].extendedHandled = true;
+		#if DEBUG_BUILD
+		if (filePath != nullptr)
+		{
+			if (!IsEmptyStr(pig->controllerBtnHandled[controllerIndex][btn].filePath)) { FreeString(fixedHeap, &pig->controllerBtnHandled[controllerIndex][btn].filePath); }
+			pig->controllerBtnHandled[controllerIndex][btn].filePath = NewStringInArenaNt(fixedHeap, filePath);
+			pig->controllerBtnHandled[controllerIndex][btn].lineNumber = lineNumber;
+		}
+		#else
+		UNUSED(filePath);
+		UNUSED(lineNumber);
+		#endif
+	}
+}
+
+#if DEBUG_BUILD
+#define HandleControllerBtn(controllerIndex, btn)                  HandleControllerBtn_((controllerIndex), (btn), __FILE__, __LINE__)
+#define HandleControllerBtnRelease(controllerIndex, btn)           HandleControllerBtnRelease_((controllerIndex), (btn), __FILE__, __LINE__)
+#define HandleControllerBtnExtended(controllerIndex, btn)          HandleControllerBtnExtended_((controllerIndex), (btn), __FILE__, __LINE__)
+#else
+#define HandleControllerBtn(controllerIndex, btn)                  HandleControllerBtn_((controllerIndex), (btn), nullptr, 0)
+#define HandleControllerBtnRelease(controllerIndex, btn)           HandleControllerBtnRelease_((controllerIndex), (btn), nullptr, 0)
+#define HandleControllerBtnExtended(controllerIndex, btn)          HandleControllerBtnExtended_((controllerIndex), (btn), nullptr, 0)
+#endif
+
+// +==============================+
+// |  Check and Handle Functions  |
+// +==============================+
+//NOTE: Extended button presses are a way for a piece of logic who only cares about the press or holding of a specific button to still
+//      handle the entire sequence of events (press, hold, release) for a button so another check doesn't errantly handle the hold or release of the button
+bool ControllerBtnDownAndHandle_(i32 controllerIndex, ControllerBtn_t btn, bool extended, const char* filePath, u64 lineNumber)
+{
+	if (ControllerBtnDown(controllerIndex, btn))
+	{
+		if (extended) { HandleControllerBtnExtended_(controllerIndex, btn, filePath, lineNumber); }
+		else { HandleControllerBtn_(controllerIndex, btn, filePath, lineNumber); }
+		return true;
+	}
+	return false;
+}
+bool ControllerBtnPressedAndHandle_(i32 controllerIndex, ControllerBtn_t btn, bool extended, const char* filePath, u64 lineNumber)
+{
+	if (ControllerBtnPressed(controllerIndex, btn))
+	{
+		if (extended) { HandleControllerBtnExtended_(controllerIndex, btn, filePath, lineNumber); }
+		else { HandleControllerBtn_(controllerIndex, btn, filePath, lineNumber); }
+		return true;
+	}
+	return false;
+}
+bool ControllerBtnReleasedAndHandle_(i32 controllerIndex, ControllerBtn_t btn, const char* filePath, u64 lineNumber)
+{
+	if (ControllerBtnReleased(controllerIndex, btn))
+	{
+		HandleControllerBtnRelease_(controllerIndex, btn, filePath, lineNumber);
+		return true;
+	}
+	return false;
+}
+
+#if DEBUG_BUILD
+#define ControllerBtnDownAndHandle(controllerIndex, btn)            ControllerBtnDownAndHandle_((controllerIndex), (btn), false, __FILE__, __LINE__)
+#define ControllerBtnDownAndHandleExtended(controllerIndex, btn)    ControllerBtnDownAndHandle_((controllerIndex), (btn), true, __FILE__, __LINE__)
+#define ControllerBtnPressedAndHandle(controllerIndex, btn)         ControllerBtnPressedAndHandle_((controllerIndex), (btn), false, __FILE__, __LINE__)
+#define ControllerBtnPressedAndHandleExtended(controllerIndex, btn) ControllerBtnPressedAndHandle_((controllerIndex), (btn), true, __FILE__, __LINE__)
+#define ControllerBtnReleasedAndHandle(controllerIndex, btn)        ControllerBtnReleasedAndHandle_((controllerIndex), (btn), __FILE__, __LINE__)
+#else
+#define ControllerBtnDownAndHandle(controllerIndex, btn)            ControllerBtnDownAndHandle_((controllerIndex), (btn), false, nullptr, 0)
+#define ControllerBtnDownAndHandleExtended(controllerIndex, btn)    ControllerBtnDownAndHandle_((controllerIndex), (btn), true, nullptr, 0)
+#define ControllerBtnPressedAndHandle(controllerIndex, btn)         ControllerBtnPressedAndHandle_((controllerIndex), (btn), false, nullptr, 0)
+#define ControllerBtnPressedAndHandleExtended(controllerIndex, btn) ControllerBtnPressedAndHandle_((controllerIndex), (btn), true, nullptr, 0)
+#define ControllerBtnReleasedAndHandle(controllerIndex, btn)        ControllerBtnReleasedAndHandle_((controllerIndex), (btn), nullptr, 0)
+#endif
 
 // +--------------------------------------------------------------+
 // |                     Input Event Handling                     |

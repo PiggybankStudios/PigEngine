@@ -82,36 +82,11 @@ void RcDrawTexturedPartRectangle(rec rectangle, Color_t color, rec sourceRec)
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
 
-//TODO: Add options for rotating and flipping x/y?
-void RcDrawSheetFrame(v2i frame, rec rectangle, Color_t color)
-{
-	NotNull(rc->state.boundSpriteSheet);
-	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
-	rec sourceRec = NewRec(
-		ToVec2(Vec2iMultiply(frame, sheet->frameSize + sheet->padding) + sheet->padding),
-		ToVec2(sheet->frameSize)
-	);
-	RcBindTexture1(&sheet->texture);
-	RcDrawTexturedPartRectangle(rectangle, color, sourceRec);
-}
-void RcDrawSheetFrame(MyStr_t frameName, rec rectangle, Color_t color)
-{
-	NotNull(rc->state.boundSpriteSheet);
-	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
-	v2i frameGridPos = GetSpriteSheetFrame(sheet, frameName);
-	rec sourceRec = NewRec(
-		ToVec2(Vec2iMultiply(frameGridPos, sheet->frameSize + sheet->padding) + sheet->padding),
-		ToVec2(sheet->frameSize)
-	);
-	RcBindTexture1(&sheet->texture);
-	RcDrawTexturedPartRectangle(rectangle, color, sourceRec);
-}
-
 void RcDrawGradientRectangle(rec rectangle, bool horizontal, Color_t colorLeftOrTop, Color_t colorRightOrBottom, bool bindShader = true)
 {
 	Shader_t* oldShader = rc->state.boundShader;
 	Color_t oldColor2 = rc->state.color2;
-	if (bindShader) { RcBindShader(&pig->resources.gradientShader2D); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->gradient2D); }
 	RcBindTexture1(horizontal ? &rc->gradientHorizontal : &rc->gradientVertical);
 	RcSetColor2(colorRightOrBottom);
 	RcDrawTexturedRectangle(rectangle, colorLeftOrTop);
@@ -126,7 +101,7 @@ void RcDrawRoundedRectangle(rec rectangle, r32 cornerRadius, Color_t color, bool
 	v2 oldShiftVec = rc->state.shiftVec;
 	r32 oldCircleRadius = rc->state.circleRadius;
 	
-	if (bindShader) { RcBindShader(&pig->resources.roundedCornersShader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->roundedCorners); }
 	RcSetShiftVec(rectangle.size);
 	RcSetCircleRadius(cornerRadius);
 	
@@ -146,7 +121,7 @@ void RcDrawCircle(v2 center, r32 radius, Color_t color, bool bindShader = true)
 	r32 oldCircleRadius = rc->state.circleRadius;
 	r32 oldInnerCircleRadius = rc->state.circleInnerRadius;
 	
-	if (bindShader) { RcBindShader(&pig->resources.mainShader2D); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->main2D); }
 	RcSetCircleRadius(1.0f);
 	RcSetCircleInnerRadius(0.0f);
 	
@@ -185,6 +160,20 @@ void RcDrawObb2(obb2 boundingBox, Colorf_t colorf)
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+void RcDrawTexturedObb2(obb2 boundingBox, Color_t color, rec sourceRec)
+{
+	NotNull(rc->state.boundTexture1);
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
+	Mat4Transform(worldMatrix, Mat4Scale2(boundingBox.size));
+	Mat4Transform(worldMatrix, Mat4RotateZ(boundingBox.rotation));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, rc->state.depth));
+	RcSetWorldMatrix(worldMatrix);
+	RcSetSourceRec1(sourceRec);
+	RcSetColor1(color);
+	RcBindVertBuffer(&rc->squareBuffer);
+	RcDrawBuffer(VertBufferPrimitive_Triangles);
+}
 void RcDrawObb2Outline(obb2 boundingBox, Color_t color, r32 thickness, bool outsideBox = false)
 {
 	if (outsideBox)
@@ -212,7 +201,7 @@ void RcDrawRoundedObb2(obb2 boundingBox, r32 cornerRadius, Color_t color, bool b
 	v2 oldShiftVec = rc->state.shiftVec;
 	r32 oldCircleRadius = rc->state.circleRadius;
 	
-	if (bindShader) { RcBindShader(&pig->resources.roundedCornersShader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->roundedCorners); }
 	RcSetShiftVec(boundingBox.size);
 	RcSetCircleRadius(cornerRadius);
 	
@@ -221,6 +210,46 @@ void RcDrawRoundedObb2(obb2 boundingBox, r32 cornerRadius, Color_t color, bool b
 	RcSetShiftVec(oldShiftVec);
 	RcSetCircleRadius(oldCircleRadius);
 	if (bindShader) { RcBindShader(oldShader); }
+}
+
+//NOTE: rotation is applied after flipX/flipY
+void RcDrawSheetFrame(v2i frame, rec rectangle, Color_t color, bool flipX = false, bool flipY = false, Dir2_t rotation = Dir2_Down)
+{
+	NotNull(rc->state.boundSpriteSheet);
+	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
+	rec sourceRec = GetSpriteSheetFrameSourceRec(sheet, frame);
+	if (flipX) { sourceRec.x += sourceRec.width; sourceRec.width = -sourceRec.width; }
+	if (flipY) { sourceRec.y += sourceRec.height; sourceRec.height = -sourceRec.height; }
+	if (rotation != Dir2_Down)
+	{
+		obb2 boundingBox = NewObb2D(rectangle.topLeft + rectangle.size/2, rectangle.size, 0.0f);
+		if (rotation == Dir2_Left || rotation == Dir2_Right) { SWAP_VARIABLES(r32, boundingBox.width, boundingBox.height); }
+		if (rotation == Dir2_Left)       { boundingBox.rotation = HalfPi32;       }
+		else if (rotation == Dir2_Up)    { boundingBox.rotation = Pi32;           }
+		else if (rotation == Dir2_Right) { boundingBox.rotation = ThreeHalfsPi32; }
+		else { AssertMsg(false, "Rotation is an unsupported value"); }
+		RcBindTexture1(&sheet->texture);
+		RcDrawTexturedObb2(boundingBox, color, sourceRec);
+	}
+	else
+	{
+		RcBindTexture1(&sheet->texture);
+		RcDrawTexturedPartRectangle(rectangle, color, sourceRec);
+	}
+}
+void RcDrawSheetFrame(MyStr_t frameName, rec rectangle, Color_t color, bool flipX = false, bool flipY = false, Dir2_t rotation = Dir2_Down)
+{
+	NotNull(rc->state.boundSpriteSheet);
+	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
+	SpriteSheetFrame_t* sheetFrame = TryGetSpriteSheetFrame(sheet, frameName);
+	if (sheetFrame != nullptr)
+	{
+		RcDrawSheetFrame(sheetFrame->gridPos, rectangle, color, flipX, flipY, rotation);
+	}
+	else
+	{
+		RcDrawRectangle(rectangle, color);
+	}
 }
 
 void RcDrawEquilTriangleFrom(v2 base, r32 direction, r32 height, Color_t color)
@@ -295,7 +324,7 @@ void RcDrawBezier3WithShader(v2 start, v2 control, v2 end, r32 thickness, Color_
 	// RecAlign(&bounds);
 	
 	Shader_t* oldShader = rc->state.boundShader;
-	if (bindShader) { RcBindShader(&pig->resources.bezier3Shader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->bezier3); }
 	RcSetDynamicUniformVec2("StartPos", Vec2Divide((start - bounds.topLeft), bounds.size));
 	RcSetDynamicUniformVec2("Control", Vec2Divide((control - bounds.topLeft), bounds.size));
 	RcSetDynamicUniformVec2("EndPos",   Vec2Divide((end - bounds.topLeft), bounds.size));
@@ -317,7 +346,7 @@ void RcDrawBezier4WithShader(v2 start, v2 control1, v2 control2, v2 end, r32 thi
 	// RecAlign(&bounds);
 	
 	Shader_t* oldShader = rc->state.boundShader;
-	if (bindShader) { RcBindShader(&pig->resources.bezier4Shader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->bezier4); }
 	RcSetDynamicUniformVec2("StartPos", Vec2Divide((start - bounds.topLeft), bounds.size));
 	RcSetDynamicUniformVec2("Control1", Vec2Divide((control1 - bounds.topLeft), bounds.size));
 	RcSetDynamicUniformVec2("Control2", Vec2Divide((control2 - bounds.topLeft), bounds.size));
@@ -337,7 +366,7 @@ void RcDrawEllipseArcWithShader(v2 center, v2 radius, r32 axisAngle, r32 startAn
 	// RecAlign(&bounds);
 	
 	Shader_t* oldShader = rc->state.boundShader;
-	if (bindShader) { RcBindShader(&pig->resources.ellipseArcShader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->ellipseArc); }
 	RcSetDynamicUniformVec2("Center", Vec2_Half);
 	RcSetDynamicUniformVec2("Radius", (radius / bounds.width));
 	RcSetDynamicUniformR32("Rotation", axisAngle);
@@ -356,7 +385,7 @@ void RcDrawBezierPathWithShader(const BezierPath_t* path, r32 thickness, Color_t
 	NotNull(path);
 	
 	Shader_t* oldShader = rc->state.boundShader;
-	if (bindShader) { RcBindShader(&pig->resources.bezier4Shader); }
+	if (bindShader) { RcBindShader(&pig->resources.shaders->bezier4); }
 	
 	v2 currentPos = Vec2_Zero;
 	VarArrayLoop(&path->parts, pIndex)
@@ -372,7 +401,7 @@ void RcDrawBezierPathWithShader(const BezierPath_t* path, r32 thickness, Color_t
 				v2 startPos = offset + Vec2Multiply(currentPos, scale);
 				v2 endPos = offset + Vec2Multiply(part->endPos, scale);
 				v2 midpoint = (startPos + endPos) / 2;
-				if (rc->state.boundShader != &pig->resources.bezier3Shader) { RcBindShader(&pig->resources.bezier3Shader); }
+				if (rc->state.boundShader != &pig->resources.shaders->bezier3) { RcBindShader(&pig->resources.shaders->bezier3); }
 				RcDrawBezier3WithShader(startPos, midpoint, endPos, thickness, color, false);
 			} break;
 			case BezierPathPartType_Curve3:
@@ -380,7 +409,7 @@ void RcDrawBezierPathWithShader(const BezierPath_t* path, r32 thickness, Color_t
 				v2 startPos = offset + Vec2Multiply(currentPos, scale);
 				v2 control = offset + Vec2Multiply(part->control1, scale);
 				v2 endPos = offset + Vec2Multiply(part->endPos, scale);
-				if (rc->state.boundShader != &pig->resources.bezier3Shader) { RcBindShader(&pig->resources.bezier3Shader); }
+				if (rc->state.boundShader != &pig->resources.shaders->bezier3) { RcBindShader(&pig->resources.shaders->bezier3); }
 				RcDrawBezier3WithShader(startPos, control, endPos, thickness, color, false);
 			} break;
 			case BezierPathPartType_Curve4:
@@ -389,7 +418,7 @@ void RcDrawBezierPathWithShader(const BezierPath_t* path, r32 thickness, Color_t
 				v2 control1 = offset + Vec2Multiply(part->control1, scale);
 				v2 control2 = offset + Vec2Multiply(part->control2, scale);
 				v2 endPos = offset + Vec2Multiply(part->endPos, scale);
-				if (rc->state.boundShader != &pig->resources.bezier4Shader) { RcBindShader(&pig->resources.bezier4Shader); }
+				if (rc->state.boundShader != &pig->resources.shaders->bezier4) { RcBindShader(&pig->resources.shaders->bezier4); }
 				RcDrawBezier4WithShader(startPos, control1, control2, endPos, thickness, color, false);
 			} break;
 			case BezierPathPartType_EllipseArc:
@@ -403,14 +432,14 @@ void RcDrawBezierPathWithShader(const BezierPath_t* path, r32 thickness, Color_t
 				r32 arcAngleDelta = 0;
 				if (GetEllipseArcCurveCenterAndAngles(startPos, radius, part->axisAngle, part->arcFlags, endPos, &arcCenter, &arcAngleStart, &arcAngleDelta))
 				{
-					if (rc->state.boundShader != &pig->resources.ellipseArcShader) { RcBindShader(&pig->resources.ellipseArcShader); }
+					if (rc->state.boundShader != &pig->resources.shaders->ellipseArc) { RcBindShader(&pig->resources.shaders->ellipseArc); }
 					RcDrawEllipseArcWithShader(arcCenter, radius, part->axisAngle, arcAngleStart, arcAngleDelta, thickness, color, false);
 				}
 				else
 				{
 					//draw a line
 					v2 midpoint = (currentPos + part->endPos) / 2;
-					if (rc->state.boundShader != &pig->resources.bezier3Shader) { RcBindShader(&pig->resources.bezier3Shader); }
+					if (rc->state.boundShader != &pig->resources.shaders->bezier3) { RcBindShader(&pig->resources.shaders->bezier3); }
 					RcDrawBezier3WithShader(currentPos + offset, midpoint + offset, part->endPos + offset, thickness, color, false);
 				}
 			} break;
@@ -431,7 +460,7 @@ void RcDrawPieChart(u64 numPiePieces, r64* piePiecePercentages, rec rectangle, C
 	Shader_t* oldShader = rc->state.boundShader;
 	r32 oldCircleRadius = rc->state.circleRadius;
 	r32 oldCircleInnerRadius = rc->state.circleInnerRadius;
-	if (rc->state.boundShader != &pig->resources.pieChartShader) { RcBindShader(&pig->resources.pieChartShader); }
+	if (rc->state.boundShader != &pig->resources.shaders->pieChart) { RcBindShader(&pig->resources.shaders->pieChart); }
 	r64 chunkBasePercentage = 0.0;
 	for (u64 pieChunkIndex = 0; pieChunkIndex*ShaderUniform_NumGenericValues < numPiePieces; pieChunkIndex++)
 	{
@@ -460,7 +489,7 @@ void RcDrawPieChart(u64 numPiePieces, r64* piePiecePercentages, rec rectangle, C
 	RcSetCircleRadius(oldCircleRadius);
 	RcSetCircleInnerRadius(oldCircleInnerRadius);
 	for (u8 vIndex = 0; vIndex < ShaderUniform_NumGenericValues; vIndex++) { RcSetValue(vIndex, 0.0f); }
-	if (oldShader != &pig->resources.pieChartShader) { RcBindShader(oldShader); }
+	if (oldShader != &pig->resources.shaders->pieChart) { RcBindShader(oldShader); }
 }
 
 void RcDrawPieChartTest(rec rectangle)

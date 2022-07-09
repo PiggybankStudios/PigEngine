@@ -251,7 +251,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 	if (IsInsideRec(rectangle, MousePos) && showPieceTextOnHover)
 	{
 		Shader_t* oldShader = rc->state.boundShader;
-		if (rc->state.boundShader != &pig->resources.mainShader2D) { RcBindShader(&pig->resources.mainShader2D); }
+		if (rc->state.boundShader != &pig->resources.shaders->main2D) { RcBindShader(&pig->resources.shaders->main2D); }
 		NotNull(rc->state.boundFont);
 		r32 mouseDistance = Vec2Length(MousePos - (rectangle.topLeft + rectangle.size/2));
 		if (mouseDistance < MinR32(rectangle.width, rectangle.height)/2)
@@ -274,7 +274,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 				anglePercentage += (r32)percentages[sIndex];
 			}
 		}
-		if (oldShader != &pig->resources.mainShader2D) { RcBindShader(oldShader); }
+		if (oldShader != &pig->resources.shaders->main2D) { RcBindShader(oldShader); }
 	}
 	TempPopMark();
 }

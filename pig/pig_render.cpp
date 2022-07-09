@@ -671,7 +671,7 @@ VertexArrayObject_t* RcGetVertexArrayObj(u64 windowId, VertexType_t vertexType)
 void RcBindShader(Shader_t* shader)
 {
 	NotNull(rc);
-	if (shader != nullptr && !shader->isValid) { DebugAssertMsg(false, "Trying to bind invalid shader!"); shader = &pig->resources.mainShader2D; }
+	if (shader != nullptr && !shader->isValid) { DebugAssertMsg(false, "Trying to bind invalid shader!"); shader = &pig->resources.shaders->main2D; }
 	if (shader != nullptr && !shader->isValid) { shader = nullptr; }
 	if (rc->state.boundShader == shader) { return; }
 	//TODO: Track the number of shader binds

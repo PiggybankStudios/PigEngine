@@ -12,7 +12,7 @@ struct Textbox_t
 	MemArena_t* allocArena;
 	u64 id;
 	MyStr_t hintText;
-	Font_t* font;
+	FontHandle_t font;
 	FontFaceSelector_t fontFaceSelector;
 	r32 fontScale;
 	v2 innerMargin;

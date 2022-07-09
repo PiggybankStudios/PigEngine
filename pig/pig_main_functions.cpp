@@ -15,6 +15,7 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->mainThreadId = plat->GetThisThreadId();
 	pig->renderApi = platInfo->renderApi;
 	pig->dllReloaded = false;
+	pig->reloadIndex = 1;
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
@@ -67,7 +68,7 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	RcLoadBasicResources();
 	Pig_InitResources();
-	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup 
+	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup
 	
 	// plat->DebugReadout(NewStr("Hello from Pig Engine!"), White, 1.0f);
 	#if 0
@@ -136,7 +137,7 @@ void PigUpdateMainWindow()
 // +--------------------------------------------------------------+
 void PigRenderDebugOverlays()
 {
-	RcBindShader(&pig->resources.mainShader2D);
+	RcBindShader(&pig->resources.shaders->main2D);
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
 	RcClearDepth(-1.0f);
@@ -217,13 +218,13 @@ void PigUpdate()
 				}
 				else
 				{
-					RcBegin(window, renderBuffer, &pig->resources.mainShader2D, GetPredefPalColorByIndex(wIndex+4));
+					RcBegin(window, renderBuffer, &pig->resources.shaders->main2D, GetPredefPalColorByIndex(wIndex+4));
 				}
 				
 				if (renderBuffer != nullptr)
 				{
 					PrepareFrameBufferTexture(renderBuffer);
-					RcBegin(window, nullptr, &pig->resources.mainShader2D, PalPurpleDark);
+					RcBegin(window, nullptr, &pig->resources.shaders->main2D, PalPurpleDark);
 					RcBindTexture1(&renderBuffer->outTexture);
 					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
 				}
@@ -266,9 +267,11 @@ void PigPostReload(Version_t oldVersion)
 	UNUSED(oldVersion); //TODO: Remove me!
 	PigInitGlad();
 	pig->dllReloaded = true;
+	pig->reloadIndex++;
 	
 	NotifyPrint_N("Now running Pig DLL v%u.%02u(%03u)!", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	
+	Pig_HandleResourcesOnReload();
 	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;

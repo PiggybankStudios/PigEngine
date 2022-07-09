@@ -208,8 +208,8 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 	
 	if (graph->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		
 		#if DEBUG_BUILD
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*1), White, "Mixer %.2lfms (drops %llu clips %llu)", pig->audioMixerTime, pigIn->numAudioFrameDrops, pig->numAudioClips);
@@ -310,7 +310,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 		{
 			Color_t btnColor = ColorTransparent(White, (IsMouseOverNamed("AudioOutGraphPauseBtn") ? 1.0f : 0.5f));
 			MyStr_t pauseIconFrame = (graph->paused ? NewStr("PlayIcon") : NewStr("PauseIcon"));
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(pauseIconFrame, graph->pauseBtnRec, btnColor);
 		}
 		
@@ -320,7 +320,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 		if (graph->viewCenterGoto != 0.5f || graph->scaleGoto != graph->minScale)
 		{
 			Color_t btnColor = ColorTransparent(White, (IsMouseOverNamed("AudioOutGraphResetViewBtn") ? 1.0f : 0.5f));
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(NewStr("ResetIcon"), graph->resetViewBtnRec, btnColor);
 		}
 	}

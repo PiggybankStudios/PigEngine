@@ -90,4 +90,58 @@ struct ResourceFontMetaInfo_t
 	ResourceFontFaceMetaInfo_t faces[MAX_NUM_RESOURCE_FONT_FACES];
 };
 
+//TODO: We could make these be straight up typedefs in release mode?
+//NOTE: The reloadIndex is also acting like a "filled" flag since 0 is an invalid reloadIndex
+struct TextureHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Texture_t* pntr;
+};
+struct VectorImgHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	VectorImg_t* pntr;
+};
+struct SpriteSheetHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	SpriteSheet_t* pntr;
+};
+struct ShaderHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Shader_t* pntr;
+};
+struct FontHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Font_t* pntr;
+};
+
+#include "game_resources.h"
+
+struct Resources_t
+{
+	#if DEBUG_BUILD
+	VarArray_t watches; //ResourceWatch_t
+	#endif
+	
+	u64 numTexturesAlloc;
+	u64 numVectorImgsAlloc;
+	u64 numSheetsAlloc;
+	u64 numShadersAlloc;
+	u64 numFontsAlloc;
+	
+	ResourceTextures_t* textures;
+	ResourceVectors_t*  vectors;
+	ResourceSheets_t*   sheets;
+	ResourceShaders_t*  shaders;
+	ResourceFonts_t*    fonts;
+};
+
 #endif //  _PIG_RESOURCES_H

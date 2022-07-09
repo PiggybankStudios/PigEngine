@@ -184,7 +184,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatControllerState_t* controller, rec drawRec)
 {
 	UNUSED(overlay);
-	RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+	RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 	
 	RcDrawRectangleOutline(drawRec, White, 1);
 	
@@ -240,7 +240,7 @@ void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatCon
 			}
 			// Color_t outlineColor = (btnState->numReleases > 0) ? MonokaiWhite : MonokaiGray1;
 			
-			RcBindSpriteSheet(&pig->resources.controllerBtnsSheet);
+			RcBindSpriteSheet(&pig->resources.sheets->controllerBtns);
 			RcDrawSheetFrame(btnFrame, btnRec, btnColor);
 			// RcDrawRectangleOutline(btnRec, outlineColor, 1);
 			// RcDrawRectangle(btnRec, btnColor);
@@ -296,8 +296,8 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 	
 	if (overlay->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		v2 textPos = NewVec2(10, 10);
 		if (pig->perfGraph.enabled) { textPos.y = pig->perfGraph.infoTextPos.y + 10; }
 		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
@@ -409,9 +409,9 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		// +==============================+
 		if (overlay->pieChartsEnabled)
 		{
-			RcBindShader(&pig->resources.pieChartShader);
+			RcBindShader(&pig->resources.shaders->pieChart);
 			
-			RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec + NewVec2(0, 8), Grey11);
 			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec, White, true);
 			
@@ -426,7 +426,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			
 			// RcDrawPieChartTest(NewRec(ScreenSize.width - 630, ScreenSize.height - 210, 200, 200));
 			
-			RcBindShader(&pig->resources.mainShader2D);
+			RcBindShader(&pig->resources.shaders->main2D);
 		}
 	}
 	
@@ -481,7 +481,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Easing Functions"); }
 		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Controller Debug"); }
 		
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12, true));
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12, true));
 		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
 		Vec2Align(&textPos, 2);
 		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);

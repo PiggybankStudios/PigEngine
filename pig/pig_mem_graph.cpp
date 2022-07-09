@@ -137,7 +137,7 @@ void PigMemGraphLayout(PigMemGraph_t* graph)
 {
 	NotNull(graph);
 	
-	RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
+	RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 	
 	rec usableArea = NewRec(Vec2_Zero, ScreenSize);
 	if (pig->perfGraph.enabled)
@@ -358,7 +358,7 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 				
 				if (isMouseOver || (isSelected && !isMouseOverAnyPage))
 				{
-					RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
+					RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 					v2 textPos = NewVec2(page->mainRec.x, page->mainRec.y + page->mainRec.height + RcGetMaxAscend());
 					Vec2Align(&textPos);
 					

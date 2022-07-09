@@ -253,7 +253,6 @@ SpriteSheetFrame_t* TryGetSpriteSheetFrame(SpriteSheet_t* sheet, v2i gridPos)
 	}
 	return nullptr;
 }
-
 SpriteSheetFrame_t* TryGetSpriteSheetFrame(SpriteSheet_t* sheet, MyStr_t frameName)
 {
 	NotNull(sheet);
@@ -267,7 +266,16 @@ SpriteSheetFrame_t* TryGetSpriteSheetFrame(SpriteSheet_t* sheet, MyStr_t frameNa
 	}
 	return nullptr;
 }
-v2i GetSpriteSheetFrame(SpriteSheet_t* sheet, MyStr_t frameName, bool assertOnFailure = false)
+const SpriteSheetFrame_t* TryGetSpriteSheetFrame(const SpriteSheet_t* sheet, v2i gridPos) //const variant
+{
+	return (const SpriteSheetFrame_t*)TryGetSpriteSheetFrame((SpriteSheet_t*)sheet, gridPos);
+}
+const SpriteSheetFrame_t* TryGetSpriteSheetFrame(const SpriteSheet_t* sheet, MyStr_t frameName) //const variant
+{
+	return (const SpriteSheetFrame_t*)TryGetSpriteSheetFrame((SpriteSheet_t*)sheet, frameName);
+}
+
+v2i GetSpriteSheetFrame(const SpriteSheet_t* sheet, MyStr_t frameName, bool assertOnFailure = false)
 {
 	NotNull(sheet);
 	VarArrayLoop(&sheet->frames, fIndex)
@@ -278,6 +286,25 @@ v2i GetSpriteSheetFrame(SpriteSheet_t* sheet, MyStr_t frameName, bool assertOnFa
 			return frame->gridPos;
 		}
 	}
-	AssertIf(assertOnFailure, false);
+	AssertIfMsg(assertOnFailure, false, "Failed to find sprite frame by name");
 	return Vec2i_Zero;
+}
+
+rec GetSpriteSheetFrameSourceRec(const SpriteSheet_t* sheet, v2i gridPos)
+{
+	rec result = NewRec(
+		ToVec2(Vec2iMultiply(gridPos, sheet->frameSize + sheet->padding) + sheet->padding),
+		ToVec2(sheet->frameSize)
+	);
+	return result;
+}
+rec GetSpriteSheetFrameSourceRec(const SpriteSheet_t* sheet, MyStr_t frameName, bool assertOnFailure = true)
+{
+	const SpriteSheetFrame_t* frame = TryGetSpriteSheetFrame(sheet, frameName);
+	if (frame != nullptr)
+	{
+		return GetSpriteSheetFrameSourceRec(sheet, frame->gridPos);
+	}
+	AssertIfMsg(assertOnFailure, false, "Failed to find sprite frame by name");
+	return Rec_Zero;
 }

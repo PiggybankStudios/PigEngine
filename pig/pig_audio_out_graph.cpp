@@ -199,8 +199,8 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 	
 	if (graph->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()), White, "Scale %.3f -> %.3f (min %f)", graph->scale, graph->scaleGoto, graph->minScale);
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*2), White, "ViewCenter %.3f -> %.3f", graph->viewCenter, graph->viewCenterGoto);

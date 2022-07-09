@@ -324,7 +324,7 @@ typedef PIG_CLOSING_DEF(PigClosing_f);
 #define PIG_PRE_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t newVersion)
 typedef PIG_PRE_RELOAD_DEF(PigPreReload_f);
 
-#define PIG_POST_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion)
+#define PIG_POST_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime)
 typedef PIG_POST_RELOAD_DEF(PigPostReload_f);
 
 #define PIG_PERFORM_TASK_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThreadPoolThread_t* thread, PlatTask_t* task)

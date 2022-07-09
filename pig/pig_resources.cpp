@@ -17,6 +17,35 @@ void Pig_InitResources()
 	#if DEBUG_BUILD
 	CreateVarArray(&pig->resources.watches, fixedHeap, sizeof(ResourceWatch_t), TOTAL_NUM_RESOURCES);
 	#endif
+	
+	pig->resources.numTexturesAlloc   = RESOURCES_NUM_TEXTURES;
+	pig->resources.numVectorImgsAlloc = RESOURCES_NUM_VECTORS;
+	pig->resources.numSheetsAlloc     = RESOURCES_NUM_SHEETS;
+	pig->resources.numShadersAlloc    = RESOURCES_NUM_SHADERS;
+	pig->resources.numFontsAlloc      = RESOURCES_NUM_FONTS;
+	
+	Assert(sizeof(ResourceTextures_t) == sizeof(Texture_t)     * RESOURCES_NUM_TEXTURES);
+	Assert(sizeof(ResourceVectors_t)  == sizeof(VectorImg_t)   * RESOURCES_NUM_VECTORS);
+	Assert(sizeof(ResourceSheets_t)   == sizeof(SpriteSheet_t) * RESOURCES_NUM_SHEETS);
+	Assert(sizeof(ResourceShaders_t)  == sizeof(Shader_t)      * RESOURCES_NUM_SHADERS);
+	Assert(sizeof(ResourceFonts_t)    == sizeof(Font_t)        * RESOURCES_NUM_FONTS);
+	
+	pig->resources.textures = (ResourceTextures_t*)AllocArray(fixedHeap, Texture_t,     RESOURCES_NUM_TEXTURES);
+	pig->resources.vectors  =  (ResourceVectors_t*)AllocArray(fixedHeap, VectorImg_t,   RESOURCES_NUM_VECTORS);
+	pig->resources.sheets   =   (ResourceSheets_t*)AllocArray(fixedHeap, SpriteSheet_t, RESOURCES_NUM_SHEETS);
+	pig->resources.shaders  =  (ResourceShaders_t*)AllocArray(fixedHeap, Shader_t,      RESOURCES_NUM_SHADERS);
+	pig->resources.fonts    =    (ResourceFonts_t*)AllocArray(fixedHeap, Font_t,        RESOURCES_NUM_FONTS);
+	NotNull(pig->resources.textures);
+	NotNull(pig->resources.vectors);
+	NotNull(pig->resources.sheets);
+	NotNull(pig->resources.shaders);
+	NotNull(pig->resources.fonts);
+	
+	ClearPointer(pig->resources.textures);
+	ClearPointer(pig->resources.vectors);
+	ClearPointer(pig->resources.sheets);
+	ClearPointer(pig->resources.shaders);
+	ClearPointer(pig->resources.fonts);
 }
 
 // +--------------------------------------------------------------+
@@ -26,11 +55,12 @@ u64 GetNumResourcesOfType(ResourceType_t resourceType)
 {
 	switch (resourceType)
 	{
-		case ResourceType_Texture: return RESOURCES_NUM_TEXTURES;
-		case ResourceType_Sheet:   return RESOURCES_NUM_SHEETS;
-		case ResourceType_Shader:  return RESOURCES_NUM_SHADERS;
-		case ResourceType_Font:    return RESOURCES_NUM_FONTS;
-		default: return 0;
+		case ResourceType_Texture:     return RESOURCES_NUM_TEXTURES;
+		case ResourceType_VectorImage: return RESOURCES_NUM_VECTORS;
+		case ResourceType_Sheet:       return RESOURCES_NUM_SHEETS;
+		case ResourceType_Shader:      return RESOURCES_NUM_SHADERS;
+		case ResourceType_Font:        return RESOURCES_NUM_FONTS;
+		default: Unimplemented(); return 0;
 	}
 }
 
@@ -102,7 +132,7 @@ void Pig_LoadTextureResource(u64 textureIndex)
 		DestroyTexture(&newTexture);
 		return;
 	}
-	Texture_t* texture = &pig->resources.textures[textureIndex];
+	Texture_t* texture = &pig->resources.textures->items[textureIndex];
 	if (texture->isValid)
 	{
 		DestroyTexture(texture);
@@ -179,7 +209,7 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 	}
 	FreeSvgData(&svgData);
 	
-	VectorImg_t* image = &pig->resources.vectorImgs[vectorImgIndex];
+	VectorImg_t* image = &pig->resources.vectors->items[vectorImgIndex];
 	if (image->isValid)
 	{
 		DestroyVectorImg(image);
@@ -207,7 +237,7 @@ void Pig_LoadAllVectorImgs()
 void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 {
 	Assert(sheetIndex < RESOURCES_NUM_SHEETS);
-	SpriteSheet_t* sheet = &pig->resources.sheets[sheetIndex];
+	SpriteSheet_t* sheet = &pig->resources.sheets->items[sheetIndex];
 	
 	ResourceSheetMetaInfo_t metaInfo = {};
 	const char* sheetPath = Resources_GetPathForSheet(sheetIndex, &metaInfo);
@@ -280,7 +310,7 @@ void Pig_LoadAllSpriteSheets()
 void Pig_LoadShaderResource(u64 shaderIndex)
 {
 	Assert(shaderIndex < RESOURCES_NUM_SHADERS);
-	Shader_t* shader = &pig->resources.shaders[shaderIndex];
+	Shader_t* shader = &pig->resources.shaders->items[shaderIndex];
 	
 	ResourceShaderMetaInfo_t metaInfo;
 	const char* shaderPath = Resources_GetPathForShader(shaderIndex, &metaInfo);
@@ -374,7 +404,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 void Pig_LoadFontResource(u64 fontIndex)
 {
 	Assert(fontIndex < RESOURCES_NUM_FONTS);
-	Font_t* font = &pig->resources.fonts[fontIndex];
+	Font_t* font = &pig->resources.fonts->items[fontIndex];
 	if (font->isValid) { DestroyFont(font); }
 	
 	ResourceFontMetaInfo_t metaInfo = {};
@@ -521,6 +551,80 @@ void Pig_LoadAllResources()
 // +--------------------------------------------------------------+
 // |                            Update                            |
 // +--------------------------------------------------------------+
+void Pig_HandleResourcesOnReload()
+{
+	if (pig->resources.numTexturesAlloc != RESOURCES_NUM_TEXTURES)
+	{
+		PrintLine_N("Texture resource count changed: %llu -> %llu", pig->resources.numTexturesAlloc, RESOURCES_NUM_TEXTURES);
+		u64 oldTextureCount = pig->resources.numTexturesAlloc;
+		Texture_t* newSpace = AllocArray(fixedHeap, Texture_t, RESOURCES_NUM_TEXTURES);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.textures, sizeof(Texture_t) * MinU64(RESOURCES_NUM_TEXTURES, oldTextureCount));
+		FreeMem(fixedHeap, pig->resources.textures, sizeof(Texture_t) * oldTextureCount);
+		pig->resources.numTexturesAlloc = RESOURCES_NUM_TEXTURES;
+		pig->resources.textures = (ResourceTextures_t*)newSpace;
+		u64 numNewTextures = RESOURCES_NUM_TEXTURES - oldTextureCount;
+		if (oldTextureCount < RESOURCES_NUM_TEXTURES) { NotifyPrint_N("Loading %llu new texture resource%s...", numNewTextures, (numNewTextures == 1) ? "" : "s"); }
+		for (u64 textureIndex = oldTextureCount; textureIndex < RESOURCES_NUM_TEXTURES; textureIndex++) { Pig_LoadTextureResource(textureIndex); }
+	}
+	if (pig->resources.numVectorImgsAlloc != RESOURCES_NUM_VECTORS)
+	{
+		PrintLine_N("Vector resource count changed: %llu -> %llu", pig->resources.numVectorImgsAlloc, RESOURCES_NUM_VECTORS);
+		u64 oldVectorImgCount = pig->resources.numVectorImgsAlloc;
+		VectorImg_t* newSpace = AllocArray(fixedHeap, VectorImg_t, RESOURCES_NUM_VECTORS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.vectors, sizeof(VectorImg_t) * MinU64(RESOURCES_NUM_VECTORS, oldVectorImgCount));
+		FreeMem(fixedHeap, pig->resources.vectors, sizeof(VectorImg_t) * oldVectorImgCount);
+		pig->resources.numVectorImgsAlloc = RESOURCES_NUM_VECTORS;
+		pig->resources.vectors = (ResourceVectors_t*)newSpace;
+		u64 numNewVectorImgs = RESOURCES_NUM_VECTORS - oldVectorImgCount;
+		if (oldVectorImgCount < RESOURCES_NUM_VECTORS) { NotifyPrint_I("Loading %llu new vector resource%s...", numNewVectorImgs, (numNewVectorImgs == 1) ? "" : "s"); }
+		for (u64 vectorIndex = oldVectorImgCount; vectorIndex < RESOURCES_NUM_VECTORS; vectorIndex++) { Pig_LoadVectorImgResource(vectorIndex); }
+	}
+	if (pig->resources.numSheetsAlloc != RESOURCES_NUM_SHEETS)
+	{
+		PrintLine_N("Sprite Sheet resource count changed: %llu -> %llu", pig->resources.numSheetsAlloc, RESOURCES_NUM_SHEETS);
+		u64 oldSheetsCount = pig->resources.numSheetsAlloc;
+		SpriteSheet_t* newSpace = AllocArray(fixedHeap, SpriteSheet_t, RESOURCES_NUM_SHEETS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.sheets, sizeof(SpriteSheet_t) * MinU64(RESOURCES_NUM_SHEETS, oldSheetsCount));
+		FreeMem(fixedHeap, pig->resources.sheets, sizeof(SpriteSheet_t) * oldSheetsCount);
+		pig->resources.numSheetsAlloc = RESOURCES_NUM_SHEETS;
+		pig->resources.sheets = (ResourceSheets_t*)newSpace;
+		u64 numNewSheets = RESOURCES_NUM_SHEETS - oldSheetsCount;
+		if (oldSheetsCount < RESOURCES_NUM_SHEETS) { NotifyPrint_I("Loading %llu new sprite sheet resource%s...", numNewSheets, (numNewSheets == 1) ? "" : "s"); }
+		for (u64 sheetIndex = oldSheetsCount; sheetIndex < RESOURCES_NUM_SHEETS; sheetIndex++) { Pig_LoadSpriteSheetResource(sheetIndex); }
+	}
+	if (pig->resources.numShadersAlloc != RESOURCES_NUM_SHADERS)
+	{
+		PrintLine_N("Shader resource count changed: %llu -> %llu", pig->resources.numShadersAlloc, RESOURCES_NUM_SHADERS);
+		u64 oldShadersCount = pig->resources.numShadersAlloc;
+		Shader_t* newSpace = AllocArray(fixedHeap, Shader_t, RESOURCES_NUM_SHADERS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.shaders, sizeof(Shader_t) * MinU64(RESOURCES_NUM_SHADERS, oldShadersCount));
+		FreeMem(fixedHeap, pig->resources.shaders, sizeof(Shader_t) * oldShadersCount);
+		pig->resources.numShadersAlloc = RESOURCES_NUM_SHADERS;
+		pig->resources.shaders = (ResourceShaders_t*)newSpace;
+		u64 numNewShaders = RESOURCES_NUM_SHADERS - oldShadersCount;
+		if (oldShadersCount < RESOURCES_NUM_SHADERS) { NotifyPrint_I("Loading %llu new shader resource%s...", numNewShaders, (numNewShaders == 1) ? "" : "s"); }
+		for (u64 shaderIndex = oldShadersCount; shaderIndex < RESOURCES_NUM_SHADERS; shaderIndex++) { Pig_LoadShaderResource(shaderIndex); }
+	}
+	if (pig->resources.numFontsAlloc != RESOURCES_NUM_FONTS)
+	{
+		PrintLine_N("Font resource count changed: %llu -> %llu", pig->resources.numFontsAlloc, RESOURCES_NUM_FONTS);
+		u64 oldFontsCount = pig->resources.numFontsAlloc;
+		Font_t* newSpace = AllocArray(fixedHeap, Font_t, RESOURCES_NUM_FONTS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.fonts, sizeof(Font_t) * MinU64(RESOURCES_NUM_FONTS, oldFontsCount));
+		FreeMem(fixedHeap, pig->resources.fonts, sizeof(Font_t) * oldFontsCount);
+		pig->resources.numFontsAlloc = RESOURCES_NUM_FONTS;
+		pig->resources.fonts = (ResourceFonts_t*)newSpace;
+		u64 numNewFonts = RESOURCES_NUM_FONTS - oldFontsCount;
+		if (oldFontsCount < RESOURCES_NUM_FONTS) { NotifyPrint_I("Loading %llu new font resource%s...", numNewFonts, (numNewFonts == 1) ? "" : "s"); }
+		for (u64 fontIndex = oldFontsCount; fontIndex < RESOURCES_NUM_FONTS; fontIndex++) { Pig_LoadFontResource(fontIndex); }
+	}
+}
+
 void Pig_UpdateResources()
 {
 	#if DEBUG_BUILD
@@ -563,4 +667,148 @@ void Pig_UpdateResources()
 		}
 	}
 	#endif
+}
+
+// +--------------------------------------------------------------+
+// |                           Handles                            |
+// +--------------------------------------------------------------+
+bool IsHandleFilled(const TextureHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const VectorImgHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const SpriteSheetHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const ShaderHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const FontHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+
+#define AssertFilledHandle(handlePntr) Assert(IsHandleFilled(handlePntr))
+
+//NOTE: Handles to resources CAN be grabbed before the resource lists are allocated!
+TextureHandle_t GetTextureHandle(const Texture_t* texturePointer)
+{
+	TextureHandle_t result = {};
+	if (texturePointer == nullptr && pig->resources.textures != nullptr) { return result; }
+	Assert(texturePointer >= (Texture_t*)pig->resources.textures);
+	if (pig->resources.textures == nullptr) { Assert(texturePointer < ((Texture_t*)pig->resources.textures) + RESOURCES_NUM_TEXTURES); }
+	else { Assert(texturePointer < ((Texture_t*)pig->resources.textures) + pig->resources.numTexturesAlloc); }
+	result.index = (u64)(texturePointer - ((Texture_t*)pig->resources.textures));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (Texture_t*)texturePointer;
+	return result;
+}
+VectorImgHandle_t GetVectorImgHandle(const VectorImg_t* vectorImgPointer)
+{
+	VectorImgHandle_t result = {};
+	if (vectorImgPointer == nullptr && pig->resources.vectors != nullptr) { return result; }
+	Assert(vectorImgPointer >= (VectorImg_t*)pig->resources.vectors);
+	if (pig->resources.vectors == nullptr) { Assert(vectorImgPointer < ((VectorImg_t*)pig->resources.vectors) + RESOURCES_NUM_VECTORS); }
+	else { Assert(vectorImgPointer < ((VectorImg_t*)pig->resources.vectors) + pig->resources.numVectorImgsAlloc); }
+	result.index = (u64)(vectorImgPointer - ((VectorImg_t*)pig->resources.vectors));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (VectorImg_t*)vectorImgPointer;
+	return result;
+}
+SpriteSheetHandle_t GetSpriteSheetHandle(const SpriteSheet_t* spriteSheetPointer)
+{
+	SpriteSheetHandle_t result = {};
+	if (spriteSheetPointer == nullptr && pig->resources.sheets != nullptr) { return result; }
+	Assert(spriteSheetPointer >= (SpriteSheet_t*)pig->resources.sheets);
+	if (pig->resources.sheets == nullptr) { Assert(spriteSheetPointer < ((SpriteSheet_t*)pig->resources.sheets) + RESOURCES_NUM_SHEETS); }
+	else { Assert(spriteSheetPointer < ((SpriteSheet_t*)pig->resources.sheets) + pig->resources.numSheetsAlloc); }
+	result.index = (u64)(spriteSheetPointer - ((SpriteSheet_t*)pig->resources.sheets));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (SpriteSheet_t*)spriteSheetPointer;
+	return result;
+}
+ShaderHandle_t GetShaderHandle(const Shader_t* shaderPointer)
+{
+	ShaderHandle_t result = {};
+	if (shaderPointer == nullptr && pig->resources.shaders != nullptr) { return result; }
+	Assert(shaderPointer >= (Shader_t*)pig->resources.shaders);
+	if (pig->resources.shaders == nullptr) { Assert(shaderPointer < ((Shader_t*)pig->resources.shaders) + RESOURCES_NUM_SHADERS); }
+	else { Assert(shaderPointer < ((Shader_t*)pig->resources.shaders) + pig->resources.numShadersAlloc); }
+	result.index = (u64)(shaderPointer - ((Shader_t*)pig->resources.shaders));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (Shader_t*)shaderPointer;
+	return result;
+}
+FontHandle_t GetFontHandle(const Font_t* fontPointer)
+{
+	FontHandle_t result = {};
+	if (fontPointer == nullptr && pig->resources.fonts != nullptr) { return result; }
+	Assert(fontPointer >= (Font_t*)pig->resources.fonts);
+	if (pig->resources.fonts == nullptr) { Assert(fontPointer < ((Font_t*)pig->resources.fonts) + RESOURCES_NUM_FONTS); }
+	else { Assert(fontPointer < ((Font_t*)pig->resources.fonts) + pig->resources.numFontsAlloc); }
+	result.index = (u64)(fontPointer - ((Font_t*)pig->resources.fonts));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (Font_t*)fontPointer;
+	return result;
+}
+
+Texture_t* GetPointer(TextureHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numTexturesAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.textures == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.textures->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
+VectorImg_t* GetPointer(VectorImgHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numVectorImgsAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.vectors == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.vectors->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
+SpriteSheet_t* GetPointer(SpriteSheetHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numSheetsAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.sheets == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.sheets->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
+Shader_t* GetPointer(ShaderHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numShadersAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.shaders == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.shaders->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
+Font_t* GetPointer(FontHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numFontsAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.fonts == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.fonts->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
 }
