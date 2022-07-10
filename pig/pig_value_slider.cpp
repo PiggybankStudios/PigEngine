@@ -11,6 +11,9 @@ Description:
 //TODO: Add support for sprite sheet based rendering style
 //TODO: Add support for color choosing
 
+// +--------------------------------------------------------------+
+// |                       Create and Free                        |
+// +--------------------------------------------------------------+
 void FreeValueSlider(ValueSlider_t* slider)
 {
 	NotNull(slider);
@@ -26,6 +29,7 @@ void CreateValueSlider(ValueSlider_t* slider, MemArena_t* memArena, ValueSliderS
 	Assert(initialValue >= minValue && initialValue <= maxValue);
 	ClearPointer(slider);
 	slider->allocArena = memArena;
+	slider->enabled = true;
 	slider->style = style;
 	slider->minValue = minValue;
 	slider->maxValue = maxValue;
@@ -98,10 +102,12 @@ void UpdateValueSlider(ValueSlider_t* slider)
 	NotNull(slider);
 	ValueSliderLayout(slider);
 	
+	if (!slider->enabled) { slider->isDraggingSlider = false; }
+	
 	// +==============================+
 	// |   Handle Mouse Left Click    |
 	// +==============================+
-	if (IsMouseOverPrint("Slider%lluHandle", slider->id))
+	if (slider->enabled && IsMouseOverPrint("Slider%lluHandle", slider->id))
 	{
 		pigOut->cursorType = PlatCursor_Pointer;
 		if (MousePressed(MouseBtn_Left))
@@ -111,7 +117,7 @@ void UpdateValueSlider(ValueSlider_t* slider)
 			slider->dragSliderOffset = (MousePos - (slider->sliderRec.topLeft + slider->sliderRec.size/2));
 		}
 	}
-	if (IsMouseOverPrint("Slider%llu", slider->id))
+	if (slider->enabled && IsMouseOverPrint("Slider%llu", slider->id))
 	{
 		pigOut->cursorType = PlatCursor_Pointer;
 		if (MousePressed(MouseBtn_Left))

@@ -395,7 +395,9 @@ int main(int argc, char* argv[])
 	// +--------------------------------------------------------------+
 	TempPopMark();
 	InitPhase = Win32InitPhase_DoingFirstUpdate;
-	while (Platform->mainWindow->handle != nullptr && glfwWindowShouldClose(Platform->mainWindow->handle) == false)
+	while (Platform->mainWindow->handle != nullptr &&
+		!glfwWindowShouldClose(Platform->mainWindow->handle) &&
+		!Platform->exitRequested)
 	{
 		Win32_DoMainLoopIteration(true);
 	}

@@ -260,6 +260,7 @@ struct SoundInstance_t
 	SoundInstanceType_t type;
 	SoundInstance_t* nextInstanceToStart;
 	
+	bool isMusic;
 	bool repeating;
 	r32 volume;
 	u64 numFrames; //frames

@@ -296,6 +296,7 @@ struct EngineInput_t
 
 struct EngineOutput_t
 {
+	bool exit;
 	PlatCursor_t cursorType;
 	PlatMouseMode_t mouseMode;
 };

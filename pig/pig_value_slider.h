@@ -27,6 +27,7 @@ struct ValueSlider_t
 {
 	u64 id;
 	MemArena_t* allocArena;
+	bool enabled;
 	ValueSliderStyle_t style;
 	r32 minValue;
 	r32 maxValue;

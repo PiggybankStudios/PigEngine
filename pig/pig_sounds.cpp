@@ -123,7 +123,7 @@ void PigUpdateSounds()
 	}
 }
 
-SoundInstance_t* NewSoundInstance(SoundInstanceType_t type)
+SoundInstance_t* NewSoundInstance(SoundInstanceType_t type, bool isMusic)
 {
 	AssertSingleThreaded();
 	SoundInstance_t* result = nullptr;
@@ -145,6 +145,7 @@ SoundInstance_t* NewSoundInstance(SoundInstanceType_t type)
 			result->id = pig->nextSoundInstanceId;
 			pig->nextSoundInstanceId++;
 			result->type = type;
+			result->isMusic = isMusic;
 			result->playing = false;
 			result->format = platInfo->audioFormat;
 			result->volume = 1.0f;
@@ -245,7 +246,7 @@ SoundInstanceHandle_t PlaySineNote(SoundInstanceHandle_t soundToWaitFor, r32 vol
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
 	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SineWave);
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SineWave, false);
 	if (instance == nullptr) { return result; }
 	
 	instance->frequency = frequency;
@@ -277,7 +278,7 @@ SoundInstanceHandle_t PlaySquareNote(r32 volume, r64 frequency, u64 durationMs,
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
 	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SquareWave);
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SquareWave, false);
 	if (instance == nullptr) { return result; }
 	
 	instance->frequency = frequency;
@@ -301,7 +302,7 @@ SoundInstanceHandle_t PlaySawNote(r32 volume, r64 frequency, u64 durationMs,
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
 	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SawWave);
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SawWave, false);
 	if (instance == nullptr) { return result; }
 	
 	instance->frequency = frequency;
@@ -326,7 +327,7 @@ SoundInstanceHandle_t PlaySound(const Sound_t* sound, r32 volume,
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
 	
 	SoundInstanceHandle_t result = {};
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_Samples);
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_Samples, false);
 	if (instance == nullptr) { return result; }
 	
 	instance->numFrames = sound->numFrames;

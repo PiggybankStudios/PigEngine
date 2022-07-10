@@ -109,6 +109,12 @@ struct PigState_t
 	r64 physicsSimTimeLastFrame;
 	
 	//Audio
+	PlatMutex_t volumeMutex;
+	bool musicEnabled;
+	bool soundsEnabled;
+	r32 masterVolume;
+	r32 musicVolume;
+	r32 soundsVolume;
 	PlatMutex_t soundInstancesMutex;
 	u64 nextSoundInstanceId;
 	SoundInstance_t soundInstances[PIG_MAX_SOUND_INSTANCES];

@@ -12,6 +12,7 @@ Description:
 struct Win32PlatformState_t
 {
 	bool initialized;
+	bool exitRequested;
 	Version_t version;
 	
 	MemArena_t stdHeap;

@@ -148,12 +148,19 @@ void Win32_FillEngineOutput(EngineOutput_t* output)
 void Win32_ClearEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
-	//TODO: Anything that needs to get reset or cleared each frame before passing this structure to the engine?
+	output->exit = false;
 }
 
 void Win32_ProcessEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
+	
+	if (output->exit)
+	{
+		WriteLine_E("Application requested an exit...");
+		Platform->exitRequested = true;
+	}
+	
 	//TODO: Does this work for multiple windows? Do we need to set the cursor in each window?
 	if (output->cursorType != Platform->currentCursorType)
 	{

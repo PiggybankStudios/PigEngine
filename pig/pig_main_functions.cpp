@@ -83,6 +83,12 @@ void PigInitialize(EngineMemory_t* memory)
 	}
 	#endif
 	
+	plat->CreateMutex(&pig->volumeMutex);
+	pig->musicEnabled = true;
+	pig->soundsEnabled = true;
+	pig->masterVolume = 0.8f;
+	pig->musicVolume  = 1.0f;
+	pig->soundsVolume = 1.0f;
 	
 	// +==============================+
 	// |     Initialize AppState      |

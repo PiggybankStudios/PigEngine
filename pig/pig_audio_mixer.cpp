@@ -19,7 +19,7 @@ void PigInitAudioOutput()
 	pig->audioOutWriteIndex = 0;
 }
 
-r64 GetSoundInstanceCurrentVolume(SoundInstance_t* instance, PlatAudioFormat_t format, r64 instanceTime)
+r64 GetSoundInstanceCurrentVolume(SoundInstance_t* instance, PlatAudioFormat_t format, r64 instanceTime, r32 masterVolume, r32 musicVolume, r32 soundsVolume)
 {
 	r64 instanceLengthMs = ((r64)instance->numFrames / (r64)format.samplesPerSecond) * 1000.0;
 	r64 result = (r64)instance->volume;
@@ -33,11 +33,12 @@ r64 GetSoundInstanceCurrentVolume(SoundInstance_t* instance, PlatAudioFormat_t f
 		r64 falloffTime = ((instanceTime * 1000.0) - (instanceLengthMs - (r64)instance->falloffTime)) / (r64)instance->falloffTime;
 		result *= 1.0f - Ease(instance->falloffCurve, (r32)falloffTime);
 	}
+	result *= masterVolume * (instance->isMusic ? musicVolume : soundsVolume);
 	return result;
 }
 
 //TODO: Add support for multi-channel audio!
-r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, u64 globalSampleIndex)
+r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, u64 globalSampleIndex, r32 masterVolume, r32 musicVolume, r32 soundsVolume)
 {
 	NotNull(instance);
 	r64 result = 0;
@@ -57,19 +58,19 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 		case SoundInstanceType_SineWave:
 		{
 			r64 instanceTime = (r64)instance->frameIndex / (r64)format.samplesPerSecond;
-			result = SinR64(instanceTime * TwoPi64 * instance->frequency) * GetSoundInstanceCurrentVolume(instance, format, instanceTime);
+			result = SinR64(instanceTime * TwoPi64 * instance->frequency) * GetSoundInstanceCurrentVolume(instance, format, instanceTime, masterVolume, musicVolume, soundsVolume);
 		} break;
 		
 		case SoundInstanceType_SquareWave:
 		{
 			r64 instanceTime = (r64)instance->frameIndex / (r64)format.samplesPerSecond;
-			result = ((DecimalPartR64(instanceTime / (1 / instance->frequency)) >= 0.5f) ? 1.0f : -1.0f) * GetSoundInstanceCurrentVolume(instance, format, instanceTime);
+			result = ((DecimalPartR64(instanceTime / (1 / instance->frequency)) >= 0.5f) ? 1.0f : -1.0f) * GetSoundInstanceCurrentVolume(instance, format, instanceTime, masterVolume, musicVolume, soundsVolume);
 		} break;
 		
 		case SoundInstanceType_SawWave:
 		{
 			r64 instanceTime = (r64)instance->frameIndex / (r64)format.samplesPerSecond;
-			result = SawR64(instanceTime * TwoPi64 * instance->frequency) * GetSoundInstanceCurrentVolume(instance, format, instanceTime);
+			result = SawR64(instanceTime * TwoPi64 * instance->frequency) * GetSoundInstanceCurrentVolume(instance, format, instanceTime, masterVolume, musicVolume, soundsVolume);
 		} break;
 		
 		case SoundInstanceType_Samples:
@@ -96,7 +97,7 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 			else { AssertMsg(false, "We don't support a sound's bitsPerSample in the audio mixer!"); }
 			
 			r64 instanceTime = (r64)instance->frameIndex / (r64)format.samplesPerSecond;
-			result *= GetSoundInstanceCurrentVolume(instance, format, instanceTime);
+			result *= GetSoundInstanceCurrentVolume(instance, format, instanceTime, masterVolume, musicVolume, soundsVolume);
 		} break;
 		
 		default: AssertMsg(false, "Unhandled SoundInstanceType in GetSoundInstanceSample"); break;
@@ -129,6 +130,12 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 	
 	PerfTime_t serviceStartTime = plat->GetPerfTime();
 	
+	plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE);
+	r32 masterVolume = pig->masterVolume;
+	r32 musicVolume  = (pig->musicEnabled ? pig->musicVolume : 0.0f);
+	r32 soundsVolume = (pig->soundsEnabled ? pig->soundsVolume : 0.0f);
+	plat->UnlockMutex(&pig->volumeMutex);
+	
 	plat->LockMutex(&pig->soundInstancesMutex, MUTEX_LOCK_INFINITE);
 	plat->LockMutex(&pig->audioOutSamplesMutex, MUTEX_LOCK_INFINITE);
 	
@@ -144,7 +151,7 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 			SoundInstance_t* instance = &pig->soundInstances[iIndex];
 			if (instance->type != SoundInstanceType_None && instance->playing)
 			{
-				sampleValueR64 += GetSoundInstanceSample(instance, audioInfo->format, globalFrameIndex);
+				sampleValueR64 += GetSoundInstanceSample(instance, audioInfo->format, globalFrameIndex, masterVolume, musicVolume, soundsVolume);
 			}
 		}
 		// if (sampleValueR64 > 1.0 || sampleValueR64 < -1.0) { MyDebugBreak(); }
