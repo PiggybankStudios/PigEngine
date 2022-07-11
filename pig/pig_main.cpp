@@ -105,6 +105,7 @@ static       v2               ScreenSize     = {};
 
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_wav.cpp"
+#include "pig/pig_ogg.cpp"
 #include "pig/pig_vertex_buffer.cpp"
 #include "pig/pig_shader.cpp"
 #include "pig/pig_texture.cpp"
@@ -117,11 +118,12 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_slug.cpp"
 #include "pig/pig_model_obj.cpp"
 #include "pig/pig_model.cpp"
+#include "pig/pig_sounds.cpp"
+#include "pig/pig_music.cpp"
 #include "pig/pig_resources.cpp"
 
 #include "pig/pig_input.cpp"
 #include "pig/pig_window.cpp"
-#include "pig/pig_sounds.cpp"
 
 #include "pig/pig_render.cpp"
 #include "pig/pig_slug_render.cpp"

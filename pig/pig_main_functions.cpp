@@ -69,6 +69,7 @@ void PigInitialize(EngineMemory_t* memory)
 	RcLoadBasicResources();
 	Pig_InitResources();
 	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup
+	PigInitMusicSystem(&pig->musicSystem);
 	
 	// plat->DebugReadout(NewStr("Hello from Pig Engine!"), White, 1.0f);
 	#if 0
@@ -143,6 +144,7 @@ void PigRenderDebugOverlays()
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
 	RcClearDepth(-1.0f);
+	RcSetDepth(0.0f);
 	
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);
@@ -192,6 +194,7 @@ void PigUpdate()
 	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();
+	PigUpdateMusicSystem(&pig->musicSystem);
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
 	PigUpdateMainWindow();
@@ -231,6 +234,27 @@ void PigUpdate()
 					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
 				}
 				Pig_UpdateCaptureHandling(pig->currentWindow, pig->currentWindowState);
+				
+				if (pig->currentWindowState->recordingGif)
+				{
+					RcBindShader(&pig->resources.shaders->main2D);
+					RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+					RcSetViewMatrix(Mat4_Identity);
+					RcSetDepth(1.0f);
+					rec gifRecordingRec;
+					gifRecordingRec.size = pig->resources.textures->gifRecording.size;
+					gifRecordingRec.x = ScreenSize.width/2 - gifRecordingRec.width/2;
+					gifRecordingRec.y = 10;
+					RecAlign(&gifRecordingRec);
+					RcBindTexture1(&pig->resources.textures->gifRecording);
+					RcDrawTexturedRectangle(gifRecordingRec, White);
+					
+					RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+					i32 gifRecordTime = RoundR32i(pig->currentWindowState->gifFrames.count * (1000.0f / GIF_FRAMERATE));
+					v2 recordingTextPos = NewVec2(gifRecordingRec.x + gifRecordingRec.width/2, gifRecordingRec.y + gifRecordingRec.height + 5 + RcGetMaxAscend());
+					Vec2Align(&recordingTextPos);
+					RcDrawTextPrintEx(recordingTextPos, White, TextAlignment_Center, 0, "F4 to stop (%s)", FormatMillisecondsNt(gifRecordTime, TempArena));
+				}
 			}
 			window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
 		}

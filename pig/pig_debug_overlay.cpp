@@ -324,6 +324,9 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
 			textPos.y += stepY;
 			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Music Fade: %.0f%% %s", pig->musicSystem.currentFadeProgress*100, GetMusicFadeStr(pig->musicSystem.currentFade));
+			textPos.y += stepY;
+			
 			if (pig->mouseHit.priority > 0)
 			{
 				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", pig->mouseHit.name.length, pig->mouseHit.name.pntr, pig->mouseHit.priority, pig->mouseHit.pntr);

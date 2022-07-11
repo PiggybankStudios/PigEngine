@@ -177,7 +177,7 @@ void FreeWavAudioData(WavAudioData_t* wavData)
 // +--------------------------------------------------------------+
 bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log, WavAudioData_t* wavDataOut, MemArena_t* memArena)
 {
-	AssertSingleThreaded(); //TODO: This doesn't have to be single threaded if we make the nextWavAudioDataId thread safe
+	AssertSingleThreaded(); //TODO: This doesn't have to be single threaded if we make the nextWavOggAudioDataId thread safe
 	NotNull(log);
 	AssertIf(wavFileSize > 0, wavFilePntr != nullptr);
 	NotNull(wavDataOut);
@@ -211,9 +211,9 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 	
 	ClearPointer(wavDataOut);
 	wavDataOut->allocArena = memArena;
-	if (pig->nextWavAudioDataId == 0) { pig->nextWavAudioDataId = 1; }
-	wavDataOut->id = pig->nextWavAudioDataId;
-	pig->nextWavAudioDataId++;
+	if (pig->nextWavOggAudioDataId == 0) { pig->nextWavOggAudioDataId = 1; }
+	wavDataOut->id = pig->nextWavOggAudioDataId;
+	pig->nextWavOggAudioDataId++;
 	wavDataOut->numChunks = 0;
 	wavDataOut->firstChunk = nullptr;
 	wavDataOut->lastChunk = nullptr;

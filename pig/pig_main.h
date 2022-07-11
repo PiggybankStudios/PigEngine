@@ -73,7 +73,7 @@ struct PigState_t
 	u64 nextVectorImgId;
 	u64 nextSpriteSheetId;
 	u64 nextUiId;
-	u64 nextWavAudioDataId;
+	u64 nextWavOggAudioDataId;
 	
 	//Resources
 	Resources_t resources;
@@ -123,6 +123,8 @@ struct PigState_t
 	r64 audioOutSamples[PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH];
 	r64 audioMixerTime;
 	u64 numAudioClips;
+	
+	MusicSystemState_t musicSystem;
 };
 
 #endif //  _PIG_MAIN_H

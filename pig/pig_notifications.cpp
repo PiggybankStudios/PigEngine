@@ -294,13 +294,13 @@ void PigRenderNotifications(PigNotificationQueue_t* queue)
 			v2 textPos = mainRec.topLeft + notification->textOffset;
 			Vec2Align(&textPos);
 			
-			RcSetDepth(0.01f);
+			// RcSetDepth(0.01f);
 			RcDrawRoundedRectangle(mainRec, PIG_NOTIFICATIONS_ROUNDED_RADIUS, ColorTransparent(Black, PIG_NOTIFICATIONS_ALPHA));
 			RcDrawText(notification->message, textPos, GetDbgLevelTextColor(notification->dbgLevel), TextAlignment_Left, PIG_NOTIFICATIONS_MAX_WIDTH);
 			
 			if (notification->repeatCount > 1)
 			{
-				RcSetDepth(0.00f);
+				// RcSetDepth(0.00f);
 				rec repeatCountRec = notification->repeatCountRec + notificationsBasePos;
 				v2 repeatCountTextPos = repeatCountRec.topLeft + notification->repeatCountTextOffset;
 				Vec2Align(&repeatCountTextPos);
@@ -309,5 +309,5 @@ void PigRenderNotifications(PigNotificationQueue_t* queue)
 			}
 		}
 	}
-	RcSetDepth(0);
+	// RcSetDepth(0);
 }

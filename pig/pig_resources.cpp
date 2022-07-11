@@ -23,29 +23,39 @@ void Pig_InitResources()
 	pig->resources.numSheetsAlloc     = RESOURCES_NUM_SHEETS;
 	pig->resources.numShadersAlloc    = RESOURCES_NUM_SHADERS;
 	pig->resources.numFontsAlloc      = RESOURCES_NUM_FONTS;
+	pig->resources.numSoundsAlloc     = RESOURCES_NUM_SOUNDS;
+	pig->resources.numMusicsAlloc     = RESOURCES_NUM_MUSICS;
 	
 	Assert(sizeof(ResourceTextures_t) == sizeof(Texture_t)     * RESOURCES_NUM_TEXTURES);
 	Assert(sizeof(ResourceVectors_t)  == sizeof(VectorImg_t)   * RESOURCES_NUM_VECTORS);
 	Assert(sizeof(ResourceSheets_t)   == sizeof(SpriteSheet_t) * RESOURCES_NUM_SHEETS);
 	Assert(sizeof(ResourceShaders_t)  == sizeof(Shader_t)      * RESOURCES_NUM_SHADERS);
 	Assert(sizeof(ResourceFonts_t)    == sizeof(Font_t)        * RESOURCES_NUM_FONTS);
+	Assert(sizeof(ResourceSounds_t)   == sizeof(Sound_t)       * RESOURCES_NUM_SOUNDS);
+	Assert(sizeof(ResourceMusics_t)   == sizeof(Sound_t)       * RESOURCES_NUM_MUSICS);
 	
 	pig->resources.textures = (ResourceTextures_t*)AllocArray(fixedHeap, Texture_t,     RESOURCES_NUM_TEXTURES);
 	pig->resources.vectors  =  (ResourceVectors_t*)AllocArray(fixedHeap, VectorImg_t,   RESOURCES_NUM_VECTORS);
 	pig->resources.sheets   =   (ResourceSheets_t*)AllocArray(fixedHeap, SpriteSheet_t, RESOURCES_NUM_SHEETS);
 	pig->resources.shaders  =  (ResourceShaders_t*)AllocArray(fixedHeap, Shader_t,      RESOURCES_NUM_SHADERS);
 	pig->resources.fonts    =    (ResourceFonts_t*)AllocArray(fixedHeap, Font_t,        RESOURCES_NUM_FONTS);
+	pig->resources.sounds   =   (ResourceSounds_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_SOUNDS);
+	pig->resources.musics   =   (ResourceMusics_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_MUSICS);
 	NotNull(pig->resources.textures);
 	NotNull(pig->resources.vectors);
 	NotNull(pig->resources.sheets);
 	NotNull(pig->resources.shaders);
 	NotNull(pig->resources.fonts);
+	NotNull(pig->resources.sounds);
+	NotNull(pig->resources.musics);
 	
 	ClearPointer(pig->resources.textures);
 	ClearPointer(pig->resources.vectors);
 	ClearPointer(pig->resources.sheets);
 	ClearPointer(pig->resources.shaders);
 	ClearPointer(pig->resources.fonts);
+	ClearPointer(pig->resources.sounds);
+	ClearPointer(pig->resources.musics);
 }
 
 // +--------------------------------------------------------------+
@@ -60,6 +70,8 @@ u64 GetNumResourcesOfType(ResourceType_t resourceType)
 		case ResourceType_Sheet:       return RESOURCES_NUM_SHEETS;
 		case ResourceType_Shader:      return RESOURCES_NUM_SHADERS;
 		case ResourceType_Font:        return RESOURCES_NUM_FONTS;
+		case ResourceType_Sound:       return RESOURCES_NUM_SOUNDS;
+		case ResourceType_Music:       return RESOURCES_NUM_MUSICS;
 		default: Unimplemented(); return 0;
 	}
 }
@@ -116,11 +128,13 @@ ResourceWatch_t* WatchFileForResource(ResourceType_t resourceType, u64 resourceI
 void Pig_LoadTextureResource(u64 textureIndex)
 {
 	Assert(textureIndex < RESOURCES_NUM_TEXTURES);
-	const char* texturePath = Resources_GetPathForTexture(textureIndex);
+	bool isPixelated = true;
+	bool isRepeating = true;
+	const char* texturePath = Resources_GetPathForTexture(textureIndex, &isPixelated, &isRepeating);
 	NotNull(texturePath);
 	MyStr_t texturePathStr = NewStr(texturePath);
 	Texture_t newTexture = {};
-	if (!LoadTexture(fixedHeap, &newTexture, texturePathStr, true, true))
+	if (!LoadTexture(fixedHeap, &newTexture, texturePathStr, isPixelated, isRepeating))
 	{
 		PrintLine_E("Failed to load texture[%u] from \"%s\"! Error %s%s%s",
 			textureIndex,
@@ -539,13 +553,185 @@ void Pig_LoadAllFonts()
 	}
 }
 
+// +==============================+
+// |            Sound             |
+// +==============================+
+void Pig_LoadSoundResource(u64 soundIndex)
+{
+	Assert(soundIndex < RESOURCES_NUM_SOUNDS);
+	const char* soundPath = Resources_GetPathForSound(soundIndex);
+	NotNull(soundPath);
+	MyStr_t soundPathStr = NewStr(soundPath);
+	Sound_t newSound = {};
+	
+	PlatFileContents_t soundFile = {};
+	if (plat->ReadFileContents(soundPathStr, &soundFile))
+	{
+		bool parseSuccess = false;
+		ProcessLog_t soundParseLog = {};
+		CreateProcessLog(&soundParseLog, Kilobytes(8), TempArena, fixedHeap);
+		
+		if (StrEndsWith(soundPathStr, ".ogg"))
+		{
+			TempPushMark();
+			OggAudioData_t oggData = {};
+			if (TryDeserOggFile(soundFile.size, soundFile.data, &soundParseLog, &oggData, TempArena))
+			{
+				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newSound, mainHeap);
+				parseSuccess = true;
+			}
+			else
+			{
+				PrintLine_E("Failed to deserialize ogg sound[%llu] at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
+				DebugAssert(false);
+			}
+			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "OGG Parse Log"); }
+			TempPopMark();
+		}
+		else if (StrEndsWith(soundPathStr, ".wav"))
+		{
+			TempPushMark();
+			WavAudioData_t wavData = {};
+			if (TryDeserWavFile(soundFile.size, soundFile.data, &soundParseLog, &wavData, TempArena))
+			{
+				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, &newSound, mainHeap);
+				parseSuccess = true;
+			}
+			else
+			{
+				PrintLine_E("Failed to deserialize wav sound[%llu] at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
+				DebugAssert(false);
+			}
+			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "WAV Parse Log"); }
+			TempPopMark();
+		}
+		else
+		{
+			AssertMsg(false, "Unknown file format extension found on sound resource path");
+		}
+		
+		FreeProcessLog(&soundParseLog);
+		plat->FreeFileContents(&soundFile);
+		if (!parseSuccess) { return; }
+	}
+	else
+	{
+		PrintLine_E("Missing sound[%llu] file at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
+		DebugAssert(false);
+		return;
+	}
+	
+	Sound_t* sound = &pig->resources.sounds->items[soundIndex];
+	if (sound->allocArena != nullptr) //TODO: Change this to something like isValid
+	{
+		FreeSound(sound);
+	}
+	MyMemCopy(sound, &newSound, sizeof(Sound_t));
+	StopWatchingFilesForResource(ResourceType_Sound, soundIndex);
+	WatchFileForResource(ResourceType_Sound, soundIndex, soundPathStr);
+}
+void Pig_LoadAllSounds()
+{
+	for (u64 soundIndex = 0; soundIndex < RESOURCES_NUM_SOUNDS; soundIndex++)
+	{
+		Pig_LoadSoundResource(soundIndex);
+	}
+}
+
+// +==============================+
+// |            Music             |
+// +==============================+
+void Pig_LoadMusicResource(u64 musicIndex)
+{
+	Assert(musicIndex < RESOURCES_NUM_MUSICS);
+	const char* musicPath = Resources_GetPathForMusic(musicIndex);
+	NotNull(musicPath);
+	MyStr_t musicPathStr = NewStr(musicPath);
+	Sound_t newMusic = {};
+	
+	PlatFileContents_t musicFile = {};
+	if (plat->ReadFileContents(musicPathStr, &musicFile))
+	{
+		bool parseSuccess = false;
+		ProcessLog_t musicParseLog = {};
+		CreateProcessLog(&musicParseLog, Kilobytes(8), TempArena, fixedHeap);
+		
+		if (StrEndsWith(musicPathStr, ".ogg"))
+		{
+			TempPushMark();
+			OggAudioData_t oggData = {};
+			if (TryDeserOggFile(musicFile.size, musicFile.data, &musicParseLog, &oggData, TempArena))
+			{
+				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newMusic, mainHeap);
+				parseSuccess = true;
+			}
+			else
+			{
+				PrintLine_E("Failed to deserialize ogg music[%llu] at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+				DebugAssert(false);
+			}
+			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "OGG Parse Log"); }
+			TempPopMark();
+		}
+		else if (StrEndsWith(musicPathStr, ".wav"))
+		{
+			TempPushMark();
+			WavAudioData_t wavData = {};
+			if (TryDeserWavFile(musicFile.size, musicFile.data, &musicParseLog, &wavData, TempArena))
+			{
+				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, &newMusic, mainHeap);
+				parseSuccess = true;
+			}
+			else
+			{
+				PrintLine_E("Failed to deserialize wav music[%llu] at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+				DebugAssert(false);
+			}
+			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "WAV Parse Log"); }
+			TempPopMark();
+		}
+		else
+		{
+			AssertMsg(false, "Unknown file format extension found on music resource path");
+		}
+		
+		FreeProcessLog(&musicParseLog);
+		plat->FreeFileContents(&musicFile);
+		if (!parseSuccess) { return; }
+	}
+	else
+	{
+		PrintLine_E("Missing sound[%llu] file at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+		DebugAssert(false);
+		return;
+	}
+	
+	Sound_t* music = &pig->resources.musics->items[musicIndex];
+	if (music->allocArena != nullptr) //TODO: Change this to something like isValid
+	{
+		FreeSound(music);
+	}
+	MyMemCopy(music, &newMusic, sizeof(Sound_t));
+	StopWatchingFilesForResource(ResourceType_Music, musicIndex);
+	WatchFileForResource(ResourceType_Music, musicIndex, musicPathStr);
+}
+void Pig_LoadAllMusics()
+{
+	for (u64 musicIndex = 0; musicIndex < RESOURCES_NUM_MUSICS; musicIndex++)
+	{
+		Pig_LoadMusicResource(musicIndex);
+	}
+}
+
 void Pig_LoadAllResources()
 {
 	Pig_LoadAllTextures();
 	Pig_LoadAllVectorImgs();
+	Pig_LoadAllSpriteSheets();
 	Pig_LoadAllShaders();
 	Pig_LoadAllFonts();
-	Pig_LoadAllSpriteSheets();
+	Pig_LoadAllSounds();
+	Pig_LoadAllMusics();
 }
 
 // +--------------------------------------------------------------+
@@ -623,6 +809,34 @@ void Pig_HandleResourcesOnReload()
 		if (oldFontsCount < RESOURCES_NUM_FONTS) { NotifyPrint_I("Loading %llu new font resource%s...", numNewFonts, (numNewFonts == 1) ? "" : "s"); }
 		for (u64 fontIndex = oldFontsCount; fontIndex < RESOURCES_NUM_FONTS; fontIndex++) { Pig_LoadFontResource(fontIndex); }
 	}
+	if (pig->resources.numSoundsAlloc != RESOURCES_NUM_SOUNDS)
+	{
+		PrintLine_N("Sound resource count changed: %llu -> %llu", pig->resources.numSoundsAlloc, RESOURCES_NUM_SOUNDS);
+		u64 oldSoundsCount = pig->resources.numSoundsAlloc;
+		Sound_t* newSpace = AllocArray(fixedHeap, Sound_t, RESOURCES_NUM_SOUNDS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.sounds, sizeof(Sound_t) * MinU64(RESOURCES_NUM_SOUNDS, oldSoundsCount));
+		FreeMem(fixedHeap, pig->resources.sounds, sizeof(Sound_t) * oldSoundsCount);
+		pig->resources.numSoundsAlloc = RESOURCES_NUM_SOUNDS;
+		pig->resources.sounds = (ResourceSounds_t*)newSpace;
+		u64 numNewSounds = RESOURCES_NUM_SOUNDS - oldSoundsCount;
+		if (oldSoundsCount < RESOURCES_NUM_SOUNDS) { NotifyPrint_I("Loading %llu new sound resource%s...", numNewSounds, (numNewSounds == 1) ? "" : "s"); }
+		for (u64 soundIndex = oldSoundsCount; soundIndex < RESOURCES_NUM_SOUNDS; soundIndex++) { Pig_LoadSoundResource(soundIndex); }
+	}
+	if (pig->resources.numMusicsAlloc != RESOURCES_NUM_MUSICS)
+	{
+		PrintLine_N("Music resource count changed: %llu -> %llu", pig->resources.numMusicsAlloc, RESOURCES_NUM_MUSICS);
+		u64 oldMusicsCount = pig->resources.numMusicsAlloc;
+		Sound_t* newSpace = AllocArray(fixedHeap, Sound_t, RESOURCES_NUM_MUSICS);
+		NotNull(newSpace);
+		MyMemCopy(newSpace, pig->resources.musics, sizeof(Sound_t) * MinU64(RESOURCES_NUM_MUSICS, oldMusicsCount));
+		FreeMem(fixedHeap, pig->resources.musics, sizeof(Sound_t) * oldMusicsCount);
+		pig->resources.numMusicsAlloc = RESOURCES_NUM_MUSICS;
+		pig->resources.musics = (ResourceMusics_t*)newSpace;
+		u64 numNewMusics = RESOURCES_NUM_MUSICS - oldMusicsCount;
+		if (oldMusicsCount < RESOURCES_NUM_MUSICS) { NotifyPrint_I("Loading %llu new music resource%s...", numNewMusics, (numNewMusics == 1) ? "" : "s"); }
+		for (u64 musicIndex = oldMusicsCount; musicIndex < RESOURCES_NUM_MUSICS; musicIndex++) { Pig_LoadMusicResource(musicIndex); }
+	}
 }
 
 void Pig_UpdateResources()
@@ -661,6 +875,16 @@ void Pig_UpdateResources()
 				{
 					PrintLine_N("Reloading Font[%llu]...", watch->resourceIndex);
 					Pig_LoadFontResource(watch->resourceIndex);
+				} break;
+				case ResourceType_Sound:
+				{
+					PrintLine_N("Reloading Sound[%llu]...", watch->resourceIndex);
+					Pig_LoadSoundResource(watch->resourceIndex);
+				} break;
+				case ResourceType_Music:
+				{
+					PrintLine_N("Reloading Music[%llu]...", watch->resourceIndex);
+					Pig_LoadMusicResource(watch->resourceIndex);
 				} break;
 				default: DebugAssert(false); break;
 			}

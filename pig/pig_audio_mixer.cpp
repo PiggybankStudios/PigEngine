@@ -116,6 +116,11 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 				instance->nextInstanceToStart = nullptr;
 			}
 		}
+		else
+		{
+			instance->attackTime = 0;
+			instance->attackCurve = EasingStyle_None;
+		}
 	}
 	return result;
 }

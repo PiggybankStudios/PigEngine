@@ -288,6 +288,10 @@ void Pig_UpdateCaptureHandling(const PlatWindow_t* window, PigWindowState_t* sta
 	if (state->recordingGif)
 	{
 		Pig_StoreGifFrame(&state->frameBuffer, state->screenSubPart, &state->gifFrames);
+		
+		u64 gifFrameSize = state->screenSubPart.width * state->screenSubPart.height * sizeof(u32);
+		if (state->gifFrames.count * gifFrameSize >= MAX_GIF_SIZE) { state->finishGif = true; }
+		
 		if (state->finishGif)
 		{
 			TempPushMark();
@@ -297,6 +301,8 @@ void Pig_UpdateCaptureHandling(const PlatWindow_t* window, PigWindowState_t* sta
 			TempPopMark();
 		}
 	}
+	
+	
 }
 
 void Pig_UpdateWindowStates()

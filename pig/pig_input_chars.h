@@ -12,6 +12,8 @@ Description:
 #ifndef _PIG_INPUT_CHARS_H
 #define _PIG_INPUT_CHARS_H
 
+#define NUM_INPUT_DISP_CHAR_CODEPOINTS  147
+
 #define INPUT_DISP_CHAR_ESCAPE_CODEPOINT             0x00002600
 #define INPUT_DISP_CHAR_F1_CODEPOINT                 0x00002601
 #define INPUT_DISP_CHAR_F2_CODEPOINT                 0x00002602
@@ -691,6 +693,406 @@ u32 GetDisplayCharCodepointForControllerBtn(ControllerType_t type, ControllerBtn
 			default: return INPUT_DISP_CHAR_XB_UNKNOWN_CODEPOINT;
 		}
 	}
+}
+
+u32 GetInputCharCodepointByIndex(u64 index)
+{
+	switch (index)
+	{
+		case 0:   return INPUT_DISP_CHAR_ESCAPE_CODEPOINT;
+		case 1:   return INPUT_DISP_CHAR_F1_CODEPOINT;
+		case 2:   return INPUT_DISP_CHAR_F2_CODEPOINT;
+		case 3:   return INPUT_DISP_CHAR_F3_CODEPOINT;
+		case 4:   return INPUT_DISP_CHAR_F4_CODEPOINT;
+		case 5:   return INPUT_DISP_CHAR_F5_CODEPOINT;
+		case 6:   return INPUT_DISP_CHAR_F6_CODEPOINT;
+		case 7:   return INPUT_DISP_CHAR_F7_CODEPOINT;
+		case 8:   return INPUT_DISP_CHAR_F8_CODEPOINT;
+		case 9:   return INPUT_DISP_CHAR_F9_CODEPOINT;
+		case 10:  return INPUT_DISP_CHAR_F10_CODEPOINT;
+		case 11:  return INPUT_DISP_CHAR_F11_CODEPOINT;
+		case 12:  return INPUT_DISP_CHAR_F12_CODEPOINT;
+		case 13:  return INPUT_DISP_CHAR_SPACE_CODEPOINT;
+		case 14:  return INPUT_DISP_CHAR_BLANK_CODEPOINT;
+		case 15:  return INPUT_DISP_CHAR_BLANK_WIDE_CODEPOINT;
+		case 16:  return INPUT_DISP_CHAR_TILDE_CODEPOINT;
+		case 17:  return INPUT_DISP_CHAR_1_CODEPOINT;
+		case 18:  return INPUT_DISP_CHAR_2_CODEPOINT;
+		case 19:  return INPUT_DISP_CHAR_3_CODEPOINT;
+		case 20:  return INPUT_DISP_CHAR_4_CODEPOINT;
+		case 21:  return INPUT_DISP_CHAR_5_CODEPOINT;
+		case 22:  return INPUT_DISP_CHAR_6_CODEPOINT;
+		case 23:  return INPUT_DISP_CHAR_7_CODEPOINT;
+		case 24:  return INPUT_DISP_CHAR_8_CODEPOINT;
+		case 25:  return INPUT_DISP_CHAR_9_CODEPOINT;
+		case 26:  return INPUT_DISP_CHAR_0_CODEPOINT;
+		case 27:  return INPUT_DISP_CHAR_MINUS_CODEPOINT;
+		case 28:  return INPUT_DISP_CHAR_PLUS_CODEPOINT;
+		case 29:  return INPUT_DISP_CHAR_BACK_CODEPOINT;
+		case 30:  return INPUT_DISP_CHAR_INSERT_CODEPOINT;
+		case 31:  return INPUT_DISP_CHAR_DELETE_CODEPOINT;
+		case 32:  return INPUT_DISP_CHAR_TAB_CODEPOINT;
+		case 33:  return INPUT_DISP_CHAR_Q_CODEPOINT;
+		case 34:  return INPUT_DISP_CHAR_W_CODEPOINT;
+		case 35:  return INPUT_DISP_CHAR_E_CODEPOINT;
+		case 36:  return INPUT_DISP_CHAR_R_CODEPOINT;
+		case 37:  return INPUT_DISP_CHAR_T_CODEPOINT;
+		case 38:  return INPUT_DISP_CHAR_Y_CODEPOINT;
+		case 39:  return INPUT_DISP_CHAR_U_CODEPOINT;
+		case 40:  return INPUT_DISP_CHAR_I_CODEPOINT;
+		case 41:  return INPUT_DISP_CHAR_O_CODEPOINT;
+		case 42:  return INPUT_DISP_CHAR_P_CODEPOINT;
+		case 43:  return INPUT_DISP_CHAR_OPEN_BRACKET_CODEPOINT;
+		case 44:  return INPUT_DISP_CHAR_CLOSE_BRACKET_CODEPOINT;
+		case 45:  return INPUT_DISP_CHAR_PIPE_CODEPOINT;
+		case 46:  return INPUT_DISP_CHAR_HOME_CODEPOINT;
+		case 47:  return INPUT_DISP_CHAR_END_CODEPOINT;
+		case 48:  return INPUT_DISP_CHAR_CAPS_CODEPOINT;
+		case 49:  return INPUT_DISP_CHAR_A_CODEPOINT;
+		case 50:  return INPUT_DISP_CHAR_S_CODEPOINT;
+		case 51:  return INPUT_DISP_CHAR_D_CODEPOINT;
+		case 52:  return INPUT_DISP_CHAR_F_CODEPOINT;
+		case 53:  return INPUT_DISP_CHAR_G_CODEPOINT;
+		case 54:  return INPUT_DISP_CHAR_H_CODEPOINT;
+		case 55:  return INPUT_DISP_CHAR_J_CODEPOINT;
+		case 56:  return INPUT_DISP_CHAR_K_CODEPOINT;
+		case 57:  return INPUT_DISP_CHAR_L_CODEPOINT;
+		case 58:  return INPUT_DISP_CHAR_COLON_CODEPOINT;
+		case 59:  return INPUT_DISP_CHAR_QUOTE_CODEPOINT;
+		case 60:  return INPUT_DISP_CHAR_UP_CODEPOINT;
+		case 61:  return INPUT_DISP_CHAR_ENTER_CODEPOINT;
+		case 62:  return INPUT_DISP_CHAR_PAGE_UP_CODEPOINT;
+		case 63:  return INPUT_DISP_CHAR_PAGE_DOWN_CODEPOINT;
+		case 64:  return INPUT_DISP_CHAR_SHIFT_CODEPOINT;
+		case 65:  return INPUT_DISP_CHAR_Z_CODEPOINT;
+		case 66:  return INPUT_DISP_CHAR_X_CODEPOINT;
+		case 67:  return INPUT_DISP_CHAR_C_CODEPOINT;
+		case 68:  return INPUT_DISP_CHAR_V_CODEPOINT;
+		case 69:  return INPUT_DISP_CHAR_B_CODEPOINT;
+		case 70:  return INPUT_DISP_CHAR_N_CODEPOINT;
+		case 71:  return INPUT_DISP_CHAR_M_CODEPOINT;
+		case 72:  return INPUT_DISP_CHAR_COMMA_CODEPOINT;
+		case 73:  return INPUT_DISP_CHAR_PERIOD_CODEPOINT;
+		case 74:  return INPUT_DISP_CHAR_QUESTION_CODEPOINT;
+		case 75:  return INPUT_DISP_CHAR_LEFT_CODEPOINT;
+		case 76:  return INPUT_DISP_CHAR_DOWN_CODEPOINT;
+		case 77:  return INPUT_DISP_CHAR_RIGHT_CODEPOINT;
+		case 78:  return INPUT_DISP_CHAR_ALT_CODEPOINT;
+		case 79:  return INPUT_DISP_CHAR_CONTROL_CODEPOINT;
+		case 80:  return INPUT_DISP_CHAR_BLANK_SQUARE_CODEPOINT;
+		case 81:  return INPUT_DISP_CHAR_BLANK_SQUARE_LARGE_CODEPOINT;
+		case 82:  return INPUT_DISP_CHAR_BLANK_SEMI_WIDE_CODEPOINT;
+		case 83:  return INPUT_DISP_CHAR_MOUSE_BLANK_CODEPOINT;
+		case 84:  return INPUT_DISP_CHAR_MOUSE_LEFT_CODEPOINT;
+		case 85:  return INPUT_DISP_CHAR_MOUSE_RIGHT_CODEPOINT;
+		case 86:  return INPUT_DISP_CHAR_MOUSE_MIDDLE_CODEPOINT;
+		case 87:  return INPUT_DISP_CHAR_XB_A_CODEPOINT;
+		case 88:  return INPUT_DISP_CHAR_XB_B_CODEPOINT;
+		case 89:  return INPUT_DISP_CHAR_XB_X_CODEPOINT;
+		case 90:  return INPUT_DISP_CHAR_XB_Y_CODEPOINT;
+		case 91:  return INPUT_DISP_CHAR_XB_LB_CODEPOINT;
+		case 92:  return INPUT_DISP_CHAR_XB_RB_CODEPOINT;
+		case 93:  return INPUT_DISP_CHAR_XB_LT_CODEPOINT;
+		case 94:  return INPUT_DISP_CHAR_XB_RT_CODEPOINT;
+		case 95:  return INPUT_DISP_CHAR_XB_L3_CODEPOINT;
+		case 96:  return INPUT_DISP_CHAR_XB_R3_CODEPOINT;
+		case 97:  return INPUT_DISP_CHAR_XB_BACK_CODEPOINT;
+		case 98:  return INPUT_DISP_CHAR_XB_START_CODEPOINT;
+		case 99:  return INPUT_DISP_CHAR_XB_UP_CODEPOINT;
+		case 100: return INPUT_DISP_CHAR_XB_LEFT_CODEPOINT;
+		case 101: return INPUT_DISP_CHAR_XB_DOWN_CODEPOINT;
+		case 102: return INPUT_DISP_CHAR_XB_RIGHT_CODEPOINT;
+		case 103: return INPUT_DISP_CHAR_XB_LEFT_STICK_CODEPOINT;
+		case 104: return INPUT_DISP_CHAR_XB_RIGHT_STICK_CODEPOINT;
+		case 105: return INPUT_DISP_CHAR_XB_DPAD_CODEPOINT;
+		case 106: return INPUT_DISP_CHAR_XB_UNKNOWN_CODEPOINT;
+		case 107: return INPUT_DISP_CHAR_PS_CROSS_CODEPOINT;
+		case 108: return INPUT_DISP_CHAR_PS_CIRCLE_CODEPOINT;
+		case 109: return INPUT_DISP_CHAR_PS_SQUARE_CODEPOINT;
+		case 110: return INPUT_DISP_CHAR_PS_TRIANGLE_CODEPOINT;
+		case 111: return INPUT_DISP_CHAR_PS_L1_CODEPOINT;
+		case 112: return INPUT_DISP_CHAR_PS_R1_CODEPOINT;
+		case 113: return INPUT_DISP_CHAR_PS_L2_CODEPOINT;
+		case 114: return INPUT_DISP_CHAR_PS_R2_CODEPOINT;
+		case 115: return INPUT_DISP_CHAR_PS_L3_CODEPOINT;
+		case 116: return INPUT_DISP_CHAR_PS_R3_CODEPOINT;
+		case 117: return INPUT_DISP_CHAR_PS_SHARE_CODEPOINT;
+		case 118: return INPUT_DISP_CHAR_PS_OPTIONS_CODEPOINT;
+		case 119: return INPUT_DISP_CHAR_PS_UP_CODEPOINT;
+		case 120: return INPUT_DISP_CHAR_PS_LEFT_CODEPOINT;
+		case 121: return INPUT_DISP_CHAR_PS_DOWN_CODEPOINT;
+		case 122: return INPUT_DISP_CHAR_PS_RIGHT_CODEPOINT;
+		case 123: return INPUT_DISP_CHAR_PS_LEFT_STICK_CODEPOINT;
+		case 124: return INPUT_DISP_CHAR_PS_RIGHT_STICK_CODEPOINT;
+		case 125: return INPUT_DISP_CHAR_PS_DPAD_CODEPOINT;
+		case 126: return INPUT_DISP_CHAR_PS_UNKNOWN_CODEPOINT;
+		case 127: return INPUT_DISP_CHAR_NT_B_CODEPOINT;
+		case 128: return INPUT_DISP_CHAR_NT_A_CODEPOINT;
+		case 129: return INPUT_DISP_CHAR_NT_Y_CODEPOINT;
+		case 130: return INPUT_DISP_CHAR_NT_X_CODEPOINT;
+		case 131: return INPUT_DISP_CHAR_NT_L_CODEPOINT;
+		case 132: return INPUT_DISP_CHAR_NT_R_CODEPOINT;
+		case 133: return INPUT_DISP_CHAR_NT_ZL_CODEPOINT;
+		case 134: return INPUT_DISP_CHAR_NT_ZR_CODEPOINT;
+		case 135: return 0; //INPUT_DISP_CHAR_NT_L3_CODEPOINT;
+		case 136: return 0; //INPUT_DISP_CHAR_NT_R3_CODEPOINT;
+		case 137: return INPUT_DISP_CHAR_NT_MINUS_CODEPOINT;
+		case 138: return INPUT_DISP_CHAR_NT_PLUS_CODEPOINT;
+		case 139: return INPUT_DISP_CHAR_NT_UP_CODEPOINT;
+		case 140: return INPUT_DISP_CHAR_NT_LEFT_CODEPOINT;
+		case 141: return INPUT_DISP_CHAR_NT_DOWN_CODEPOINT;
+		case 142: return INPUT_DISP_CHAR_NT_RIGHT_CODEPOINT;
+		case 143: return INPUT_DISP_CHAR_NT_LEFT_STICK_CODEPOINT;
+		case 144: return INPUT_DISP_CHAR_NT_RIGHT_STICK_CODEPOINT;
+		case 145: return INPUT_DISP_CHAR_NT_DPAD_CODEPOINT;
+		case 146: return INPUT_DISP_CHAR_NT_UNKNOWN_CODEPOINT;
+		default: return 0;
+	}
+}
+
+const char* GetInputCharNameByCodepoint(u32 codepoint)
+{
+	switch (codepoint)
+	{
+		case INPUT_DISP_CHAR_ESCAPE_CODEPOINT:             return "ESCAPE";
+		case INPUT_DISP_CHAR_F1_CODEPOINT:                 return "F1";
+		case INPUT_DISP_CHAR_F2_CODEPOINT:                 return "F2";
+		case INPUT_DISP_CHAR_F3_CODEPOINT:                 return "F3";
+		case INPUT_DISP_CHAR_F4_CODEPOINT:                 return "F4";
+		case INPUT_DISP_CHAR_F5_CODEPOINT:                 return "F5";
+		case INPUT_DISP_CHAR_F6_CODEPOINT:                 return "F6";
+		case INPUT_DISP_CHAR_F7_CODEPOINT:                 return "F7";
+		case INPUT_DISP_CHAR_F8_CODEPOINT:                 return "F8";
+		case INPUT_DISP_CHAR_F9_CODEPOINT:                 return "F9";
+		case INPUT_DISP_CHAR_F10_CODEPOINT:                return "F10";
+		case INPUT_DISP_CHAR_F11_CODEPOINT:                return "F11";
+		case INPUT_DISP_CHAR_F12_CODEPOINT:                return "F12";
+		case INPUT_DISP_CHAR_SPACE_CODEPOINT:              return "SPACE";
+		case INPUT_DISP_CHAR_BLANK_CODEPOINT:              return "BLANK";
+		case INPUT_DISP_CHAR_BLANK_WIDE_CODEPOINT:         return "BLANK_WIDE";
+		case INPUT_DISP_CHAR_TILDE_CODEPOINT:              return "TILDE";
+		case INPUT_DISP_CHAR_1_CODEPOINT:                  return "1";
+		case INPUT_DISP_CHAR_2_CODEPOINT:                  return "2";
+		case INPUT_DISP_CHAR_3_CODEPOINT:                  return "3";
+		case INPUT_DISP_CHAR_4_CODEPOINT:                  return "4";
+		case INPUT_DISP_CHAR_5_CODEPOINT:                  return "5";
+		case INPUT_DISP_CHAR_6_CODEPOINT:                  return "6";
+		case INPUT_DISP_CHAR_7_CODEPOINT:                  return "7";
+		case INPUT_DISP_CHAR_8_CODEPOINT:                  return "8";
+		case INPUT_DISP_CHAR_9_CODEPOINT:                  return "9";
+		case INPUT_DISP_CHAR_0_CODEPOINT:                  return "0";
+		case INPUT_DISP_CHAR_MINUS_CODEPOINT:              return "MINUS";
+		case INPUT_DISP_CHAR_PLUS_CODEPOINT:               return "PLUS";
+		case INPUT_DISP_CHAR_BACK_CODEPOINT:               return "BACK";
+		case INPUT_DISP_CHAR_INSERT_CODEPOINT:             return "INSERT";
+		case INPUT_DISP_CHAR_DELETE_CODEPOINT:             return "DELETE";
+		case INPUT_DISP_CHAR_TAB_CODEPOINT:                return "TAB";
+		case INPUT_DISP_CHAR_Q_CODEPOINT:                  return "Q";
+		case INPUT_DISP_CHAR_W_CODEPOINT:                  return "W";
+		case INPUT_DISP_CHAR_E_CODEPOINT:                  return "E";
+		case INPUT_DISP_CHAR_R_CODEPOINT:                  return "R";
+		case INPUT_DISP_CHAR_T_CODEPOINT:                  return "T";
+		case INPUT_DISP_CHAR_Y_CODEPOINT:                  return "Y";
+		case INPUT_DISP_CHAR_U_CODEPOINT:                  return "U";
+		case INPUT_DISP_CHAR_I_CODEPOINT:                  return "I";
+		case INPUT_DISP_CHAR_O_CODEPOINT:                  return "O";
+		case INPUT_DISP_CHAR_P_CODEPOINT:                  return "P";
+		case INPUT_DISP_CHAR_OPEN_BRACKET_CODEPOINT:       return "OPEN_BRACKET";
+		case INPUT_DISP_CHAR_CLOSE_BRACKET_CODEPOINT:      return "CLOSE_BRACKET";
+		case INPUT_DISP_CHAR_PIPE_CODEPOINT:               return "PIPE";
+		case INPUT_DISP_CHAR_HOME_CODEPOINT:               return "HOME";
+		case INPUT_DISP_CHAR_END_CODEPOINT:                return "END";
+		case INPUT_DISP_CHAR_CAPS_CODEPOINT:               return "CAPS";
+		case INPUT_DISP_CHAR_A_CODEPOINT:                  return "A";
+		case INPUT_DISP_CHAR_S_CODEPOINT:                  return "S";
+		case INPUT_DISP_CHAR_D_CODEPOINT:                  return "D";
+		case INPUT_DISP_CHAR_F_CODEPOINT:                  return "F";
+		case INPUT_DISP_CHAR_G_CODEPOINT:                  return "G";
+		case INPUT_DISP_CHAR_H_CODEPOINT:                  return "H";
+		case INPUT_DISP_CHAR_J_CODEPOINT:                  return "J";
+		case INPUT_DISP_CHAR_K_CODEPOINT:                  return "K";
+		case INPUT_DISP_CHAR_L_CODEPOINT:                  return "L";
+		case INPUT_DISP_CHAR_COLON_CODEPOINT:              return "COLON";
+		case INPUT_DISP_CHAR_QUOTE_CODEPOINT:              return "QUOTE";
+		case INPUT_DISP_CHAR_UP_CODEPOINT:                 return "UP";
+		case INPUT_DISP_CHAR_ENTER_CODEPOINT:              return "ENTER";
+		case INPUT_DISP_CHAR_PAGE_UP_CODEPOINT:            return "PAGE_UP";
+		case INPUT_DISP_CHAR_PAGE_DOWN_CODEPOINT:          return "PAGE_DOWN";
+		case INPUT_DISP_CHAR_SHIFT_CODEPOINT:              return "SHIFT";
+		case INPUT_DISP_CHAR_Z_CODEPOINT:                  return "Z";
+		case INPUT_DISP_CHAR_X_CODEPOINT:                  return "X";
+		case INPUT_DISP_CHAR_C_CODEPOINT:                  return "C";
+		case INPUT_DISP_CHAR_V_CODEPOINT:                  return "V";
+		case INPUT_DISP_CHAR_B_CODEPOINT:                  return "B";
+		case INPUT_DISP_CHAR_N_CODEPOINT:                  return "N";
+		case INPUT_DISP_CHAR_M_CODEPOINT:                  return "M";
+		case INPUT_DISP_CHAR_COMMA_CODEPOINT:              return "COMMA";
+		case INPUT_DISP_CHAR_PERIOD_CODEPOINT:             return "PERIOD";
+		case INPUT_DISP_CHAR_QUESTION_CODEPOINT:           return "QUESTION";
+		case INPUT_DISP_CHAR_LEFT_CODEPOINT:               return "LEFT";
+		case INPUT_DISP_CHAR_DOWN_CODEPOINT:               return "DOWN";
+		case INPUT_DISP_CHAR_RIGHT_CODEPOINT:              return "RIGHT";
+		case INPUT_DISP_CHAR_ALT_CODEPOINT:                return "ALT";
+		case INPUT_DISP_CHAR_CONTROL_CODEPOINT:            return "CONTROL";
+		case INPUT_DISP_CHAR_BLANK_SQUARE_CODEPOINT:       return "BLANK_SQUARE";
+		case INPUT_DISP_CHAR_BLANK_SQUARE_LARGE_CODEPOINT: return "BLANK_SQUARE_LARGE";
+		case INPUT_DISP_CHAR_BLANK_SEMI_WIDE_CODEPOINT:    return "BLANK_SEMI_WIDE";
+		case INPUT_DISP_CHAR_MOUSE_BLANK_CODEPOINT:        return "MOUSE_BLANK";
+		case INPUT_DISP_CHAR_MOUSE_LEFT_CODEPOINT:         return "MOUSE_LEFT";
+		case INPUT_DISP_CHAR_MOUSE_RIGHT_CODEPOINT:        return "MOUSE_RIGHT";
+		case INPUT_DISP_CHAR_MOUSE_MIDDLE_CODEPOINT:       return "MOUSE_MIDDLE";
+		case INPUT_DISP_CHAR_XB_A_CODEPOINT:               return "XB_A";
+		case INPUT_DISP_CHAR_XB_B_CODEPOINT:               return "XB_B";
+		case INPUT_DISP_CHAR_XB_X_CODEPOINT:               return "XB_X";
+		case INPUT_DISP_CHAR_XB_Y_CODEPOINT:               return "XB_Y";
+		case INPUT_DISP_CHAR_XB_LB_CODEPOINT:              return "XB_LB";
+		case INPUT_DISP_CHAR_XB_RB_CODEPOINT:              return "XB_RB";
+		case INPUT_DISP_CHAR_XB_LT_CODEPOINT:              return "XB_LT";
+		case INPUT_DISP_CHAR_XB_RT_CODEPOINT:              return "XB_RT";
+		case INPUT_DISP_CHAR_XB_L3_CODEPOINT:              return "XB_L3";
+		case INPUT_DISP_CHAR_XB_R3_CODEPOINT:              return "XB_R3";
+		case INPUT_DISP_CHAR_XB_BACK_CODEPOINT:            return "XB_BACK";
+		case INPUT_DISP_CHAR_XB_START_CODEPOINT:           return "XB_START";
+		case INPUT_DISP_CHAR_XB_UP_CODEPOINT:              return "XB_UP";
+		case INPUT_DISP_CHAR_XB_LEFT_CODEPOINT:            return "XB_LEFT";
+		case INPUT_DISP_CHAR_XB_DOWN_CODEPOINT:            return "XB_DOWN";
+		case INPUT_DISP_CHAR_XB_RIGHT_CODEPOINT:           return "XB_RIGHT";
+		case INPUT_DISP_CHAR_XB_LEFT_STICK_CODEPOINT:      return "XB_LEFT_STICK";
+		case INPUT_DISP_CHAR_XB_RIGHT_STICK_CODEPOINT:     return "XB_RIGHT_STICK";
+		case INPUT_DISP_CHAR_XB_DPAD_CODEPOINT:            return "XB_DPAD";
+		case INPUT_DISP_CHAR_XB_UNKNOWN_CODEPOINT:         return "XB_UNKNOWN";
+		case INPUT_DISP_CHAR_PS_CROSS_CODEPOINT:           return "PS_CROSS";
+		case INPUT_DISP_CHAR_PS_CIRCLE_CODEPOINT:          return "PS_CIRCLE";
+		case INPUT_DISP_CHAR_PS_SQUARE_CODEPOINT:          return "PS_SQUARE";
+		case INPUT_DISP_CHAR_PS_TRIANGLE_CODEPOINT:        return "PS_TRIANGLE";
+		case INPUT_DISP_CHAR_PS_L1_CODEPOINT:              return "PS_L1";
+		case INPUT_DISP_CHAR_PS_R1_CODEPOINT:              return "PS_R1";
+		case INPUT_DISP_CHAR_PS_L2_CODEPOINT:              return "PS_L2";
+		case INPUT_DISP_CHAR_PS_R2_CODEPOINT:              return "PS_R2";
+		case INPUT_DISP_CHAR_PS_L3_CODEPOINT:              return "PS_L3";
+		case INPUT_DISP_CHAR_PS_R3_CODEPOINT:              return "PS_R3";
+		case INPUT_DISP_CHAR_PS_SHARE_CODEPOINT:           return "PS_SHARE";
+		case INPUT_DISP_CHAR_PS_OPTIONS_CODEPOINT:         return "PS_OPTIONS";
+		case INPUT_DISP_CHAR_PS_UP_CODEPOINT:              return "PS_UP";
+		case INPUT_DISP_CHAR_PS_LEFT_CODEPOINT:            return "PS_LEFT";
+		case INPUT_DISP_CHAR_PS_DOWN_CODEPOINT:            return "PS_DOWN";
+		case INPUT_DISP_CHAR_PS_RIGHT_CODEPOINT:           return "PS_RIGHT";
+		case INPUT_DISP_CHAR_PS_LEFT_STICK_CODEPOINT:      return "PS_LEFT_STICK";
+		case INPUT_DISP_CHAR_PS_RIGHT_STICK_CODEPOINT:     return "PS_RIGHT_STICK";
+		case INPUT_DISP_CHAR_PS_DPAD_CODEPOINT:            return "PS_DPAD";
+		case INPUT_DISP_CHAR_PS_UNKNOWN_CODEPOINT:         return "PS_UNKNOWN";
+		case INPUT_DISP_CHAR_NT_B_CODEPOINT:               return "NT_B";
+		case INPUT_DISP_CHAR_NT_A_CODEPOINT:               return "NT_A";
+		case INPUT_DISP_CHAR_NT_Y_CODEPOINT:               return "NT_Y";
+		case INPUT_DISP_CHAR_NT_X_CODEPOINT:               return "NT_X";
+		case INPUT_DISP_CHAR_NT_L_CODEPOINT:               return "NT_L";
+		case INPUT_DISP_CHAR_NT_R_CODEPOINT:               return "NT_R";
+		case INPUT_DISP_CHAR_NT_ZL_CODEPOINT:              return "NT_ZL";
+		case INPUT_DISP_CHAR_NT_ZR_CODEPOINT:              return "NT_ZR";
+		// case INPUT_DISP_CHAR_NT_L3_CODEPOINT:              return "NT_L3";
+		// case INPUT_DISP_CHAR_NT_R3_CODEPOINT:              return "NT_R3";
+		case INPUT_DISP_CHAR_NT_MINUS_CODEPOINT:           return "NT_MINUS";
+		case INPUT_DISP_CHAR_NT_PLUS_CODEPOINT:            return "NT_PLUS";
+		case INPUT_DISP_CHAR_NT_UP_CODEPOINT:              return "NT_UP";
+		case INPUT_DISP_CHAR_NT_LEFT_CODEPOINT:            return "NT_LEFT";
+		case INPUT_DISP_CHAR_NT_DOWN_CODEPOINT:            return "NT_DOWN";
+		case INPUT_DISP_CHAR_NT_RIGHT_CODEPOINT:           return "NT_RIGHT";
+		case INPUT_DISP_CHAR_NT_LEFT_STICK_CODEPOINT:      return "NT_LEFT_STICK";
+		case INPUT_DISP_CHAR_NT_RIGHT_STICK_CODEPOINT:     return "NT_RIGHT_STICK";
+		case INPUT_DISP_CHAR_NT_DPAD_CODEPOINT:            return "NT_DPAD";
+		case INPUT_DISP_CHAR_NT_UNKNOWN_CODEPOINT:         return "NT_UNKNOWN";
+		default: return "Unknown";
+	}
+}
+
+MyStr_t ParseInputCharSyntax(MyStr_t input, MemArena_t* memArena, u64* numItemsParsedOut = nullptr)
+{
+	NotNullStr(&input);
+	
+	MyStr_t result = MyStr_Empty;
+	for (u8 pass = 0; pass < 2; pass++)
+	{
+		u64 numItemsParsed = 0;
+		u64 outputByteIndex = 0;
+		for (u64 cIndex = 0; cIndex < input.length; )
+		{
+			u32 codepoint = 0;
+			u8 codepointSize = GetCodepointForUtf8Str(input, cIndex, &codepoint);
+			if (codepointSize == 0)
+			{
+				codepointSize = 1;
+				codepoint = CharToU32(input.chars[cIndex]);
+			}
+			
+			bool parsedFoundText = false;
+			if (codepoint == '{')
+			{
+				u64 closingCurlyIndex = 0;
+				if (FindNextCharInStr(input, cIndex, "}", &closingCurlyIndex))
+				{
+					Assert(closingCurlyIndex >= cIndex + codepointSize);
+					MyStr_t foundText = NewStr(closingCurlyIndex - (cIndex + codepointSize), &input.chars[cIndex + codepointSize]);
+					
+					for (u64 iIndex = 0; iIndex < NUM_INPUT_DISP_CHAR_CODEPOINTS; iIndex++)
+					{
+						u32 inputDispCodepoint = GetInputCharCodepointByIndex(iIndex);
+						if (inputDispCodepoint != 0)
+						{
+							const char* inputDispCodepointName = GetInputCharNameByCodepoint(inputDispCodepoint);
+							if (StrCompareIgnoreCase(foundText, inputDispCodepointName) == 0)
+							{
+								parsedFoundText = true;
+								numItemsParsed++;
+								u8 inputDispCharSize = GetUtf8BytesForCode(inputDispCodepoint, nullptr);
+								if (result.chars != nullptr)
+								{
+									Assert(outputByteIndex + inputDispCharSize <= result.length);
+									GetUtf8BytesForCode(inputDispCodepoint, &result.bytes[outputByteIndex]);
+								}
+								outputByteIndex += inputDispCharSize;
+								break;
+							}
+						}
+					}
+					
+					
+					if (parsedFoundText)
+					{
+						//NOTE: We assume the closing curly is encoded as 1 byte here. This shouldn't be much of a problem but is maybe technically wrong
+						cIndex = closingCurlyIndex + 1;
+					}
+				}
+			}
+			
+			if (!parsedFoundText)
+			{
+				if (result.chars != nullptr)
+				{
+					Assert(outputByteIndex + codepointSize <= result.length);
+					MyMemCopy(&result.bytes[outputByteIndex], &input.bytes[cIndex], codepointSize);
+				}
+				outputByteIndex += codepointSize;
+				cIndex += codepointSize;
+			}
+		}
+		
+		if (pass == 0)
+		{
+			if (numItemsParsedOut != nullptr) { *numItemsParsedOut = numItemsParsed; }
+			
+			if (outputByteIndex == 0 || memArena == nullptr) { return result; }
+			
+			result.length = outputByteIndex;
+			result.bytes = AllocArray(memArena, u8, result.length);
+		}
+		else
+		{
+			Assert(outputByteIndex == result.length);
+			result.chars[result.length] = '\0';
+		}
+	}
+	
+	return result;
 }
 
 #endif //  _PIG_INPUT_CHARS_H

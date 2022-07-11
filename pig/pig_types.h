@@ -291,6 +291,41 @@ struct SoundInstanceHandle_t
 	SoundInstance_t* instancePntr;
 };
 
+enum MusicFade_t
+{
+	MusicFade_None = 0,
+	MusicFade_Instant,
+	MusicFade_Step,
+	MusicFade_LinearCrossfade,
+	MusicFade_FadeOutThenIn,
+	MusicFade_FadeInThenOut,
+	MusicFade_PartialCrossFade,
+	MusicFade_NumTypes,
+};
+const char* GetMusicFadeStr(MusicFade_t musicFade)
+{
+	switch (musicFade)
+	{
+		case MusicFade_None:             return "None";
+		case MusicFade_Instant:          return "Instant";
+		case MusicFade_Step:             return "Step";
+		case MusicFade_LinearCrossfade:  return "LinearCrossfade";
+		case MusicFade_FadeOutThenIn:    return "FadeOutThenIn";
+		case MusicFade_FadeInThenOut:    return "FadeInThenOut";
+		case MusicFade_PartialCrossFade: return "PartialCrossFade";
+		default: return "Unknown";
+	}
+}
+
+struct MusicSystemState_t
+{
+	SoundInstanceHandle_t currentMusic;
+	SoundInstanceHandle_t previousMusic;
+	MusicFade_t currentFade;
+	r32 currentFadeDuration; //ms
+	r32 currentFadeProgress; //percent
+};
+
 struct PigNotification_t
 {
 	MemArena_t* allocArena;

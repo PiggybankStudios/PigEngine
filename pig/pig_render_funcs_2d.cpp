@@ -174,6 +174,12 @@ void RcDrawTexturedObb2(obb2 boundingBox, Color_t color, rec sourceRec)
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+void RcDrawTexturedObb2(obb2 boundingBox, Color_t color)
+{
+	NotNull(rc->state.boundTexture1);
+	rec sourceRec = NewRec(Vec2_Zero, rc->state.boundTexture1->size);
+	RcDrawTexturedObb2(boundingBox, color, sourceRec);
+}
 void RcDrawObb2Outline(obb2 boundingBox, Color_t color, r32 thickness, bool outsideBox = false)
 {
 	if (outsideBox)

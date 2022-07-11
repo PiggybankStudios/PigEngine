@@ -18,6 +18,8 @@ enum ResourceType_t
 	ResourceType_Sheet,
 	ResourceType_Shader,
 	ResourceType_Font,
+	ResourceType_Sound,
+	ResourceType_Music,
 	ResourceType_NumTypes,
 };
 const char* GetResourceTypeStr(ResourceType_t resourceType)
@@ -30,6 +32,8 @@ const char* GetResourceTypeStr(ResourceType_t resourceType)
 		case ResourceType_Sheet:       return "Sheet";
 		case ResourceType_Shader:      return "Shader";
 		case ResourceType_Font:        return "Font";
+		case ResourceType_Sound:       return "Sound";
+		case ResourceType_Music:       return "Music";
 		default: return "Unknown";
 	}
 }
@@ -136,12 +140,16 @@ struct Resources_t
 	u64 numSheetsAlloc;
 	u64 numShadersAlloc;
 	u64 numFontsAlloc;
+	u64 numSoundsAlloc;
+	u64 numMusicsAlloc;
 	
 	ResourceTextures_t* textures;
 	ResourceVectors_t*  vectors;
 	ResourceSheets_t*   sheets;
 	ResourceShaders_t*  shaders;
 	ResourceFonts_t*    fonts;
+	ResourceSounds_t*   sounds;
+	ResourceMusics_t*   musics;
 };
 
 #endif //  _PIG_RESOURCES_H

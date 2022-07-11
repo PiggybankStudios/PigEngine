@@ -241,8 +241,10 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 						sampleMax = MaxR64(pig->audioOutSamples[thisSampleIndex], sampleMax);
 					}
 				}
+				sampleMax = ConvertVolumeToLoudness(AbsR64(sampleMax)) * SignR64(sampleMax);
+				sampleMin = ConvertVolumeToLoudness(AbsR64(sampleMin)) * SignR64(sampleMin);
 				rec sampleBarRec = NewRec(graph->mainRec.x + (r32)pIndex, 0, 1, graph->mainRec.height);
-				sampleBarRec.height *= (r32)(sampleMax - sampleMin) / 2;
+				sampleBarRec.height *= ((r32)(sampleMax - sampleMin) / 2);
 				sampleBarRec.y = graph->mainRec.y + (graph->mainRec.height * (r32)(1 - (sampleMax + 1)/2));
 				RecAlign(&sampleBarRec);
 				RcDrawRectangle(sampleBarRec, MonokaiYellow);

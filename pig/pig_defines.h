@@ -42,4 +42,7 @@ Description:
 #define PIG_DOUBLE_CLICK_TIME         400 //ms TODO: Does this need any tuning? Is there a common accepted value?
 #define PIG_DOUBLE_CLICK_MAX_DIST     5 //px TODO: Does this need any tuning? Is there a common accepted value?
 
+#define GIF_FRAMERATE  50   //fps
+#define MAX_GIF_SIZE   Gigabytes(1) //frames (1920x1080@50fps that's about 2.5 seconds, but can be like 40 seconds for small-ish sub-rects)
+
 #endif //  _PIG_DEFINES_H

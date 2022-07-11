@@ -8,7 +8,7 @@ Description:
 */
 
 #define AUDIO_OUT_GRAPH_WIDTH 400 //px
-#define AUDIO_OUT_GRAPH_HEIGHT 100 //px
+#define AUDIO_OUT_GRAPH_HEIGHT 400 //px
 
 #define AUDIO_OUT_GRAPH_SCROLL_SPEED     0.2f //scale (px/sample)
 #define AUDIO_OUT_GRAPH_MAX_SCALE        20 //px/sample
@@ -255,6 +255,8 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 						sampleMax = MaxR64(pig->audioOutSamples[thisSampleIndex], sampleMax);
 					}
 				}
+				sampleMax = ConvertVolumeToLoudness(AbsR64(sampleMax)) * SignOfR64(sampleMax);
+				sampleMin = ConvertVolumeToLoudness(AbsR64(sampleMin)) * SignOfR64(sampleMin);
 				rec sampleBarRec = NewRec(graph->mainRec.x + (r32)pIndex, 0, 1, graph->mainRec.height);
 				sampleBarRec.height *= (r32)(sampleMax - sampleMin) / 2;
 				sampleBarRec.y = graph->mainRec.y + (graph->mainRec.height * (r32)(1 - (sampleMax + 1)/2));
@@ -274,6 +276,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 				{
 					sampleValue = pig->audioOutSamples[sampleIndex];
 				}
+				sampleValue = ConvertVolumeToLoudness(AbsR64(sampleValue)) * SignOfR64(sampleValue);
 				
 				r64 sampleNormalizedIndex = ((r64)sampleIndex / (r64)PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH);
 				v2 samplePos = NewVec2(
