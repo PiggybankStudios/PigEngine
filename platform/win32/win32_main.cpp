@@ -462,7 +462,7 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	Platform->engineInput.numAudioFrameDrops = Platform->numAudioFrameDrops;
 	#endif
 	Win32_ClearEngineOutput(&Platform->engineOutput);

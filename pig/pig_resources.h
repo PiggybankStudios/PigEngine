@@ -131,7 +131,7 @@ struct FontHandle_t
 
 struct Resources_t
 {
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	VarArray_t watches; //ResourceWatch_t
 	#endif
 	

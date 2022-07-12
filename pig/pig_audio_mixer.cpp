@@ -160,7 +160,7 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 			}
 		}
 		// if (sampleValueR64 > 1.0 || sampleValueR64 < -1.0) { MyDebugBreak(); }
-		#if DEBUG_BUILD
+		#if DEVELOPER_BUILD
 		if (sampleValueR64 >  1.0f) { sampleValueR64 =  1.0f; pig->numAudioClips++; }
 		if (sampleValueR64 < -1.0f) { sampleValueR64 = -1.0f; pig->numAudioClips++; }
 		#else

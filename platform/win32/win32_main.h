@@ -120,7 +120,7 @@ struct Win32PlatformState_t
 	PlatAudioFormat_t audioFormat;
 	u64 audioFrameIndex;
 	PlatThread_t* audioThread;
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	u64 numAudioFrameDrops;
 	#endif
 	PlatMutex_t audioOutputMutex;

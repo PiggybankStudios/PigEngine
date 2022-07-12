@@ -14,7 +14,7 @@ Description:
 void Pig_InitResources()
 {
 	ClearStruct(pig->resources);
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	CreateVarArray(&pig->resources.watches, fixedHeap, sizeof(ResourceWatch_t), TOTAL_NUM_RESOURCES);
 	#endif
 	
@@ -79,7 +79,7 @@ u64 GetNumResourcesOfType(ResourceType_t resourceType)
 // +--------------------------------------------------------------+
 // |                            Watch                             |
 // +--------------------------------------------------------------+
-#if DEBUG_BUILD
+#if DEVELOPER_BUILD
 void StopWatchingFilesForResource(ResourceType_t resourceType, u64 resourceIndex)
 {
 	for (u64 wIndex = 0; wIndex < pig->resources.watches.length; )
@@ -841,7 +841,7 @@ void Pig_HandleResourcesOnReload()
 
 void Pig_UpdateResources()
 {
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	VarArrayLoop(&pig->resources.watches, wIndex)
 	{
 		VarArrayLoopGet(ResourceWatch_t, watch, &pig->resources.watches, wIndex);

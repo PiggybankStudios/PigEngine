@@ -49,6 +49,12 @@ void PigInitialize(EngineMemory_t* memory)
 	WriteLine_N("+==============================+");
 	PrintLine_D("Running on %s", GetRenderApiStr(pig->renderApi));
 	
+	#if !DEBUG_BUILD && GYLIB_ASSERTIONS_ENABLED
+	bool isFolder = false;
+	plat->DoesFileExist(NewStr("Resources"), &isFolder);
+	AssertMsg(isFolder, "Failed to find Resources directory. Please make sure that the executable is next to the Resources folder!");
+	#endif
+	
 	SeedRand(11); //TODO: Get the timestamp and feed it in here!
 	PigInitGlad();
 	InitRenderContext();
@@ -92,6 +98,9 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->masterVolume = 0.8f;
 	pig->musicVolume  = 1.0f;
 	pig->soundsVolume = 1.0f;
+	if (plat->GetProgramArg(nullptr, NewStr("mute"), nullptr)) { pig->masterVolume = 0.0f; }
+	if (plat->GetProgramArg(nullptr, NewStr("nomusic"), nullptr)) { pig->musicEnabled = false; }
+	if (plat->GetProgramArg(nullptr, NewStr("nosounds"), nullptr)) { pig->soundsEnabled = false; }
 	
 	// +==============================+
 	// |     Initialize AppState      |

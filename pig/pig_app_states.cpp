@@ -17,6 +17,7 @@ void Pig_InitializeAppStateStack()
 
 void Pig_HandleAppStateChanges(bool initialAppState)
 {
+	UNUSED(initialAppState);
 	if (pig->appStateChange == AppStateChange_Push || (pig->appStateChange == AppStateChange_Change && pig->appStateStackSize == 0))
 	{
 		Assert(pig->newAppState != AppState_None && pig->newAppState < AppState_NumStates);

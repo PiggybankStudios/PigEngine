@@ -211,7 +211,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 		RcBindShader(&pig->resources.shaders->main2D);
 		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		
-		#if DEBUG_BUILD
+		#if DEVELOPER_BUILD
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*1), White, "Mixer %.2lfms (drops %llu clips %llu)", pig->audioMixerTime, pigIn->numAudioFrameDrops, pig->numAudioClips);
 		#else
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*1), White, "Mixer %.2lfms", pig->audioMixerTime);

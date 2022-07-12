@@ -287,7 +287,7 @@ struct EngineInput_t
 	v2 scrollDelta;
 	
 	//Debug
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	u64 numAudioFrameDrops;
 	#endif
 	

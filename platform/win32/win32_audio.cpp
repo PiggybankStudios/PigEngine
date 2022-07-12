@@ -499,7 +499,7 @@ void Win32_FillAudioBufferToMeetTargetFill()
 	UINT32 audioPadding = 0;
 	HRESULT getPaddingResult = Platform->audioClient->GetCurrentPadding(&audioPadding);
 	Assert(getPaddingResult == S_OK);
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	if (audioPadding == 0) { Platform->numAudioFrameDrops++; }
 	#endif
 	// PrintLine_D("Audio Padding: %lu", audioPadding);
