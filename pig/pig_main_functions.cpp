@@ -22,6 +22,7 @@ void PigInitialize(EngineMemory_t* memory)
 	Assert(memory->persistentDataSize > sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_FixedHeap(&pig->fixedHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_PagedHeapFuncs(&pig->mainHeap, PIG_MAIN_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	TempPushMark();
@@ -31,11 +32,12 @@ void PigInitialize(EngineMemory_t* memory)
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
-	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"));
+	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"),  Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"), MonokaiGreen);
+	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"),  MonokaiOrange);
+	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"), MonokaiBlue);
+	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"),   Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap, NewStr("audioHeap"), MonokaiPurple);
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);

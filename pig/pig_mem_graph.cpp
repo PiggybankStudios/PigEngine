@@ -113,7 +113,7 @@ void InitializePigMemGraph(PigMemGraph_t* graph)
 	CreateVarArray(&graph->arenas, fixedHeap, sizeof(PigMemGraphArena_t));
 }
 
-void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name)
+void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor)
 {
 	AssertSingleThreaded();
 	NotNull(graph);
@@ -127,6 +127,7 @@ void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t na
 	newArena->pntr = arenaPntr;
 	newArena->name = AllocString(fixedHeap, &name);
 	NotNullStr(&newArena->name);
+	newArena->fillColor = fillColor;
 	CreateVarArray(&newArena->pages, fixedHeap, sizeof(PigMemGraphArenaPage_t), PigMemGraphGetNumPagesForArena(arenaPntr));
 }
 
@@ -321,14 +322,14 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 			{
 				VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
 				Color_t backColor = ColorTransparent(Black, 0.5f);
-				Color_t fillColor = MonokaiOrange;
+				Color_t fillColor = arena->fillColor;
 				Color_t outlineColor = Black;
 				bool isMouseOver = IsMouseOverPrint("PigMemGraphArena%lluPage%llu", aIndex, pIndex);
 				bool isSelected = (graph->selectedPageId == page->id);
 				if (isMouseOver)
 				{
 					backColor = MonokaiDarkGray;
-					fillColor = MonokaiYellow;
+					fillColor = ColorLighten(arena->fillColor, 40);
 				}
 				if (isSelected)
 				{

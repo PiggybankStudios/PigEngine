@@ -203,6 +203,10 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			DebugPrintArenaInfo(&pig->tempArena, "TempArena");
 		}
+		else if (StrCompareIgnoreCase(arguments[0], "Audio") == 0 || StrCompareIgnoreCase(arguments[0], "AudioHeap") == 0)
+		{
+			DebugPrintArenaInfo(&pig->audioHeap, "AudioHeap");
+		}
 		else 
 		{
 			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);

@@ -75,6 +75,7 @@ struct PigMemGraphArena_t
 	u64 id;
 	MemArena_t* pntr;
 	MyStr_t name;
+	Color_t fillColor;
 	
 	VarArray_t pages; //PigMemGraphArenaPage_t
 	

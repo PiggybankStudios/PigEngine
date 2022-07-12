@@ -18,6 +18,9 @@ struct Win32PlatformState_t
 	MemArena_t stdHeap;
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
+	#if BOX2D_SUPPORTED
+	MemArena_t box2dHeap;
+	#endif
 	PlatMutex_t threadSafeHeapMutex;
 	MemArena_t threadSafeHeap;
 	

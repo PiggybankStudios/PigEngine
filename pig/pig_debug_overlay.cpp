@@ -321,6 +321,13 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
 			textPos.y += stepY;
 			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
+				"Timezone: %.*s %s%s",
+				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
+				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
+			);
+			textPos.y += stepY;
+			
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
 			textPos.y += stepY;
 			
@@ -337,13 +344,6 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
 				textPos.y += stepY;
 			}
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
-				"Timezone: %.*s %s%s",
-				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
-				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
-			);
-			textPos.y += stepY;
 		}
 		
 		// +==============================+

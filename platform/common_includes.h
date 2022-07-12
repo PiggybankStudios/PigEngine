@@ -25,6 +25,9 @@ Date:   09\14\2021
 #if !defined(SLUG_SUPPORTED)
 #error You must define SLUG_SUPPORTED in the build options
 #endif
+#if !defined(BOX2D_SUPPORTED)
+#error You must define BOX2D_SUPPORTED in the build options
+#endif
 
 #ifdef PLATFORM_LAYER
 #undef PLATFORM_LAYER

@@ -46,6 +46,7 @@ struct PigState_t
 	MemArena_t mainHeap;
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
+	MemArena_t audioHeap;
 	
 	//AppStates
 	AppGlobals_t appGlobals;
