@@ -76,7 +76,8 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	RcLoadBasicResources();
 	Pig_InitResources();
-	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup
+	GamePinResources();
+	Pig_LoadAllResources(!LOAD_ALL_RESOURCES_ON_STARTUP);
 	PigInitMusicSystem(&pig->musicSystem);
 	
 	// plat->DebugReadout(NewStr("Hello from Pig Engine!"), White, 1.0f);

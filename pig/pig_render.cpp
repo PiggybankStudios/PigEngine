@@ -1380,7 +1380,7 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 // +==============================+
 // |            Begin             |
 // +==============================+
-void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = 1.0f, i32 clearStencil = 0)
+void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = -1.0f, i32 clearStencil = 0)
 {
 	NotNull(pig);
 	NotNull(rc);
@@ -1439,7 +1439,7 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	
 	rc->state.cameraPosition = Vec3_Zero;
 	
-	rc->state.depth = 1.0f;
+	rc->state.depth = clearDepth;
 	
 	rc->state.sourceRec1 = Rec_Default;
 	rc->state.sourceRec2 = Rec_Default;

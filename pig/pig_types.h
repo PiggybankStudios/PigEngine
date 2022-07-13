@@ -117,6 +117,7 @@ struct PigDebugOverlay_t
 {
 	bool enabled;
 	bool debugReadoutsEnabled;
+	bool audioInstancesEnabled;
 	bool pieChartsEnabled;
 	bool easingFuncsEnabled;
 	bool controllerDebugEnabled;
@@ -137,12 +138,13 @@ struct PigDebugOverlay_t
 	rec totalToggleBtnsRec;
 	union
 	{
-		rec toggleBtnRecs[7];
+		rec toggleBtnRecs[8];
 		struct
 		{
 			rec toggleDebugReadoutBtnRec;
 			rec togglePerfGraphBtnRec;
 			rec toggleAudioGraphBtnRec;
+			rec toggleAudioInstancesBtnRec;
 			rec toggleMemGraphBtnRec;
 			rec togglePieChartsBtnRec;
 			rec toggleEasingFuncsBtnRec;

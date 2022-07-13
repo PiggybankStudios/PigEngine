@@ -38,6 +38,47 @@ const char* GetResourceTypeStr(ResourceType_t resourceType)
 	}
 }
 
+enum ResourceState_t
+{
+	ResourceState_None = 0,
+	ResourceState_Unloaded, //we've never tried to load, or we have unloaded it for non-use
+	ResourceState_Error,    //we've tried to load, but failed
+	ResourceState_Warning,  //failed reload, or failed to load all metadata, but we have a valid value (still probably usable)
+	ResourceState_Loaded,   //Loaded and ready to go
+	ResourceState_NumStates,
+};
+const char* GetResourceStateStr(ResourceState_t resourceState)
+{
+	switch (resourceState)
+	{
+		case ResourceState_None:     return "None";
+		case ResourceState_Unloaded: return "Unloaded";
+		case ResourceState_Error:    return "Error";
+		case ResourceState_Warning:  return "Warning";
+		case ResourceState_Loaded:   return "Loaded";
+		default: return "Unknown";
+	}
+}
+
+ResourceState_t ResourceStateWarnOrError(ResourceState_t state)
+{
+	switch (state)
+	{
+		case ResourceState_Unloaded: return ResourceState_Error;
+		case ResourceState_Error:    return ResourceState_Error;
+		case ResourceState_Warning:  return ResourceState_Warning;
+		case ResourceState_Loaded:   return ResourceState_Warning;
+		default: return ResourceState_Error;
+	}
+}
+
+struct ResourceStatus_t
+{
+	ResourceState_t state;
+	u64 lastAccessTime;
+	bool isPinned; //keeps the resource loaded without needing to call AccessResource
+};
+
 struct ResourceWatch_t
 {
 	ResourceType_t type;
@@ -90,6 +131,7 @@ struct ResourceFontFaceMetaInfo_t
 };
 struct ResourceFontMetaInfo_t
 {
+	const char* fontName;
 	bool requestFromPlatform;
 	ResourceFontFaceMetaInfo_t faces[MAX_NUM_RESOURCE_FONT_FACES];
 };
@@ -126,6 +168,18 @@ struct FontHandle_t
 	u64 reloadIndex;
 	Font_t* pntr;
 };
+struct SoundHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Sound_t* pntr;
+};
+struct MusicHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Sound_t* pntr;
+};
 
 #include "game_resources.h"
 
@@ -142,6 +196,14 @@ struct Resources_t
 	u64 numFontsAlloc;
 	u64 numSoundsAlloc;
 	u64 numMusicsAlloc;
+	
+	ResourceStatus_t* textureStatus;
+	ResourceStatus_t* vectorStatus;
+	ResourceStatus_t* sheetStatus;
+	ResourceStatus_t* shaderStatus;
+	ResourceStatus_t* fontStatus;
+	ResourceStatus_t* soundStatus;
+	ResourceStatus_t* musicStatus;
 	
 	ResourceTextures_t* textures;
 	ResourceVectors_t*  vectors;

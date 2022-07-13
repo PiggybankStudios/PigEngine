@@ -16,8 +16,11 @@ Description:
 #define SHOW_MEM_GRAPH_ON_STARTUP       false
 #define SHOW_PIE_GRAPHS_ON_STARTUP      false
 #define SHOW_AUDIO_OUT_GRAPH_ON_STARTUP false
+#define SHOW_AUDIO_INSTANCES_ON_STARTUP false
 #define PAUSE_PERF_GRAPH_ONCE_FULL      false
 #define LOCK_PERF_GRAPH_SCALE           true
+
+#define LOAD_ALL_RESOURCES_ON_STARTUP   false
 
 #define DEBUG_OUTPUT_ENABLED   1
 #define REGULAR_OUTPUT_ENABLED 1

@@ -258,6 +258,31 @@ void RcDrawSheetFrame(MyStr_t frameName, rec rectangle, Color_t color, bool flip
 	}
 }
 
+void RcDrawSheetFrame(v2i frame, obb2 boundingBox, Color_t color, bool flipX = false, bool flipY = false)
+{
+	NotNull(rc->state.boundSpriteSheet);
+	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
+	rec sourceRec = GetSpriteSheetFrameSourceRec(sheet, frame);
+	if (flipX) { sourceRec.x += sourceRec.width; sourceRec.width = -sourceRec.width; }
+	if (flipY) { sourceRec.y += sourceRec.height; sourceRec.height = -sourceRec.height; }
+	RcBindTexture1(&sheet->texture);
+	RcDrawTexturedObb2(boundingBox, color, sourceRec);
+}
+void RcDrawSheetFrame(MyStr_t frameName, obb2 boundingBox, Color_t color, bool flipX = false, bool flipY = false)
+{
+	NotNull(rc->state.boundSpriteSheet);
+	SpriteSheet_t* sheet = rc->state.boundSpriteSheet;
+	SpriteSheetFrame_t* sheetFrame = TryGetSpriteSheetFrame(sheet, frameName);
+	if (sheetFrame != nullptr)
+	{
+		RcDrawSheetFrame(sheetFrame->gridPos, boundingBox, color, flipX, flipY);
+	}
+	else
+	{
+		RcDrawObb2(boundingBox, color);
+	}
+}
+
 void RcDrawEquilTriangleFrom(v2 base, r32 direction, r32 height, Color_t color)
 {
 	r32 triangleHeight = SqrtR32(3)/2;

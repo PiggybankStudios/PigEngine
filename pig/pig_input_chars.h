@@ -1083,7 +1083,7 @@ MyStr_t ParseInputCharSyntax(MyStr_t input, MemArena_t* memArena, u64* numItemsP
 			if (outputByteIndex == 0 || memArena == nullptr) { return result; }
 			
 			result.length = outputByteIndex;
-			result.bytes = AllocArray(memArena, u8, result.length);
+			result.bytes = AllocArray(memArena, u8, result.length+1);
 		}
 		else
 		{
