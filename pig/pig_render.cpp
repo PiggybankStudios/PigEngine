@@ -978,6 +978,23 @@ void RcSetDepth(r32 depth)
 {
 	rc->state.depth = depth;
 }
+r32 RcGetRealDepth(r32 depth)
+{
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			return (-2.0f * depth) + 1.0f;
+		} break;
+		#endif
+		default: DebugAssertMsg(false, "Unsupported render API in RcGetRealDepth!"); return depth;
+	}
+}
+r32 RcGetRealDepth()
+{
+	return RcGetRealDepth(rc->state.depth);
+}
 
 void RcSetViewport(rec viewportRec, bool fakeScreenSpaceCoordinates = true)
 {
@@ -1338,7 +1355,7 @@ void RcClearDepth(r32 depth)
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
-			RcClearDepth_OpenGL(depth);
+			RcClearDepth_OpenGL(RcGetRealDepth(depth));
 		} break;
 		#endif
 		
@@ -1380,7 +1397,7 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 // +==============================+
 // |            Begin             |
 // +==============================+
-void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = -1.0f, i32 clearStencil = 0)
+void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* initialShader, Color_t clearColor, r32 clearDepth = 1.0f, i32 clearStencil = 0)
 {
 	NotNull(pig);
 	NotNull(rc);

@@ -51,18 +51,20 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 	sheetOut->padding = padding;
 	sheetOut->numFilledFrames = 0;
 	
-	v2i frameSizeWithPadding = sheetOut->frameSize + padding*2;
-	v2i textureSizeWithPadding = Vec2iMultiply(frameSizeWithPadding, numFrames);
+	v2i frameSizeWithPadding = sheetOut->frameSize + padding;
+	v2i textureSizeWithPadding = padding + Vec2iMultiply(frameSizeWithPadding, numFrames);
 	
 	TempPushMark();
 	
-	u32* newPixels = AllocArray(TempArena, u32, textureSizeWithPadding.width*textureSizeWithPadding.height);
+	u64 newPixelsSize = sizeof(u32) * textureSizeWithPadding.width*textureSizeWithPadding.height;
+	u32* newPixels = AllocArray(mainHeap, u32, textureSizeWithPadding.width*textureSizeWithPadding.height);
 	if (newPixels == nullptr)
 	{
 		DebugAssert(false);
 		sheetOut->error = SpriteSheetError_AllocFailure;
 		DestroySpriteSheet(sheetOut);
 		TempPopMark();
+		FreeMem(mainHeap, newPixels, newPixelsSize);
 		return false;
 	}
 	MyMemSet(newPixels, 0x00, sizeof(u32)*textureSizeWithPadding.width*textureSizeWithPadding.height);
@@ -193,9 +195,11 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 		sheetOut->error = SpriteSheetError_TextureError;
 		DestroySpriteSheet(sheetOut);
 		TempPopMark();
+		FreeMem(mainHeap, newPixels, newPixelsSize);
 		return false;
 	}
 	
+	FreeMem(mainHeap, newPixels, newPixelsSize);
 	TempPopMark();
 	
 	sheetOut->isValid = true;

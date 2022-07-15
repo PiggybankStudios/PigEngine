@@ -15,9 +15,9 @@ void RcDrawTriangle2D(v2* positions, Color_t color)
 	RcSetColor1(color);
 	v4 colorVec = ToVec4(color);
 	Vertex2D_t vertices[3];
-	vertices[0].position = NewVec3(positions[0].x, positions[0].y, rc->state.depth); vertices[0].color = colorVec; vertices[0].texCoord = NewVec2(0, 0);
-	vertices[1].position = NewVec3(positions[1].x, positions[1].y, rc->state.depth); vertices[1].color = colorVec; vertices[1].texCoord = NewVec2(1, 0);
-	vertices[2].position = NewVec3(positions[2].x, positions[2].y, rc->state.depth); vertices[2].color = colorVec; vertices[2].texCoord = NewVec2(0, 1);
+	vertices[0].position = NewVec3(positions[0].x, positions[0].y, RcGetRealDepth()); vertices[0].color = colorVec; vertices[0].texCoord = NewVec2(0, 0);
+	vertices[1].position = NewVec3(positions[1].x, positions[1].y, RcGetRealDepth()); vertices[1].color = colorVec; vertices[1].texCoord = NewVec2(1, 0);
+	vertices[2].position = NewVec3(positions[2].x, positions[2].y, RcGetRealDepth()); vertices[2].color = colorVec; vertices[2].texCoord = NewVec2(0, 1);
 	ChangeVertBufferVertices2D(&rc->scratchBuffer2D, 0, 3, &vertices[0]);
 	RcBindVertBuffer(&rc->scratchBuffer2D);
 	RcDrawBuffer(VertBufferPrimitive_Triangles, 0, 3);
@@ -35,7 +35,7 @@ void RcDrawRectangle(rec rectangle, Color_t color)
 {
 	mat4 worldMatrix = Mat4_Identity;
 	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
-	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
 	RcSetSourceRec1(Rec_Default);
@@ -61,7 +61,7 @@ void RcDrawTexturedRectangle(rec rectangle, Color_t color)
 	NotNull(rc->state.boundTexture1);
 	mat4 worldMatrix = Mat4_Identity;
 	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
-	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	rec sourceRec = NewRec(Vec2_Zero, rc->state.boundTexture1->size);
 	RcSetSourceRec1(sourceRec);
@@ -74,7 +74,7 @@ void RcDrawTexturedPartRectangle(rec rectangle, Color_t color, rec sourceRec)
 	NotNull(rc->state.boundTexture1);
 	mat4 worldMatrix = Mat4_Identity;
 	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
-	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcSetSourceRec1(sourceRec);
 	RcSetColor1(color);
@@ -138,7 +138,7 @@ void RcDrawObb2(obb2 boundingBox, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
 	Mat4Transform(worldMatrix, Mat4Scale2(boundingBox.size));
 	Mat4Transform(worldMatrix, Mat4RotateZ(boundingBox.rotation));
-	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
 	RcSetSourceRec1(Rec_Default);
@@ -152,7 +152,7 @@ void RcDrawObb2(obb2 boundingBox, Colorf_t colorf)
 	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
 	Mat4Transform(worldMatrix, Mat4Scale2(boundingBox.size));
 	Mat4Transform(worldMatrix, Mat4RotateZ(boundingBox.rotation));
-	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
 	RcSetSourceRec1(Rec_Default);
@@ -167,7 +167,7 @@ void RcDrawTexturedObb2(obb2 boundingBox, Color_t color, rec sourceRec)
 	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
 	Mat4Transform(worldMatrix, Mat4Scale2(boundingBox.size));
 	Mat4Transform(worldMatrix, Mat4RotateZ(boundingBox.rotation));
-	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcSetSourceRec1(sourceRec);
 	RcSetColor1(color);
@@ -289,7 +289,7 @@ void RcDrawEquilTriangleFrom(v2 base, r32 direction, r32 height, Color_t color)
 	mat4 worldMatrix = Mat4_Identity;
 	Mat4Transform(worldMatrix, Mat4RotateZ(direction));
 	Mat4Transform(worldMatrix, Mat4Scale2(height/triangleHeight, height/triangleHeight));
-	Mat4Transform(worldMatrix, Mat4Translate3(base.x, base.y, rc->state.depth));
+	Mat4Transform(worldMatrix, Mat4Translate3(base.x, base.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
 	RcSetSourceRec1(Rec_Default);
@@ -629,7 +629,7 @@ void RcDrawVectorImgShape(VectorImgShape_t* shape, Color_t color)
 				}
 				if (shape->path.vertBufferUpToDate)
 				{
-					RcSetWorldMatrix(Mat4Translate3(0, 0, rc->state.depth));
+					RcSetWorldMatrix(Mat4Translate3(0, 0, RcGetRealDepth()));
 					// RcSetColor1((GetNumSubPathsInBezierPath(&shape->path.value) > 1) ? ColorLerp(MonokaiRed, MonokaiBlue, Oscillate(0, 1, 1000)) : shape->fill.color);
 					RcSetColor1(shape->fill.color);
 					RcBindTexture1(&rc->dotTexture);

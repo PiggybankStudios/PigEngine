@@ -81,4 +81,156 @@ struct ParticleEngine_t
 	BktArray_t particles; //Particle_t
 };
 
+
+// +--------------------------------------------------------------+
+// |                      Deserialized Data                       |
+// +--------------------------------------------------------------+
+enum PartsDistroFunc_t
+{
+	PartsDistroFunc_Random = 0,
+	PartsDistroFunc_BlueRandom,
+	PartsDistroFunc_Spread,
+	PartsDistroFunc_NumFuncs,
+};
+const char* GetPartsDistroFuncStr(PartsDistroFunc_t func)
+{
+	switch (func)
+	{
+		case PartsDistroFunc_Random:     return "Random";
+		case PartsDistroFunc_BlueRandom: return "BlueRandom";
+		case PartsDistroFunc_Spread:     return "Spread";
+		default: return "Unknown";
+	}
+}
+
+struct PartsParamR32_t
+{
+	PartsDistroFunc_t distroFunc;
+	r32 minValue;
+	r32 maxValue;
+};
+
+struct PartsParamI32_t
+{
+	PartsDistroFunc_t distroFunc;
+	i32 minValue;
+	i32 maxValue;
+};
+
+struct PartsParamVec2_t
+{
+	bool isPolar;
+	PartsDistroFunc_t distroFunc;
+	v2 minValue; //in polar mode, x is direction, y is speed
+	v2 maxValue; //in polar mode, x is direction, y is speed
+};
+
+struct PartsParamVec2i_t
+{
+	PartsDistroFunc_t distroFunc;
+	v2i minValue;
+	v2i maxValue;
+};
+
+#define MAX_PARTS_PARAM_COLOR_POSSIBLE_COLORS 16
+struct PartsParamColor_t
+{
+	bool pickFromList;
+	u64 numPossibleColors;
+	PartsDistroFunc_t distroFunc;
+	union
+	{
+		Color_t possibleColors[MAX_PARTS_PARAM_COLOR_POSSIBLE_COLORS];
+		struct
+		{
+			Color_t minColor;
+			Color_t maxColor;
+		};
+	};
+};
+
+enum PartsTypeFlag_t
+{
+	PartsTypeFlag_None             = 0x00,
+	PartsTypeFlag_AddMouseVelocity = 0x01,
+	PartsTypeFlag_NumFlags = 2,
+};
+const char* GetPartsTypeFlagStr(u8 flag)
+{
+	switch (flag)
+	{
+		case PartsTypeFlag_None:             return "None";
+		case PartsTypeFlag_AddMouseVelocity: return "AddMouseVelocity";
+		default: return "Unknown";
+	}
+}
+
+struct PartsType_t
+{
+	u64 id;
+	MyStr_t name;
+	
+	u8 flags;
+	SpriteSheetHandle_t sheet;
+	TextureHandle_t texture;
+	rec sourceRec;
+	PartsParamVec2i_t frame;
+	PartsParamR32_t frameTime;
+	PartsParamI32_t frameCount, frameOffset;
+	PartsParamR32_t lifeSpan, depth;
+	PartsParamR32_t scaleStart, scaleEnd;
+	PartsParamR32_t alphaStart, alphaEnd;
+	PartsParamR32_t rotation, rotationVelocity, rotationAcceleration;
+	PartsParamR32_t velocityDamping, rotVelocityDamping;
+	PartsParamVec2_t velocity, acceleration;
+	PartsParamColor_t colorStart, colorEnd;
+};
+
+enum PartsEmissionShape_t
+{
+	PartsEmissionShape_Point = 0,
+	PartsEmissionShape_Square,
+	PartsEmissionShape_Circle,
+	PartsEmissionShape_Line,
+	PartsEmissionShape_NumShapes,
+};
+const char* GetPartsEmissionShapeStr(PartsEmissionShape_t shape)
+{
+	switch (shape)
+	{
+		case PartsEmissionShape_Point:  return "Point";
+		case PartsEmissionShape_Square: return "Square";
+		case PartsEmissionShape_Circle: return "Circle";
+		case PartsEmissionShape_Line:   return "Line";
+		default: return "Unknown";
+	}
+}
+
+struct PartsBurst_t
+{
+	u64 id;
+	MyStr_t name;
+	
+	PartsEmissionShape_t shape;
+	PartsParamI32_t count;
+	PartsType_t type;
+};
+
+struct PartsPrefab_t
+{
+	u64 id;
+	MyStr_t name;
+	VarArray_t bursts; //PartsBurst_t
+};
+
+struct PartsPrefabCollection_t
+{
+	u64 nextTypeId;
+	u64 nextBurstId;
+	u64 nextPrefabId;
+	
+	MemArena_t* allocArena;
+	VarArray_t prefabs; //PartsPrefab_t
+};
+
 #endif //  _PIG_PARTICLES_H

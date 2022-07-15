@@ -100,7 +100,7 @@ struct ResourceShaderMetaInfo_t
 	u32 requiredUniforms;
 };
 
-#define MAX_NUM_RESOURCE_FONT_FACES 8
+#define MAX_NUM_RESOURCE_FONT_FACES 12
 #define MAX_NUM_RESOURCE_FONT_BAKES 4
 
 struct ResourceFontFaceMetaInfo_t

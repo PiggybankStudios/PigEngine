@@ -155,7 +155,7 @@ void PigRenderDebugOverlays()
 	RcBindShader(&pig->resources.shaders->main2D);
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
-	RcClearDepth(-1.0f);
+	RcClearDepth(1.0f);
 	RcSetDepth(0.0f);
 	
 	RenderDebugConsole(&pig->debugConsole);
@@ -252,7 +252,7 @@ void PigUpdate()
 					RcBindShader(&pig->resources.shaders->main2D);
 					RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 					RcSetViewMatrix(Mat4_Identity);
-					RcSetDepth(1.0f);
+					RcSetDepth(0.0f);
 					rec gifRecordingRec;
 					gifRecordingRec.size = pig->resources.textures->gifRecording.size;
 					gifRecordingRec.x = ScreenSize.width/2 - gifRecordingRec.width/2;

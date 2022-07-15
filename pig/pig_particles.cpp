@@ -32,26 +32,41 @@ void UpdateParticleEngine(ParticleEngine_t* engine, r64 elapsedMs)
 	
 	if (elapsedMs > 0)
 	{
-		for (u64 pIndex = 0; pIndex < engine->particles.length; pIndex++)
+		BktArrayBucket_t* bucket = engine->particles.firstBucket;
+		u64 pIndex = 0;
+		while (bucket != nullptr && pIndex < engine->particles.length)
 		{
-			Particle_t* part = BktArrayGet(&engine->particles, Particle_t, pIndex);
-			if (IsFlagSet(part->flags, ParticleFlag_Alive))
+			Particle_t* part = (Particle_t*)bucket->items;
+			for (u64 bktIndex = 0; bktIndex < bucket->numItems && pIndex < engine->particles.length; bktIndex++)
 			{
-				part->age += (r32)elapsedMs;
-				if (part->age >= part->lifeSpan) { FlagUnset(part->flags, ParticleFlag_Alive); engine->numPartsAlive--; continue; }
-				if (part->movementType == PartMovementType_Default)
+				if (IsFlagSet(part->flags, ParticleFlag_Alive))
 				{
-					//TODO: We should be taking elapsedMs into account here!
-					part->velocity += part->acceleration;
-					part->velocity = (1.0f - (part->velocityDamping / 100.0f)) * part->velocity;
-					part->position += part->velocity;
-					part->rotationVelocity += part->rotationAcceleration;
-					part->rotationVelocity *= (1.0f - (part->rotVelocityDamping / 100.0f));
-					part->rotation += part->rotationVelocity;
+					part->age += (r32)elapsedMs;
+					if (part->age >= part->lifeSpan)
+					{
+						FlagUnset(part->flags, ParticleFlag_Alive);
+						engine->numPartsAlive--;
+					}
+					else
+					{
+						if (part->movementType == PartMovementType_Default)
+						{
+							//TODO: We should be taking elapsedMs into account here!
+							part->velocity += part->acceleration;
+							part->velocity = (1.0f - (part->velocityDamping / 100.0f)) * part->velocity;
+							part->position += part->velocity;
+							part->rotationVelocity += part->rotationAcceleration;
+							part->rotationVelocity *= (1.0f - (part->rotVelocityDamping / 100.0f));
+							part->rotation += part->rotationVelocity;
+						}
+						else if (part->movementType == PartMovementType_None) { /* do nothing */ }
+						else { Unimplemented(); }
+					}
 				}
-				else if (part->movementType == PartMovementType_None) { /* do nothing */ }
-				else { Unimplemented(); }
+				pIndex++;
+				part++;
 			}
+			bucket = bucket->next;
 		}
 	}
 }
@@ -61,44 +76,63 @@ void RenderParticleEngine(ParticleEngine_t* engine, bool renderNormal, bool rend
 	NotNull(engine);
 	r32 oldDepth = rc->state.depth;
 	
-	for (u64 pIndex = 0; pIndex < engine->particles.length; pIndex++)
+	BktArrayBucket_t* bucket = engine->particles.firstBucket;
+	u64 pIndex = 0;
+	while (bucket != nullptr && pIndex < engine->particles.length)
 	{
-		Particle_t* part = BktArrayGet(&engine->particles, Particle_t, pIndex);
-		if (IsFlagSet(part->flags, ParticleFlag_Alive))
+		Particle_t* part = (Particle_t*)bucket->items;
+		for (u64 bktIndex = 0; bktIndex < bucket->numItems && pIndex < engine->particles.length; bktIndex++)
 		{
-			if ((renderNormal && !IsFlagSet(part->flags, ParticleFlag_ScreenSpace)) || (renderScreenSpace && IsFlagSet(part->flags, ParticleFlag_ScreenSpace)))
+			if (IsFlagSet(part->flags, ParticleFlag_Alive))
 			{
-				r32 partLifeLerp = ClampR32(part->age / part->lifeSpan, 0.0f, 1.0f);
-				Color_t partColor = ColorLerp(part->colorStart, part->colorEnd, partLifeLerp);
-				r32 partScale = LerpR32(part->scaleStart, part->scaleEnd, partLifeLerp);
-				RcSetDepth(part->depth);
-				
-				Texture_t* texturePntr = GetPointer(&part->texture);
-				SpriteSheet_t* sheetPntr = GetPointer(&part->sheet);
-				if (texturePntr != nullptr)
+				if ((renderNormal && !IsFlagSet(part->flags, ParticleFlag_ScreenSpace)) || (renderScreenSpace && IsFlagSet(part->flags, ParticleFlag_ScreenSpace)))
 				{
-					obb2 partBounds = NewObb2D(part->position, texturePntr->size * partScale, part->rotation);
-					RcBindTexture1(texturePntr);
-					RcDrawTexturedObb2(partBounds, partColor, part->sourceRec);
+					r32 partLifeLerp = ClampR32(part->age / part->lifeSpan, 0.0f, 1.0f);
+					Color_t partColor = ColorLerp(part->colorStart, part->colorEnd, partLifeLerp);
+					r32 partScale = LerpR32(part->scaleStart, part->scaleEnd, partLifeLerp);
+					RcSetDepth(part->depth);
+					
+					Texture_t* texturePntr = GetPointer(&part->texture);
+					SpriteSheet_t* sheetPntr = GetPointer(&part->sheet);
+					if (texturePntr != nullptr)
+					{
+						obb2 partBounds = NewObb2D(part->position, texturePntr->size * partScale, part->rotation);
+						RcBindTexture1(texturePntr);
+						RcDrawTexturedObb2(partBounds, partColor, part->sourceRec);
+					}
+					else if (sheetPntr != nullptr)
+					{
+						i32 partFrameIndex = ((part->frameTime > 0) ? ((FloorR32i(part->age / part->frameTime) + (i32)part->frameOffset) % part->numFrames) : 0);
+						i32 numFramesX = sheetPntr->numFramesX;
+						v2i partFrame = NewVec2i(
+							(part->sheetFrame.x + partFrameIndex) % numFramesX,
+							part->sheetFrame.y + ((part->sheetFrame.x + partFrameIndex) / numFramesX)
+						);
+						obb2 partBounds = NewObb2D(part->position, ToVec2(sheetPntr->frameSize) * partScale, part->rotation);
+						RcBindSpriteSheet(sheetPntr);
+						RcDrawSheetFrame(partFrame, partBounds, partColor, IsFlagSet(part->flags, ParticleFlag_FlipX), IsFlagSet(part->flags, ParticleFlag_FlipY));
+					}
+					else { DebugAssertMsg(false, "Particle didn't have a sprite sheet or texture to back it!"); }
 				}
-				else if (sheetPntr != nullptr)
-				{
-					i32 partFrameIndex = ((FloorR32i(part->age / part->frameTime) + (i32)part->frameOffset) % part->numFrames);
-					i32 numFramesX = sheetPntr->numFramesX;
-					v2i partFrame = NewVec2i(
-						(part->sheetFrame.x + partFrameIndex) % numFramesX,
-						part->sheetFrame.y + ((part->sheetFrame.x + partFrameIndex) / numFramesX)
-					);
-					obb2 partBounds = NewObb2D(part->position, ToVec2(sheetPntr->frameSize) * partScale, part->rotation);
-					RcBindSpriteSheet(sheetPntr);
-					RcDrawSheetFrame(partFrame, partBounds, partColor, IsFlagSet(part->flags, ParticleFlag_FlipX), IsFlagSet(part->flags, ParticleFlag_FlipY));
-				}
-				else { DebugAssertMsg(false, "Particle didn't have a sprite sheet or texture to back it!"); }
 			}
+			pIndex++;
+			part++;
 		}
+		bucket = bucket->next;
 	}
 	
 	RcSetDepth(oldDepth);
+}
+
+void ParticleEngineClear(ParticleEngine_t* engine)
+{
+	NotNull(engine);
+	for (u64 pIndex = 0; pIndex < engine->particles.length; pIndex++)
+	{
+		Particle_t* part = BktArrayGet(&engine->particles, Particle_t, pIndex);
+		FlagUnset(part->flags, ParticleFlag_Alive);
+	}
+	engine->numPartsAlive = 0;
 }
 
 Particle_t* AllocParticle_(ParticleEngine_t* engine, u8 flags)

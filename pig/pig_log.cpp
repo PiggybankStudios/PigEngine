@@ -15,7 +15,7 @@ Description:
 void FreeProcessLog(ProcessLog_t* log)
 {
 	NotNull_(log);
-	if (log->fifo.allocArena->type != MemArenaType_MarkedStack)
+	if (log->fifo.allocArena == nullptr || log->fifo.allocArena->type != MemArenaType_MarkedStack)
 	{
 		DestroyStringFifo(&log->fifo);
 	}

@@ -238,6 +238,39 @@ bool IsResourcePinned(ResourceType_t type, u64 resourceIndex)
 	return status->isPinned;
 }
 
+ResourceType_t FindResourceByPathOrName(MyStr_t searchStr, u64* resourceIndexOut, bool allowEndingPortionPartial = false, bool ignoreCase = true)
+{
+	NotNullStr(&searchStr);
+	for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+	{
+		ResourceType_t type = (ResourceType_t)tIndex;
+		if (type != ResourceType_None)
+		{
+			u64 numOfType = GetNumResourcesOfType(type);
+			for (u64 rIndex = 0; rIndex < numOfType; rIndex++)
+			{
+				const char* pathOrName = GetPathOrNameForResource(type, rIndex);
+				if (allowEndingPortionPartial && StrEndsWith(NewStr(pathOrName), searchStr, ignoreCase))
+				{
+					if (resourceIndexOut != nullptr) { *resourceIndexOut = rIndex; }
+					return type;
+				}
+				else if (!allowEndingPortionPartial && ignoreCase && StrCompareIgnoreCase(NewStr(pathOrName), searchStr) == 0)
+				{
+					if (resourceIndexOut != nullptr) { *resourceIndexOut = rIndex; }
+					return type;
+				}
+				else if (!allowEndingPortionPartial && !ignoreCase && StrEquals(NewStr(pathOrName), searchStr))
+				{
+					if (resourceIndexOut != nullptr) { *resourceIndexOut = rIndex; }
+					return type;
+				}
+			}
+		}
+	}
+	return ResourceType_None;
+}
+
 // +--------------------------------------------------------------+
 // |                            Watch                             |
 // +--------------------------------------------------------------+
@@ -740,7 +773,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 					loadedSpriteSheet = TryLoadSpriteSheetAndMeta(
 						mainHeap,
 						NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png"), NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns.meta"),
-						NewVec2i(16, 16), Vec2i_One, false,
+						NewVec2i(16, 16), Vec2i_Zero, true,
 						&spriteSheet
 					);
 				}
@@ -749,7 +782,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 					loadedSpriteSheet = TryLoadSpriteSheetAndMeta(
 						mainHeap,
 						NewStr(RESOURCE_FOLDER_FONTS "/btns_light.png"), NewStr(RESOURCE_FOLDER_FONTS "/btns_light.meta"),
-						NewVec2i(16, 16), Vec2i_One, false,
+						NewVec2i(16, 16), Vec2i_Zero, false,
 						&spriteSheet
 					);
 				}
