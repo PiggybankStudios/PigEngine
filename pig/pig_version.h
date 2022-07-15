@@ -15,6 +15,6 @@ Description:
 #define ENGINE_VERSION_MINOR 1
 
 //NOTE: Auto-incremented by a python script before each build
-#define ENGINE_VERSION_BUILD 8250
+#define ENGINE_VERSION_BUILD 8254
 
 #endif //  _PIG_VERSION_H
