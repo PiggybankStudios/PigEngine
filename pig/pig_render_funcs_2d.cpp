@@ -31,6 +31,20 @@ void RcDrawTriangle2D(v2 p1, v2 p2, v2 p3, Color_t color)
 	RcDrawTriangle2D(&positions[0], color);
 }
 
+void RcDrawTriangle2DEx(v2 p1, v2 p2, v2 p3, v2 tc1, v2 tc2, v2 tc3, Color_t color)
+{
+	RcSetWorldMatrix(Mat4_Identity);
+	RcSetColor1(color);
+	v4 colorVec = ToVec4(color);
+	Vertex2D_t vertices[3];
+	vertices[0].position = NewVec3(p1.x, p1.y, RcGetRealDepth()); vertices[0].color = colorVec; vertices[0].texCoord = tc1;
+	vertices[1].position = NewVec3(p2.x, p2.y, RcGetRealDepth()); vertices[1].color = colorVec; vertices[1].texCoord = tc2;
+	vertices[2].position = NewVec3(p3.x, p3.y, RcGetRealDepth()); vertices[2].color = colorVec; vertices[2].texCoord = tc3;
+	ChangeVertBufferVertices2D(&rc->scratchBuffer2D, 0, 3, &vertices[0]);
+	RcBindVertBuffer(&rc->scratchBuffer2D);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 0, 3);
+}
+
 void RcDrawRectangle(rec rectangle, Color_t color)
 {
 	mat4 worldMatrix = Mat4_Identity;
