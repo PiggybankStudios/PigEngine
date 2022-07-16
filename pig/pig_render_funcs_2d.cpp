@@ -31,6 +31,7 @@ void RcDrawTriangle2D(v2 p1, v2 p2, v2 p3, Color_t color)
 	RcDrawTriangle2D(&positions[0], color);
 }
 
+//Textured
 void RcDrawTriangle2DEx(v2 p1, v2 p2, v2 p3, v2 tc1, v2 tc2, v2 tc3, Color_t color)
 {
 	RcSetWorldMatrix(Mat4_Identity);
@@ -43,6 +44,31 @@ void RcDrawTriangle2DEx(v2 p1, v2 p2, v2 p3, v2 tc1, v2 tc2, v2 tc3, Color_t col
 	ChangeVertBufferVertices2D(&rc->scratchBuffer2D, 0, 3, &vertices[0]);
 	RcBindVertBuffer(&rc->scratchBuffer2D);
 	RcDrawBuffer(VertBufferPrimitive_Triangles, 0, 3);
+}
+
+void RcDrawTexturedQuad(v2 topLeft, v2 topRight, v2 bottomRight, v2 bottomLeft, Color_t color)
+{
+	RcDrawTriangle2DEx(
+		topLeft, topRight, bottomLeft,
+		NewVec2(0, 0), NewVec2(1, 0), NewVec2(0, 1),
+		color
+	);
+	RcDrawTriangle2DEx(
+		bottomLeft, topRight, bottomRight,
+		NewVec2(0, 1), NewVec2(1, 0), NewVec2(1, 1),
+		color
+	);
+}
+void RcDrawTexturedQuadSubPart(v2 topLeft, v2 topRight, v2 bottomRight, v2 bottomLeft, rec subPart, Color_t color)
+{
+	UNUSED(bottomRight);
+	v2 rightVec = (topRight - topLeft);
+	v2 downVec = (bottomLeft - topLeft);
+	v2 realTopLeft = topLeft + (subPart.x * rightVec) + (subPart.y * downVec);
+	v2 realTopRight = topLeft + ((subPart.x + subPart.width) * rightVec) + (subPart.y * downVec);
+	v2 realBottomLeft = topLeft + (subPart.x * rightVec) + ((subPart.y + subPart.height) * downVec);
+	v2 realBottomRight = topLeft + ((subPart.x + subPart.width) * rightVec) + ((subPart.y + subPart.height) * downVec);
+	RcDrawTexturedQuad(realTopLeft, realTopRight, realBottomRight, realBottomLeft, color);
 }
 
 void RcDrawRectangle(rec rectangle, Color_t color)
