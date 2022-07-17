@@ -171,6 +171,25 @@ void RcDrawCircle(v2 center, r32 radius, Color_t color, bool bindShader = true)
 	RcSetCircleInnerRadius(oldInnerCircleRadius);
 	if (bindShader) { RcBindShader(oldShader); }
 }
+void RcDrawDonut(v2 center, r32 innerRadius, r32 radius, Color_t color, bool bindShader = true)
+{
+	NotNull(rc);
+	
+	Shader_t* oldShader = rc->state.boundShader;
+	v2 oldShiftVec = rc->state.shiftVec;
+	r32 oldCircleRadius = rc->state.circleRadius;
+	r32 oldInnerCircleRadius = rc->state.circleInnerRadius;
+	
+	if (bindShader) { RcBindShader(&pig->resources.shaders->main2D); }
+	RcSetCircleRadius(1.0f);
+	RcSetCircleInnerRadius(innerRadius / radius);
+	
+	RcDrawRectangle(NewRecCentered(center, Vec2Fill(radius*2)), color);
+	
+	RcSetCircleRadius(oldCircleRadius);
+	RcSetCircleInnerRadius(oldInnerCircleRadius);
+	if (bindShader) { RcBindShader(oldShader); }
+}
 
 void RcDrawObb2(obb2 boundingBox, Color_t color)
 {
