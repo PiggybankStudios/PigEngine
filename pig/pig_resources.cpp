@@ -943,9 +943,8 @@ void Pig_LoadMusicResource(u64 musicIndex)
 		
 		if (StrEndsWith(musicPathStr, ".ogg"))
 		{
-			TempPushMark();
 			OggAudioData_t oggData = {};
-			if (TryDeserOggFile(musicFile.size, musicFile.data, &musicParseLog, &oggData, TempArena))
+			if (TryDeserOggFile(musicFile.size, musicFile.data, &musicParseLog, &oggData, &pig->stdHeap))
 			{
 				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newMusic, &pig->audioHeap);
 				parseSuccess = true;
@@ -956,7 +955,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "OGG Parse Log"); }
-			TempPopMark();
+			FreeOggAudioData(&oggData);
 		}
 		else if (StrEndsWith(musicPathStr, ".wav"))
 		{
