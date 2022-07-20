@@ -312,6 +312,7 @@ void PigPostReload(Version_t oldVersion)
 	Pig_HandleResourcesOnReload();
 	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
+	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
 	
