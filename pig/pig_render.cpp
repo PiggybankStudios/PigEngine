@@ -538,6 +538,44 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 	AssertNoOpenGlError();
 }
 
+void RcStartStencilDrawing_OpenGL()
+{
+	glEnable(GL_STENCIL_TEST); AssertNoOpenGlError();
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); AssertNoOpenGlError(); //don't draw to the color buffer
+	glDepthMask(GL_FALSE); AssertNoOpenGlError(); //don't draw to the depth buffer
+	glStencilMask(0xFF); AssertNoOpenGlError();
+	glStencilFunc(GL_NEVER, 1, 0xFF); AssertNoOpenGlError();
+	glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP); AssertNoOpenGlError();
+}
+
+void RcSetStencilPolarity_OpenGL(bool writePositiveValues)
+{
+	// glStencilMask(writePositiveValues ? 0xFF : 0x00); AssertNoOpenGlError();
+	glStencilFunc(GL_NEVER, writePositiveValues ? 1 : 0, 0xFF); AssertNoOpenGlError();
+}
+
+void RcUseStencil_OpenGL(bool inverseMask)
+{
+	glEnable(GL_STENCIL_TEST); AssertNoOpenGlError();
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); AssertNoOpenGlError();
+	glDepthMask(GL_TRUE); AssertNoOpenGlError();
+	glStencilMask(0x00); AssertNoOpenGlError();
+	if (inverseMask)
+	{
+		glStencilFunc(GL_GREATER, 1, 0xFF); AssertNoOpenGlError();
+	}
+	else
+	{
+		glStencilFunc(GL_EQUAL, 1, 0xFF); AssertNoOpenGlError();
+	}
+}
+
+void RcDisableStencil_OpenGL()
+{
+	glDisable(GL_STENCIL_TEST);
+	AssertNoOpenGlError();
+}
+
 void RcBegin_OpenGL()
 {
 	NotNull(rc);
@@ -1391,6 +1429,67 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 		#endif
 		
 		default: DebugAssertMsg(false, "Unsupported render API in RcDrawBuffer!"); break;
+	}
+}
+
+void RcStartStencilDrawing()
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcStartStencilDrawing_OpenGL();
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcStartStencilDrawing!"); break;
+	}
+}
+void RcSetStencilPolarity(bool writePositiveValues)
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetStencilPolarity_OpenGL(writePositiveValues);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetStencilPolarity!"); break;
+	}
+}
+void RcUseStencil(bool inverseMask = false)
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcUseStencil_OpenGL(inverseMask);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcUseStencil!"); break;
+	}
+}
+void RcDisableStencil()
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcDisableStencil_OpenGL();
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcDisableStencil!"); break;
 	}
 }
 

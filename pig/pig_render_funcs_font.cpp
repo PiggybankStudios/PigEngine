@@ -117,6 +117,17 @@ TextMeasure_t RcMeasureText(const char* nulltermStr, r32 maxWidth = 0, FontFlowI
 	return RcMeasureText(NewStr(nulltermStr), maxWidth, infoOut);
 }
 
+rec RcGetTextRec(MyStr_t text, v2 position)
+{
+	TextMeasure_t measure = RcMeasureText(text);
+	return NewRec(
+		position.x - measure.offset.x,
+		position.y - measure.offset.y,
+		measure.size.width,
+		measure.size.height
+	);
+}
+
 void RcDrawText(const char* str, v2 position, Color_t color, TextAlignment_t alignment = TextAlignment_Left, r32 maxWidth = 0)
 {
 	NotNull(str);

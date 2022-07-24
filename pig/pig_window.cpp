@@ -16,7 +16,7 @@ PigWindowState_t* Pig_AddNewWindowState(const PlatWindow_t* window)
 	NotNull(newState);
 	ClearPointer(newState);
 	newState->windowId = window->id;
-	if (!CreateFrameBuffer(mainHeap, &newState->frameBuffer, window->input.contextResolution, window->options.create.antialiasingNumSamples))
+	if (!CreateFrameBuffer(mainHeap, &newState->frameBuffer, window->input.contextResolution, window->options.create.antialiasingNumSamples, false, FrameBufferChannel_All))
 	{
 		u64 windowIndex = GetItemIndexInLinkedList(platInfo->windows, window);
 		NotifyPrint_E("Failed to create frameBuffer for window[%llu] at resolution %dx%d: %s",
@@ -323,7 +323,7 @@ void Pig_UpdateWindowStates()
 				);
 				//TODO: Is there a better way to resize buffers without destroying and recreating?
 				DestroyFrameBuffer(&windowState->frameBuffer);
-				if (!CreateFrameBuffer(mainHeap, &windowState->frameBuffer, window->input.contextResolution, window->options.create.antialiasingNumSamples))
+				if (!CreateFrameBuffer(mainHeap, &windowState->frameBuffer, window->input.contextResolution, window->options.create.antialiasingNumSamples, false, FrameBufferChannel_All))
 				{
 					NotifyPrint_E("Failed to resize frameBuffer for window[%llu] at resolution %dx%d: %s", wIndex, window->input.contextResolution.width, window->input.contextResolution.height, PrintFrameBufferError(&windowState->frameBuffer));
 					DestroyFrameBuffer(&windowState->frameBuffer);
