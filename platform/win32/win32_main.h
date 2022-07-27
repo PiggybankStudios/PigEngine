@@ -12,11 +12,15 @@ Description:
 struct Win32PlatformState_t
 {
 	bool initialized;
+	bool exitRequested;
 	Version_t version;
 	
 	MemArena_t stdHeap;
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
+	#if BOX2D_SUPPORTED
+	MemArena_t box2dHeap;
+	#endif
 	PlatMutex_t threadSafeHeapMutex;
 	MemArena_t threadSafeHeap;
 	
@@ -116,7 +120,7 @@ struct Win32PlatformState_t
 	PlatAudioFormat_t audioFormat;
 	u64 audioFrameIndex;
 	PlatThread_t* audioThread;
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	u64 numAudioFrameDrops;
 	#endif
 	PlatMutex_t audioOutputMutex;

@@ -7,13 +7,13 @@ Description:
 */
 
 #if DEMO_BUILD
-#define ENGINE_DLL_NAME            "PigParts_Demo.dll"
-#define ENGINE_DLL_TEMP_NAME       "PigParts_Demo_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR "PigParts_Demo_TEMP_Reload%llu.dll"
+#define ENGINE_DLL_NAME            PROJECT_NAME "_Demo.dll"
+#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME "_Demo_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME "_Demo_TEMP_Reload%llu.dll"
 #else
-#define ENGINE_DLL_NAME            "PigParts.dll"
-#define ENGINE_DLL_TEMP_NAME       "PigParts_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR "PigParts_TEMP__Reload%llu.dll"
+#define ENGINE_DLL_NAME            PROJECT_NAME ".dll"
+#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME "_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME "_TEMP__Reload%llu.dll"
 #endif
 
 #define ENGINE_DLL_RELOAD_WAIT_TIME  400 //ms
@@ -178,7 +178,7 @@ void Win32_ReloadEngineDll(MyStr_t filePath, MyStr_t tempFormatStr, EngineDll_t*
 	MyMemCopy(engine, &newDll, sizeof(EngineDll_t));
 	
 	PrintLine_N("Calling PostReload on v%u.%02u(%03u)...", engine->version.major, engine->version.minor, engine->version.build);
-	engine->PostReload(&Platform->info, &Platform->api, &Platform->engineMemory, oldVersion);
+	engine->PostReload(&Platform->info, &Platform->api, &Platform->engineMemory, oldVersion, Win32_GetProgramTime(nullptr));
 	
 	TempPopMark();
 }

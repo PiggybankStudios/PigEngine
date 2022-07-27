@@ -15,12 +15,14 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->mainThreadId = plat->GetThisThreadId();
 	pig->renderApi = platInfo->renderApi;
 	pig->dllReloaded = false;
+	pig->reloadIndex = 1;
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
 	Assert(memory->persistentDataSize > sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_FixedHeap(&pig->fixedHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_PagedHeapFuncs(&pig->mainHeap, PIG_MAIN_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	TempPushMark();
@@ -30,11 +32,12 @@ void PigInitialize(EngineMemory_t* memory)
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
-	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"));
-	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"));
+	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"),  Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"), MonokaiGreen);
+	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"),  MonokaiOrange);
+	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"), MonokaiBlue);
+	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"),   Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap, NewStr("audioHeap"), MonokaiPurple);
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);
@@ -45,6 +48,12 @@ void PigInitialize(EngineMemory_t* memory)
 	PrintLine_N("|    Pig engine v%u.%02u(%03u)     |", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	WriteLine_N("+==============================+");
 	PrintLine_D("Running on %s", GetRenderApiStr(pig->renderApi));
+	
+	#if !DEBUG_BUILD && GYLIB_ASSERTIONS_ENABLED
+	bool isFolder = false;
+	plat->DoesFileExist(NewStr("Resources"), &isFolder);
+	AssertMsg(isFolder, "Failed to find Resources directory. Please make sure that the executable is next to the Resources folder!");
+	#endif
 	
 	SeedRand(11); //TODO: Get the timestamp and feed it in here!
 	PigInitGlad();
@@ -67,7 +76,9 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	RcLoadBasicResources();
 	Pig_InitResources();
-	Pig_LoadAllResources(); //TODO: Eventually we don't want to load ALL resources at startup 
+	GamePinResources();
+	Pig_LoadAllResources(!LOAD_ALL_RESOURCES_ON_STARTUP);
+	PigInitMusicSystem(&pig->musicSystem);
 	
 	// plat->DebugReadout(NewStr("Hello from Pig Engine!"), White, 1.0f);
 	#if 0
@@ -82,15 +93,25 @@ void PigInitialize(EngineMemory_t* memory)
 	}
 	#endif
 	
-	InPlaceNew(MyPhysRenderer_c, &pig->physRenderer); //TODO: Do we need this?
-	
-	GameInitAppGlobals(&pig->appGlobals);
+	plat->CreateMutex(&pig->volumeMutex);
+	pig->musicEnabled = true;
+	pig->soundsEnabled = true;
+	pig->masterVolume = 0.8f;
+	pig->musicVolume  = 1.0f;
+	pig->soundsVolume = 1.0f;
+	if (plat->GetProgramArg(nullptr, NewStr("mute"), nullptr)) { pig->masterVolume = 0.0f; }
+	if (plat->GetProgramArg(nullptr, NewStr("nomusic"), nullptr)) { pig->musicEnabled = false; }
+	if (plat->GetProgramArg(nullptr, NewStr("nosounds"), nullptr)) { pig->soundsEnabled = false; }
 	
 	// +==============================+
 	// |     Initialize AppState      |
 	// +==============================+
-	pig->currentAppState = INITIAL_APP_STATE;
-	InitializeAppState(pig->currentAppState);
+	GameInitAppGlobals(&pig->appGlobals);
+	GameAllocateAppStateStructs(&pig->appStateStructs);
+	GameUpdateGlobals();
+	Pig_InitializeAppStateStack();
+	PushAppState(INITIAL_APP_STATE);
+	Pig_HandleAppStateChanges(true);
 	
 	pig->initialized = true;
 	PerfTime_t initEndTime = plat->GetPerfTime();
@@ -122,14 +143,7 @@ void PigUpdateMainWindow()
 	UpdateDebugConsole(&pig->debugConsole);
 	Pig_HandleScreenshotHotkeys();
 	
-	if (pig->changeAppStateRequested)
-	{
-		DeinitializeAppState(pig->currentAppState);
-		InitializeAppState(pig->newAppState);
-		pig->currentAppState = pig->newAppState;
-		pig->newAppState = AppState_None;
-		pig->changeAppStateRequested = false;
-	}
+	Pig_HandleAppStateChanges(false);
 	UpdateAppState(pig->currentAppState);
 }
 
@@ -138,10 +152,11 @@ void PigUpdateMainWindow()
 // +--------------------------------------------------------------+
 void PigRenderDebugOverlays()
 {
-	RcBindShader(&pig->resources.mainShader2D);
+	RcBindShader(&pig->resources.shaders->main2D);
 	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 	RcSetViewMatrix(Mat4_Identity);
-	RcClearDepth(-1.0f);
+	RcClearDepth(1.0f);
+	RcSetDepth(0.0f);
 	
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);
@@ -191,6 +206,7 @@ void PigUpdate()
 	Pig_UpdateWindowStates();
 	Pig_UpdateInputBefore();
 	PigUpdateSounds();
+	PigUpdateMusicSystem(&pig->musicSystem);
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
 	PigUpdateMainWindow();
@@ -219,17 +235,38 @@ void PigUpdate()
 				}
 				else
 				{
-					RcBegin(window, renderBuffer, &pig->resources.mainShader2D, GetPredefPalColorByIndex(wIndex+4));
+					RcBegin(window, renderBuffer, &pig->resources.shaders->main2D, GetPredefPalColorByIndex(wIndex+4));
 				}
 				
 				if (renderBuffer != nullptr)
 				{
 					PrepareFrameBufferTexture(renderBuffer);
-					RcBegin(window, nullptr, &pig->resources.mainShader2D, PalPurpleDark);
+					RcBegin(window, nullptr, &pig->resources.shaders->main2D, PalPurpleDark);
 					RcBindTexture1(&renderBuffer->outTexture);
 					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
 				}
 				Pig_UpdateCaptureHandling(pig->currentWindow, pig->currentWindowState);
+				
+				if (pig->currentWindowState->recordingGif)
+				{
+					RcBindShader(&pig->resources.shaders->main2D);
+					RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+					RcSetViewMatrix(Mat4_Identity);
+					RcSetDepth(0.0f);
+					rec gifRecordingRec;
+					gifRecordingRec.size = pig->resources.textures->gifRecording.size;
+					gifRecordingRec.x = ScreenSize.width/2 - gifRecordingRec.width/2;
+					gifRecordingRec.y = 10;
+					RecAlign(&gifRecordingRec);
+					RcBindTexture1(&pig->resources.textures->gifRecording);
+					RcDrawTexturedRectangle(gifRecordingRec, White);
+					
+					RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+					i32 gifRecordTime = RoundR32i(pig->currentWindowState->gifFrames.count * (1000.0f / GIF_FRAMERATE));
+					v2 recordingTextPos = NewVec2(gifRecordingRec.x + gifRecordingRec.width/2, gifRecordingRec.y + gifRecordingRec.height + 5 + RcGetMaxAscend());
+					Vec2Align(&recordingTextPos);
+					RcDrawTextPrintEx(recordingTextPos, White, TextAlignment_Center, 0, "F4 to stop (%s)", FormatMillisecondsNt(gifRecordTime, TempArena));
+				}
 			}
 			window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
 		}
@@ -268,11 +305,14 @@ void PigPostReload(Version_t oldVersion)
 	UNUSED(oldVersion); //TODO: Remove me!
 	PigInitGlad();
 	pig->dllReloaded = true;
+	pig->reloadIndex++;
 	
 	NotifyPrint_N("Now running Pig DLL v%u.%02u(%03u)!", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	
+	Pig_HandleResourcesOnReload();
 	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
+	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
 	

@@ -194,11 +194,15 @@ void RcBindVertBuffer_OpenGL(const VertBuffer_t* buffer)
 		if (buffer->numIndices > 0) { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->glIndexId); AssertNoOpenGlError(); }
 		if (IsFlagSet(rc->state.boundVao->vertexType, VertexType_SlugBit))
 		{
+			#if SLUG_SUPPORTED
 			glVertexAttribPointer(0, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex),   nullptr); AssertNoOpenGlError();
 			glVertexAttribPointer(1, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)16); AssertNoOpenGlError();
 			glVertexAttribPointer(2, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)32); AssertNoOpenGlError();
 			glVertexAttribPointer(3, 4, GL_FLOAT,         false, sizeof(Terathon::Slug::Vertex), (char*)48); AssertNoOpenGlError();
 			glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, true,  sizeof(Terathon::Slug::Vertex), (char*)64); AssertNoOpenGlError();
+			#else
+			AssertMsg(false, "Slug support is not enabled but this vertex buffer is marked with VertexType_SlugBit");
+			#endif
 		}
 		else
 		{
@@ -534,6 +538,44 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 	AssertNoOpenGlError();
 }
 
+void RcStartStencilDrawing_OpenGL()
+{
+	glEnable(GL_STENCIL_TEST); AssertNoOpenGlError();
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); AssertNoOpenGlError(); //don't draw to the color buffer
+	glDepthMask(GL_FALSE); AssertNoOpenGlError(); //don't draw to the depth buffer
+	glStencilMask(0xFF); AssertNoOpenGlError();
+	glStencilFunc(GL_NEVER, 1, 0xFF); AssertNoOpenGlError();
+	glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP); AssertNoOpenGlError();
+}
+
+void RcSetStencilPolarity_OpenGL(bool writePositiveValues)
+{
+	// glStencilMask(writePositiveValues ? 0xFF : 0x00); AssertNoOpenGlError();
+	glStencilFunc(GL_NEVER, writePositiveValues ? 1 : 0, 0xFF); AssertNoOpenGlError();
+}
+
+void RcUseStencil_OpenGL(bool inverseMask)
+{
+	glEnable(GL_STENCIL_TEST); AssertNoOpenGlError();
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); AssertNoOpenGlError();
+	glDepthMask(GL_TRUE); AssertNoOpenGlError();
+	glStencilMask(0x00); AssertNoOpenGlError();
+	if (inverseMask)
+	{
+		glStencilFunc(GL_GREATER, 1, 0xFF); AssertNoOpenGlError();
+	}
+	else
+	{
+		glStencilFunc(GL_EQUAL, 1, 0xFF); AssertNoOpenGlError();
+	}
+}
+
+void RcDisableStencil_OpenGL()
+{
+	glDisable(GL_STENCIL_TEST);
+	AssertNoOpenGlError();
+}
+
 void RcBegin_OpenGL()
 {
 	NotNull(rc);
@@ -667,7 +709,7 @@ VertexArrayObject_t* RcGetVertexArrayObj(u64 windowId, VertexType_t vertexType)
 void RcBindShader(Shader_t* shader)
 {
 	NotNull(rc);
-	if (shader != nullptr && !shader->isValid) { DebugAssertMsg(false, "Trying to bind invalid shader!"); shader = &pig->resources.mainShader2D; }
+	if (shader != nullptr && !shader->isValid) { DebugAssertMsg(false, "Trying to bind invalid shader!"); shader = &pig->resources.shaders->main2D; }
 	if (shader != nullptr && !shader->isValid) { shader = nullptr; }
 	if (rc->state.boundShader == shader) { return; }
 	//TODO: Track the number of shader binds
@@ -973,6 +1015,23 @@ void RcSetCameraPosition(v3 cameraPos)
 void RcSetDepth(r32 depth)
 {
 	rc->state.depth = depth;
+}
+r32 RcGetRealDepth(r32 depth)
+{
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			return (-2.0f * depth) + 1.0f;
+		} break;
+		#endif
+		default: DebugAssertMsg(false, "Unsupported render API in RcGetRealDepth!"); return depth;
+	}
+}
+r32 RcGetRealDepth()
+{
+	return RcGetRealDepth(rc->state.depth);
 }
 
 void RcSetViewport(rec viewportRec, bool fakeScreenSpaceCoordinates = true)
@@ -1334,7 +1393,7 @@ void RcClearDepth(r32 depth)
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
-			RcClearDepth_OpenGL(depth);
+			RcClearDepth_OpenGL(RcGetRealDepth(depth));
 		} break;
 		#endif
 		
@@ -1370,6 +1429,67 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 		#endif
 		
 		default: DebugAssertMsg(false, "Unsupported render API in RcDrawBuffer!"); break;
+	}
+}
+
+void RcStartStencilDrawing()
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcStartStencilDrawing_OpenGL();
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcStartStencilDrawing!"); break;
+	}
+}
+void RcSetStencilPolarity(bool writePositiveValues)
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetStencilPolarity_OpenGL(writePositiveValues);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetStencilPolarity!"); break;
+	}
+}
+void RcUseStencil(bool inverseMask = false)
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcUseStencil_OpenGL(inverseMask);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcUseStencil!"); break;
+	}
+}
+void RcDisableStencil()
+{
+	NotNull(rc);
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcDisableStencil_OpenGL();
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcDisableStencil!"); break;
 	}
 }
 
@@ -1435,7 +1555,7 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	
 	rc->state.cameraPosition = Vec3_Zero;
 	
-	rc->state.depth = 1.0f;
+	rc->state.depth = clearDepth;
 	
 	rc->state.sourceRec1 = Rec_Default;
 	rc->state.sourceRec2 = Rec_Default;

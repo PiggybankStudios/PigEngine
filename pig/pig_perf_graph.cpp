@@ -47,7 +47,7 @@ void PigPerfGraphLayout(PigPerfGraph_t* graph)
 	graph->pauseBtnRec.y = graph->mainRec.y + PERF_GRAPH_PAUSE_LOCK_BTNS_MARGIN;
 	RecAlign(&graph->pauseBtnRec);
 	
-	RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+	RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 	graph->infoTextPos = NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + 2 + RcGetMaxAscend());
 	Vec2Align(&graph->infoTextPos);
 }
@@ -179,8 +179,8 @@ void RenderPigPerfGraph(PigPerfGraph_t* graph)
 {
 	NotNull(graph);
 	PigPerfGraphLayout(graph);
-	RcBindShader(&pig->resources.mainShader2D);
-	RcBindFont(&pig->resources.pixelFont, SelectFontFace(8));
+	RcBindShader(&pig->resources.shaders->main2D);
+	RcBindFont(&pig->resources.fonts->pixel, SelectFontFace(8));
 	
 	if (graph->enabled)
 	{
@@ -281,16 +281,16 @@ void RenderPigPerfGraph(PigPerfGraph_t* graph)
 		RcDrawRectangleOutline(graph->mainRec, MonokaiWhite, 1, true);
 		
 		MyStr_t lockIconFrame = (graph->lockedScale ? NewStr("LockIcon") : NewStr("UnlockIcon"));
-		RcBindSpriteSheet(&pig->resources.vectorIcons64);
+		RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 		RcDrawSheetFrame(lockIconFrame, graph->lockScaleBtnRec, ColorTransparent(MonokaiWhite, (IsMouseOverNamed("PerfGraphLockScaleBtn") ? 1.0f : 0.3f)));
 		
 		MyStr_t playIconFrame = (graph->paused ? NewStr("PlayIcon") : NewStr("PauseIcon"));
-		RcBindSpriteSheet(&pig->resources.vectorIcons64);
+		RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 		RcDrawSheetFrame(playIconFrame, graph->pauseBtnRec, ColorTransparent(MonokaiWhite, (IsMouseOverNamed("PerfGraphPauseBtn") ? 1.0f : 0.3f)));
 		
 		if (showingMsReadout)
 		{
-			RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 			RcDrawTextPrint(graph->infoTextPos, MonokaiWhite,
 				"CPU: %.2lfms Total: %.2lfms ProgramTime: %llu",
 				graph->updateMsValues[msReadoutIndex], graph->msValues[msReadoutIndex], graph->readoutProgramTimes[msReadoutIndex]

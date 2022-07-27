@@ -9,17 +9,18 @@ Description:
 #ifndef _PIG_DEFINES_H
 #define _PIG_DEFINES_H
 
-#define PIG_PERMANANT_MEM_SIZE     Kilobytes(1024)
-#define PIG_TEMP_ARENA_SIZE        Megabytes(16)
 #define PIG_MAIN_ARENA_PAGE_SIZE   Megabytes(1)
+#define PIG_AUDIO_ARENA_PAGE_SIZE  Kilobytes(128) //the pages will probably NOT be this size. Since audio takes LARGE continuous chunks.
 
-#define PIG_WINDOW_ALWAYS_ON_TOP        false
 #define SHOW_PERF_GRAPH_ON_STARTUP      false
 #define SHOW_MEM_GRAPH_ON_STARTUP       false
 #define SHOW_PIE_GRAPHS_ON_STARTUP      false
 #define SHOW_AUDIO_OUT_GRAPH_ON_STARTUP false
+#define SHOW_AUDIO_INSTANCES_ON_STARTUP false
 #define PAUSE_PERF_GRAPH_ONCE_FULL      false
 #define LOCK_PERF_GRAPH_SCALE           true
+
+#define LOAD_ALL_RESOURCES_ON_STARTUP   false
 
 #define DEBUG_OUTPUT_ENABLED   1
 #define REGULAR_OUTPUT_ENABLED 1
@@ -44,5 +45,8 @@ Description:
 
 #define PIG_DOUBLE_CLICK_TIME         400 //ms TODO: Does this need any tuning? Is there a common accepted value?
 #define PIG_DOUBLE_CLICK_MAX_DIST     5 //px TODO: Does this need any tuning? Is there a common accepted value?
+
+#define GIF_FRAMERATE  50   //fps
+#define MAX_GIF_SIZE   Gigabytes(1) //frames (1920x1080@50fps that's about 2.5 seconds, but can be like 40 seconds for small-ish sub-rects)
 
 #endif //  _PIG_DEFINES_H

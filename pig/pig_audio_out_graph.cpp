@@ -199,8 +199,8 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 	
 	if (graph->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()), White, "Scale %.3f -> %.3f (min %f)", graph->scale, graph->scaleGoto, graph->minScale);
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*2), White, "ViewCenter %.3f -> %.3f", graph->viewCenter, graph->viewCenterGoto);
@@ -241,8 +241,10 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 						sampleMax = MaxR64(pig->audioOutSamples[thisSampleIndex], sampleMax);
 					}
 				}
+				sampleMax = ConvertVolumeToLoudness(AbsR64(sampleMax)) * SignR64(sampleMax);
+				sampleMin = ConvertVolumeToLoudness(AbsR64(sampleMin)) * SignR64(sampleMin);
 				rec sampleBarRec = NewRec(graph->mainRec.x + (r32)pIndex, 0, 1, graph->mainRec.height);
-				sampleBarRec.height *= (r32)(sampleMax - sampleMin) / 2;
+				sampleBarRec.height *= ((r32)(sampleMax - sampleMin) / 2);
 				sampleBarRec.y = graph->mainRec.y + (graph->mainRec.height * (r32)(1 - (sampleMax + 1)/2));
 				RecAlign(&sampleBarRec);
 				RcDrawRectangle(sampleBarRec, MonokaiYellow);

@@ -75,6 +75,7 @@ struct PigMemGraphArena_t
 	u64 id;
 	MemArena_t* pntr;
 	MyStr_t name;
+	Color_t fillColor;
 	
 	VarArray_t pages; //PigMemGraphArenaPage_t
 	
@@ -116,6 +117,7 @@ struct PigDebugOverlay_t
 {
 	bool enabled;
 	bool debugReadoutsEnabled;
+	bool audioInstancesEnabled;
 	bool pieChartsEnabled;
 	bool easingFuncsEnabled;
 	bool controllerDebugEnabled;
@@ -136,40 +138,19 @@ struct PigDebugOverlay_t
 	rec totalToggleBtnsRec;
 	union
 	{
-		rec toggleBtnRecs[7];
+		rec toggleBtnRecs[8];
 		struct
 		{
 			rec toggleDebugReadoutBtnRec;
 			rec togglePerfGraphBtnRec;
 			rec toggleAudioGraphBtnRec;
+			rec toggleAudioInstancesBtnRec;
 			rec toggleMemGraphBtnRec;
 			rec togglePieChartsBtnRec;
 			rec toggleEasingFuncsBtnRec;
 			rec toggleContollerDebugBtnRec;
 		};
 	};
-};
-
-// +==============================+
-// |       MyPhysRenderer_c       |
-// +==============================+
-class MyPhysRenderer_c : q3Render
-{
-	private:
-	Color_t drawColor;
-	v3 drawPos;
-	v3 drawScale;
-	v3 drawNormal;
-	
-	public:
-	void SetPenColor(f32 r, f32 g, f32 b, f32 a = 1.0f) override;
-	void SetPenPosition(f32 x, f32 y, f32 z) override;
-	void SetScale(f32 sx, f32 sy, f32 sz) override;
-	void SetTriNormal(f32 x, f32 y, f32 z) override;
-	
-	void Point() override;
-	void Line(f32 x, f32 y, f32 z) override;
-	void Triangle(f32 x1, f32 y1, f32 z1, f32 x2, f32 y2, f32 z2, f32 x3, f32 y3, f32 z3) override;
 };
 
 enum XmlParsingError_t
@@ -282,6 +263,7 @@ struct SoundInstance_t
 	SoundInstanceType_t type;
 	SoundInstance_t* nextInstanceToStart;
 	
+	bool isMusic;
 	bool repeating;
 	r32 volume;
 	u64 numFrames; //frames
@@ -310,6 +292,41 @@ struct SoundInstanceHandle_t
 {
 	u64 id;
 	SoundInstance_t* instancePntr;
+};
+
+enum MusicFade_t
+{
+	MusicFade_None = 0,
+	MusicFade_Instant,
+	MusicFade_Step,
+	MusicFade_LinearCrossfade,
+	MusicFade_FadeOutThenIn,
+	MusicFade_FadeInThenOut,
+	MusicFade_PartialCrossFade,
+	MusicFade_NumTypes,
+};
+const char* GetMusicFadeStr(MusicFade_t musicFade)
+{
+	switch (musicFade)
+	{
+		case MusicFade_None:             return "None";
+		case MusicFade_Instant:          return "Instant";
+		case MusicFade_Step:             return "Step";
+		case MusicFade_LinearCrossfade:  return "LinearCrossfade";
+		case MusicFade_FadeOutThenIn:    return "FadeOutThenIn";
+		case MusicFade_FadeInThenOut:    return "FadeInThenOut";
+		case MusicFade_PartialCrossFade: return "PartialCrossFade";
+		default: return "Unknown";
+	}
+}
+
+struct MusicSystemState_t
+{
+	SoundInstanceHandle_t currentMusic;
+	SoundInstanceHandle_t previousMusic;
+	MusicFade_t currentFade;
+	r32 currentFadeDuration; //ms
+	r32 currentFadeProgress; //percent
 };
 
 struct PigNotification_t

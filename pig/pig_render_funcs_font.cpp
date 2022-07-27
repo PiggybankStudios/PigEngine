@@ -20,6 +20,10 @@ struct RcRenderTextWithColoredRegionCallbackContext_t
 // bool RcRenderTextWithColoredRegionBeforeCharCallback(u32 codepoint, const FontCharInfo_t* charInfo, rec logicalRec, rec renderRec, FontFlowState_t* state, void* context)
 FFCB_BEFORE_CHAR_DEFINITION(RcRenderTextWithColoredRegionBeforeCharCallback) // | RcRenderTextWithColoredRegionBeforeCharCallback |
 {
+	UNUSED(codepoint);
+	UNUSED(charInfo);
+	UNUSED(logicalRec);
+	UNUSED(renderRec);
 	NotNull(context);
 	RcRenderTextWithColoredRegionCallbackContext_t* contextPntr = (RcRenderTextWithColoredRegionCallbackContext_t*)context;
 	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
@@ -50,6 +54,9 @@ void RcRenderTextWithSelectionDrawSelectionRec(v2 startPos, v2 currentPos, Color
 // void RcRenderTextWithSelectionBetweenCharCallback(u64 byteIndex, u64 charIndex, v2 position, FontFlowState_t* state, void* context)
 FFCB_BETWEEN_CHAR_DEFINITION(RcRenderTextWithSelectionBetweenCharCallback) // | RcRenderTextWithSelectionBetweenCharCallback |
 {
+	UNUSED(byteIndex);
+	UNUSED(charIndex);
+	UNUSED(position);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (state->byteIndex >= contextPntr->startIndex && state->byteIndex < contextPntr->startIndex + contextPntr->numBytes)
@@ -72,6 +79,8 @@ FFCB_BETWEEN_CHAR_DEFINITION(RcRenderTextWithSelectionBetweenCharCallback) // | 
 // void RcRenderTextWithSelectionBeforeLineCallback(u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
 FFCB_BEFORE_LINE_DEFINITION(RcRenderTextWithSelectionBeforeLineCallback) // | RcRenderTextWithSelectionBeforeLineCallback |
 {
+	UNUSED(lineIndex);
+	UNUSED(byteIndex);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (contextPntr->insideSelection)
@@ -82,6 +91,8 @@ FFCB_BEFORE_LINE_DEFINITION(RcRenderTextWithSelectionBeforeLineCallback) // | Rc
 // void RcRenderTextWithSelectionAfterLineCallback(bool isLineWrap, u64 lineIndex, u64 byteIndex, FontFlowState_t* state, void* context)
 FFCB_AFTER_LINE_DEFINITION(RcRenderTextWithSelectionAfterLineCallback) // | RcRenderTextWithSelectionAfterLineCallback |
 {
+	UNUSED(isLineWrap);
+	UNUSED(lineIndex);
 	NotNull(context);
 	RcRenderTextWithSelectionCallbackContext_t* contextPntr = (RcRenderTextWithSelectionCallbackContext_t*)context;
 	if (contextPntr->insideSelection)
@@ -104,6 +115,17 @@ TextMeasure_t RcMeasureText(MyStr_t text, r32 maxWidth = 0, FontFlowInfo_t* info
 TextMeasure_t RcMeasureText(const char* nulltermStr, r32 maxWidth = 0, FontFlowInfo_t* infoOut = nullptr)
 {
 	return RcMeasureText(NewStr(nulltermStr), maxWidth, infoOut);
+}
+
+rec RcGetTextRec(MyStr_t text, v2 position)
+{
+	TextMeasure_t measure = RcMeasureText(text);
+	return NewRec(
+		position.x - measure.offset.x,
+		position.y - measure.offset.y,
+		measure.size.width,
+		measure.size.height
+	);
 }
 
 void RcDrawText(const char* str, v2 position, Color_t color, TextAlignment_t alignment = TextAlignment_Left, r32 maxWidth = 0)
@@ -240,7 +262,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 	if (IsInsideRec(rectangle, MousePos) && showPieceTextOnHover)
 	{
 		Shader_t* oldShader = rc->state.boundShader;
-		if (rc->state.boundShader != &pig->resources.mainShader2D) { RcBindShader(&pig->resources.mainShader2D); }
+		if (rc->state.boundShader != &pig->resources.shaders->main2D) { RcBindShader(&pig->resources.shaders->main2D); }
 		NotNull(rc->state.boundFont);
 		r32 mouseDistance = Vec2Length(MousePos - (rectangle.topLeft + rectangle.size/2));
 		if (mouseDistance < MinR32(rectangle.width, rectangle.height)/2)
@@ -263,7 +285,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 				anglePercentage += (r32)percentages[sIndex];
 			}
 		}
-		if (oldShader != &pig->resources.mainShader2D) { RcBindShader(oldShader); }
+		if (oldShader != &pig->resources.shaders->main2D) { RcBindShader(oldShader); }
 	}
 	TempPopMark();
 }

@@ -98,6 +98,73 @@ void CreateSoundFromWavAudioData(const WavAudioData_t* wavData, PlatAudioFormat_
 	}
 	Assert(sampleIndex == soundOut->numFrames * soundOut->format.numChannels);
 }
+void CreateSoundFromOggAudioData(const OggAudioData_t* oggData, PlatAudioFormat_t outFormat, Sound_t* soundOut, MemArena_t* memArena)
+{
+	AssertSingleThreaded(); //TODO: This doesn't have to be single threaded if we make the nextSoundId thread safe
+	NotNull(oggData);
+	NotNull(soundOut);
+	NotNull(memArena);
+	Assert(oggData->totalNumFrames > 0);
+	Assert((oggData->format.bitsPerSample % 8) == 0);
+	Assert((outFormat.bitsPerSample % 8) == 0);
+	
+	ClearPointer(soundOut);
+	soundOut->allocArena = memArena;
+	soundOut->id = pig->nextSoundId;
+	pig->nextSoundId++;
+	soundOut->format = outFormat;
+	soundOut->numFrames = oggData->totalNumFrames;
+	
+	u64 outFormatFrameSize = (outFormat.bitsPerSample/8) * outFormat.numChannels;
+	u64 oggDataFrameSize = (oggData->format.bitsPerSample/8) * oggData->format.numChannels;
+	Assert((oggData->samplesSize % oggDataFrameSize) == 0);
+	soundOut->dataSize = soundOut->numFrames * outFormatFrameSize;
+	soundOut->data = AllocMem(memArena, soundOut->dataSize);
+	NotNull(soundOut->data);
+	
+	const u8* samples = (const u8*)(oggData->samples);
+	if (oggData->format == outFormat)
+	{
+		Assert(oggData->samplesSize == soundOut->dataSize);
+		MyMemCopy(&soundOut->dataI8[0], samples, oggData->samplesSize);
+	}
+	else
+	{
+		if (outFormat.samplesPerSecond == oggData->format.samplesPerSecond)
+		{
+			for (u64 fIndex = 0; fIndex < oggData->totalNumFrames; fIndex++)
+			{
+				u64 inNumChannels = oggData->format.numChannels;
+				r64 inSamples[2];
+				for (u64 chIndex = 0; chIndex < inNumChannels; chIndex++)
+				{
+					switch (oggData->format.bitsPerSample)
+					{
+						case  8: { i8 sampleI8   = ((i8*)samples)[(fIndex * inNumChannels) + chIndex];  inSamples[chIndex] = ConvertSampleI8ToR64(sampleI8);   } break;
+						case 16: { i16 sampleI16 = ((i16*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ConvertSampleI16ToR64(sampleI16); } break;
+						case 32: { i32 sampleI32 = ((i32*)samples)[(fIndex * inNumChannels) + chIndex]; inSamples[chIndex] = ConvertSampleI32ToR64(sampleI32); } break;
+						default: Unimplemented(); break;
+					}
+				}
+				for (u64 chIndex = 0; chIndex < outFormat.numChannels; chIndex++)
+				{
+					switch (outFormat.bitsPerSample)
+					{
+						case 8:  { i8*  sampleI8  = &soundOut->dataI8[fIndex  * outFormat.numChannels + chIndex]; *sampleI8  = ConvertSampleR64ToI8(inSamples[chIndex  % inNumChannels]); } break;
+						case 16: { i16* sampleI16 = &soundOut->dataI16[fIndex * outFormat.numChannels + chIndex]; *sampleI16 = ConvertSampleR64ToI16(inSamples[chIndex % inNumChannels]); } break;
+						case 32: { i32* sampleI32 = &soundOut->dataI32[fIndex * outFormat.numChannels + chIndex]; *sampleI32 = ConvertSampleR64ToI32(inSamples[chIndex % inNumChannels]); } break;
+						default: Unimplemented(); break;
+					}
+				}
+			}
+		}
+		else
+		{
+			//We don't currently support transposing from one sample rate to another
+			Unimplemented(); //TODO: Implement me!
+		}
+	}
+}
 
 // +--------------------------------------------------------------+
 // |                        Initialization                        |
@@ -123,7 +190,7 @@ void PigUpdateSounds()
 	}
 }
 
-SoundInstance_t* NewSoundInstance(SoundInstanceType_t type)
+SoundInstance_t* NewSoundInstance(SoundInstanceType_t type, bool isMusic)
 {
 	AssertSingleThreaded();
 	SoundInstance_t* result = nullptr;
@@ -145,6 +212,7 @@ SoundInstance_t* NewSoundInstance(SoundInstanceType_t type)
 			result->id = pig->nextSoundInstanceId;
 			pig->nextSoundInstanceId++;
 			result->type = type;
+			result->isMusic = isMusic;
 			result->playing = false;
 			result->format = platInfo->audioFormat;
 			result->volume = 1.0f;
@@ -178,6 +246,35 @@ bool IsSoundInstanceHandleDonePlaying(SoundInstanceHandle_t handle)
 	return false;
 }
 #define SoundInstanceHandle_Empty NewSoundInstanceHandle(nullptr)
+
+void SetSoundVolume(SoundInstance_t* instance, r32 newVolume)
+{
+	NotNull(instance);
+	if (instance->playing && instance->volume != newVolume)
+	{
+		if (plat->LockMutex(&pig->soundInstancesMutex, MUTEX_LOCK_INFINITE))
+		{
+			instance->volume = newVolume;
+			plat->UnlockMutex(&pig->soundInstancesMutex);
+		}
+	}
+}
+
+void StopSoundInstance(SoundInstance_t* instance)
+{
+	if (instance != nullptr && instance->playing)
+	{
+		if (plat->LockMutex(&pig->soundInstancesMutex, MUTEX_LOCK_INFINITE))
+		{
+			instance->playing = false;
+			plat->UnlockMutex(&pig->soundInstancesMutex);
+		}
+	}
+}
+void StopSoundInstance(SoundInstanceHandle_t handle)
+{
+	StopSoundInstance(GetSoundInstanceFromHandle(handle));
+}
 
 void StartSoundInstance(SoundInstance_t* instance)
 {
@@ -243,10 +340,9 @@ SoundInstanceHandle_t PlaySineNote(SoundInstanceHandle_t soundToWaitFor, r32 vol
 	Assert(frequency > 0.0);
 	Assert(durationMs > 0);
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
-	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SineWave);
-	if (instance == nullptr) { return result; }
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SineWave, false);
+	if (instance == nullptr) { return SoundInstanceHandle_Empty; }
 	
 	instance->frequency = frequency;
 	instance->numFrames = (platInfo->audioFormat.samplesPerSecond * durationMs) / 1000ULL;
@@ -275,10 +371,9 @@ SoundInstanceHandle_t PlaySquareNote(r32 volume, r64 frequency, u64 durationMs,
 	Assert(frequency > 0.0);
 	Assert(durationMs > 0);
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
-	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SquareWave);
-	if (instance == nullptr) { return result; }
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SquareWave, false);
+	if (instance == nullptr) { return SoundInstanceHandle_Empty; }
 	
 	instance->frequency = frequency;
 	instance->numFrames = (platInfo->audioFormat.samplesPerSecond * durationMs) / 1000ULL;
@@ -299,10 +394,9 @@ SoundInstanceHandle_t PlaySawNote(r32 volume, r64 frequency, u64 durationMs,
 	Assert(frequency > 0.0);
 	Assert(durationMs > 0);
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
-	SoundInstanceHandle_t result = {};
 	
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SawWave);
-	if (instance == nullptr) { return result; }
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_SawWave, false);
+	if (instance == nullptr) { return SoundInstanceHandle_Empty; }
 	
 	instance->frequency = frequency;
 	instance->numFrames = (platInfo->audioFormat.samplesPerSecond * durationMs) / 1000ULL;
@@ -317,6 +411,7 @@ SoundInstanceHandle_t PlaySawNote(r32 volume, r64 frequency, u64 durationMs,
 	return NewSoundInstanceHandle(instance);
 }
 
+//TODO: Rename this because windows has PlaySound as a function name
 SoundInstanceHandle_t PlaySound(const Sound_t* sound, r32 volume,
 	u64 attackTime = 0, EasingStyle_t attackCurve = EasingStyle_None, u64 falloffTime = 0, EasingStyle_t falloffCurve = EasingStyle_None)
 {
@@ -325,9 +420,8 @@ SoundInstanceHandle_t PlaySound(const Sound_t* sound, r32 volume,
 	AssertIf(attackTime > 0, attackCurve != EasingStyle_None);
 	AssertIf(falloffTime > 0, falloffCurve != EasingStyle_None);
 	
-	SoundInstanceHandle_t result = {};
-	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_Samples);
-	if (instance == nullptr) { return result; }
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_Samples, false);
+	if (instance == nullptr) { return SoundInstanceHandle_Empty; }
 	
 	instance->numFrames = sound->numFrames;
 	instance->format = sound->format;
@@ -342,3 +436,29 @@ SoundInstanceHandle_t PlaySound(const Sound_t* sound, r32 volume,
 	
 	return NewSoundInstanceHandle(instance);
 }
+
+//TODO: This interface should probably be much better so we don't have 2 music instances at once and so we can do cross-fades and similar effects
+#if 0
+SoundInstanceHandle_t PlayMusic(const Sound_t* sound, r32 volume,
+	u64 attackTime = 0, EasingStyle_t attackCurve = EasingStyle_None)
+{
+	NotNull(sound);
+	NotNull(sound->data);
+	
+	SoundInstanceHandle_t result = {};
+	SoundInstance_t* instance = NewSoundInstance(SoundInstanceType_Samples, true);
+	if (instance == nullptr) { return result; }
+	
+	instance->repeating = true;
+	instance->numFrames = sound->numFrames;
+	instance->format = sound->format;
+	instance->sound = sound;
+	instance->volume = volume;
+	instance->attackTime = attackTime;
+	instance->attackCurve = attackCurve;
+	
+	StartSoundInstance(instance);
+	
+	return NewSoundInstanceHandle(instance);
+}
+#endif

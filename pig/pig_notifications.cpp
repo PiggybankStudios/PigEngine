@@ -9,7 +9,7 @@ Description:
 
 #define PIG_NOTIFICATIONS_ALPHA             0.7f
 #define PIG_NOTIFICATIONS_SHOW_ANIM_TIME    300 //ms
-#define PIG_NOTIFICATIONS_VOLUME            0.0f //0.1f
+#define PIG_NOTIFICATIONS_VOLUME            0.1f
 
 #define PIG_NOTIFICATIONS_MAX_WIDTH                 400 //px
 #define PIG_NOTIFICATIONS_MIN_HEIGHT                60 //px
@@ -141,7 +141,7 @@ PigNotification_t* PigPushNotificationPrint(PigNotificationQueue_t* queue, const
 void PigNotificationsLayout(PigNotificationQueue_t* queue)
 {
 	NotNull(queue);
-	RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
+	RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 	
 	queue->notificationsSize = Vec2_Zero;
 	for (u64 nIndex = 0; nIndex < PIG_MAX_NUM_NOTIFICATIONS; nIndex++)
@@ -280,7 +280,7 @@ void PigRenderNotifications(PigNotificationQueue_t* queue)
 	NotNull(queue);
 	PigNotificationsLayout(queue);
 	
-	RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
+	RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 	
 	// RcDrawRectangleOutline(queue->mainRec, White, 1, true);
 	
@@ -294,13 +294,13 @@ void PigRenderNotifications(PigNotificationQueue_t* queue)
 			v2 textPos = mainRec.topLeft + notification->textOffset;
 			Vec2Align(&textPos);
 			
-			RcSetDepth(0.01f);
+			// RcSetDepth(0.01f);
 			RcDrawRoundedRectangle(mainRec, PIG_NOTIFICATIONS_ROUNDED_RADIUS, ColorTransparent(Black, PIG_NOTIFICATIONS_ALPHA));
 			RcDrawText(notification->message, textPos, GetDbgLevelTextColor(notification->dbgLevel), TextAlignment_Left, PIG_NOTIFICATIONS_MAX_WIDTH);
 			
 			if (notification->repeatCount > 1)
 			{
-				RcSetDepth(0.00f);
+				// RcSetDepth(0.00f);
 				rec repeatCountRec = notification->repeatCountRec + notificationsBasePos;
 				v2 repeatCountTextPos = repeatCountRec.topLeft + notification->repeatCountTextOffset;
 				Vec2Align(&repeatCountTextPos);
@@ -309,5 +309,5 @@ void PigRenderNotifications(PigNotificationQueue_t* queue)
 			}
 		}
 	}
-	RcSetDepth(0);
+	// RcSetDepth(0);
 }

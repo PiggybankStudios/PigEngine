@@ -37,6 +37,7 @@ struct PigState_t
 	bool initialized;
 	bool firstUpdate;
 	bool dllReloaded;
+	u64 reloadIndex;
 	ThreadId_t mainThreadId;
 	
 	//Memory Arenas
@@ -45,18 +46,24 @@ struct PigState_t
 	MemArena_t mainHeap;
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
+	MemArena_t audioHeap;
 	
-	AppStateStructs_t appStates;
+	//AppStates
 	AppGlobals_t appGlobals;
+	AppStateStructs_t appStateStructs;
+	bool appStateInitialized[AppState_NumStates];
 	
-	AppState_t currentAppState;
-	bool changeAppStateRequested;
+	//AppState Stack
+	u64 appStateStackSize;
+	AppState_t appStateStack[MAX_APP_STATE_STACK_SIZE];
+	AppState_t currentAppState; //the one at the top of appStateStack
+	AppState_t thisAppState; //the one we are currently calling update/render/etc on
+	AppStateChange_t appStateChange;
 	AppState_t newAppState;
 	
 	//Rendering
 	RenderApi_t renderApi;
 	RenderContext_t renderContext;
-	MyPhysRenderer_c physRenderer;
 	
 	//IDs
 	u64 nextSoundId;
@@ -67,7 +74,7 @@ struct PigState_t
 	u64 nextVectorImgId;
 	u64 nextSpriteSheetId;
 	u64 nextUiId;
-	u64 nextWavAudioDataId;
+	u64 nextWavOggAudioDataId;
 	
 	//Resources
 	Resources_t resources;
@@ -83,7 +90,7 @@ struct PigState_t
 	u64 prevProgramTime;
 	BtnHandlingInfo_t keyHandled[Key_NumKeys];
 	BtnHandlingInfo_t mouseBtnHandled[MouseBtn_NumBtns];
-	BtnHandlingInfo_t controllerBtnHandled[ControllerBtn_NumBtns];
+	BtnHandlingInfo_t controllerBtnHandled[MAX_NUM_CONTROLLERS][ControllerBtn_NumBtns];
 	BtnHandlingInfo_t scrollXHandled;
 	BtnHandlingInfo_t scrollYHandled;
 	
@@ -103,6 +110,12 @@ struct PigState_t
 	r64 physicsSimTimeLastFrame;
 	
 	//Audio
+	PlatMutex_t volumeMutex;
+	bool musicEnabled;
+	bool soundsEnabled;
+	r32 masterVolume;
+	r32 musicVolume;
+	r32 soundsVolume;
 	PlatMutex_t soundInstancesMutex;
 	u64 nextSoundInstanceId;
 	SoundInstance_t soundInstances[PIG_MAX_SOUND_INSTANCES];
@@ -111,6 +124,8 @@ struct PigState_t
 	r64 audioOutSamples[PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH];
 	r64 audioMixerTime;
 	u64 numAudioClips;
+	
+	MusicSystemState_t musicSystem;
 };
 
 #endif //  _PIG_MAIN_H

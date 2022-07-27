@@ -21,8 +21,9 @@ void InitializePigDebugOverlay(PigDebugOverlay_t* overlay)
 {
 	NotNull(overlay);
 	ClearPointer(overlay);
-	overlay->enabled = (SHOW_PERF_GRAPH_ON_STARTUP || SHOW_MEM_GRAPH_ON_STARTUP || SHOW_PIE_GRAPHS_ON_STARTUP || SHOW_AUDIO_OUT_GRAPH_ON_STARTUP);
+	overlay->enabled = (SHOW_PERF_GRAPH_ON_STARTUP || SHOW_MEM_GRAPH_ON_STARTUP || SHOW_PIE_GRAPHS_ON_STARTUP || SHOW_AUDIO_OUT_GRAPH_ON_STARTUP || SHOW_AUDIO_INSTANCES_ON_STARTUP);
 	overlay->pieChartsEnabled = SHOW_PIE_GRAPHS_ON_STARTUP;
+	overlay->audioInstancesEnabled = (overlay->enabled ? SHOW_AUDIO_INSTANCES_ON_STARTUP : true);
 	overlay->perfGraphWasEnabled = true;
 }
 
@@ -88,10 +89,11 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 						case 0: overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   break; //toggleDebugReadoutBtnRec
 						case 1: pig->perfGraph.enabled          = !pig->perfGraph.enabled;          break; //togglePerfGraphBtnRec
 						case 2: pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      break; //toggleAudioGraphBtnRec
-						case 3: pig->memGraph.enabled           = !pig->memGraph.enabled;           break; //toggleMemGraphBtnRec
-						case 4: overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       break; //togglePieChartsBtnRec
-						case 5: overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     break; //toggleEasingFuncsBtnRec
-						case 6: overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; break; //toggleContollerDebugBtnRec
+						case 3: overlay->audioInstancesEnabled  = !overlay->audioInstancesEnabled;  break; //toggleAudioInstancesBtnRec
+						case 4: pig->memGraph.enabled           = !pig->memGraph.enabled;           break; //toggleMemGraphBtnRec
+						case 5: overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       break; //togglePieChartsBtnRec
+						case 6: overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     break; //toggleEasingFuncsBtnRec
+						case 7: overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; break; //toggleContollerDebugBtnRec
 						default: DebugAssert(false); break;
 					}
 				}
@@ -112,9 +114,9 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 			overlay->enabled = !overlay->enabled;
 			if (!overlay->enabled)
 			{
-				overlay->perfGraphWasEnabled     = pig->perfGraph.enabled;
-				overlay->memGraphWasEnabled      = pig->memGraph.enabled;
-				overlay->audioOutGraphWasEnabled = pig->audioOutGraph.enabled;
+				overlay->perfGraphWasEnabled      = pig->perfGraph.enabled;
+				overlay->memGraphWasEnabled       = pig->memGraph.enabled;
+				overlay->audioOutGraphWasEnabled  = pig->audioOutGraph.enabled;
 				pig->perfGraph.enabled     = false;
 				pig->audioOutGraph.enabled = false;
 				pig->memGraph.enabled      = false;
@@ -134,18 +136,20 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_1)) { HandleKey(Key_1); overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_2)) { HandleKey(Key_2); pig->perfGraph.enabled          = !pig->perfGraph.enabled;          overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_3)) { HandleKey(Key_3); pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_4)) { HandleKey(Key_4); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_5)) { HandleKey(Key_5); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_7)) { HandleKey(Key_7); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_4)) { HandleKey(Key_4); overlay->audioInstancesEnabled  = !overlay->audioInstancesEnabled;  overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_5)) { HandleKey(Key_5); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_7)) { HandleKey(Key_7); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_8)) { HandleKey(Key_8); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		
 		if (KeyPressed(Key_Num1)) { HandleKey(Key_Num1); overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_Num2)) { HandleKey(Key_Num2); pig->perfGraph.enabled          = !pig->perfGraph.enabled;          overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_Num3)) { HandleKey(Key_Num3); pig->audioOutGraph.enabled      = !pig->audioOutGraph.enabled;      overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_Num4)) { HandleKey(Key_Num4); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_Num5)) { HandleKey(Key_Num5); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_Num6)) { HandleKey(Key_Num6); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
-		if (KeyPressed(Key_Num7)) { HandleKey(Key_Num7); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num4)) { HandleKey(Key_Num4); overlay->audioInstancesEnabled  = !overlay->audioInstancesEnabled;  overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num5)) { HandleKey(Key_Num5); pig->memGraph.enabled           = !pig->memGraph.enabled;           overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num6)) { HandleKey(Key_Num6); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num7)) { HandleKey(Key_Num7); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num8)) { HandleKey(Key_Num8); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 	}
 	
 	// +==============================+
@@ -184,7 +188,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatControllerState_t* controller, rec drawRec)
 {
 	UNUSED(overlay);
-	RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+	RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 	
 	RcDrawRectangleOutline(drawRec, White, 1);
 	
@@ -240,7 +244,7 @@ void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatCon
 			}
 			// Color_t outlineColor = (btnState->numReleases > 0) ? MonokaiWhite : MonokaiGray1;
 			
-			RcBindSpriteSheet(&pig->resources.controllerBtnsSheet);
+			RcBindSpriteSheet(&pig->resources.sheets->controllerBtns);
 			RcDrawSheetFrame(btnFrame, btnRec, btnColor);
 			// RcDrawRectangleOutline(btnRec, outlineColor, 1);
 			// RcDrawRectangle(btnRec, btnColor);
@@ -296,8 +300,8 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 	
 	if (overlay->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		v2 textPos = NewVec2(10, 10);
 		if (pig->perfGraph.enabled) { textPos.y = pig->perfGraph.infoTextPos.y + 10; }
 		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
@@ -312,6 +316,16 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		// +==============================+
 		if (overlay->debugReadoutsEnabled)
 		{
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Engine v%u.%02u(%04u) Game v%u.%02u(%04u) %s v%u.%02u(%04u)",
+				ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD,
+				GAME_VERSION_MAJOR, GAME_VERSION_MINOR, GAME_VERSION_BUILD,
+				GetPlatTypeStr(platInfo->type), platInfo->version.major, platInfo->version.minor, platInfo->version.build
+			);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ScreenSize: %.0fx%.0f MousePos (%.0f, %.0f) TimeScale: %lf ElapsedMs: %lf", ScreenSize.width, ScreenSize.height, MousePos.x, MousePos.y, TimeScale, ElapsedMs);
+			textPos.y += stepY;
+			
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
 			textPos.y += stepY;
 			
@@ -321,7 +335,17 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
 			textPos.y += stepY;
 			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
+				"Timezone: %.*s %s%s",
+				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
+				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
+			);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, ((pig->focusedItemPntr != nullptr) ? MonokaiWhite : MonokaiGray1), backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Music Fade: %.0f%% %s", pig->musicSystem.currentFadeProgress*100, GetMusicFadeStr(pig->musicSystem.currentFade));
 			textPos.y += stepY;
 			
 			if (pig->mouseHit.priority > 0)
@@ -334,13 +358,6 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
 				textPos.y += stepY;
 			}
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
-				"Timezone: %.*s %s%s",
-				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
-				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
-			);
-			textPos.y += stepY;
 		}
 		
 		// +==============================+
@@ -348,6 +365,8 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		// +==============================+
 		if (overlay->easingFuncsEnabled)
 		{
+			r32 bottomOfAudioOutGraph = pig->audioOutGraph.mainRec.y + pig->audioOutGraph.mainRec.height + RcGetLineHeight() + 10;
+			if (pig->audioOutGraph.enabled && textPos.y < bottomOfAudioOutGraph) { textPos.y = bottomOfAudioOutGraph; }
 			rec baseGraphRec = NewRec(textPos + NewVec2(0, RcGetLineHeight()), 100, 100);
 			for (u64 eIndex = 1; eIndex < EasingStyle_NumStyles; eIndex++)
 			{
@@ -409,9 +428,9 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		// +==============================+
 		if (overlay->pieChartsEnabled)
 		{
-			RcBindShader(&pig->resources.pieChartShader);
+			RcBindShader(&pig->resources.shaders->pieChart);
 			
-			RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec + NewVec2(0, 8), Grey11);
 			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec, White, true);
 			
@@ -426,7 +445,75 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			
 			// RcDrawPieChartTest(NewRec(ScreenSize.width - 630, ScreenSize.height - 210, 200, 200));
 			
-			RcBindShader(&pig->resources.mainShader2D);
+			RcBindShader(&pig->resources.shaders->main2D);
+		}
+		
+		// +==============================+
+		// |    Render Audio Instances    |
+		// +==============================+
+		if (overlay->audioInstancesEnabled)
+		{
+			RcBindFont(&pig->resources.fonts->pixel, SelectDefaultFontFace());
+			rec baseProgressRec = NewRec(0, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + 5, 100, RcGetLineHeight());
+			baseProgressRec.x = (pig->audioOutGraph.enabled ? pig->audioOutGraph.mainRec.x : ScreenSize.width) - 10 - baseProgressRec.width;
+			RecAlign(&baseProgressRec);
+			for (u64 iIndex = 0; iIndex < PIG_MAX_SOUND_INSTANCES; iIndex++)
+			{
+				SoundInstance_t* instance = &pig->soundInstances[iIndex];
+				if (instance->playing && instance->sound != nullptr)
+				{
+					const Sound_t* soundPntr = instance->sound;
+					u64 foundIndex = 0;
+					ResourceType_t foundType = GetResourceByPntr(soundPntr, &foundIndex);
+					MyStr_t displayText = TempPrintStr("Unknown[%p]", soundPntr);
+					r32 progressRecWidth = baseProgressRec.width;
+					Color_t displayColor = MonokaiMagenta;
+					r32 soundDurationSecs = ((r32)soundPntr->numFrames / (r32)soundPntr->format.samplesPerSecond);
+					r32 currentTimeSecs = ((r32)instance->frameIndex / (r32)soundPntr->numFrames) * soundDurationSecs;
+					progressRecWidth = soundDurationSecs * 10;
+					if (progressRecWidth < 10) { progressRecWidth = 10; }
+					if (foundType == ResourceType_Music)
+					{
+						i32 totalMinutes = RoundR32i(soundDurationSecs) / 60;
+						i32 totalSeconds = RoundR32i(soundDurationSecs) % 60;
+						i32 totalHundredths = RoundR32i(DecimalPartR32(soundDurationSecs) * 100);
+						i32 currentMinutes = RoundR32i(currentTimeSecs) / 60;
+						i32 currentSeconds = RoundR32i(currentTimeSecs) % 60;
+						i32 currentHundredths = RoundR32i(DecimalPartR32(currentTimeSecs) * 100);
+						MyStr_t musicName = GetFileNamePart(NewStr(Resources_GetPathForMusic(foundIndex)));
+						displayText = TempPrintStr("(%d:%02d.%02d/%d:%02d.%02d) %.*s",
+							currentMinutes, currentSeconds, currentHundredths,
+							totalMinutes, totalSeconds, totalHundredths,
+							musicName.length, musicName.pntr
+						);
+						displayColor = MonokaiWhite;
+					}
+					else if (foundType == ResourceType_Sound)
+					{
+						displayText = GetFileNamePart(NewStr(Resources_GetPathForSound(foundIndex)));
+						displayColor = MonokaiLightBlue;
+					}
+					
+					rec progressTotalRec = baseProgressRec;
+					progressTotalRec.width = progressRecWidth;
+					progressTotalRec.x = baseProgressRec.x + baseProgressRec.width - progressTotalRec.width;
+					RecAlign(&progressTotalRec);
+					rec progressRec = progressTotalRec;
+					progressRec.width *= ((r32)instance->frameIndex / (r32)soundPntr->numFrames);
+					RecAlign(&progressRec);
+					v2 displayTextPos = NewVec2(progressTotalRec.x - 5, progressTotalRec.y + progressTotalRec.height/2 - RcGetLineHeight()/2 + RcGetMaxAscend());
+					Vec2Align(&displayTextPos);
+					r32 progressAlpha = LerpR32(0.3f, 1.0f, ConvertVolumeToLoudness(instance->volume));
+					if (instance->volume == 0) { progressAlpha = 0.0f; }
+					
+					RcDrawRectangle(RecInflate(progressTotalRec, 1, 1), displayColor);
+					RcDrawRectangle(progressTotalRec, Black);
+					RcDrawRectangle(progressRec, ColorTransparent(displayColor, progressAlpha));
+					RcDrawText(displayText, displayTextPos, displayColor, TextAlignment_Right);
+					
+					baseProgressRec.y = progressTotalRec.y + progressTotalRec.height + 5;
+				}
+			}
 		}
 	}
 	
@@ -447,10 +534,11 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				case 0: enabled = overlay->debugReadoutsEnabled;   btnColor = MonokaiLightGray; break;
 				case 1: enabled = pig->perfGraph.enabled;          btnColor = MonokaiYellow;    break;
 				case 2: enabled = pig->audioOutGraph.enabled;      btnColor = MonokaiBlue;      break;
-				case 3: enabled = pig->memGraph.enabled;           btnColor = MonokaiOrange;    break;
-				case 4: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
-				case 5: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
-				case 6: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
+				case 3: enabled = overlay->audioInstancesEnabled;  btnColor = MonokaiPurple;    break;
+				case 4: enabled = pig->memGraph.enabled;           btnColor = MonokaiOrange;    break;
+				case 5: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
+				case 6: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
+				case 7: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
 				default: DebugAssert(false);
 			}
 			Color_t outlineColor = Transparent;
@@ -476,12 +564,13 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (IsMouseOverNamed("DebugOverlayToggleBtn0")) { displayText = NewStr("Debug Readouts"); }
 		if (IsMouseOverNamed("DebugOverlayToggleBtn1")) { displayText = NewStr("Perf Graph"); }
 		if (IsMouseOverNamed("DebugOverlayToggleBtn2")) { displayText = NewStr("Audio Graph"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn3")) { displayText = NewStr("Memory Graph"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn4")) { displayText = NewStr("Pie Charts"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Easing Functions"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Controller Debug"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn3")) { displayText = NewStr("Audio Instances"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn4")) { displayText = NewStr("Memory Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Pie Charts"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Easing Functions"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn7")) { displayText = NewStr("Controller Debug"); }
 		
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12, true));
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12, true));
 		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
 		Vec2Align(&textPos, 2);
 		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);

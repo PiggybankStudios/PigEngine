@@ -8,7 +8,7 @@ Description:
 */
 
 #define AUDIO_OUT_GRAPH_WIDTH 400 //px
-#define AUDIO_OUT_GRAPH_HEIGHT 100 //px
+#define AUDIO_OUT_GRAPH_HEIGHT 400 //px
 
 #define AUDIO_OUT_GRAPH_SCROLL_SPEED     0.2f //scale (px/sample)
 #define AUDIO_OUT_GRAPH_MAX_SCALE        20 //px/sample
@@ -208,10 +208,10 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 	
 	if (graph->enabled)
 	{
-		RcBindShader(&pig->resources.mainShader2D);
-		RcBindFont(&pig->resources.debugFont, SelectFontFace(12));
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
 		
-		#if DEBUG_BUILD
+		#if DEVELOPER_BUILD
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*1), White, "Mixer %.2lfms (drops %llu clips %llu)", pig->audioMixerTime, pigIn->numAudioFrameDrops, pig->numAudioClips);
 		#else
 		RcDrawTextPrint(NewVec2(graph->mainRec.x, graph->mainRec.y + graph->mainRec.height + RcGetLineHeight()*1), White, "Mixer %.2lfms", pig->audioMixerTime);
@@ -255,6 +255,8 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 						sampleMax = MaxR64(pig->audioOutSamples[thisSampleIndex], sampleMax);
 					}
 				}
+				sampleMax = ConvertVolumeToLoudness(AbsR64(sampleMax)) * SignOfR64(sampleMax);
+				sampleMin = ConvertVolumeToLoudness(AbsR64(sampleMin)) * SignOfR64(sampleMin);
 				rec sampleBarRec = NewRec(graph->mainRec.x + (r32)pIndex, 0, 1, graph->mainRec.height);
 				sampleBarRec.height *= (r32)(sampleMax - sampleMin) / 2;
 				sampleBarRec.y = graph->mainRec.y + (graph->mainRec.height * (r32)(1 - (sampleMax + 1)/2));
@@ -274,6 +276,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 				{
 					sampleValue = pig->audioOutSamples[sampleIndex];
 				}
+				sampleValue = ConvertVolumeToLoudness(AbsR64(sampleValue)) * SignOfR64(sampleValue);
 				
 				r64 sampleNormalizedIndex = ((r64)sampleIndex / (r64)PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH);
 				v2 samplePos = NewVec2(
@@ -310,7 +313,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 		{
 			Color_t btnColor = ColorTransparent(White, (IsMouseOverNamed("AudioOutGraphPauseBtn") ? 1.0f : 0.5f));
 			MyStr_t pauseIconFrame = (graph->paused ? NewStr("PlayIcon") : NewStr("PauseIcon"));
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(pauseIconFrame, graph->pauseBtnRec, btnColor);
 		}
 		
@@ -320,7 +323,7 @@ void RenderPigAudioOutGraph(PigAudioOutGraph_t* graph)
 		if (graph->viewCenterGoto != 0.5f || graph->scaleGoto != graph->minScale)
 		{
 			Color_t btnColor = ColorTransparent(White, (IsMouseOverNamed("AudioOutGraphResetViewBtn") ? 1.0f : 0.5f));
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(NewStr("ResetIcon"), graph->resetViewBtnRec, btnColor);
 		}
 	}

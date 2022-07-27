@@ -670,7 +670,7 @@ void Win32_LoadWindowIcon(PlatWindow_t* window, u64 numIconFiles, MyStr_t* iconF
 			}
 			else
 			{
-				DebugAssertMsg(false, "Failed to load one of the icons that was requested by the application");
+				DebugAssertMsg(false, "Failed to load one of the icons that was requested by the application. Make sure the .exe is next to the Resources folder or use -w command line option to load resources from the working directory.");
 			}
 		}
 		

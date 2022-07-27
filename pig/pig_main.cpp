@@ -17,21 +17,20 @@ Description:
 #endif
 #include "common_includes.h"
 
-#define Q3_NO_STDLIB
-#include "qu3e/src/q3.h"
-
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
 
+#if SLUG_SUPPORTED
 // #define TERATHON_NO_SYSTEM
 // #define SLUG_WINDOWS
 // #define SLUG_D3D11
 // #define SLUG_DEBUG
 #include "slug/SlugCode/SLSlug.h"
 #include "slug/TerathonCode/TSCompression.h"
+#endif
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
@@ -45,14 +44,18 @@ Description:
 #include "pig/pig_slug.h"
 #include "pig/pig_render_context.h"
 #include "pig/pig_resources.h"
+#include "pig/pig_particles.h"
 #include "pig/pig_input.h"
 #include "pig/pig_textbox.h"
+#include "pig/pig_value_slider.h"
+#include "pig/pig_checkbox.h"
 #include "pig/pig_debug_commands.h"
 #include "pig/pig_debug_console.h"
 #include "pig/pig_tasks.h"
 
 #include "game_main.h"
 
+#include "pig/pig_app_states.h"
 #include "pig/pig_main.h"
 
 // +--------------------------------------------------------------+
@@ -103,6 +106,7 @@ static       v2               ScreenSize     = {};
 
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_wav.cpp"
+#include "pig/pig_ogg.cpp"
 #include "pig/pig_vertex_buffer.cpp"
 #include "pig/pig_shader.cpp"
 #include "pig/pig_texture.cpp"
@@ -115,11 +119,12 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_slug.cpp"
 #include "pig/pig_model_obj.cpp"
 #include "pig/pig_model.cpp"
+#include "pig/pig_sounds.cpp"
+#include "pig/pig_music.cpp"
 #include "pig/pig_resources.cpp"
 
 #include "pig/pig_input.cpp"
 #include "pig/pig_window.cpp"
-#include "pig/pig_sounds.cpp"
 
 #include "pig/pig_render.cpp"
 #include "pig/pig_slug_render.cpp"
@@ -127,8 +132,12 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_font_flow.cpp"
 #include "pig/pig_render_funcs_3d.cpp"
 #include "pig/pig_render_funcs_font.cpp"
-#include "pig/pig_phys_debug_render.cpp"
+#include "pig/pig_particle_serialization.cpp"
+#include "pig/pig_particles.cpp"
+#include "pig/pig_particles_collection.cpp"
 #include "pig/pig_textbox.cpp"
+#include "pig/pig_value_slider.cpp"
+#include "pig/pig_checkbox.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"
@@ -136,6 +145,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_mem_graph.cpp"
 #include "pig/pig_audio_debug.cpp"
 #include "pig/pig_debug_overlay.cpp"
+#include "pig/pig_app_states.cpp"
 
 #include "pig/pig_tasks.cpp"
 
@@ -258,10 +268,11 @@ PIG_PRE_RELOAD_DEF(Pig_PreReload)
 // +==============================+
 // |        Pig_PostReload        |
 // +==============================+
-// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion)
+// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime)
 PIG_POST_RELOAD_DEF(Pig_PostReload)
 {
 	PigEntryPoint(PigEntryPoint_PostReload, info, api, memory, nullptr, nullptr);
+	ProgramTime = programTime;
 	PigPostReload(oldVersion);
 	PigExitPoint(PigEntryPoint_PostReload);
 }

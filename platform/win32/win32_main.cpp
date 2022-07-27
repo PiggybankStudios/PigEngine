@@ -17,6 +17,7 @@ Description:
 #include "win32/win32_types.h"
 #include "win32/win32_main.h"
 #include "win32/win32_controller_types.h"
+#include "win32/win32_box2d.h"
 
 #include <float.h>
 #include "gylib/gy_test_floatscan.h"
@@ -67,6 +68,13 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "stb/stb_image_write.h"
 
 // +--------------------------------------------------------------+
+// |                         Box2D Source                         |
+// +--------------------------------------------------------------+
+#if BOX2D_SUPPORTED
+#include "b2_files.cpp"
+#endif
+
+// +--------------------------------------------------------------+
 // |                         GLAD Source                          |
 // +--------------------------------------------------------------+
 #include "glad/glad.c"
@@ -86,6 +94,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_files.cpp"
 #include "win32/win32_file_watching.cpp"
 #include "win32/win32_dll_loading.cpp"
+#include "win32/win32_box2d.cpp"
 #include "win32/win32_audio.cpp"
 #include "win32/win32_clipboard.cpp"
 #include "win32/win32_input.cpp"
@@ -395,7 +404,9 @@ int main(int argc, char* argv[])
 	// +--------------------------------------------------------------+
 	TempPopMark();
 	InitPhase = Win32InitPhase_DoingFirstUpdate;
-	while (Platform->mainWindow->handle != nullptr && glfwWindowShouldClose(Platform->mainWindow->handle) == false)
+	while (Platform->mainWindow->handle != nullptr &&
+		!glfwWindowShouldClose(Platform->mainWindow->handle) &&
+		!Platform->exitRequested)
 	{
 		Win32_DoMainLoopIteration(true);
 	}
@@ -451,7 +462,7 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
-	#if DEBUG_BUILD
+	#if DEVELOPER_BUILD
 	Platform->engineInput.numAudioFrameDrops = Platform->numAudioFrameDrops;
 	#endif
 	Win32_ClearEngineOutput(&Platform->engineOutput);

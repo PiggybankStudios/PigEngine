@@ -123,6 +123,10 @@ const char* PigDebugCommandInfoStrs[] = {
 	"help", "Displays this list of commands", "{command}", "\n",
 	"break", "Runs MyDebugBreak", "\n",
 	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
+	"reload", "Reloads a specific resource", "[resource_name]", "{resource_type}", "\n",
+	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
+	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
+	"mute", "Sets Master Volume to 0 (or disables music or sounds if argument is passed)", "{music/sounds}", "\n",
 	// "template", "description", "\n",
 };
 DebugCommandInfoList_t PigGetDebugCommandInfoList()
@@ -135,6 +139,7 @@ DebugCommandInfoList_t PigGetDebugCommandInfoList()
 // +--------------------------------------------------------------+
 bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr)
 {
+	UNUSED(fullInputStr);
 	bool validCommand = true;
 	
 	// +==============================+
@@ -202,9 +207,205 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			DebugPrintArenaInfo(&pig->tempArena, "TempArena");
 		}
+		else if (StrCompareIgnoreCase(arguments[0], "Audio") == 0 || StrCompareIgnoreCase(arguments[0], "AudioHeap") == 0)
+		{
+			DebugPrintArenaInfo(&pig->audioHeap, "AudioHeap");
+		}
 		else 
 		{
 			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+		}
+	}
+	
+	// +==============================+
+	// |            reload            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "reload") == 0)
+	{
+		if (numArguments < 1 || numArguments > 2) { PrintLine_E("reload takes 1 or 2 arguments, not %llu", numArguments); return validCommand; }
+		
+		MyStr_t targetName = arguments[0];
+		
+		if (StrCompareIgnoreCase(targetName, "all") == 0)
+		{
+			WriteLine_I("Reloading all resources...");
+			Pig_LoadAllResources();
+			return validCommand;
+		}
+		
+		ResourceType_t targetType = ResourceType_None;
+		if (numArguments >= 2)
+		{
+			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+			{
+				if (StrCompareIgnoreCase(arguments[1], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				{
+					targetType = (ResourceType_t)tIndex;
+					break;
+				}
+			}
+			if (targetType == ResourceType_None)
+			{
+				PrintLine_E("Unknown resource type given for argument 2: \"%.*s\"", arguments[1].length, arguments[1].pntr);
+				return validCommand;
+			}
+		}
+		
+		bool foundResource = false;
+		for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+		{
+			ResourceType_t type = (ResourceType_t)tIndex;
+			if (type != ResourceType_None && (targetType == ResourceType_None || targetType == type))
+			{
+				u64 numOfType = GetNumResourcesOfType(type);
+				for (u64 rIndex = 0; rIndex < numOfType; rIndex++)
+				{
+					const char* resourcePath = GetPathOrNameForResource(type, rIndex);
+					MyStr_t resourceName = GetFileNamePart(NewStr(resourcePath));
+					if (StrCompareIgnoreCase(resourceName, targetName) == 0)
+					{
+						PrintLine_I("Reloading %s[%llu]...", GetResourceTypeStr(type), rIndex);
+						Pig_LoadResource(type, rIndex);
+						foundResource = true;
+						break;
+					}
+				}
+				if (foundResource) { break; }
+			}
+		}
+		
+		if (!foundResource)
+		{
+			PrintLine_E("Unknown resource name \"%.*s\" for %s resource", targetName.length, targetName.pntr, (targetType == ResourceType_None ? "Any" : GetResourceTypeStr(targetType)));
+		}
+	}
+	
+	// +==============================+
+	// |          resources           |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "resources") == 0)
+	{
+		if (numArguments > 1) { PrintLine_E("resources takes 1 argument, not %llu", numArguments); return validCommand; }
+		
+		ResourceType_t targetType = ResourceType_None;
+		if (numArguments >= 1)
+		{
+			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+			{
+				if (StrCompareIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				{
+					targetType = (ResourceType_t)tIndex;
+					break;
+				}
+			}
+			if (targetType == ResourceType_None)
+			{
+				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+				return validCommand;
+			}
+		}
+		
+		for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+		{
+			ResourceType_t type = (ResourceType_t)tIndex;
+			if (type != ResourceType_None && (targetType == ResourceType_None || targetType == type))
+			{
+				u64 numOfType = GetNumResourcesOfType(type);
+				PrintLine_N("%llu %s Resources:", numOfType, GetResourceTypeStr(type));
+				for (u64 rIndex = 0; rIndex < numOfType; rIndex++)
+				{
+					const char* resourcePath = GetPathOrNameForResource(type, rIndex);
+					MyStr_t resourceName = GetFileNamePart(NewStr(resourcePath));
+					ResourceStatus_t* status = GetResourceStatus(type, rIndex);
+					NotNull(status);
+					DbgLevel_t dbgLevel = DbgLevel_Debug;
+					if (status->state == ResourceState_Error) { dbgLevel = DbgLevel_Error; }
+					else if (status->state == ResourceState_Warning) { dbgLevel = DbgLevel_Warning; }
+					else if (status->state == ResourceState_Loaded) { dbgLevel = DbgLevel_Info; }
+					PrintLineAt(dbgLevel, "%s[%llu]: \"%.*s\"", GetResourceTypeStr(type), rIndex, resourceName.length, resourceName.pntr);
+				}
+			}
+		}
+	}
+	
+	// +==============================+
+	// |           watches            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "watches") == 0)
+	{
+		#if DEVELOPER_BUILD
+		if (numArguments > 1) { PrintLine_E("watches takes 1 argument, not %llu", numArguments); return validCommand; }
+		
+		ResourceType_t targetType = ResourceType_None;
+		if (numArguments >= 1)
+		{
+			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
+			{
+				if (StrCompareIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				{
+					targetType = (ResourceType_t)tIndex;
+					break;
+				}
+			}
+			if (targetType == ResourceType_None)
+			{
+				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+				return validCommand;
+			}
+		}
+		
+		PrintLine_N("There are %llu watches active", pig->resources.watches.length);
+		VarArrayLoop(&pig->resources.watches, wIndex)
+		{
+			VarArrayLoopGet(ResourceWatch_t, watch, &pig->resources.watches, wIndex);
+			if (targetType == watch->type || targetType == ResourceType_None)
+			{
+				bool doesFileExist = plat->DoesFileExist(watch->watchedFile->path, nullptr);
+				PrintLineAt(doesFileExist ? DbgLevel_Info : DbgLevel_Warning, "\t%s[%llu]: \"%.*s\"", GetResourceTypeStr(watch->type), watch->resourceIndex, watch->watchedFile->path.length, watch->watchedFile->path.pntr);
+			}
+		}
+		#else //DEVELOPER_MODE
+		WriteLine_E("This application is not compiled in DEVELOPER_MODE so we aren't watching any files");
+		#endif
+	}
+	
+	// +==============================+
+	// |             mute             |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "mute") == 0)
+	{
+		if (numArguments > 1) { PrintLine_E("mute takes 0 or 1 argument, not %llu", numArguments); return validCommand; }
+		
+		if (numArguments >= 1 && StrCompareIgnoreCase(arguments[0], "music") == 0)
+		{
+			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
+			{
+				pig->musicEnabled = !pig->musicEnabled;
+				plat->UnlockMutex(&pig->volumeMutex);
+				PrintLine_I("Music %s", pig->musicEnabled ? "Enabled" : "Disabled");
+			}
+		}
+		else if (numArguments >= 1 && StrCompareIgnoreCase(arguments[0], "sounds") == 0)
+		{
+			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
+			{
+				pig->soundsEnabled = !pig->soundsEnabled;
+				plat->UnlockMutex(&pig->volumeMutex);
+				PrintLine_I("Sounds %s", pig->soundsEnabled ? "Enabled" : "Disabled");
+			}
+		}
+		else if (numArguments == 0)
+		{
+			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
+			{
+				pig->masterVolume = (pig->masterVolume == 0) ? 0.8f : 0.0f;
+				plat->UnlockMutex(&pig->volumeMutex);
+				PrintLine_I("Master Volume = %.0f", pig->masterVolume*100);
+			}
+		}
+		else
+		{
+			PrintLine_E("Unknown argument \"%.*s\"! Known values: \"music\", \"sounds\"", arguments[0].length, arguments[0].pntr);
 		}
 	}
 	

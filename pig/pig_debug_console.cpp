@@ -523,7 +523,7 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	console->mainRec.height *= EaseQuadraticInOut(console->openAmount);
 	RecAlign(&console->mainRec);
 	
-	TextMeasure_t inputLabelMeasure = MeasureTextInFont(DBG_CONSOLE_INPUT_LABEL_STR, &pig->resources.debugFont, SelectDefaultFontFace());
+	TextMeasure_t inputLabelMeasure = MeasureTextInFont(DBG_CONSOLE_INPUT_LABEL_STR, &pig->resources.fonts->debug, SelectDefaultFontFace());
 	console->inputLabelRec.size = inputLabelMeasure.size;
 	
 	console->inputRec.height = console->inputTextbox.mainRec.height;
@@ -566,7 +566,7 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	RecAlign(&console->viewUsableRec);
 	
 	const char* currentJumpToEndStr = (console->overlayMode ? DBG_CONSOLE_REFOCUS_STR : DBG_CONSOLE_JUMP_TO_END_STR);
-	TextMeasure_t jumpToEndBtnTextMeasure = MeasureTextInFont(currentJumpToEndStr, &pig->resources.debugFont, SelectDefaultFontFace());
+	TextMeasure_t jumpToEndBtnTextMeasure = MeasureTextInFont(currentJumpToEndStr, &pig->resources.fonts->debug, SelectDefaultFontFace());
 	console->jumpToEndBtnRec.size = jumpToEndBtnTextMeasure.size;
 	bool shouldBtnBeShiftedRight = (console->fileNameGutterEnabled && console->funcNameGutterEnabled);
 	RecLayoutHorizontalCenter(&console->jumpToEndBtnRec, console->viewRec, (shouldBtnBeShiftedRight ? 0.75f : 0.5f));
@@ -643,9 +643,9 @@ void DebugConsoleLineLayout(DebugConsole_t* console, StringFifoLine_t* fifoLine,
 	MyStr_t fileLineNumberStr = TempPrintStr("%llu", dbgLine->fileLineNumber);
 	MyStr_t gutterNumberStr = TempPrintStr("%u", fifoLine->lineNumber);
 	
-	FontFace_t* fontFace = GetFontFace(&pig->resources.debugFont, SelectDefaultFontFace());
+	FontFace_t* fontFace = GetFontFace(&pig->resources.fonts->debug, SelectDefaultFontFace());
 	NotNull_(fontFace);
-	TextMeasure_t textMeasure = MeasureTextInFont(text, &pig->resources.debugFont, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width);
+	TextMeasure_t textMeasure = MeasureTextInFont(text, &pig->resources.fonts->debug, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width);
 	if (textMeasure.size.height < fontFace->lineHeight)
 	{
 		r32 changeAmount = (fontFace->lineHeight - textMeasure.size.height);
@@ -654,10 +654,10 @@ void DebugConsoleLineLayout(DebugConsole_t* console, StringFifoLine_t* fifoLine,
 	}
 	
 	dbgLine->textSize        = textMeasure.size;
-	dbgLine->fileNameSize    = MeasureTextInFont(fileName,          &pig->resources.debugFont, SelectDefaultFontFace()).size;
-	dbgLine->funcNameSize    = MeasureTextInFont(funcName,          &pig->resources.debugFont, SelectDefaultFontFace()).size;
-	dbgLine->fileLineNumSize = MeasureTextInFont(fileLineNumberStr, &pig->resources.debugFont, SelectDefaultFontFace()).size;
-	dbgLine->gutterNumSize   = MeasureTextInFont(gutterNumberStr,   &pig->resources.debugFont, SelectDefaultFontFace()).size;
+	dbgLine->fileNameSize    = MeasureTextInFont(fileName,          &pig->resources.fonts->debug, SelectDefaultFontFace()).size;
+	dbgLine->funcNameSize    = MeasureTextInFont(funcName,          &pig->resources.fonts->debug, SelectDefaultFontFace()).size;
+	dbgLine->fileLineNumSize = MeasureTextInFont(fileLineNumberStr, &pig->resources.fonts->debug, SelectDefaultFontFace()).size;
+	dbgLine->gutterNumSize   = MeasureTextInFont(gutterNumberStr,   &pig->resources.fonts->debug, SelectDefaultFontFace()).size;
 	
 	dbgLine->textPos = NewVec2(0, textMeasure.offset.y);
 	dbgLine->mainRec.size = dbgLine->textSize;
@@ -719,7 +719,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	bool openKeyWasPressed = KeyPressed(DBG_CONSOLE_OPEN_KEY);
 	if (openKeyWasPressed) { HandleKeyExtended(DBG_CONSOLE_OPEN_KEY); }
 	bool escapeKeyWasPressed = KeyPressed(Key_Escape);
-	if (escapeKeyWasPressed) { HandleKeyExtended(Key_Escape); }
+	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode) { HandleKeyExtended(Key_Escape); }
 	
 	// +==============================+
 	// |     Update Input Textbox     |
@@ -1083,7 +1083,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				flowCallbacks.betweenChar = DebugConsoleFindMouseHoverIndexCallback;
 				
 				FontFlowInfo_t flowInfo = {};
-				TextMeasure_t measure = MeasureTextInFont(text, &pig->resources.debugFont, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width, &flowInfo, &flowCallbacks);
+				TextMeasure_t measure = MeasureTextInFont(text, &pig->resources.fonts->debug, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width, &flowInfo, &flowCallbacks);
 				
 				if (context.foundPosition)
 				{
@@ -1241,7 +1241,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					flowCallbacks.afterLine = DebugConsoleSelectionRecsAfterLineCallback;
 					
 					FontFlowInfo_t flowInfo = {};
-					TextMeasure_t measure = MeasureTextInFont(text, &pig->resources.debugFont, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width, &flowInfo, &flowCallbacks);
+					TextMeasure_t measure = MeasureTextInFont(text, &pig->resources.fonts->debug, SelectDefaultFontFace(), 1.0f, console->viewUsableRec.width, &flowInfo, &flowCallbacks);
 					DebugAssert_(console->selectionRecs.length > 0);
 				}
 				
@@ -1417,12 +1417,12 @@ void RenderDebugConsole(DebugConsole_t* console)
 	
 	if (console->openAmount > 0)
 	{
-		RcBindFont(&pig->resources.debugFont, SelectDefaultFontFace());
+		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 		
 		// +==============================+
 		// |      Render Window Back      |
 		// +==============================+
-		RcBindShader(&pig->resources.mainShader2D);
+		RcBindShader(&pig->resources.shaders->main2D);
 		if (!console->overlayMode)
 		{
 			RcDrawRectangle(console->mainRec, ColorTransparent(MonokaiBack, console->alphaAmount));
@@ -1456,7 +1456,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// +==============================+
 		// |      Render Input Label      |
 		// +==============================+
-		RcBindShader(&pig->resources.mainShader2D);
+		RcBindShader(&pig->resources.shaders->main2D);
 		if (!console->overlayMode)
 		{
 			RcDrawText(DBG_CONSOLE_INPUT_LABEL_STR, console->inputLabelTextPos, MonokaiWhite);
@@ -1688,7 +1688,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// +==============================+
 		if (!console->overlayMode)
 		{
-			RcBindShader(&pig->resources.roundedCornersShader);
+			RcBindShader(&pig->resources.shaders->roundedCorners);
 			RcDrawRoundedRectangle(console->closeBtnRec,            10, ColorTransparent(MonokaiMagenta, IsMouseOverNamed("DebugConsoleCloseBtn") ? console->alphaAmount : console->alphaAmount*0.6f), false);
 			RcDrawRoundedRectangle(console->toggleGutterBtnRec,      7, ColorTransparent(console->gutterEnabled            ? MonokaiWhite : MonokaiGray1, console->alphaAmount), false);
 			RcDrawRoundedRectangle(console->toggleFileNameBtnRec,    7, ColorTransparent(console->fileNameGutterEnabled    ? MonokaiWhite : MonokaiGray1, console->alphaAmount), false);
@@ -1697,8 +1697,8 @@ void RenderDebugConsole(DebugConsole_t* console)
 			RcDrawRoundedRectangle(console->toggleTimeBtnRec,        7, ColorTransparent(console->timeGutterEnabled        ? MonokaiWhite : MonokaiGray1, console->alphaAmount), false);
 			RcDrawRoundedRectangle(console->exportBtnRec,            7, ColorTransparent(MonokaiGreen, IsMouseOverNamed("DebugConsoleExportBtn") ? console->alphaAmount : console->alphaAmount*0.6f), false);
 			
-			RcBindShader(&pig->resources.mainShader2D);
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindShader(&pig->resources.shaders->main2D);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(NewStr("CrossIcon"), RecDeflate(console->closeBtnRec, DBG_CONSOLE_ICON_SMALLER_AMOUNT, DBG_CONSOLE_ICON_SMALLER_AMOUNT), MonokaiDarkGray);
 			RcDrawSheetFrame(NewStr("PoundIcon"), RecDeflate(console->toggleGutterBtnRec, DBG_CONSOLE_ICON_SMALLER_AMOUNT, DBG_CONSOLE_ICON_SMALLER_AMOUNT), MonokaiDarkGray);
 			RcDrawSheetFrame(NewStr("FileIcon"), RecDeflate(console->toggleFileNameBtnRec, DBG_CONSOLE_ICON_SMALLER_AMOUNT, DBG_CONSOLE_ICON_SMALLER_AMOUNT), MonokaiDarkGray);
@@ -1714,7 +1714,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 		if (console->state != DbgConsoleState_Closed && console->overlayMode)
 		{
 			Color_t iconColor = ColorTransparent(White, IsMouseOverNamed("DebugConsoleFullAlphaTextBtn") ? 1.0f : 0.5f);
-			RcBindSpriteSheet(&pig->resources.vectorIcons64);
+			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(NewStr("EyeIcon"), console->fullAlphaTextBtnRec, iconColor);
 		}
 	}

@@ -7,6 +7,8 @@ Date:   06\02\2022
 #ifndef _PIG_SLUG_H
 #define _PIG_SLUG_H
 
+#if SLUG_SUPPORTED
+
 struct SlugAlbum_t
 {
 	bool isValid;
@@ -43,5 +45,7 @@ struct SlugText_t
 	Terathon::Slug::LayoutData layoutData;
 	VertBuffer_t vertBuffer;
 };
+
+#endif //SLUG_SUPPORTED
 
 #endif //  _PIG_SLUG_H

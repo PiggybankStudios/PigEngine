@@ -6,6 +6,8 @@ Description:
 	** Holds functions that help us render Slug related things
 */
 
+#if SLUG_SUPPORTED
+
 void RenderSlugText(const SlugText_t* text, v2 position)
 {
 	RcBindShader(&text->font->pipelineShader);
@@ -18,3 +20,5 @@ void RenderSlugText(const SlugText_t* text, v2 position)
 	RcBindVertBuffer(&text->vertBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+
+#endif //SLUG_SUPPORTED

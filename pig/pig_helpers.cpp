@@ -66,6 +66,27 @@ bool UpdateAnimationDown(r32* animTimerPntr, r32 animationTimeMs)
 	return UpdateAnimationDownTo(animTimerPntr, animationTimeMs, 0.0f);
 }
 
+//TODO: These functions are totally just made up to try out a log base 2 approach to see if it "sounds right"
+//      I need to do more research and learning about audio and the human ear to know what the real function should be
+//      These functions also don't perfectly go through (1,1) so clamping IS necassary
+r32 ConvertVolumeToLoudness(r32 volume)
+{
+	return ClampR32(EaseLogTwoOutCustom(volume), 0.0f, 1.0f);
+}
+r32 ConvertLoudnessToVolume(r32 loudness)
+{
+	return ClampR32(EaseLogTwoInCustom(loudness), 0.0f, 1.0f);
+}
+//TODO: Make these calculate in r64 precision
+r64 ConvertVolumeToLoudness(r64 volume)
+{
+	return (r64)ClampR32(EaseLogTwoOutCustom((r32)volume), 0.0f, 1.0f);
+}
+r64 ConvertLoudnessToVolume(r64 loudness)
+{
+	return (r64)ClampR32(EaseLogTwoInCustom((r32)loudness), 0.0f, 1.0f);
+}
+
 // +--------------------------------------------------------------+
 // |                       Two Pass Helpers                       |
 // +--------------------------------------------------------------+
