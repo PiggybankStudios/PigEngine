@@ -159,7 +159,12 @@ static       v2               ScreenSize     = {};
 #define MSF_GIF_REALLOC(contextPointer, oldMemory, oldSize, newSize) PlatReallocFunc((oldMemory), (newSize), (oldSize))
 #define MSF_GIF_FREE(contextPointer, oldMemory, oldSize) PlatFreeFunc(oldMemory)
 #define MSF_GIF_IMPL
+#pragma warning(push)
+#pragma warning(disable:4244) //lines 422, 433, 434, 435, 472, 498, 515: '=': conversion from 'int' to 'uint8_t', possible loss of data
+#pragma warning(disable:4456) //line 339: declaration of 'k' hides previous local declaration
+#pragma warning(disable:4459) //line 553, 617: declaration of 'empty' hides global declaration
 #include "msf_gif/msf_gif.h"
+#pragma warning(pop)
 
 // +--------------------------------------------------------------+
 // |                      Exported Functions                      |
