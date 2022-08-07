@@ -38,6 +38,7 @@ Description:
 #define PIG_PHYS_FRAMERATE       120 //frames per second
 #define PIG_PHYS_FRAME_TIME_SEC  (1.0 / PIG_PHYS_FRAMERATE) //secs
 
+#define PIG_MAX_AUDIO_CHANNELS                2 //channels
 #define PIG_MAX_SOUND_INSTANCES               64 //instances
 #define PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH   44100 //samples
 
