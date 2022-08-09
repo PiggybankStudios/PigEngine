@@ -38,7 +38,7 @@ r64 GetSoundInstanceCurrentVolume(SoundInstance_t* instance, PlatAudioFormat_t f
 }
 
 //TODO: Add support for multi-channel audio!
-r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, u64 globalSampleIndex, r32 masterVolume, r32 musicVolume, r32 soundsVolume)
+r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, u8 channelIndex, bool advanceFrameIndex, u64 globalSampleIndex, r32 masterVolume, r32 musicVolume, r32 soundsVolume)
 {
 	NotNull(instance);
 	r64 result = 0;
@@ -82,17 +82,17 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 			if (instance->sound->format.bitsPerSample == 8)
 			{
 				i8* framePntr = &instance->sound->dataI8[instance->frameIndex * instance->sound->format.numChannels];
-				result = ConvertSampleI8ToR64(framePntr[0]);
+				result = ConvertSampleI8ToR64(framePntr[channelIndex % instance->sound->format.numChannels]);
 			}
 			else if (instance->sound->format.bitsPerSample == 16)
 			{
 				i16* framePntr = &instance->sound->dataI16[instance->frameIndex * instance->sound->format.numChannels];
-				result = ConvertSampleI16ToR64(framePntr[0]);
+				result = ConvertSampleI16ToR64(framePntr[channelIndex % instance->sound->format.numChannels]);
 			}
 			else if (instance->sound->format.bitsPerSample == 32)
 			{
 				i32* framePntr = &instance->sound->dataI32[instance->frameIndex * instance->sound->format.numChannels];
-				result = ConvertSampleI32ToR64(framePntr[0]);
+				result = ConvertSampleI32ToR64(framePntr[channelIndex % instance->sound->format.numChannels]);
 			}
 			else { AssertMsg(false, "We don't support a sound's bitsPerSample in the audio mixer!"); }
 			
@@ -102,24 +102,27 @@ r64 GetSoundInstanceSample(SoundInstance_t* instance, PlatAudioFormat_t format, 
 		
 		default: AssertMsg(false, "Unhandled SoundInstanceType in GetSoundInstanceSample"); break;
 	}
-	instance->frameIndex++;
-	if (instance->frameIndex >= instance->numFrames)
+	if (advanceFrameIndex)
 	{
-		instance->numLoops++;
-		instance->frameIndex = 0;
-		if (!instance->repeating)
+		instance->frameIndex++;
+		if (instance->frameIndex >= instance->numFrames)
 		{
-			instance->playing = false;
-			if (instance->nextInstanceToStart != nullptr)
+			instance->numLoops++;
+			instance->frameIndex = 0;
+			if (!instance->repeating)
 			{
-				instance->nextInstanceToStart->playing = true;
-				instance->nextInstanceToStart = nullptr;
+				instance->playing = false;
+				if (instance->nextInstanceToStart != nullptr)
+				{
+					instance->nextInstanceToStart->playing = true;
+					instance->nextInstanceToStart = nullptr;
+				}
 			}
-		}
-		else
-		{
-			instance->attackTime = 0;
-			instance->attackCurve = EasingStyle_None;
+			else
+			{
+				instance->attackTime = 0;
+				instance->attackCurve = EasingStyle_None;
+			}
 		}
 	}
 	return result;
@@ -150,22 +153,30 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 		u64 globalFrameIndex = audioInfo->audioFrameIndex + frameIndex;
 		globalFrameIndex = (globalFrameIndex % (audioInfo->format.samplesPerSecond * 100ULL));
 		
-		r64 sampleValueR64 = 0;
+		r64 sampleValueR64[PIG_MAX_AUDIO_CHANNELS] = { 0.0f, 0.0f };
+		DebugAssert(audioInfo->format.numChannels <= PIG_MAX_AUDIO_CHANNELS);
 		for (u64 iIndex = 0; iIndex < PIG_MAX_SOUND_INSTANCES; iIndex++)
 		{
 			SoundInstance_t* instance = &pig->soundInstances[iIndex];
 			if (instance->type != SoundInstanceType_None && instance->playing)
 			{
-				sampleValueR64 += GetSoundInstanceSample(instance, audioInfo->format, globalFrameIndex, masterVolume, musicVolume, soundsVolume);
+				for (u8 channelIndex = 0; channelIndex < audioInfo->format.numChannels; channelIndex++)
+				{
+					bool advanceFrameIndex = (channelIndex == audioInfo->format.numChannels-1);
+					sampleValueR64[channelIndex] += GetSoundInstanceSample(instance, audioInfo->format, channelIndex, advanceFrameIndex, globalFrameIndex, masterVolume, musicVolume, soundsVolume);
+				}
 			}
 		}
-		// if (sampleValueR64 > 1.0 || sampleValueR64 < -1.0) { MyDebugBreak(); }
-		#if DEVELOPER_BUILD
-		if (sampleValueR64 >  1.0f) { sampleValueR64 =  1.0f; pig->numAudioClips++; }
-		if (sampleValueR64 < -1.0f) { sampleValueR64 = -1.0f; pig->numAudioClips++; }
-		#else
-		sampleValueR64 = ClampR64(sampleValueR64, -1, 1);
-		#endif
+		for (u8 channelIndex = 0; channelIndex < audioInfo->format.numChannels; channelIndex++)
+		{
+			// if (sampleValueR64 > 1.0 || sampleValueR64 < -1.0) { MyDebugBreak(); }
+			#if DEVELOPER_BUILD
+			if (sampleValueR64[channelIndex] >  1.0f) { sampleValueR64[channelIndex] =  1.0f; pig->numAudioClips++; }
+			if (sampleValueR64[channelIndex] < -1.0f) { sampleValueR64[channelIndex] = -1.0f; pig->numAudioClips++; }
+			#else
+			sampleValueR64[channelIndex] = ClampR64(sampleValueR64[channelIndex], -1, 1);
+			#endif
+		}
 		
 		#if 0
 		// +==============================+
@@ -178,35 +189,40 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 		
 		if (!pig->audioOutGraph.paused)
 		{
-			pig->audioOutSamples[pig->audioOutWriteIndex] = sampleValueR64;
+			//TODO: Feed 2 channel audio data to the debug display!
+			pig->audioOutSamples[pig->audioOutWriteIndex] = sampleValueR64[0];
 			pig->audioOutWriteIndex = (pig->audioOutWriteIndex + 1) % PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH;
 		}
 		
 		if (audioInfo->format.bitsPerSample == 32)
 		{
-			i32 sampleValueI32 = (i32)RoundR64i(sampleValueR64 * (r64)INT32_MAX);
+			i32 sampleValueI32[PIG_MAX_AUDIO_CHANNELS];
+			sampleValueI32[0] = (i32)RoundR64i(sampleValueR64[0] * (r64)INT32_MAX);
+			sampleValueI32[1] = (i32)RoundR64i(sampleValueR64[1] * (r64)INT32_MAX);
 			if (audioInfo->format.numChannels == 2)
 			{
-				*(i32*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i32)*0] = sampleValueI32;
-				*(i32*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i32)*1] = sampleValueI32;
+				*(i32*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i32)*0] = sampleValueI32[0];
+				*(i32*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i32)*1] = sampleValueI32[1];
 			}
 			else if (audioInfo->format.numChannels == 1)
 			{
-				*(i32*)&audioInfo->bufferPntr[outputByteIndex] = sampleValueI32;
+				*(i32*)&audioInfo->bufferPntr[outputByteIndex] = sampleValueI32[0];
 			}
 			else { AssertMsg_(false, "Unhandled value for numChannels in PigAudioService"); }
 		}
 		else if (audioInfo->format.bitsPerSample == 16)
 		{
-			i16 sampleValueI16 = (i16)RoundR64i(sampleValueR64 * (r64)INT16_MAX);
+			i16 sampleValueI16[PIG_MAX_AUDIO_CHANNELS];
+			sampleValueI16[0] = (i16)RoundR64i(sampleValueR64[0] * (r64)INT16_MAX);
+			sampleValueI16[1] = (i16)RoundR64i(sampleValueR64[1] * (r64)INT16_MAX);
 			if (audioInfo->format.numChannels == 2)
 			{
-				*(i16*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i16)*0] = sampleValueI16;
-				*(i16*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i16)*1] = sampleValueI16;
+				*(i16*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i16)*0] = sampleValueI16[0];
+				*(i16*)&audioInfo->bufferPntr[outputByteIndex + sizeof(i16)*1] = sampleValueI16[1];
 			}
 			else if (audioInfo->format.numChannels == 1)
 			{
-				*(i16*)&audioInfo->bufferPntr[outputByteIndex] = sampleValueI16;
+				*(i16*)&audioInfo->bufferPntr[outputByteIndex] = sampleValueI16[0];
 			}
 			else { AssertMsg_(false, "Unhandled value for numChannels in PigAudioService"); }
 		}
