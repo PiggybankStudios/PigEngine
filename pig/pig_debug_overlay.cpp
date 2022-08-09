@@ -358,6 +358,59 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
 				textPos.y += stepY;
 			}
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "nextProcmonEventId: %llu", pigIn->nextProcmonEventId);
+			textPos.y += stepY;
+			
+			#if PROCMON_SUPPORTED
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			
+			#if 1
+			u64 numFilePaths = 0;
+			StrHashDictIter_t touchedFilesIter = StrHashDictGetIter(&pigIn->touchedFiles, ProcmonFile_t);
+			for (ProcmonFile_t* touchedFile = nullptr; StrHashDictIter(&touchedFilesIter, ProcmonFile_t, &touchedFile); )
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, touchedFile->filePath.length, touchedFile->filePath.pntr);
+				textPos.y += stepY;
+				numFilePaths++;
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu files total", numFilePaths);
+			textPos.y += stepY;
+			#else
+			u64 numProcessNames = 0;
+			for (u64 pIndex = 0; pIndex < pigIn->processEntries.numItemsAlloc; pIndex++)
+			{
+				StrHashDictItem_t* slot = (StrHashDictItem_t*)(((u8*)pigIn->processEntries.base) + (pIndex * (sizeof(StrHashDictItem_t) + sizeof(ProcmonEntry_t))));
+				if (slot->hash != 0)
+				{
+					ProcmonEntry_t* processEntry = (ProcmonEntry_t*)(slot + 1);
+					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, processEntry->processName.length, processEntry->processName.pntr);
+					#if 0
+					r32 resetPosX = textPos.x;
+					textPos.x += rc->flowInfo.renderRec.width + 10;
+					for (u64 eIndex = 0; eIndex < ArrayCount(processEntry->lastFewEvents); eIndex++)
+					{
+						RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%s", GetProcmonEventTypeStr(processEntry->lastFewEvents[eIndex]));
+						textPos.x += rc->flowInfo.renderRec.width + 10;
+					}
+					textPos.x = resetPosX;
+					#endif
+					textPos.y += stepY;
+					numProcessNames++;
+				}
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu processes total", numProcessNames);
+			textPos.y += stepY;
+			#endif
+			#endif
 		}
 		
 		// +==============================+

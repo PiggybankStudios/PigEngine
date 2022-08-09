@@ -86,12 +86,24 @@ MyStr_t Win32_GetWorkingDirectory(MemArena_t* memArena)
 	
 	char* resultBuffer = AllocArray(memArena, char, pathLength+2);
 	NotNull(resultBuffer);
-	DWORD resultLength = GetCurrentDirectory(pathLength+1, resultBuffer);
+	DWORD resultLength = GetCurrentDirectoryA(pathLength+1, resultBuffer);
 	Assert(resultLength <= pathLength); //TODO: Should this just be == ?
 	if (resultBuffer[resultLength] != '\\' && resultBuffer[resultLength] != '/') { resultBuffer[resultLength] = '\\'; resultLength++; }
 	resultBuffer[resultLength] = '\0';
 	return NewStr(resultLength, resultBuffer);
 }
+
+#if PROCMON_SUPPORTED
+//TODO: We should probably think a little harder about where we get the procmon memory from. A VirtualAlloc call might be better?
+void* ProcmonAllocate(u64 numBytes)
+{
+	return malloc(numBytes);
+}
+void ProcmonFree(void* memPntr)
+{
+	return free(memPntr);
+}
+#endif
 
 // +--------------------------------------------------------------+
 // |                          Functions                           |
@@ -168,6 +180,10 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	}
 	InitMemArena_FixedHeap(&Platform->threadSafeHeap, PLAT_THREAD_SAFE_HEAP_SIZE, threadSafeHeapMem);
 	Win32_CreateMutex(&Platform->threadSafeHeapMutex);
+	
+	#if PROCMON_SUPPORTED
+	InitMemArena_PagedHeapFuncs(&Platform->procmonHeap, Megabytes(1), ProcmonAllocate, ProcmonFree);
+	#endif
 }
 
 // +--------------------------------------------------------------+

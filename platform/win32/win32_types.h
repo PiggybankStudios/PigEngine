@@ -18,6 +18,9 @@ enum Win32InitPhase_t
 	Win32InitPhase_ProgramArgsParsed,
 	Win32InitPhase_ThreadingInitialized,
 	Win32InitPhase_AudioInitialized,
+	#if PROCMON_SUPPORTED
+	Win32InitPhase_ProcmonDriverLoaded,
+	#endif
 	Win32InitPhase_EngineDllLoaded,
 	Win32InitPhase_GlfwInitialized,
 	Win32InitPhase_StartupOptionsObtained,
@@ -45,6 +48,9 @@ const char* GetWin32InitPhaseStr(Win32InitPhase_t initPhase)
 		case Win32InitPhase_ProgramArgsParsed:      return "ProgramArgsParsed";
 		case Win32InitPhase_ThreadingInitialized:   return "ThreadingInitialized";
 		case Win32InitPhase_AudioInitialized:       return "AudioInitialized";
+		#if PROCMON_SUPPORTED
+		case Win32InitPhase_ProcmonDriverLoaded:    return "ProcmonDriverLoaded";
+		#endif
 		case Win32InitPhase_EngineDllLoaded:        return "EngineDllLoaded";
 		case Win32InitPhase_GlfwInitialized:        return "GlfwInitialized";
 		case Win32InitPhase_StartupOptionsObtained: return "StartupOptionsObtained";

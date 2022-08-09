@@ -21,6 +21,9 @@ struct Win32PlatformState_t
 	#if BOX2D_SUPPORTED
 	MemArena_t box2dHeap;
 	#endif
+	#if PROCMON_SUPPORTED
+	MemArena_t procmonHeap;
+	#endif
 	PlatMutex_t threadSafeHeapMutex;
 	MemArena_t threadSafeHeap;
 	
@@ -144,6 +147,19 @@ struct Win32PlatformState_t
 	mat4 worldMatrix;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
+	
+	#if PROCMON_SUPPORTED
+	CEventMgr*         Optmgr;
+	CMonitorContoller* Monitormgr;
+	CDrvLoader*        Drvload;
+	
+	u64 nextProcmonEventId;
+	char procmonConversionBuffer[1024];
+	u64 nextProcmonEntryId;
+	u64 nextProcmonFileId;
+	StrHashDict_t processEntries; //ProcmonEntry_t
+	StrHashDict_t touchedFiles; //ProcmonFile_t
+	#endif
 	
 };
 

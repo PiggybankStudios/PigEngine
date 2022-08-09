@@ -101,6 +101,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_glfw.cpp"
 #include "win32/win32_monitors.cpp"
 #include "win32/win32_fonts.cpp"
+#include "win32/win32_procmon.cpp"
 #include "win32/win32_render_basic.cpp"
 #include "win32/win32_overlays.cpp"
 #include "win32/win32_loading.cpp"
@@ -202,11 +203,25 @@ int main(int argc, char* argv[])
 	
 	Win32_AudioInit();
 	
+	#if PROCMON_SUPPORTED
+	// +==============================+
+	// |     ProcmonDriverLoading     |
+	// +==============================+
+	PerfSection("ProcmonDriverLoading");
+	InitPhase = Win32InitPhase_AudioInitialized;
+	
+	Win32_ProcmonInit();
+	#endif
+	
 	// +==============================+
 	// |       LoadingEngineDll       |
 	// +==============================+
 	PerfSection("LoadingEngineDll");
+	#if PROCMON_SUPPORTED
+	InitPhase = Win32InitPhase_ProcmonDriverLoaded;
+	#else
 	InitPhase = Win32InitPhase_AudioInitialized;
+	#endif
 	
 	Win32_DllLoadingInit();
 	if (!Win32_LoadEngineDll(Platform->engineDllPath, Platform->engineDllTempPath, &Platform->engine))
@@ -460,6 +475,9 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
+	Platform->engineInput.nextProcmonEventId = Platform->nextProcmonEventId;
+	Platform->engineInput.processEntries = Platform->processEntries;
+	Platform->engineInput.touchedFiles = Platform->touchedFiles;
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
 	#if DEVELOPER_BUILD
