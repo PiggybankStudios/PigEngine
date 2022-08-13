@@ -359,10 +359,9 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				textPos.y += stepY;
 			}
 			
+			#if PROCMON_SUPPORTED
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "nextProcmonEventId: %llu", pigIn->nextProcmonEventId);
 			textPos.y += stepY;
-			
-			#if PROCMON_SUPPORTED
 			
 			textPos.x += 600;
 			textPos.y = 10 + RcGetMaxAscend();
@@ -410,7 +409,8 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu processes total", numProcessNames);
 			textPos.y += stepY;
 			#endif
-			#endif
+			
+			#endif //PROCMON_SUPPORTED
 		}
 		
 		// +==============================+

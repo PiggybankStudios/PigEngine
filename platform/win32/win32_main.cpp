@@ -475,9 +475,11 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
+	#if PROCMON_SUPPORTED
 	Platform->engineInput.nextProcmonEventId = Platform->nextProcmonEventId;
 	Platform->engineInput.processEntries = Platform->processEntries;
 	Platform->engineInput.touchedFiles = Platform->touchedFiles;
+	#endif
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
 	#if DEVELOPER_BUILD
