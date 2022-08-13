@@ -104,6 +104,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
 
+#include "pig/pig_serialization.cpp"
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_wav.cpp"
 #include "pig/pig_ogg.cpp"
