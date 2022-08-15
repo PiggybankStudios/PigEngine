@@ -51,8 +51,8 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 	sheetOut->padding = padding;
 	sheetOut->numFilledFrames = 0;
 	
-	v2i frameSizeWithPadding = sheetOut->frameSize + padding;
-	v2i textureSizeWithPadding = padding + Vec2iMultiply(frameSizeWithPadding, numFrames);
+	v2i frameSizeWithPadding = sheetOut->frameSize + padding*2;
+	v2i textureSizeWithPadding = padding*2 + Vec2iMultiply(frameSizeWithPadding, numFrames);
 	
 	TempPushMark();
 	
@@ -190,7 +190,8 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 	paddedImageData.dataSize = paddedImageData.rowSize * paddedImageData.height;
 	paddedImageData.data32 = newPixels;
 	
-	if (!CreateTexture(memArena, &sheetOut->texture, &paddedImageData, pixelated, false))
+	const bool repeating = false;
+	if (!CreateTexture(memArena, &sheetOut->texture, &paddedImageData, pixelated, repeating))
 	{
 		sheetOut->error = SpriteSheetError_TextureError;
 		DestroySpriteSheet(sheetOut);
@@ -297,7 +298,7 @@ v2i GetSpriteSheetFrame(const SpriteSheet_t* sheet, MyStr_t frameName, bool asse
 rec GetSpriteSheetFrameSourceRec(const SpriteSheet_t* sheet, v2i gridPos)
 {
 	rec result = NewRec(
-		ToVec2(Vec2iMultiply(gridPos, sheet->frameSize + sheet->padding) + sheet->padding),
+		ToVec2(Vec2iMultiply(gridPos, sheet->frameSize + sheet->padding*2) + sheet->padding),
 		ToVec2(sheet->frameSize)
 	);
 	return result;
