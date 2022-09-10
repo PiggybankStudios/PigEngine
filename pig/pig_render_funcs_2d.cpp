@@ -152,6 +152,41 @@ void RcDrawRoundedRectangle(rec rectangle, r32 cornerRadius, Color_t color, bool
 	if (bindShader) { RcBindShader(oldShader); }
 }
 
+void RcDrawVoxelOrthoFace2D(rec rectangle, rec sourceRec, Color_t color, Dir3_t side)
+{
+	Assert(side == Dir3_Forward || side == Dir3_Left || side == Dir3_Up || side == Dir3_All);
+	NotNull(rc->state.boundTexture1);
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, RcGetRealDepth()));
+	RcSetWorldMatrix(worldMatrix);
+	RcSetSourceRec1(sourceRec);
+	RcSetColor1(color);
+	if (side == Dir3_All)
+	{
+		RcBindVertBuffer(&gl->voxelOrtho2D);
+		RcDrawBuffer(VertBufferPrimitive_Triangles);
+	}
+	else
+	{
+		u64 startIndex = 0;
+		if (side == Dir3_Left) { startIndex = 6; }
+		if (side == Dir3_Up) { startIndex = 12; }
+		RcBindVertBuffer(&gl->voxelOrtho2D);
+		RcDrawBuffer(VertBufferPrimitive_Triangles, startIndex, 6);
+	}
+}
+void RcDrawVoxelOrtho2D(rec rectangle, rec forwardSourceRec, rec leftSourceRec, rec topSourceRec, Color_t forwardColor, Color_t leftColor, Color_t topColor)
+{
+	RcDrawVoxelOrthoFace2D(rectangle, forwardSourceRec, forwardColor, Dir3_Forward);
+	RcDrawVoxelOrthoFace2D(rectangle, leftSourceRec,    leftColor,    Dir3_Left);
+	RcDrawVoxelOrthoFace2D(rectangle, topSourceRec,     topColor,     Dir3_Up);
+}
+void RcDrawVoxelOrtho2D(rec rectangle, rec sourceRec, Color_t color)
+{
+	RcDrawVoxelOrthoFace2D(rectangle, sourceRec, color, Dir3_All);
+}
+
 void RcDrawCircle(v2 center, r32 radius, Color_t color, bool bindShader = true)
 {
 	NotNull(rc);
