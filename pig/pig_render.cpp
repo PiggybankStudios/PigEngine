@@ -420,6 +420,29 @@ void RcSetCircleInnerRadius_OpenGL(r32 innerRadius)
 	}
 }
 
+void RcSetSaturation_OpenGL(r32 saturation)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_Saturation))
+	{
+		Assert(rc->state.boundShader->glLocations.saturation >= 0);
+		glUniform1f(rc->state.boundShader->glLocations.saturation, saturation);
+		AssertNoOpenGlError();
+	}
+}
+void RcSetBrightness_OpenGL(r32 brightness)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_Brightness))
+	{
+		Assert(rc->state.boundShader->glLocations.brightness >= 0);
+		glUniform1f(rc->state.boundShader->glLocations.brightness, brightness);
+		AssertNoOpenGlError();
+	}
+}
+
 void RcSetValue_OpenGL(u8 valueIndex, r32 value)
 {
 	NotNull(rc);
@@ -741,6 +764,8 @@ void RcBindShader(Shader_t* shader)
 			RcSetShiftVec_OpenGL(rc->state.shiftVec);
 			RcSetCircleRadius_OpenGL(rc->state.circleRadius);
 			RcSetCircleInnerRadius_OpenGL(rc->state.circleInnerRadius);
+			RcSetSaturation_OpenGL(rc->state.saturation);
+			RcSetBrightness_OpenGL(rc->state.brightness);
 			for (u8 vIndex = 0; vIndex < ArrayCount(rc->state.values); vIndex++)
 			{
 				RcSetValue_OpenGL(vIndex, rc->state.values[vIndex]);
@@ -1208,7 +1233,7 @@ void RcSetCircleRadius(r32 radius)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetCircleRadius!"); break;
 	}
 }
 void RcSetCircleInnerRadius(r32 innerRadius)
@@ -1225,7 +1250,42 @@ void RcSetCircleInnerRadius(r32 innerRadius)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetCircleInnerRadius!"); break;
+	}
+}
+
+void RcSetSaturation(r32 saturation)
+{
+	NotNull(rc);
+	if (BasicallyEqualR32(rc->state.saturation, saturation)) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetSaturation_OpenGL(saturation);
+			rc->state.saturation = saturation;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetSaturation!"); break;
+	}
+}
+void RcSetBrightness(r32 brightness)
+{
+	NotNull(rc);
+	if (BasicallyEqualR32(rc->state.brightness, brightness)) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetBrightness_OpenGL(brightness);
+			rc->state.brightness = brightness;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetSaturation!"); break;
 	}
 }
 
@@ -1244,7 +1304,7 @@ void RcSetValue(u8 valueIndex, r32 value)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetValue!"); break;
 	}
 }
 

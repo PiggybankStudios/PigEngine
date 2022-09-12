@@ -375,6 +375,7 @@ void Win32_GlfwSystemEventCallback(GLFWwindow* glfwWindowPntr, unsigned int uMsg
 		case WM_PAINT:
 		case WM_MOVE:
 		case WM_SIZE:
+		// case WM_SIZING:
 		{
 			if (InitPhase >= Win32InitPhase_PostFirstUpdate && IsMainThread())
 			{

@@ -236,6 +236,7 @@ SoundInstance_t* GetSoundInstanceFromHandle(SoundInstanceHandle_t handle)
 {
 	if (handle.instancePntr == nullptr) { return nullptr; }
 	if (handle.instancePntr->id != handle.id) { return nullptr; }
+	if (handle.instancePntr->type == SoundInstanceType_None) { return nullptr; }
 	return handle.instancePntr;
 }
 bool IsSoundInstanceHandleDonePlaying(SoundInstanceHandle_t handle)
@@ -266,7 +267,12 @@ void StopSoundInstance(SoundInstance_t* instance)
 	{
 		if (plat->LockMutex(&pig->soundInstancesMutex, MUTEX_LOCK_INFINITE))
 		{
+			instance->type = SoundInstanceType_None;
 			instance->playing = false;
+			if (instance->nextInstanceToStart != nullptr)
+			{
+				instance->nextInstanceToStart->type = SoundInstanceType_None;
+			}
 			plat->UnlockMutex(&pig->soundInstancesMutex);
 		}
 	}
