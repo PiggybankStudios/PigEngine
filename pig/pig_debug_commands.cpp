@@ -127,6 +127,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
 	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
 	"mute", "Sets Master Volume to 0 (or disables music or sounds if argument is passed)", "{music/sounds}", "\n",
+	"cyclic_funcs", "Toggles rendering of the cyclic function debug overlay", "\n",
 	// "template", "description", "\n",
 };
 DebugCommandInfoList_t PigGetDebugCommandInfoList()
@@ -407,6 +408,16 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			PrintLine_E("Unknown argument \"%.*s\"! Known values: \"music\", \"sounds\"", arguments[0].length, arguments[0].pntr);
 		}
+	}
+	
+	// +==============================+
+	// |         cyclic_funcs         |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "cyclic_funcs") == 0)
+	{
+		pig->cyclicFuncsDebug = !pig->cyclicFuncsDebug;
+		pig->cyclicFunc = CyclicFunc_Default;
+		PrintLine_I("Cyclic Functions Overlay %s", pig->cyclicFuncsDebug ? "Enabled" : "Disabled");
 	}
 	
 	// +==============================+

@@ -632,7 +632,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 	// +==================================+
 	// | Render Cyclic Functions Overlay  |
 	// +==================================+
-	if (gl->cyclicFuncsDebug)
+	if (pig->cyclicFuncsDebug)
 	{
 		const u64 numVertices = 250;
 		const r32 graphWidth  = 6; //-5 to +5
@@ -640,22 +640,22 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_PageUp))
 		{
 			HandleKeyExtended(Key_PageUp);
-			gl->cyclicFunc.type = (CyclicFuncType_t)((u64)gl->cyclicFunc.type + 1);
-			if (gl->cyclicFunc.type >= CyclicFuncType_NumTypes)
+			pig->cyclicFunc.type = (CyclicFuncType_t)((u64)pig->cyclicFunc.type + 1);
+			if (pig->cyclicFunc.type >= CyclicFuncType_NumTypes)
 			{
-				gl->cyclicFunc.type = CyclicFuncType_Constant;
+				pig->cyclicFunc.type = CyclicFuncType_Constant;
 			}
 		}
 		if (KeyPressed(Key_PageDown))
 		{
 			HandleKeyExtended(Key_PageDown);
-			if (gl->cyclicFunc.type > CyclicFuncType_Constant)
+			if (pig->cyclicFunc.type > CyclicFuncType_Constant)
 			{
-				gl->cyclicFunc.type = (CyclicFuncType_t)((u64)gl->cyclicFunc.type - 1);
+				pig->cyclicFunc.type = (CyclicFuncType_t)((u64)pig->cyclicFunc.type - 1);
 			}
 			else
 			{
-				gl->cyclicFunc.type = (CyclicFuncType_t)(CyclicFuncType_NumTypes - 1);
+				pig->cyclicFunc.type = (CyclicFuncType_t)(CyclicFuncType_NumTypes - 1);
 			}
 		}
 		if (KeyDown(Key_Up))
@@ -663,11 +663,11 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			HandleKey(Key_Up);
 			if (KeyDownRaw(Key_Shift))
 			{
-				gl->cyclicFunc.constant += 0.01f;
+				pig->cyclicFunc.constant += 0.01f;
 			}
 			else
 			{
-				gl->cyclicFunc.amplitude += 0.01f;
+				pig->cyclicFunc.amplitude += 0.01f;
 			}
 		}
 		if (KeyDown(Key_Down))
@@ -675,11 +675,11 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			HandleKey(Key_Down);
 			if (KeyDownRaw(Key_Shift))
 			{
-				gl->cyclicFunc.constant -= 0.01f;
+				pig->cyclicFunc.constant -= 0.01f;
 			}
 			else
 			{
-				gl->cyclicFunc.amplitude -= 0.01f;
+				pig->cyclicFunc.amplitude -= 0.01f;
 			}
 		}
 		if (KeyDown(Key_Right))
@@ -687,11 +687,11 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			HandleKey(Key_Right);
 			if (KeyDownRaw(Key_Shift))
 			{
-				gl->cyclicFunc.offset += 0.01f;
+				pig->cyclicFunc.offset += 0.01f;
 			}
 			else
 			{
-				gl->cyclicFunc.period += 0.01f;
+				pig->cyclicFunc.period += 0.01f;
 			}
 		}
 		if (KeyDown(Key_Left))
@@ -699,11 +699,11 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			HandleKey(Key_Left);
 			if (KeyDownRaw(Key_Shift))
 			{
-				gl->cyclicFunc.offset -= 0.01f;
+				pig->cyclicFunc.offset -= 0.01f;
 			}
 			else
 			{
-				gl->cyclicFunc.period -= 0.01f;
+				pig->cyclicFunc.period -= 0.01f;
 			}
 		}
 		
@@ -741,7 +741,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		for (u64 xIndex = 0; xIndex <= numVertices; xIndex++)
 		{
 			r32 t = (((r32)xIndex / (r32)numVertices) - 0.5f) * graphWidth;
-			r32 y = CyclicFuncGetValue(gl->cyclicFunc, t);
+			r32 y = CyclicFuncGetValue(pig->cyclicFunc, t);
 			r32 screenX = funcRec.x + ((r32)xIndex / (r32)numVertices) * funcRec.width;
 			r32 screenY = funcRec.y + (funcRec.height * ((1.0f - y) / 2));
 			v2 screenVert = NewVec2(screenX, screenY);
@@ -756,10 +756,10 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 		v2 textPos = NewVec2(funcRec.x, funcRec.y - 4 - RcGetMaxDescend());
 		r32 textLineHeight = RcGetLineHeight() + 4;
-		RcDrawTextPrint(textPos, MonokaiWhite, "Constant:  %g", gl->cyclicFunc.constant);  textPos.y -= textLineHeight;
-		RcDrawTextPrint(textPos, MonokaiWhite, "Offset:    %g", gl->cyclicFunc.offset);    textPos.y -= textLineHeight;
-		RcDrawTextPrint(textPos, MonokaiWhite, "Amplitude: %g", gl->cyclicFunc.amplitude); textPos.y -= textLineHeight;
-		RcDrawTextPrint(textPos, MonokaiWhite, "Period:    %g", gl->cyclicFunc.period);    textPos.y -= textLineHeight;
-		RcDrawTextPrint(textPos, MonokaiWhite, "Type:   %s", GetCyclicFuncTypeStr(gl->cyclicFunc.type)); textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Constant:  %g", pig->cyclicFunc.constant);  textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Offset:    %g", pig->cyclicFunc.offset);    textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Amplitude: %g", pig->cyclicFunc.amplitude); textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Period:    %g", pig->cyclicFunc.period);    textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Type:   %s", GetCyclicFuncTypeStr(pig->cyclicFunc.type)); textPos.y -= textLineHeight;
 	}
 }

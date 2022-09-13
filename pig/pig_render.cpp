@@ -1688,6 +1688,44 @@ void RcLoadBasicResources()
 		DebugAssert(false);
 	}
 	
+	Hexagon_t hexagon = NewHexagon(Vec2_Half, 0.5f, -ToRadians32(30));
+	v3 hexagonVertices[HEXAGON_NUM_VERTICES];
+	v3 hexagonCenter = NewVec3(0.5f, 0.5f, 0.0f);
+	for (u64 vIndex = 0; vIndex < HEXAGON_NUM_VERTICES; vIndex++) { hexagonVertices[vIndex] = Vec3FromVec2(GetHexagonVertex(hexagon, vIndex), 0); }
+	Vertex2D_t voxelOrthoVerts2D[6*3] = {
+		//Front Face (which is facing down left)
+		{ hexagonVertices[4], ToVec4(White), {0, 0} },
+		{ hexagonCenter,      ToVec4(White), {1, 0} },
+		{ hexagonVertices[3], ToVec4(White), {0, 1} },
+		
+		{ hexagonVertices[2], ToVec4(White), {1, 1} },
+		{ hexagonVertices[3], ToVec4(White), {0, 1} },
+		{ hexagonCenter,      ToVec4(White), {1, 0} },
+		
+		//Left Face (which is facing down right)
+		{ hexagonCenter,      ToVec4(White), {0, 0} },
+		{ hexagonVertices[0], ToVec4(White), {1, 0} },
+		{ hexagonVertices[2], ToVec4(White), {0, 1} },
+		
+		{ hexagonVertices[1], ToVec4(White), {1, 1} },
+		{ hexagonVertices[2], ToVec4(White), {0, 1} },
+		{ hexagonVertices[0], ToVec4(White), {1, 0} },
+		
+		//Top Face (which is facing up)
+		{ hexagonCenter,      ToVec4(White), {0, 0} },
+		{ hexagonVertices[4], ToVec4(White), {1, 0} },
+		{ hexagonVertices[0], ToVec4(White), {0, 1} },
+		
+		{ hexagonVertices[5], ToVec4(White), {1, 1} },
+		{ hexagonVertices[0], ToVec4(White), {0, 1} },
+		{ hexagonVertices[4], ToVec4(White), {1, 0} },
+	};
+	if (!CreateVertBuffer2D(mainHeap, &rc->voxelOrtho2D, false, ArrayCount(voxelOrthoVerts2D), &voxelOrthoVerts2D[0], true))
+	{
+		WriteLine_E("Failed to create voxelOrtho2D vertex buffer!");
+		DebugAssert(false);
+	}
+	
 	//cubeBuffer
 	{
 		TempPushMark();
