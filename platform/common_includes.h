@@ -28,6 +28,9 @@ Date:   09\14\2021
 #if !defined(BOX2D_SUPPORTED)
 #error You must define BOX2D_SUPPORTED in the build options
 #endif
+#if !defined(PROCMON_SUPPORTED)
+#error You must define PROCMON_SUPPORTED in the build options
+#endif
 
 #ifdef PLATFORM_LAYER
 #undef PLATFORM_LAYER
@@ -68,6 +71,11 @@ Date:   09\14\2021
 	#include <Functiondiscoverykeys_devpkey.h>
 	#include <Audioclient.h>
 	#include <Audiopolicy.h>
+	#if PROCMON_SUPPORTED
+		#include <conio.h>
+		#include <atltime.h>
+		#include "sdk.hpp"
+	#endif //PROCMON_SUPPORTED
 	// #if !USE_CUSTOM_AUDIO
 	// 	#include <openal/al.h>
 	// 	#include <openal/alc.h>
@@ -134,13 +142,16 @@ Date:   09\14\2021
 #include "gylib/gy_intrinsics.h"
 #include "gylib/gy_debug.h"
 #include "gylib/gy_random.h"
+#include "gylib/gy_noise.h"
 #include "gylib/gy_easing.h"
+#include "gylib/gy_hash.h"
 #include "gylib/gy_memory.h"
 #include "gylib/gy_unicode.h"
 #include "gylib/gy_time.h"
 #include "gylib/gy_audio.h"
 #include "gylib/gy_string.h"
 #include "gylib/gy_vectors.h"
+#include "gylib/gy_cyclic_functions.h"
 #include "gylib/gy_directions.h"
 #include "gylib/gy_matrices.h"
 #include "gylib/gy_quaternions.h"
@@ -155,6 +166,7 @@ Date:   09\14\2021
 #include "gylib/gy_sorting.h"
 #include "gylib/gy_linked_list.h"
 #include "gylib/gy_variable_array.h"
+#include "gylib/gy_str_hash_dictionary.h"
 #include "gylib/gy_word_tree.h"
 #include "gylib/gy_bezier.h"
 #include "gylib/gy_bucket_array.h"

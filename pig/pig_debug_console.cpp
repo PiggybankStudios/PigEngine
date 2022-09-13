@@ -714,6 +714,20 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		if (console->selectionActive) { console->selectionChanged = true; }
 	}
 	
+	// +========================================+
+	// | Handle Ctrl+Tilde to Run Last Command  |
+	// +========================================+
+	if (KeyPressed(DBG_CONSOLE_OPEN_KEY) && KeyDownRaw(Key_Control))
+	{
+		HandleKeyExtended(DBG_CONSOLE_OPEN_KEY);
+		if (console->inputHistory.length > 0)
+		{
+			MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex, MyStr_t);
+			bool wasValidCommand = PigParseDebugCommand(*previousInputPntr);
+			UNUSED(wasValidCommand);
+		}
+	}
+	
 	// We need to handle this before the inputBox gets a chance to treat it as text input
 	// (because it's bound to Tilde which is a valid character)
 	bool openKeyWasPressed = KeyPressed(DBG_CONSOLE_OPEN_KEY);
@@ -766,13 +780,13 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		{
 			HandleKeyExtended(Key_Up);
 			FocusTextbox(&console->inputTextbox);
-			if (console->recallIndex == 0)
-			{
-				// PrintLine_D("Storing in suspension: \"%*.s\"", console->inputTextbox.text.length, console->inputTextbox.text.pntr);
-				console->suspendedInputStr = AllocString(mainHeap, &console->inputTextbox.text);
-			}
 			if (console->recallIndex < console->inputHistory.length)
 			{
+				if (console->recallIndex == 0)
+				{
+					// PrintLine_D("Storing in suspension: \"%*.s\"", console->inputTextbox.text.length, console->inputTextbox.text.pntr);
+					console->suspendedInputStr = AllocString(mainHeap, &console->inputTextbox.text);
+				}
 				// PrintLine_D("Recalling previous input %llu", console->recallIndex);
 				MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex, MyStr_t);
 				TextboxSetText(&console->inputTextbox, *previousInputPntr);

@@ -801,7 +801,7 @@ SHOW_SOURCE_FILE_DEFINITION(Win32_ShowSourceFile)
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
 	MyStr_t commandStr = TempPrintStr("%.*s:%llu", fullPath.length, fullPath.pntr, lineNumber);
 	
-	u64 executeResult = (u64)ShellExecute(
+	u64 executeResult = (u64)ShellExecuteA(
 		NULL,   //No parent window
 		"open", //The action verb
 		"\"C:\\Program Files\\Sublime Text 3\\subl.exe\"", //The target file

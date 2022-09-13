@@ -358,6 +358,59 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
 				textPos.y += stepY;
 			}
+			
+			#if PROCMON_SUPPORTED
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "nextProcmonEventId: %llu", pigIn->nextProcmonEventId);
+			textPos.y += stepY;
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			
+			#if 1
+			u64 numFilePaths = 0;
+			StrHashDictIter_t touchedFilesIter = StrHashDictGetIter(&pigIn->touchedFiles, ProcmonFile_t);
+			for (ProcmonFile_t* touchedFile = nullptr; StrHashDictIter(&touchedFilesIter, ProcmonFile_t, &touchedFile); )
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, touchedFile->filePath.length, touchedFile->filePath.pntr);
+				textPos.y += stepY;
+				numFilePaths++;
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu files total", numFilePaths);
+			textPos.y += stepY;
+			#else
+			u64 numProcessNames = 0;
+			for (u64 pIndex = 0; pIndex < pigIn->processEntries.numItemsAlloc; pIndex++)
+			{
+				StrHashDictItem_t* slot = (StrHashDictItem_t*)(((u8*)pigIn->processEntries.base) + (pIndex * (sizeof(StrHashDictItem_t) + sizeof(ProcmonEntry_t))));
+				if (slot->hash != 0)
+				{
+					ProcmonEntry_t* processEntry = (ProcmonEntry_t*)(slot + 1);
+					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, processEntry->processName.length, processEntry->processName.pntr);
+					#if 0
+					r32 resetPosX = textPos.x;
+					textPos.x += rc->flowInfo.renderRec.width + 10;
+					for (u64 eIndex = 0; eIndex < ArrayCount(processEntry->lastFewEvents); eIndex++)
+					{
+						RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%s", GetProcmonEventTypeStr(processEntry->lastFewEvents[eIndex]));
+						textPos.x += rc->flowInfo.renderRec.width + 10;
+					}
+					textPos.x = resetPosX;
+					#endif
+					textPos.y += stepY;
+					numProcessNames++;
+				}
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu processes total", numProcessNames);
+			textPos.y += stepY;
+			#endif
+			
+			#endif //PROCMON_SUPPORTED
 		}
 		
 		// +==============================+
@@ -574,5 +627,139 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
 		Vec2Align(&textPos, 2);
 		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);
+	}
+	
+	// +==================================+
+	// | Render Cyclic Functions Overlay  |
+	// +==================================+
+	if (gl->cyclicFuncsDebug)
+	{
+		const u64 numVertices = 250;
+		const r32 graphWidth  = 6; //-5 to +5
+		
+		if (KeyPressed(Key_PageUp))
+		{
+			HandleKeyExtended(Key_PageUp);
+			gl->cyclicFunc.type = (CyclicFuncType_t)((u64)gl->cyclicFunc.type + 1);
+			if (gl->cyclicFunc.type >= CyclicFuncType_NumTypes)
+			{
+				gl->cyclicFunc.type = CyclicFuncType_Constant;
+			}
+		}
+		if (KeyPressed(Key_PageDown))
+		{
+			HandleKeyExtended(Key_PageDown);
+			if (gl->cyclicFunc.type > CyclicFuncType_Constant)
+			{
+				gl->cyclicFunc.type = (CyclicFuncType_t)((u64)gl->cyclicFunc.type - 1);
+			}
+			else
+			{
+				gl->cyclicFunc.type = (CyclicFuncType_t)(CyclicFuncType_NumTypes - 1);
+			}
+		}
+		if (KeyDown(Key_Up))
+		{
+			HandleKey(Key_Up);
+			if (KeyDownRaw(Key_Shift))
+			{
+				gl->cyclicFunc.constant += 0.01f;
+			}
+			else
+			{
+				gl->cyclicFunc.amplitude += 0.01f;
+			}
+		}
+		if (KeyDown(Key_Down))
+		{
+			HandleKey(Key_Down);
+			if (KeyDownRaw(Key_Shift))
+			{
+				gl->cyclicFunc.constant -= 0.01f;
+			}
+			else
+			{
+				gl->cyclicFunc.amplitude -= 0.01f;
+			}
+		}
+		if (KeyDown(Key_Right))
+		{
+			HandleKey(Key_Right);
+			if (KeyDownRaw(Key_Shift))
+			{
+				gl->cyclicFunc.offset += 0.01f;
+			}
+			else
+			{
+				gl->cyclicFunc.period += 0.01f;
+			}
+		}
+		if (KeyDown(Key_Left))
+		{
+			HandleKey(Key_Left);
+			if (KeyDownRaw(Key_Shift))
+			{
+				gl->cyclicFunc.offset -= 0.01f;
+			}
+			else
+			{
+				gl->cyclicFunc.period -= 0.01f;
+			}
+		}
+		
+		rec funcRec = NewRec(20, ScreenSize.height/2 - 200, ScreenSize.width - 20*2, 400);
+		RecAlign(&funcRec);
+		rec baselineRec = NewRec(funcRec.x, (funcRec.y + funcRec.height/2) - 0.5f, funcRec.width, 1);
+		RecAlign(&baselineRec); //TODO: Should we align this?
+		//TODO: Calculate some vertical markers to show us where whole numbers are
+		
+		RcDrawRectangle(funcRec, ColorTransparent(Black, 0.5f));
+		RcDrawRectangleOutline(funcRec, MonokaiWhite, 1, true);
+		RcDrawRectangle(baselineRec, MonokaiGray2);
+		
+		for (i32 wholeNumberIndex = 0; wholeNumberIndex < FloorR32i(graphWidth)/2; wholeNumberIndex++)
+		{
+			rec posNumberBar = NewRec(
+				funcRec.x + funcRec.width/2 + ((funcRec.width / graphWidth) * wholeNumberIndex),
+				funcRec.y, 1, funcRec.height
+			);
+			RecAlign(&posNumberBar);
+			RcDrawRectangle(posNumberBar, MonokaiGray2);
+			if (wholeNumberIndex > 0)
+			{
+				rec negNumberBar = NewRec(
+					funcRec.x + funcRec.width/2 - ((funcRec.width / graphWidth) * wholeNumberIndex),
+					funcRec.y, 1, funcRec.height
+				);
+				RecAlign(&negNumberBar);
+				RcDrawRectangle(negNumberBar, MonokaiGray2);
+			}
+		}
+		
+		RcBindFont(&pig->resources.fonts->pixel, SelectDefaultFontFace());
+		v2 previousVert = Vec2_Zero;
+		for (u64 xIndex = 0; xIndex <= numVertices; xIndex++)
+		{
+			r32 t = (((r32)xIndex / (r32)numVertices) - 0.5f) * graphWidth;
+			r32 y = CyclicFuncGetValue(gl->cyclicFunc, t);
+			r32 screenX = funcRec.x + ((r32)xIndex / (r32)numVertices) * funcRec.width;
+			r32 screenY = funcRec.y + (funcRec.height * ((1.0f - y) / 2));
+			v2 screenVert = NewVec2(screenX, screenY);
+			if (xIndex > 0)
+			{
+				RcDrawLine(previousVert, screenVert, 2, MonokaiRed);
+			}
+			previousVert = screenVert;
+			// if ((xIndex % 5) == 0) { RcDrawTextPrint(Vec2Round(screenVert), MonokaiWhite, "[%u] %g=%g", xIndex, t, y); }
+		}
+		
+		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+		v2 textPos = NewVec2(funcRec.x, funcRec.y - 4 - RcGetMaxDescend());
+		r32 textLineHeight = RcGetLineHeight() + 4;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Constant:  %g", gl->cyclicFunc.constant);  textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Offset:    %g", gl->cyclicFunc.offset);    textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Amplitude: %g", gl->cyclicFunc.amplitude); textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Period:    %g", gl->cyclicFunc.period);    textPos.y -= textLineHeight;
+		RcDrawTextPrint(textPos, MonokaiWhite, "Type:   %s", GetCyclicFuncTypeStr(gl->cyclicFunc.type)); textPos.y -= textLineHeight;
 	}
 }

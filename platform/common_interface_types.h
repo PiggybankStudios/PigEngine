@@ -292,6 +292,12 @@ struct EngineInput_t
 	#endif
 	
 	StringFifo_t platDebugLines;
+	
+	#if PROCMON_SUPPORTED
+	u64 nextProcmonEventId;
+	StrHashDict_t processEntries; //ProcmonEntry_t
+	StrHashDict_t touchedFiles; //ProcmonFile_t
+	#endif
 };
 
 struct EngineOutput_t
