@@ -86,6 +86,7 @@ struct RenderContext_t
 	VertBuffer_t squareBuffer;
 	VertBuffer_t rightAngleTriBuffer;
 	VertBuffer_t equilTriangleBuffer;
+	VertBuffer_t voxelOrtho2D;
 	VertBuffer_t cubeBuffer;
 	VertBuffer_t skyboxBuffer;
 	VertBuffer_t scratchBuffer2D; //RC_SCRATCH_BUFFER_SIZE vertices

@@ -324,6 +324,9 @@ struct MusicSystemState_t
 {
 	SoundInstanceHandle_t currentMusic;
 	SoundInstanceHandle_t previousMusic;
+	MusicFade_t sndQueuedFade;
+	r32 sndQueuedFadeDuration; //ms
+	SoundInstanceHandle_t sndQueuedMusic;
 	MusicFade_t currentFade;
 	r32 currentFadeDuration; //ms
 	r32 currentFadeProgress; //percent

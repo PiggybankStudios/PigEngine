@@ -164,7 +164,7 @@ void RcDrawVoxelOrthoFace2D(rec rectangle, rec sourceRec, Color_t color, Dir3_t 
 	RcSetColor1(color);
 	if (side == Dir3_All)
 	{
-		RcBindVertBuffer(&gl->voxelOrtho2D);
+		RcBindVertBuffer(&rc->voxelOrtho2D);
 		RcDrawBuffer(VertBufferPrimitive_Triangles);
 	}
 	else
@@ -172,7 +172,7 @@ void RcDrawVoxelOrthoFace2D(rec rectangle, rec sourceRec, Color_t color, Dir3_t 
 		u64 startIndex = 0;
 		if (side == Dir3_Left) { startIndex = 6; }
 		if (side == Dir3_Up) { startIndex = 12; }
-		RcBindVertBuffer(&gl->voxelOrtho2D);
+		RcBindVertBuffer(&rc->voxelOrtho2D);
 		RcDrawBuffer(VertBufferPrimitive_Triangles, startIndex, 6);
 	}
 }

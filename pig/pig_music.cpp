@@ -47,6 +47,23 @@ void PigUpdateMusicSystem(MusicSystemState_t* music)
 	NotNull(music);
 	
 	// +==============================+
+	// | Check Sound Queued Instance  |
+	// +==============================+
+	SoundInstance_t* queuedInstance = GetSoundInstanceFromHandle(music->sndQueuedMusic);
+	if (queuedInstance != nullptr && queuedInstance->playing)
+	{
+		StopSoundInstance(music->previousMusic);
+		music->previousMusic = music->currentMusic;
+		music->currentMusic = music->sndQueuedMusic;
+		music->currentFade = music->sndQueuedFade;
+		music->currentFadeDuration = music->sndQueuedFadeDuration;
+		music->currentFadeProgress = 0.0f;
+		music->sndQueuedMusic = SoundInstanceHandle_Empty;
+		music->sndQueuedFade = MusicFade_None;
+		music->sndQueuedFadeDuration = 0;
+	}
+	
+	// +==============================+
 	// |     Update Fade Progress     |
 	// +==============================+
 	if (music->currentFade != MusicFade_None)
@@ -132,4 +149,51 @@ SoundInstanceHandle_t SoftPlayMusic(Sound_t* sound, MusicFade_t fade = MusicFade
 	if (currentInstance != nullptr && currentInstance->sound != nullptr && sound != nullptr && currentInstance->sound->id == sound->id) { return music->currentMusic; }
 	
 	return PlayMusic(sound, fade, fadeDuration);
+}
+
+//NOTE: This will set soundInstance to be not repeating
+SoundInstanceHandle_t PlayMusicAfterSound(Sound_t* sound, SoundInstance_t* soundInstance, MusicFade_t fade = MusicFade_Instant, r32 fadeDuration = 0)
+{
+	NotNull(pig);
+	NotNull(sound);
+	NotNull(soundInstance);
+	Assert(fade != MusicFade_None && fade < MusicFade_NumTypes);
+	MusicSystemState_t* music = &pig->musicSystem;
+	
+	SoundInstance_t* musicInstance = NewSoundInstance(SoundInstanceType_Samples, true);
+	if (musicInstance == nullptr) { return SoundInstanceHandle_Empty; }
+	
+	if (soundInstance->isMusic && soundInstance->repeating) { soundInstance->repeating = false; }
+	
+	musicInstance->repeating = true;
+	musicInstance->numFrames = sound->numFrames;
+	musicInstance->format = sound->format;
+	musicInstance->sound = sound;
+	musicInstance->volume = 1.0f;
+	
+	StartSoundInstanceAfterOtherInstance(soundInstance, musicInstance);
+	
+	music->sndQueuedFade = fade;
+	music->sndQueuedFadeDuration = fadeDuration;
+	music->sndQueuedMusic = NewSoundInstanceHandle(musicInstance);
+	
+	return music->sndQueuedMusic;
+}
+
+SoundInstanceHandle_t PlayMusicAfterSound(Sound_t* sound, SoundInstanceHandle_t soundInstanceHandle, MusicFade_t fade = MusicFade_Instant, r32 fadeDuration = 0)
+{
+	return PlayMusicAfterSound(sound, GetSoundInstanceFromHandle(soundInstanceHandle), fade, fadeDuration);
+}
+
+bool IsMusicQueuedAfterSound(const Sound_t* sound)
+{
+	NotNull(pig);
+	MusicSystemState_t* music = &pig->musicSystem;
+	NotNull(sound);
+	SoundInstance_t* queuedInstance = GetSoundInstanceFromHandle(music->sndQueuedMusic);
+	if (queuedInstance != nullptr && queuedInstance->sound == sound)
+	{
+		return true;
+	}
+	return false;
 }

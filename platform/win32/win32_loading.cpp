@@ -153,11 +153,24 @@ PLAT_API_RENDER_LOADING_SCREEN(Win32_RenderLoadingScreen)
 				
 				if (Platform->loadingBackground.isValid)
 				{
-					//TODO: Update this and handle loadingBackTiling and loadingBackScale
 					Win32_BindTexture(&Platform->loadingBackground);
-					rec logoRec = NewRec(window->input.renderResolution/2 - ToVec2(Platform->loadingBackground.size)/2, ToVec2(Platform->loadingBackground.size));
+					rec logoRec = Rec_Zero;
+					rec logoSourceRec = NewRec(Vec2_Zero, ToVec2(Platform->loadingBackground.size));
+					if (Platform->startupOptions.loadingBackTiling)
+					{
+						Unimplemented(); //TODO: Implement me!
+					}
+					else if (Platform->startupOptions.loadingBackScale != 0.0f)
+					{
+						logoRec = NewRec(window->input.renderResolution/2, Platform->startupOptions.loadingBackScale * ToVec2(Platform->loadingBackground.size));
+						logoRec.topLeft -= logoRec.size/2;
+					}
+					else
+					{
+						logoRec = NewRec(0, 0, window->input.renderResolution);
+					}
 					logoRec.topLeft = Vec2Round(logoRec.topLeft);
-					Win32_DrawTexturedRec(logoRec, White, NewRec(Vec2_Zero, ToVec2(Platform->loadingBackground.size)));
+					Win32_DrawTexturedRec(logoRec, White, logoSourceRec);
 				}
 				
 				if (Platform->loadingImage.isValid)
@@ -205,7 +218,7 @@ PLAT_API_RENDER_LOADING_SCREEN(Win32_RenderLoadingScreen)
 				Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), TransparentBlack, Rec_Default);
 				Win32_SetShaderValue(0, 0.0f);
 				Win32_SetShaderValue(1, 0.0f);
-				Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), ColorTransparent(Black, LerpR32(1.0f, 0.0f, actualLoadPercent)), Rec_Default);
+				// Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), ColorTransparent(Black, LerpR32(1.0f, 0.0f, actualLoadPercent)), Rec_Default);
 				
 				Win32_BindTexture(&Platform->dotTexture);
 				Win32_DrawTexturedRec(NewRec(0, 0, window->input.renderResolution.width * actualLoadPercent, 10), Platform->startupOptions.loadingBarColor, Rec_Default);

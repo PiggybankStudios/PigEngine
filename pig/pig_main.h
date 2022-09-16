@@ -108,6 +108,8 @@ struct PigState_t
 	PigMemGraph_t memGraph;
 	PigAudioOutGraph_t audioOutGraph;
 	r64 physicsSimTimeLastFrame;
+	bool cyclicFuncsDebug;
+	CyclicFunc_t cyclicFunc;
 	
 	//Audio
 	PlatMutex_t volumeMutex;
