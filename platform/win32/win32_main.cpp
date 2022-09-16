@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
 	PrintLine_O("|     PigEngine v%u.%02u(%03u)     |", Platform->version.major, Platform->version.minor, Platform->version.build);
 	WriteLine_O("+==============================+");
 	
+	#if 0
 	//TODO: Remove this test
 	const char* tests[] = {
 		"1.0",
@@ -171,6 +172,7 @@ int main(int argc, char* argv[])
 		double testValue = (double)strtox(testStr, nullptr, FloatSize_64);
 		PrintLine_I("Test[%d]: \"%s\" -> %f (%.g)", testIndex, testStr, testValue, testValue);
 	}
+	#endif
 	
 	#if USED_WIN_MAIN_ENTRY_POINT
 	Win32_ProcessProgramArguments(lpCmdLine, nCmdShow);

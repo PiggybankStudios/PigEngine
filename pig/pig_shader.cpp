@@ -525,6 +525,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			CreateShader_FindUniform(shaderOut->glLocations.color2,            "Color2",            ShaderUniform_Color2);
 			CreateShader_FindUniform(shaderOut->glLocations.replaceColors,     "ReplaceColors",     ShaderUniform_ReplaceColors);
 			CreateShader_FindUniform(shaderOut->glLocations.time,              "Time",              ShaderUniform_Time);
+			CreateShader_FindUniform(shaderOut->glLocations.count,             "Count",             ShaderUniform_Count);
 			CreateShader_FindUniform(shaderOut->glLocations.brightness,        "Brightness",        ShaderUniform_Brightness);
 			CreateShader_FindUniform(shaderOut->glLocations.saturation,        "Saturation",        ShaderUniform_Saturation);
 			CreateShader_FindUniform(shaderOut->glLocations.circleRadius,      "CircleRadius",      ShaderUniform_CircleRadius);
@@ -537,6 +538,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			CreateShader_FindUniform(shaderOut->glLocations.value[5],          "Value5",            ShaderUniform_Value5);
 			CreateShader_FindUniform(shaderOut->glLocations.value[6],          "Value6",            ShaderUniform_Value6);
 			CreateShader_FindUniform(shaderOut->glLocations.value[7],          "Value7",            ShaderUniform_Value7);
+			CreateShader_FindUniform(shaderOut->glLocations.polygonPlanes,     "PolygonPlanes",     ShaderUniform_PolygonPlanes);
 			#undef CreateShader_FindUniform
 			
 			if (shaderOut->error == ShaderError_None || shaderOut->error == ShaderError_MissingAttribute || shaderOut->error == ShaderError_MissingUniform)

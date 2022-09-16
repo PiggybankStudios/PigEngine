@@ -36,6 +36,26 @@ struct DebugConsoleSelectionRec_t
 	rec mainRec;
 };
 
+#define DEBUG_COMMAND_MAX_NUM_ARGUMENTS 8
+
+struct DebugConsoleRegisteredCommand_t
+{
+	u64 numArguments;
+	MyStr_t command;
+	MyStr_t description;
+	MyStr_t arguments[DEBUG_COMMAND_MAX_NUM_ARGUMENTS];
+};
+
+struct DebugConsoleAutocompleteItem_t
+{
+	u64 index;
+	MyStr_t command;
+	MyStr_t displayText;
+	TextMeasure_t displayTextMeasure;
+	rec mainRec;
+	v2 displayTextPos;
+};
+
 struct DebugConsoleLine_t
 {
 	u8 flags;
@@ -81,6 +101,8 @@ struct DebugConsole_t
 	bool funcNameGutterEnabled;
 	bool timeGutterEnabled;
 	
+	VarArray_t registeredCommands; //DebugConsoleRegisteredCommand_t
+	
 	u64 numLinesAdded;
 	bool linesNeedResize;
 	v2 totalLinesSize;
@@ -107,13 +129,14 @@ struct DebugConsole_t
 	u64 recallIndex;
 	MyStr_t suspendedInputStr;
 	
-	//TODO: Implement autocomplete stuff!
 	bool autocompleteActive;
+	r32 autocompleteOpenAmount;
 	i64 autocompleteSelectionIndex;
-	bool autocompleteItemsChanged;
-	VarArray_t autocompleteItems; //MyStr_t
+	bool autocompleteScrollToSelection;
+	VarArray_t autocompleteItems; //DebugConsoleAutocompleteItem_t
 	v2 autocompleteItemsSize;
 	r32 autocompleteScroll;
+	r32 autocompleteScrollGoto;
 	r32 autocompleteScrollMax;
 	
 	rec mainRec;

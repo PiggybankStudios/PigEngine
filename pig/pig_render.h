@@ -165,27 +165,31 @@ enum ShaderUniform_t
 	ShaderUniform_ReplaceColors     = 0x00004000,
 	
 	ShaderUniform_Time              = 0x00008000,
-	ShaderUniform_Brightness        = 0x00010000,
-	ShaderUniform_Saturation        = 0x00020000,
-	ShaderUniform_CircleRadius      = 0x00040000,
-	ShaderUniform_CircleInnerRadius = 0x00080000,
+	ShaderUniform_Count             = 0x00010000,
+	ShaderUniform_Brightness        = 0x00020000,
+	ShaderUniform_Saturation        = 0x00040000,
+	ShaderUniform_CircleRadius      = 0x00080000,
+	ShaderUniform_CircleInnerRadius = 0x00100000,
 	
-	ShaderUniform_Value0            = 0x00100000,
-	ShaderUniform_Value1            = 0x00200000,
-	ShaderUniform_Value2            = 0x00400000,
-	ShaderUniform_Value3            = 0x00800000,
-	ShaderUniform_Value4            = 0x01000000,
-	ShaderUniform_Value5            = 0x02000000,
-	ShaderUniform_Value6            = 0x04000000,
-	ShaderUniform_Value7            = 0x08000000,
+	ShaderUniform_PolygonPlanes     = 0x00200000,
 	
-	ShaderUniform_All               = 0x0FFFFFFF,
+	ShaderUniform_Value0            = 0x00400000,
+	ShaderUniform_Value1            = 0x00800000,
+	ShaderUniform_Value2            = 0x01000000,
+	ShaderUniform_Value3            = 0x02000000,
+	ShaderUniform_Value4            = 0x04000000,
+	ShaderUniform_Value5            = 0x08000000,
+	ShaderUniform_Value6            = 0x10000000,
+	ShaderUniform_Value7            = 0x20000000,
+	
+	ShaderUniform_All               = 0x3FFFFFFF,
 	
 	ShaderUniform_RequireNone = ShaderUniform_None,
 	ShaderUniform_RequireMatrices = (ShaderUniform_WorldMatrix|ShaderUniform_ViewMatrix|ShaderUniform_ProjectionMatrix),
 	ShaderUniform_RequireTexture  = (ShaderUniform_Texture1|ShaderUniform_Texture1Size),
 	ShaderUniform_RequireCircle   = (ShaderUniform_CircleRadius|ShaderUniform_CircleInnerRadius),
 	ShaderUniform_NumGenericValues = 8,
+	ShaderUniform_NumPolygonPlanes = 8, //make sure this matches the define in convexPolygon2D.glsl
 };
 
 enum ShaderError_t
@@ -304,10 +308,12 @@ struct Shader_t
 		
 		//Other Effects
 		GLint time;
+		GLint count;
 		GLint brightness;
 		GLint saturation;
 		GLint circleRadius;
 		GLint circleInnerRadius;
+		GLint polygonPlanes;
 		
 		//Generic "Value"s
 		GLint value[ShaderUniform_NumGenericValues];

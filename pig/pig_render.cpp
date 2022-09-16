@@ -397,6 +397,18 @@ void RcSetShiftVec_OpenGL(v2 shiftVec)
 	}
 }
 
+void RcSetCount_OpenGL(i32 count)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_Count))
+	{
+		Assert(rc->state.boundShader->glLocations.count >= 0);
+		glUniform1i(rc->state.boundShader->glLocations.count, count);
+		AssertNoOpenGlError();
+	}
+}
+
 void RcSetCircleRadius_OpenGL(r32 radius)
 {
 	NotNull(rc);
@@ -416,6 +428,19 @@ void RcSetCircleInnerRadius_OpenGL(r32 innerRadius)
 	{
 		Assert(rc->state.boundShader->glLocations.circleInnerRadius >= 0);
 		glUniform1f(rc->state.boundShader->glLocations.circleInnerRadius, innerRadius);
+		AssertNoOpenGlError();
+	}
+}
+
+void RcSetPolygonPlanes_OpenGL(const v2* planeValues)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	NotNull(planeValues);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_PolygonPlanes))
+	{
+		Assert(rc->state.boundShader->glLocations.polygonPlanes >= 0);
+		glUniform2fv(rc->state.boundShader->glLocations.polygonPlanes, (GLsizei)ShaderUniform_NumPolygonPlanes, (const GLfloat*)planeValues);
 		AssertNoOpenGlError();
 	}
 }
@@ -739,8 +764,10 @@ void RcBindShader(Shader_t* shader)
 			if (rc->state.boundTexture1 != nullptr) { RcSetSourceRec1_OpenGL(rc->state.sourceRec1, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height); }
 			if (rc->state.boundTexture2 != nullptr) { RcSetSourceRec2_OpenGL(rc->state.sourceRec2, rc->state.boundTexture2->isFlippedY, rc->state.boundTexture2->height); }
 			RcSetShiftVec_OpenGL(rc->state.shiftVec);
+			RcSetCount_OpenGL(rc->state.count);
 			RcSetCircleRadius_OpenGL(rc->state.circleRadius);
 			RcSetCircleInnerRadius_OpenGL(rc->state.circleInnerRadius);
+			RcSetPolygonPlanes_OpenGL(&rc->state.polygonPlanes[0]);
 			for (u8 vIndex = 0; vIndex < ArrayCount(rc->state.values); vIndex++)
 			{
 				RcSetValue_OpenGL(vIndex, rc->state.values[vIndex]);
@@ -1194,6 +1221,24 @@ void RcSetShiftVec(v2 shiftVec)
 	}
 }
 
+void RcSetCount(i32 count)
+{
+	NotNull(rc);
+	if (rc->state.count == count) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetCount_OpenGL(count);
+			rc->state.count = count;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetColor1!"); break;
+	}
+}
+
 void RcSetCircleRadius(r32 radius)
 {
 	NotNull(rc);
@@ -1208,7 +1253,7 @@ void RcSetCircleRadius(r32 radius)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetCircleRadius!"); break;
 	}
 }
 void RcSetCircleInnerRadius(r32 innerRadius)
@@ -1225,7 +1270,27 @@ void RcSetCircleInnerRadius(r32 innerRadius)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetCircleInnerRadius!"); break;
+	}
+}
+
+void RcSetPolygonPlane(u64 planeIndex, r32 direction, r32 distance)
+{
+	NotNull(rc);
+	Assert(planeIndex < ShaderUniform_NumPolygonPlanes);
+	v2 newValue = NewVec2(direction, distance);
+	if (Vec2BasicallyEqual(rc->state.polygonPlanes[planeIndex], newValue)) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			rc->state.polygonPlanes[planeIndex] = newValue;
+			RcSetPolygonPlanes_OpenGL(&rc->state.polygonPlanes[0]);
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetPolygonPlane!"); break;
 	}
 }
 
@@ -1244,7 +1309,7 @@ void RcSetValue(u8 valueIndex, r32 value)
 		} break;
 		#endif
 		
-		default: DebugAssertMsg(false, "Unsupported render API in RcSetShiftVec!"); break;
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetValue!"); break;
 	}
 }
 
@@ -1561,6 +1626,7 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	rc->state.sourceRec2 = Rec_Default;
 	rc->state.maskRectangle = Rec_Zero;
 	rc->state.shiftVec = Vec2_Zero;
+	rc->state.count = 0;
 	
 	rc->state.color1 = White;
 	rc->state.color1f = ToColorf(rc->state.color1);
@@ -1578,10 +1644,8 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	rc->state.circleRadius = 0.0f;
 	rc->state.circleInnerRadius = 0.0f;
 	
-	for (u64 vIndex = 0; vIndex < ArrayCount(rc->state.values); vIndex++)
-	{
-		rc->state.values[vIndex] = 0.0f;
-	}
+	ClearArray(rc->state.values);
+	ClearArray(rc->state.polygonPlanes);
 	
 	RcBindShader(initialShader);
 	RcSetViewport(NewRec(Vec2_Zero, window->input.renderResolution));
@@ -1607,7 +1671,7 @@ void RcLoadBasicResources()
 	};
 	if (!CreateVertBuffer3D(fixedHeap, &rc->lineBuffer, false, ArrayCount(lineVerts), lineVerts, true))
 	{
-		PrintLine_E("Failed to create the line vertex buffer!");
+		WriteLine_E("Failed to create the line vertex buffer!");
 		DebugAssert(false);
 	}
 	
@@ -1624,7 +1688,20 @@ void RcLoadBasicResources()
 	};
 	if (!CreateVertBuffer2D(fixedHeap, &rc->squareBuffer, false, ArrayCount(squareVerts), squareVerts, true))
 	{
-		PrintLine_E("Failed to create the square vertex buffer!");
+		WriteLine_E("Failed to create the square vertex buffer!");
+		DebugAssert(false);
+	}
+	
+	Vertex2D_t rightAngleTriVerts[] =
+	{
+		//position, color, texCoord
+		{ {0, 0, 0}, ToVec4(White), {0, 0}, }, //top-left
+		{ {1, 0, 0}, ToVec4(White), {1, 0}, }, //top-right
+		{ {0, 1, 0}, ToVec4(White), {0, 1}, }, //bottom-left
+	};
+	if (!CreateVertBuffer2D(fixedHeap, &rc->rightAngleTriBuffer, false, ArrayCount(rightAngleTriVerts), rightAngleTriVerts, true))
+	{
+		WriteLine_E("Failed to create the riangle angle triangle vertex buffer!");
 		DebugAssert(false);
 	}
 	
@@ -1635,7 +1712,7 @@ void RcLoadBasicResources()
 		InvertPrimitiveVerts(&primVerts);
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->cubeBuffer, false, &primVerts, White, true))
 		{
-			PrintLine_E("Failed to create the cube vertex buffer!");
+			WriteLine_E("Failed to create the cube vertex buffer!");
 			DebugAssert(false);
 		}
 		TempPopMark();
@@ -1670,7 +1747,7 @@ void RcLoadBasicResources()
 		}
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->skyboxBuffer, false, &primVerts, White, true))
 		{
-			PrintLine_E("Failed to create the skybox vertex buffer!");
+			WriteLine_E("Failed to create the skybox vertex buffer!");
 			DebugAssert(false);
 		}
 		TempPopMark();
@@ -1691,7 +1768,7 @@ void RcLoadBasicResources()
 		const bool copyVertices = false; //these vertices take up a decent amount of space, we won't enable this unless needed for some reason
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->sphereBuffers[sIndex], false, &primVerts, White, copyVertices))
 		{
-			PrintLine_E("Failed to create the sphere vertex buffer!");
+			WriteLine_E("Failed to create the sphere vertex buffer!");
 			DebugAssert(false);
 		}
 		TempPopMark();
@@ -1707,7 +1784,7 @@ void RcLoadBasicResources()
 	};
 	if (!CreateVertBuffer2D(fixedHeap, &rc->equilTriangleBuffer, false, ArrayCount(equilTriangleVertices), equilTriangleVertices, true))
 	{
-		PrintLine_E("Failed to create the equilateral triangle vertex buffer!");
+		WriteLine_E("Failed to create the equilateral triangle vertex buffer!");
 		DebugAssert(false);
 	}
 	
@@ -1715,7 +1792,7 @@ void RcLoadBasicResources()
 	MyMemSet(&scratchBuffer3DVerts[0], 0x00, sizeof(Vertex3D_t) * RC_SCRATCH_BUFFER_SIZE);
 	if (!CreateVertBuffer3D(fixedHeap, &rc->scratchBuffer3D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer3DVerts[0], true))
 	{
-		PrintLine_E("Failed to create the scratch buffer 3D!");
+		WriteLine_E("Failed to create the scratch buffer 3D!");
 		DebugAssert(false);
 	}
 	
@@ -1723,7 +1800,7 @@ void RcLoadBasicResources()
 	MyMemSet(&scratchBuffer2DVerts[0], 0x00, sizeof(Vertex2D_t) * RC_SCRATCH_BUFFER_SIZE);
 	if (!CreateVertBuffer2D(fixedHeap, &rc->scratchBuffer2D, true, RC_SCRATCH_BUFFER_SIZE, &scratchBuffer2DVerts[0], true))
 	{
-		PrintLine_E("Failed to create the scratch buffer 2D!");
+		WriteLine_E("Failed to create the scratch buffer 2D!");
 		DebugAssert(false);
 	}
 	

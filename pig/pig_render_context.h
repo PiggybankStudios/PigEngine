@@ -52,12 +52,15 @@ struct RenderContextState_t
 	Colorf_t replaceColorsf[16];
 	
 	r32 time;
+	i32 count;
 	r32 brightness;
 	r32 saturation;
 	r32 circleRadius;
 	r32 circleInnerRadius;
 	
 	r32 values[ShaderUniform_NumGenericValues];
+	
+	v2 polygonPlanes[ShaderUniform_NumPolygonPlanes];
 };
 
 enum SphereQuality_t
@@ -81,6 +84,7 @@ struct RenderContext_t
 	Texture_t gradientVertical;
 	VertBuffer_t lineBuffer;
 	VertBuffer_t squareBuffer;
+	VertBuffer_t rightAngleTriBuffer;
 	VertBuffer_t equilTriangleBuffer;
 	VertBuffer_t cubeBuffer;
 	VertBuffer_t skyboxBuffer;

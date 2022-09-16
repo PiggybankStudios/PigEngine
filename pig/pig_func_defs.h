@@ -12,6 +12,7 @@ Description:
 #define _PIG_FUNC_DEFS_H
 
 //pig_debug_console.cpp
+void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr_t description, u64 numArguments = 0, MyStr_t* arguments = nullptr);
 void DebugConsoleLineAdded(DebugConsole_t* console, StringFifoLine_t* newLine);
 
 //pig_perf_graph.cpp

@@ -135,6 +135,23 @@ DebugCommandInfoList_t PigGetDebugCommandInfoList()
 }
 
 // +--------------------------------------------------------------+
+// |                     Command Registration                     |
+// +--------------------------------------------------------------+
+void PigRegisterDebugCommands()
+{
+	DebugCommandInfoList_t engineCommands = PigGetDebugCommandInfoList();
+	DebugCommandInfoList_t gameCommands = GameGetDebugCommandInfoList();
+	
+	PrintLine_N("There are %llu engine and %llu game commands:", engineCommands.numCommands, gameCommands.numCommands);
+	u64 totalCommandCount = engineCommands.numCommands + gameCommands.numCommands;
+	for (u64 cIndex = 0; cIndex < totalCommandCount; cIndex++)
+	{
+		DebugCommandInfo_t* commandInfo = (cIndex >= engineCommands.numCommands) ? &gameCommands.commands[cIndex - engineCommands.numCommands] : &engineCommands.commands[cIndex];
+		DebugConsoleRegisterCommand(&pig->debugConsole, commandInfo->name, commandInfo->description, commandInfo->numArguments, commandInfo->arguments);
+	}
+}
+
+// +--------------------------------------------------------------+
 // |                   Command Implementations                    |
 // +--------------------------------------------------------------+
 bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr)

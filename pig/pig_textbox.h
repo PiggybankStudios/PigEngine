@@ -31,7 +31,7 @@ struct Textbox_t
 			u8 isFixedSizedBuffer:1;
 			u8 autoSizeHeight:1;
 			u8 autoSelectOnFocus:1;
-			u8 unusedConfigFlag0:1;
+			u8 skipNextUnfocusClick:1;
 			u8 unusedConfigFlag1:1;
 			u8 unusedConfigFlag2:1;
 			
@@ -42,7 +42,7 @@ struct Textbox_t
 			u8 hasTargetRec:1;
 			u8 targetRecMoved:1;
 			u8 mouseHovering:1;
-			u8 unusedStateFlag0:1;
+			u8 textChanged:1;
 		};
 	};
 	

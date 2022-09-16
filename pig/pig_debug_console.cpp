@@ -10,13 +10,12 @@ Description:
 
 //TODO: Add support for hovering over a line to see the timestamp and/or programTime comparison
 //TODO: Add pause and clear buttons
-//TODO: Add an autocomplete menu that pops up when you start typing in a command. Maybe even add support for showing which argument you are on
 
 #define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
 #define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
 
 #define DBG_CONSOLE_OPEN_KEY                Key_Tilde
-#define DBG_CONSOLE_INPUT_HISTORY_LENGTH  16 //items
+#define DBG_CONSOLE_INPUT_HISTORY_LENGTH    16 //items
 #define DBG_CONSOLE_OPEN_TIME               200 //ms
 #define DBG_CONSOLE_FADE_IN_TIME            300 //ms
 #define DBG_CONSOLE_NORMAL_OPEN_AMOUNT      0.33f //percent
@@ -42,6 +41,11 @@ Description:
 #define DBG_CONSOLE_TOGGLE_GUTTER_BTNS_SIZE    30 //px
 #define DBG_CONSOLE_FULL_ALPHA_BTN_SIZE        32 //px
 #define DBG_CONSOLE_ICON_SMALLER_AMOUNT        5 //px deflated
+#define DBG_CONSOLE_AUTOCOMPLETE_OPEN_TIME     300 //ms
+#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN   12 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_PADDING  4 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_MAX_HEIGHT    400 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_SCROLL_PAST   50 //px
 
 // +--------------------------------------------------------------+
 // |                        Initialization                        |
@@ -66,9 +70,13 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 	console->funcNameGutterEnabled = false;
 	console->timeGutterEnabled = false;
 	
+	CreateVarArray(&console->registeredCommands, mainHeap, sizeof(DebugConsoleRegisteredCommand_t));
+	
 	console->selectionActive = false;
 	console->mouseHovering = false;
 	CreateVarArray(&console->selectionRecs, mainHeap, sizeof(DebugConsoleSelectionRec_t));
+	
+	CreateVarArray(&console->autocompleteItems, mainHeap, sizeof(DebugConsoleAutocompleteItem_t));
 	
 	CreateTextbox(&console->inputTextbox, mainHeap, 0, false, false);
 	SetTextboxHintText(&console->inputTextbox, NewStr("Enter Command... (or type \"help\")"));
@@ -94,6 +102,47 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 // +--------------------------------------------------------------+
 // |                           Helpers                            |
 // +--------------------------------------------------------------+
+void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr_t description, u64 numArguments, MyStr_t* arguments) //pre-declared in pig_func_defs.h
+{
+	NotNull(console);
+	NotNullStr(&command);
+	NotNullStr(&description);
+	AssertIf(numArguments > 0, arguments != nullptr);
+	Assert(numArguments <= DEBUG_COMMAND_MAX_NUM_ARGUMENTS);
+	DebugConsoleRegisteredCommand_t* newCommand = VarArrayAdd(&console->registeredCommands, DebugConsoleRegisteredCommand_t);
+	NotNull(newCommand);
+	ClearPointer(newCommand);
+	newCommand->command = AllocString(fixedHeap, &command);
+	newCommand->description = AllocString(fixedHeap, &description);
+	newCommand->numArguments = numArguments;
+	for (u64 aIndex = 0; aIndex < numArguments; aIndex++)
+	{
+		NotNullStr(&arguments[aIndex]);
+		newCommand->arguments[aIndex] = AllocString(mainHeap, &arguments[aIndex]);
+	}
+}
+
+void DebugConsoleClearAutocompleteItems(DebugConsole_t* console, bool resetAnimation = true)
+{
+	NotNull(console);
+	VarArrayLoop(&console->autocompleteItems, iIndex)
+	{
+		VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+		FreeString(mainHeap, &item->command);
+		FreeString(mainHeap, &item->displayText);
+	}
+	VarArrayClear(&console->autocompleteItems);
+	if (resetAnimation) { console->autocompleteOpenAmount = 0.0f; }
+	console->autocompleteActive = false;
+	console->autocompleteSelectionIndex = -1;
+}
+
+void DebugConsoleDismissAutocomplete(DebugConsole_t* console, bool resetAnimation = true)
+{
+	NotNull(console);
+	console->autocompleteActive = false;
+}
+
 void DebugConsoleClose(DebugConsole_t* console)
 {
 	NotNull(console);
@@ -110,6 +159,7 @@ void DebugConsoleClose(DebugConsole_t* console)
 	{
 		ClearFocus();
 	}
+	DebugConsoleClearAutocompleteItems(console);
 }
 
 void DebugConsoleClearInputHistory(DebugConsole_t* console)
@@ -305,6 +355,103 @@ MyStr_t GetDebugConsoleLinesAsCopyText(DebugConsole_t* console, DebugConsoleText
 		}
 	}
 	return result;
+}
+
+// +==========================================+
+// | DebugConsoleAutocompleteSortingFunction  |
+// +==========================================+
+//i32 DebugConsoleAutocompleteSortingFunction(const void* left, const void* right, void* contextPntr)
+COMPARE_FUNC_DEFINITION(DebugConsoleAutocompleteSortingFunction) 
+{
+	DebugConsole_t* console = (DebugConsole_t*)contextPntr;
+	DebugConsoleAutocompleteItem_t* leftItem = (DebugConsoleAutocompleteItem_t*)left;
+	DebugConsoleAutocompleteItem_t* rightItem = (DebugConsoleAutocompleteItem_t*)right;
+	if (console->inputTextbox.text.length > 0)
+	{
+		u64 leftMatchIndex = 0;
+		bool leftFoundSubstring = FindSubstring(leftItem->command, console->inputTextbox.text, &leftMatchIndex, true);
+		DebugAssertAndUnused(leftFoundSubstring, leftFoundSubstring);
+		u64 rightMatchIndex = 0;
+		bool rightFoundSubstring = FindSubstring(rightItem->command, console->inputTextbox.text, &rightMatchIndex, true);
+		DebugAssertAndUnused(rightFoundSubstring, rightFoundSubstring);
+		if (leftMatchIndex < rightMatchIndex) { return -1; }
+		if (rightMatchIndex < leftMatchIndex) { return 1; }
+	}
+	return CompareFuncMyStr(&leftItem->command, &rightItem->command, nullptr);
+}
+
+void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, bool forceShowAllItems = false)
+{
+	NotNull(console);
+	DebugConsoleClearAutocompleteItems(console, false);
+	if (console->inputTextbox.text.length > 0 || forceShowAllItems)
+	{
+		VarArrayLoop(&console->registeredCommands, rIndex)
+		{
+			VarArrayLoopGet(DebugConsoleRegisteredCommand_t, registeredCommand, &console->registeredCommands, rIndex);
+			if (forceShowAllItems || FindSubstring(registeredCommand->command, console->inputTextbox.text, nullptr, true))
+			{
+				u64 formattedCommandStrLength = registeredCommand->command.length+3; //+2 for bold toggle chars and +1 for a colon
+				for (u64 aIndex = 0; aIndex < registeredCommand->numArguments; aIndex++)
+				{
+					formattedCommandStrLength += 1 + registeredCommand->arguments[aIndex].length;
+				}
+				u64 formattedCommandStrLengthBeforeTabs = formattedCommandStrLength-2; //-2 for bold chars not affecting column index
+				if (formattedCommandStrLengthBeforeTabs <   4) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <   8) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  12) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  16) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  20) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  24) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  28) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs <  32) { formattedCommandStrLength++; }
+				if (formattedCommandStrLengthBeforeTabs >= 32) { formattedCommandStrLength++; }
+				char* formattedCommandStr = TempArray(char, formattedCommandStrLength+1);
+				NotNull(formattedCommandStr);
+				u64 formattedCommandStrIndex = 0;
+				formattedCommandStr[formattedCommandStrIndex] = '\b'; formattedCommandStrIndex++;
+				MyMemCopy(&formattedCommandStr[formattedCommandStrIndex], registeredCommand->command.pntr, registeredCommand->command.length); formattedCommandStrIndex += registeredCommand->command.length;
+				formattedCommandStr[formattedCommandStrIndex] = '\b'; formattedCommandStrIndex++;
+				for (u64 aIndex = 0; aIndex < registeredCommand->numArguments; aIndex++)
+				{
+					MyStr_t argument = registeredCommand->arguments[aIndex];
+					formattedCommandStr[formattedCommandStrIndex] = ' '; formattedCommandStrIndex++;
+					MyMemCopy(&formattedCommandStr[formattedCommandStrIndex], argument.pntr, argument.length); formattedCommandStrIndex += argument.length;
+				}
+				formattedCommandStr[formattedCommandStrIndex] = ':'; formattedCommandStrIndex++;
+				if (formattedCommandStrLengthBeforeTabs <   4) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <   8) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  12) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  16) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  20) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  24) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  28) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs <  32) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
+				if (formattedCommandStrLengthBeforeTabs >= 32) { formattedCommandStr[formattedCommandStrIndex] = ' ';  formattedCommandStrIndex++; }
+				Assert(formattedCommandStrIndex == formattedCommandStrLength);
+				formattedCommandStr[formattedCommandStrLength] = '\0';
+				
+				DebugConsoleAutocompleteItem_t* newItem = VarArrayAdd(&console->autocompleteItems, DebugConsoleAutocompleteItem_t);
+				NotNull(newItem);
+				ClearPointer(newItem);
+				newItem->index = console->autocompleteItems.length-1;
+				newItem->command = AllocString(mainHeap, &registeredCommand->command);
+				if (registeredCommand->description.length > 0)
+				{
+					newItem->displayText = PrintInArenaStr(mainHeap, "%s%.*s", formattedCommandStr, registeredCommand->description.length, registeredCommand->description.pntr);
+				}
+				else
+				{
+					newItem->displayText = PrintInArenaStr(mainHeap, "%s", formattedCommandStr);
+				}
+			}
+		}
+		
+		VarArraySort(&console->autocompleteItems, DebugConsoleAutocompleteSortingFunction, console);
+	}
+	console->autocompleteActive = (console->autocompleteItems.length > 0);
+	console->autocompleteScroll = 0;
+	console->autocompleteScrollGoto = 0;
 }
 
 // +--------------------------------------------------------------+
@@ -542,6 +689,54 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	console->inputLabelTextPos = console->inputLabelRec.topLeft + inputLabelMeasure.offset;
 	Vec2Align(&console->inputLabelTextPos);
 	
+	console->autocompleteItemsSize = Vec2_Zero;
+	VarArrayLoop(&console->autocompleteItems, iIndex)
+	{
+		VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+		item->displayTextMeasure = MeasureTextInFont(item->displayText, &pig->resources.fonts->debug, SelectFontFace(18));
+		item->mainRec.size = item->displayTextMeasure.size + NewVec2(DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN*2, DBG_CONSOLE_AUTOCOMPLETE_ITEM_PADDING);
+		item->mainRec.y = console->autocompleteItemsSize.height + ((iIndex == 0) ? DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN : 0);
+		item->mainRec.x = 0;
+		RecAlign(&item->mainRec);
+		item->displayTextPos.x = item->mainRec.x + item->mainRec.width/2 - item->displayTextMeasure.size.width/2 + item->displayTextMeasure.offset.x;
+		item->displayTextPos.y = item->mainRec.y + item->mainRec.height/2 - item->displayTextMeasure.size.height/2 + item->displayTextMeasure.offset.y;
+		Vec2Align(&item->displayTextPos);
+		if (console->autocompleteItemsSize.width < item->mainRec.x + item->mainRec.width) { console->autocompleteItemsSize.width = item->mainRec.x + item->mainRec.width; }
+		if (console->autocompleteItemsSize.height < item->mainRec.y + item->mainRec.height) { console->autocompleteItemsSize.height = item->mainRec.y + item->mainRec.height; }
+	}
+	console->autocompleteRec.size = console->autocompleteItemsSize + NewVec2(0, DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN);
+	if (console->autocompleteRec.height > DBG_CONSOLE_AUTOCOMPLETE_MAX_HEIGHT) { console->autocompleteRec.height = DBG_CONSOLE_AUTOCOMPLETE_MAX_HEIGHT; }
+	if (console->autocompleteRec.height > console->inputRec.y) { console->autocompleteRec.height = console->inputRec.y; }
+	if (console->autocompleteRec.width > console->inputRec.width) { console->autocompleteRec.width = console->inputRec.width; }
+	console->autocompleteRec.height = console->autocompleteRec.height * EaseQuadraticOut(console->autocompleteOpenAmount);
+	console->autocompleteRec.x = console->inputRec.x;
+	console->autocompleteRec.y = console->inputRec.y - console->autocompleteRec.height;
+	RecAlign(&console->autocompleteRec);
+	VarArrayLoop(&console->autocompleteItems, iIndex)
+	{
+		VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+		item->mainRec.width = console->autocompleteItemsSize.width;
+	}
+	if (console->autocompleteScrollToSelection)
+	{
+		console->autocompleteScrollToSelection = false;
+		if (console->autocompleteSelectionIndex >= 0 && (u64)console->autocompleteSelectionIndex < console->autocompleteItems.length)
+		{
+			DebugConsoleAutocompleteItem_t* selectedItem = VarArrayGet(&console->autocompleteItems, console->autocompleteSelectionIndex, DebugConsoleAutocompleteItem_t);
+			if (console->autocompleteScrollGoto < selectedItem->mainRec.y + selectedItem->mainRec.height - console->autocompleteRec.height)
+			{
+				console->autocompleteScrollGoto = selectedItem->mainRec.y + selectedItem->mainRec.height - console->autocompleteRec.height + DBG_CONSOLE_AUTOCOMPLETE_SCROLL_PAST;
+			}
+			if (console->autocompleteScrollGoto > selectedItem->mainRec.y)
+			{
+				console->autocompleteScrollGoto = selectedItem->mainRec.y - DBG_CONSOLE_AUTOCOMPLETE_SCROLL_PAST;
+			}
+		}
+	}
+	console->autocompleteScrollMax = (console->autocompleteItemsSize.height + DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN) - console->autocompleteRec.height;
+	console->autocompleteScroll = ClampR32(console->autocompleteScroll, 0, console->autocompleteScrollMax);
+	console->autocompleteScrollGoto = ClampR32(console->autocompleteScrollGoto, 0, console->autocompleteScrollMax);
+	
 	console->viewRec = console->mainRec;
 	RecLayoutBetweenY(&console->viewRec, console->mainRec.y, console->inputRec.y, 0, DBG_CONSOLE_ELEM_MARGIN);
 	RecAlign(&console->viewRec);
@@ -681,6 +876,18 @@ void DebugConsoleCaptureMouse(DebugConsole_t* console)
 		}
 		if (!console->overlayMode)
 		{
+			if (console->autocompleteActive && IsMouseInsideRec(console->autocompleteRec))
+			{
+				v2 itemsOffset = console->autocompleteRec.topLeft + NewVec2(0, -console->autocompleteScroll);
+				Vec2Align(&itemsOffset);
+				VarArrayLoop(&console->autocompleteItems, iIndex)
+				{
+					VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+					rec itemRec = item->mainRec + itemsOffset;
+					MouseHitRecPrint(itemRec, "DebugConsoleAutocompleteItem%llu", iIndex);
+				}
+				MouseHitNamed("DebugConsoleAutocomplete");
+			}
 			TextboxCaptureMouse(&console->inputTextbox);
 			MouseHitRecNamed(console->closeBtnRec,             "DebugConsoleCloseBtn");
 			MouseHitRecNamed(console->toggleGutterBtnRec,      "DebugConsoleToggleGutterBtn");
@@ -734,6 +941,31 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	if (openKeyWasPressed) { HandleKeyExtended(DBG_CONSOLE_OPEN_KEY); }
 	bool escapeKeyWasPressed = KeyPressed(Key_Escape);
 	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode) { HandleKeyExtended(Key_Escape); }
+	bool tabKeyWasPressed = KeyPressedRepeating(Key_Tab, 400, 66);
+	if (IsFocused(&console->inputTextbox)) { HandleKey(Key_Tab); }
+	
+	// +============================================+
+	// | Handle Mouse Interaction With Autocomplete |
+	// +============================================+
+	if (console->autocompleteActive)
+	{
+		VarArrayLoop(&console->autocompleteItems, iIndex)
+		{
+			VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+			if (IsMouseOverPrint("DebugConsoleAutocompleteItem%llu", iIndex))
+			{
+				pigOut->cursorType = PlatCursor_Pointer;
+				if (MousePressedAndHandleExtended(MouseBtn_Left))
+				{
+					console->autocompleteSelectionIndex = (i64)iIndex;
+					TextboxSetText(&console->inputTextbox, item->command);
+					console->inputTextbox.textChanged = false;
+					console->inputTextbox.skipNextUnfocusClick = true;
+					//don't scroll to selection because that feels bad for mouse selection
+				}
+			}
+		}
+	}
 	
 	// +==============================+
 	// |     Update Input Textbox     |
@@ -766,6 +998,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				console->recallIndex = 0;
 				FreeString(mainHeap, &console->suspendedInputStr);
 				console->suspendedInputStr = MyStr_Empty;
+				DebugConsoleDismissAutocomplete(console);
 			}
 			else
 			{
@@ -790,6 +1023,8 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				// PrintLine_D("Recalling previous input %llu", console->recallIndex);
 				MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex, MyStr_t);
 				TextboxSetText(&console->inputTextbox, *previousInputPntr);
+				console->inputTextbox.textChanged = false;
+				DebugConsoleDismissAutocomplete(console);
 				console->recallIndex++;
 			}
 		}
@@ -816,8 +1051,81 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex-1, MyStr_t);
 					TextboxSetText(&console->inputTextbox, *previousInputPntr);
 				}
+				console->inputTextbox.textChanged = false;
+				DebugConsoleDismissAutocomplete(console);
 			}
 		}
+	}
+	
+	// +==============================+
+	// |     Update Autocomplete      |
+	// +==============================+
+	if (console->inputTextbox.textChanged)
+	{
+		console->inputTextbox.textChanged = false;
+		DebugConsoleUpdateAutocompleteItems(console);
+	}
+	
+	// +========================================+
+	// | Autocomplete Hides on InputBox Unfocus |
+	// +========================================+
+	if (!IsFocused(&console->inputTextbox) && console->autocompleteActive)
+	{
+		DebugConsoleDismissAutocomplete(console);
+	}
+	
+	// +==============================================+
+	// | Handle Key_Tab to Select Autocomplete Items  |
+	// +==============================================+
+	if (IsFocused(&console->inputTextbox) && tabKeyWasPressed)
+	{
+		if (!console->autocompleteActive && console->inputTextbox.text.length == 0)
+		{
+			DebugConsoleUpdateAutocompleteItems(console, true);
+		}
+		if (console->autocompleteActive && console->autocompleteItems.length > 0)
+		{
+			if (KeyDownRaw(Key_Shift))
+			{
+				if (console->autocompleteSelectionIndex < 0)
+				{
+					console->autocompleteSelectionIndex = console->autocompleteItems.length-1;
+				}
+				else if (console->autocompleteSelectionIndex > 0)
+				{
+					console->autocompleteSelectionIndex--;
+				}
+				else
+				{
+					console->autocompleteSelectionIndex = console->autocompleteItems.length-1;
+				}
+			}
+			else
+			{
+				if (console->autocompleteSelectionIndex < 0)
+				{
+					console->autocompleteSelectionIndex = 0;
+				}
+				else
+				{
+					console->autocompleteSelectionIndex = (console->autocompleteSelectionIndex + 1) % console->autocompleteItems.length;
+				}
+			}
+			
+			DebugConsoleAutocompleteItem_t* selectedItem = VarArrayGet(&console->autocompleteItems, console->autocompleteSelectionIndex, DebugConsoleAutocompleteItem_t);
+			TextboxSetText(&console->inputTextbox, selectedItem->command);
+			console->inputTextbox.textChanged = false;
+			console->autocompleteScrollToSelection = true;
+		}
+	}
+	
+	// +======================================+
+	// | Handle Scroll Wheel on Autocomplete  |
+	// +======================================+
+	if (IsMouseOverNamedPartial("DebugConsoleAutocomplete") && pigIn->scrollChangedY)
+	{
+		HandleMouseScrollY();
+		console->autocompleteScrollGoto += -pigIn->scrollDelta.y * DBG_CONSOLE_SCROLL_SPEED;
 	}
 	
 	// +==============================+
@@ -1330,7 +1638,14 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +==============================+
 	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode)
 	{
-		DebugConsoleClose(console);
+		if (console->autocompleteActive)
+		{
+			DebugConsoleDismissAutocomplete(console);
+		}
+		else
+		{
+			DebugConsoleClose(console);
+		}
 	}
 	
 	// +==============================+
@@ -1345,7 +1660,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		UpdateAnimationDown(&console->openAmount, DBG_CONSOLE_OPEN_TIME);
 	}
 	// +==============================+
-	// |       Update Open Anim       |
+	// |    Update Alpha Open Anim    |
 	// +==============================+
 	if (console->state != DbgConsoleState_Closed)
 	{
@@ -1361,6 +1676,38 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	else
 	{
 		UpdateAnimationDown(&console->alphaAmount, DBG_CONSOLE_FADE_IN_TIME);
+	}
+	
+	// +==============================+
+	// |  Update Autocomplete Scroll  |
+	// +==============================+
+	if (console->autocompleteActive)
+	{
+		r32 scrollDelta = console->autocompleteScrollGoto - console->autocompleteScroll;
+		if (AbsR32(scrollDelta) > 1.0f)
+		{
+			console->autocompleteScroll += (scrollDelta / DBG_CONSOLE_SCROLL_LAG);
+		}
+		else
+		{
+			console->autocompleteScroll = console->autocompleteScrollGoto;
+		}
+	}
+	
+	// +==============================+
+	// |   Update Autocomplete Anim   |
+	// +==============================+
+	if (console->autocompleteActive && console->autocompleteOpenAmount < 1.0f)
+	{
+		UpdateAnimationUp(&console->autocompleteOpenAmount, DBG_CONSOLE_AUTOCOMPLETE_OPEN_TIME);
+	}
+	else if (!console->autocompleteActive && console->autocompleteOpenAmount > 0.0f)
+	{
+		UpdateAnimationDown(&console->autocompleteOpenAmount, DBG_CONSOLE_AUTOCOMPLETE_OPEN_TIME);
+	}
+	if (!console->autocompleteActive && console->autocompleteOpenAmount <= 0.0f && console->autocompleteItems.length > 0)
+	{
+		DebugConsoleClearAutocompleteItems(console);
 	}
 	
 	// +==============================+
@@ -1696,6 +2043,37 @@ void RenderDebugConsole(DebugConsole_t* console)
 		}
 		
 		RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+		
+		// +==============================+
+		// |  Render Autocomplete Window  |
+		// +==============================+
+		if (console->autocompleteOpenAmount > 0.0f && !console->overlayMode)
+		{
+			RcDrawRectangle(console->autocompleteRec, ColorTransparent(Black, 0.75f));
+			
+			RcSetViewport(RecDeflateY(console->autocompleteRec, DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN));
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(18));
+			v2 itemsOffset = console->autocompleteRec.topLeft + NewVec2(0, -console->autocompleteScroll);
+			Vec2Align(&itemsOffset);
+			VarArrayLoop(&console->autocompleteItems, iIndex)
+			{
+				VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
+				rec mainRec = item->mainRec + itemsOffset;
+				v2 displayTextPos = item->displayTextPos + itemsOffset;
+				if (RecsIntersect(mainRec, console->autocompleteRec))
+				{
+					Color_t textColor = MonokaiWhite;
+					Color_t backColor = Transparent;
+					bool isSelected = (console->autocompleteSelectionIndex >= 0 && (u64)console->autocompleteSelectionIndex == iIndex);
+					bool isHovered = IsMouseOverPrint("DebugConsoleAutocompleteItem%llu", iIndex);
+					if (isSelected) { textColor = MonokaiBack; backColor = ColorTransparent(MonokaiWhite, 0.7f); }
+					else if (isHovered) { backColor = ColorTransparent(MonokaiWhite, 0.25f); }
+					if (backColor.a > 0) { RcDrawRectangle(mainRec, backColor); }
+					RcDrawText(item->displayText, displayTextPos, textColor);
+				}
+			}
+			RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+		}
 		
 		// +==============================+
 		// |    Render Toggle Buttons     |

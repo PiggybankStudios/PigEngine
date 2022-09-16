@@ -30,6 +30,7 @@ void PigInitialize(EngineMemory_t* memory)
 	PerfTime_t initStartTime = plat->GetPerfTime();
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
+	PigRegisterDebugCommands();
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
 	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"),  Grey10);

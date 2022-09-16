@@ -9,6 +9,7 @@ Description:
 
 //TODO: Add support for scrolling the text left/right
 //TODO: Add support for optional Undo Queue
+//TODO: Add support for tab characters
 //TODO: Add support for multi-line textbox (Up/Down arrows, scrolling up/down and autoSizeHeight too)
 //TODO: Fix Textbox_MoveCursor(ByLine) so it looks for new-line characters and doesn't act identical to ByWholeText
 //TODO: Add some sort of "operation invalid" indication to the user. Like when you try and type too many characters into a limited buffer textbox, or backspace while at the beginning
@@ -64,6 +65,7 @@ void CreateTextbox(Textbox_t* tb, MemArena_t* memArena, u64 textBufferSize, bool
 	tb->innerMargin = NewVec2(4, 4);
 	tb->hasTargetRec = false;
 	tb->needToRemeasure = true;
+	tb->textChanged = false;
 	tb->targetRecMoved = false;
 	tb->lastSelectionMoveTime = 0;
 	
@@ -157,6 +159,7 @@ bool Textbox_RemoveCharacters(Textbox_t* tb, bool forwardRemove)
 		tb->selectionStartIndex = removeStartIndex;
 		tb->selectionEndIndex = removeStartIndex;
 		tb->needToRemeasure = true;
+		tb->textChanged = true;
 		result = true;
 	}
 	
@@ -202,6 +205,7 @@ bool Textbox_CharactersTyped(Textbox_t* tb, MyStr_t newCharacters)
 	else { result = true; }
 	
 	tb->needToRemeasure = true;
+	tb->textChanged = true;
 	return result;
 }
 
@@ -405,6 +409,7 @@ void TextboxClearSelection(Textbox_t* tb)
 	NotNull(tb);
 	tb->selectionActive = false;
 	tb->needToRemeasure = true;
+	tb->textChanged = true;
 }
 
 void TextboxSetText(Textbox_t* tb, MyStr_t newText)
@@ -431,6 +436,7 @@ void TextboxSetText(Textbox_t* tb, MyStr_t newText)
 		}
 		
 		tb->needToRemeasure = true;
+		tb->textChanged = true;
 	}
 }
 
@@ -541,7 +547,14 @@ void UpdateTextbox(Textbox_t* tb)
 	// +==============================+
 	if (IsFocused(tb) && MousePressedRaw(MouseBtn_Left) && !IsMouseOverTextbox(tb))
 	{
-		ClearFocus();
+		if (tb->skipNextUnfocusClick)
+		{
+			tb->skipNextUnfocusClick = false;
+		}
+		else
+		{
+			ClearFocus();
+		}
 	}
 	
 	// +==============================+

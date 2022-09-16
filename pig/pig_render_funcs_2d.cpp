@@ -792,6 +792,249 @@ void RcDrawVectorImgPartAt(VectorImgPart_t* part, v2 position, r32 rotation, r32
 	RcDrawVectorImgPartInObb(part, drawBox, color, drawChildren);
 }
 
+//TODO: Make a textured version of this!
+void RcDrawRightAngleTriangle(rec rectangle, Dir2Ex_t direction, Color_t color)
+{
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Translate2(-Vec2_Half));
+	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
+	Mat4Transform(worldMatrix, Mat4RotateZ(GetDir2ExAngleR32(direction) - (5 * QuarterPi32)));
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x + rectangle.width/2, rectangle.y + rectangle.height/2, RcGetRealDepth()));
+	RcSetWorldMatrix(worldMatrix);
+	RcBindTexture1(&rc->dotTexture);
+	RcSetSourceRec1(Rec_Default);
+	RcSetColor1(color);
+	RcBindVertBuffer(&rc->rightAngleTriBuffer);
+	RcDrawBuffer(VertBufferPrimitive_Triangles);
+}
+
+//NOTE: offset goes down-left when + for descending and down-right when + for ascending
+void RcDrawDiagonalStripeInRec(rec rectangle, bool descending, r32 thickness, Color_t color, r32 offset = 0.0f)
+{
+	v2 lineStart = rectangle.topLeft;
+	v2 lineEnd = rectangle.topLeft + rectangle.size;
+	if (!descending) { lineStart.y += rectangle.height; lineEnd.y -= rectangle.height; }
+	v2 offsetVec = SqrtR32(2) * NewVec2(offset, offset);
+	if (descending) { offsetVec = Vec2PerpRight(offsetVec); }
+	lineStart += offsetVec;
+	lineEnd += offsetVec;
+	rec oldViewport = rc->state.viewportRec;
+	RcSetViewport(RecOverlap(rectangle, oldViewport));
+	RcDrawLine(lineStart, lineEnd, thickness, color);
+	RcSetViewport(oldViewport);
+}
+
+void RcDrawFoldedRectangle(rec rectangle, r32 foldSize, u8 foldedCorners, Color_t color)
+{
+	rec centerRec = RecDeflate(rectangle, foldSize, foldSize);
+	RcDrawRectangle(centerRec, color);
+	for (u8 sideIndex = 0; sideIndex < Dir2_Count; sideIndex++)
+	{
+		Dir2_t side = Dir2FromIndex(sideIndex);
+		rec sideRec = rectangle;
+		if (side == Dir2_Left || side == Dir2_Right) { sideRec.width = foldSize; }
+		if (side == Dir2_Up   || side == Dir2_Down)  { sideRec.height = foldSize; }
+		if (side == Dir2_Right) { sideRec.x += rectangle.width  - foldSize; }
+		if (side == Dir2_Down)  { sideRec.y += rectangle.height - foldSize; }
+		if (side == Dir2_Up && IsFlagSet(foldedCorners, Dir2Ex_TopLeft))  { sideRec.x += foldSize; sideRec.width -= foldSize; }
+		if (side == Dir2_Up && IsFlagSet(foldedCorners, Dir2Ex_TopRight)) { sideRec.width -= foldSize; }
+		if (side == Dir2_Down && IsFlagSet(foldedCorners, Dir2Ex_BottomLeft))  { sideRec.x += foldSize; sideRec.width -= foldSize; }
+		if (side == Dir2_Down && IsFlagSet(foldedCorners, Dir2Ex_BottomRight)) { sideRec.width -= foldSize; }
+		//NOTE: We don't actually need this double cover, right?
+		if (side == Dir2_Left || side == Dir2_Right) { sideRec.y += foldSize; sideRec.height -= foldSize*2; }
+		// if (side == Dir2_Left && IsFlagSet(foldedCorners, Dir2Ex_TopLeft))    { sideRec.y += foldSize; sideRec.height -= foldSize; }
+		// if (side == Dir2_Left && IsFlagSet(foldedCorners, Dir2Ex_BottomLeft)) { sideRec.height -= foldSize; }
+		// if (side == Dir2_Right && IsFlagSet(foldedCorners, Dir2Ex_TopRight))    { sideRec.y += foldSize; sideRec.height -= foldSize; }
+		// if (side == Dir2_Right && IsFlagSet(foldedCorners, Dir2Ex_BottomRight)) { sideRec.height -= foldSize; }
+		RcDrawRectangle(sideRec, color);
+	}
+	for (u8 cornerIndex = 0; cornerIndex < 4; cornerIndex++)
+	{
+		Dir2Ex_t corner = Dir2ExFromIndex(4 + cornerIndex);
+		if (IsFlagSet(foldedCorners, corner))
+		{
+			rec cornerRec = NewRec(rectangle.topLeft, foldSize, foldSize);
+			if (corner == Dir2Ex_TopRight || corner == Dir2Ex_BottomRight) { cornerRec.x += rectangle.width - foldSize; }
+			if (corner == Dir2Ex_BottomLeft || corner == Dir2Ex_BottomRight) { cornerRec.y += rectangle.height - foldSize; }
+			// RcDrawRectangle(cornerRec, ColorComplementary(color));
+			RcDrawRightAngleTriangle(cornerRec, Dir2ExOpposite(corner), color);
+		}
+	}
+}
+
+void RcDrawFoldedRectangleOutline(rec rectangle, r32 foldSize, u8 foldedCorners, r32 thickness, Color_t color, bool outsideRectangle = false)
+{
+	for (u8 sideIndex = 0; sideIndex < Dir2_Count; sideIndex++)
+	{
+		Dir2_t side = Dir2FromIndex(sideIndex);
+		rec sideRec = rectangle;
+		if (side == Dir2_Left || side == Dir2_Right) { sideRec.width = thickness; }
+		if (side == Dir2_Up   || side == Dir2_Down)  { sideRec.height = thickness; }
+		if (side == Dir2_Right) { sideRec.x += rectangle.width  - thickness; }
+		if (side == Dir2_Down)  { sideRec.y += rectangle.height - thickness; }
+		if (outsideRectangle && side == Dir2_Left)  { sideRec.x -= thickness; }
+		if (outsideRectangle && side == Dir2_Right) { sideRec.x += thickness; }
+		if (outsideRectangle && side == Dir2_Up)    { sideRec.y -= thickness; }
+		if (outsideRectangle && side == Dir2_Down)  { sideRec.y += thickness; }
+		if (side == Dir2_Left)
+		{
+			if (IsFlagSet(foldedCorners, Dir2Ex_BottomLeft)) { sideRec.height -= foldSize; }
+			else if (!outsideRectangle) { sideRec.height -= thickness; }
+			if (IsFlagSet(foldedCorners, Dir2Ex_TopLeft)) { sideRec.y += foldSize; sideRec.height -= foldSize; }
+			else if (!outsideRectangle) { sideRec.y += thickness; sideRec.height -= thickness; }
+		}
+		if (side == Dir2_Right)
+		{
+			if (IsFlagSet(foldedCorners, Dir2Ex_BottomRight)) { sideRec.height -= foldSize; }
+			else if (!outsideRectangle) { sideRec.height -= thickness; }
+			if (IsFlagSet(foldedCorners, Dir2Ex_TopRight)) { sideRec.y += foldSize; sideRec.height -= foldSize; }
+			else if (!outsideRectangle) { sideRec.y += thickness; sideRec.height -= thickness; }
+		}
+		if (side == Dir2_Up)
+		{
+			if (IsFlagSet(foldedCorners, Dir2Ex_TopRight)) { sideRec.width -= foldSize; }
+			else if (outsideRectangle) { sideRec.width += thickness; }
+			if (IsFlagSet(foldedCorners, Dir2Ex_TopLeft)) { sideRec.x += foldSize; sideRec.width -= foldSize; }
+			else if (outsideRectangle) { sideRec.x -= thickness; sideRec.width += thickness; }
+		}
+		if (side == Dir2_Down)
+		{
+			if (IsFlagSet(foldedCorners, Dir2Ex_BottomRight)) { sideRec.width -= foldSize; }
+			else if (outsideRectangle) { sideRec.width += thickness; }
+			if (IsFlagSet(foldedCorners, Dir2Ex_BottomLeft)) { sideRec.x += foldSize; sideRec.width -= foldSize; }
+			else if (outsideRectangle) { sideRec.x -= thickness; sideRec.width += thickness; }
+		}
+		RcDrawRectangle(sideRec, color);
+	}
+	for (u8 cornerIndex = 0; cornerIndex < 4; cornerIndex++)
+	{
+		Dir2Ex_t corner = Dir2ExFromIndex(4 + cornerIndex);
+		if (IsFlagSet(foldedCorners, corner))
+		{
+			rec cornerRec = NewRec(rectangle.topLeft, foldSize, foldSize);
+			if (corner == Dir2Ex_TopRight || corner == Dir2Ex_BottomRight) { cornerRec.x += rectangle.width - foldSize; }
+			if (corner == Dir2Ex_BottomLeft || corner == Dir2Ex_BottomRight) { cornerRec.y += rectangle.height - foldSize; }
+			r32 diagThickness = SinR32(QuarterPi32) * thickness;
+			bool descending = (corner == Dir2Ex_BottomLeft || corner == Dir2Ex_TopRight);
+			r32 diagonalOffset = (diagThickness/4) * ((corner == Dir2Ex_TopLeft || corner == Dir2Ex_TopRight) ? 1.0f : -1.0f);
+			if (outsideRectangle)
+			{
+				// diagonalOffset = -diagonalOffset;
+				cornerRec.width += thickness;
+				cornerRec.height += thickness;
+				if (corner == Dir2Ex_TopLeft || corner == Dir2Ex_BottomLeft) { cornerRec.x -= thickness; }
+				if (corner == Dir2Ex_TopLeft || corner == Dir2Ex_TopRight) { cornerRec.y -= thickness; }
+			}
+			RcDrawDiagonalStripeInRec(cornerRec, descending, diagThickness, color, diagonalOffset);
+		}
+	}
+}
+
+//Polygon should be in clockwise order
+void RcDrawConvexPolygonWithShader(Color_t color, u64 numVertices, const v2* vertices, bool bindShader = true)
+{
+	NotNull(vertices);
+	if (numVertices < 3) { return; }
+	Assert(numVertices <= ShaderUniform_NumPolygonPlanes);
+	
+	Shader_t* oldShader = rc->state.boundShader;
+	if (bindShader) { RcBindShader(&pig->resources.shaders->convexPolygon2D); }
+	
+	rec polygonBounds = Rec_Zero;
+	v4 planes[ShaderUniform_NumPolygonPlanes];
+	for (u64 vIndex = 0; vIndex < numVertices; vIndex++)
+	{
+		v2 vert = vertices[vIndex];
+		v2 previousVert = vertices[(vIndex+1) % numVertices];
+		v2 planeDirVec = Vec2PerpRight(Vec2Normalize(vert - previousVert));
+		planes[vIndex].x = vertices[vIndex].x;
+		planes[vIndex].y = vertices[vIndex].y;
+		planes[vIndex].z = planeDirVec.x;
+		planes[vIndex].w = planeDirVec.y;
+		if (vIndex == 0) { polygonBounds = NewRec(vert, 0, 0); }
+		else { polygonBounds = RecExpandToVec2(polygonBounds, vert); }
+	}
+	polygonBounds = RecSquarify(polygonBounds);
+	v2 boundsCenter = polygonBounds.topLeft + polygonBounds.size/2;
+	
+	RcSetCount((i32)numVertices);
+	for (u64 vIndex = 0; vIndex < numVertices; vIndex++)
+	{
+		v2 planeDirVec = Vec2Normalize(NewVec2(planes[vIndex].z, planes[vIndex].w));
+		r32 planeDir = AngleFromVec2(planeDirVec);
+		v2 planeVertVec = NewVec2(planes[vIndex].x, planes[vIndex].y) - boundsCenter;
+		r32 planeDistance = Vec2Dot(planeVertVec, planeDirVec);
+		planeDistance = planeDistance / (polygonBounds.width/2);
+		RcSetPolygonPlane(vIndex, planeDir, planeDistance);
+	}
+	RcDrawRectangle(polygonBounds, color);
+	
+	if (bindShader) { RcBindShader(oldShader); }
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2)
+{
+	v2 localVertsArray[3];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	RcDrawConvexPolygonWithShader(color, 3, &localVertsArray[0]);
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, v2 vert3)
+{
+	v2 localVertsArray[4];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	localVertsArray[3] = vert3;
+	RcDrawConvexPolygonWithShader(color, 4, &localVertsArray[0]);
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, v2 vert3, v2 vert4)
+{
+	v2 localVertsArray[5];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	localVertsArray[3] = vert3;
+	localVertsArray[4] = vert4;
+	RcDrawConvexPolygonWithShader(color, 5, &localVertsArray[0]);
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, v2 vert3, v2 vert4, v2 vert5)
+{
+	v2 localVertsArray[6];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	localVertsArray[3] = vert3;
+	localVertsArray[4] = vert4;
+	localVertsArray[5] = vert5;
+	RcDrawConvexPolygonWithShader(color, 6, &localVertsArray[0]);
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, v2 vert3, v2 vert4, v2 vert5, v2 vert6)
+{
+	v2 localVertsArray[7];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	localVertsArray[3] = vert3;
+	localVertsArray[4] = vert4;
+	localVertsArray[5] = vert5;
+	localVertsArray[6] = vert6;
+	RcDrawConvexPolygonWithShader(color, 7, &localVertsArray[0]);
+}
+void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, v2 vert3, v2 vert4, v2 vert5, v2 vert6, v2 vert7)
+{
+	v2 localVertsArray[8];
+	localVertsArray[0] = vert0;
+	localVertsArray[1] = vert1;
+	localVertsArray[2] = vert2;
+	localVertsArray[3] = vert3;
+	localVertsArray[4] = vert4;
+	localVertsArray[5] = vert5;
+	localVertsArray[6] = vert6;
+	localVertsArray[7] = vert7;
+	RcDrawConvexPolygonWithShader(color, 8, &localVertsArray[0]);
+}
+
 // +--------------------------------------------------------------+
 // |                    Post Processing Chain                     |
 // +--------------------------------------------------------------+
