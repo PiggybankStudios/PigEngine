@@ -12,7 +12,6 @@
 	[ ] Ignore the first click when the window wasn't focused
 	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
 	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
-	[ ] Do a debug dump when an assertion fails
 	[ ] Add convertNewLines options to ReadFileContents and WriteEntireFile
 	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
 	[ ] Add support for fullscreen
@@ -33,23 +32,20 @@
 	[ ] 
 
 # Engine
+	[!] Do a debug dump when an assertion fails
+	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
 	[ ] Improve the audio debug window
 	- Line representing 0 - Ms Ticks - Selection - Replay
 	[ ] Hover to readout actual sample values
-	[ ] Add support for new added new resources without restarting the game
 	[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
 	[ ] Add support for ellipses (not just circles)
 	[ ] Add a confirmation dialogue
 	[ ] Add a GIF export editor AppState that allows you to see and manage what portion of the captured frames you'd like to export
 	[ ] Add a UI button implementation
 	[ ] Add a UI checkbox implementation
-	[!] Add a UI textbox implementation
 	[ ] Add a UI combobox implementation
-	[ ] Add a UI slider implementation
 	[ ] Add a resource loading/parsing system
 	[?] MIDI keyboard support
-	[!] Add support for mouse based view rotation
-	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
 	[ ] Streaming sampled audio output
 	[?] Entity Component System?
 	[ ] Zip compression/decompression
@@ -62,20 +58,23 @@
 	( ) Why are text stylings not working in notifications? Why does it crash with an OpenGL error when I do underline? Is it only when we do SelectDefaultFontFace??
 	[ ] Finish adding support for adding new images to a font pack AFTER it originally was generated
 	[ ] Add support for clicking on notifications to take you either to the source line that generated the notification OR if the notification is augmented with a specific filepath, that path
+	[ ] Add some way to dismiss notifications
+	[ ] Make notifications show up in 1 of the 4 corners, based on context from the game so they don't get in the way as often
 	( ) We are going to need some way to get the ProgramTime (and possible SystemTime and LocalTime) into PigPostReload!
 	[ ] Debug overlay to enable visual of the name of what the mouse is hovering over currently
 	[ ] The beveled drawing that I normally do by drawing the text twice should be an option that you can enable for the font flow somehow (so that uncolorable glyphs don't get messed up)
-	[ ] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
+	[!] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
 	[ ] Add support for parsing FBX files
 		[ ] Vertex Data
 		[ ] Animation Data
 		[ ] Using the animation data to actually animate a model
 	[ ] Add a proper AppState system
 	[ ] Add a notification for taking screenshots but make sure the notification doesn't show up when rendering a screenshot
-	[!] Add a visual showing that we are recorindg a GIF
 	[ ] Make sure the GIF frames are rendered as if we are running at 50Hz so time is preserved in the GIF output
-	[!] OGG audio file parsing
 	[ ] Once we have debug commands add something akin to "thread_ids" that will read out all relevant IDs for threads
+	[ ] Add debug commands that allow us to change the timestep to a fixed amount. Basically allowing us to slow down time across the entire application
+	[ ] Add debug commands that allow us to set up key bindings to other debug commands
+	[ ] Make the command parsing stuff for debug commands automatically handle quotation marks around arguments and escape sequences in the quotes
 
 # Web Assembly TODO
 	[ ] How do I do a game loop?
@@ -118,6 +117,12 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] OGG audio file parsing
+	[X] Add a visual showing that we are recorindg a GIF
+	[X] Add support for mouse based view rotation
+	[X] Add a UI slider implementation
+	[X] Add a UI textbox implementation
+	[X] Add support for new added new resources without restarting the game
 	[X] Sampled audio output
 	[X] WAV audio file parsing
 	[X] Make the debug console thread safe! And make it handle building a line from multiple debug outputs before committing to the string fifo

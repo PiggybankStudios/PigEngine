@@ -137,7 +137,7 @@ void DebugConsoleClearAutocompleteItems(DebugConsole_t* console, bool resetAnima
 	console->autocompleteSelectionIndex = -1;
 }
 
-void DebugConsoleDismissAutocomplete(DebugConsole_t* console, bool resetAnimation = true)
+void DebugConsoleDismissAutocomplete(DebugConsole_t* console)
 {
 	NotNull(console);
 	console->autocompleteActive = false;

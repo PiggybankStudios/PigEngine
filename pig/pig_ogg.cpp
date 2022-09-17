@@ -20,6 +20,7 @@ Description:
 #pragma warning(disable:4456) //declaration of 'z' hides previous local declaration
 #pragma warning(disable:4457) //declaration of 'n' hides function parameter
 #pragma warning(disable:4701) //potentially uninitialized local variable 'mid' used
+#pragma warning(disable:4100) //unreferenced formal parameter
 #include "stb/stb_vorbis.c"
 #pragma warning(pop)
 
