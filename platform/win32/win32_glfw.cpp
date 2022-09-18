@@ -25,10 +25,17 @@ PlatWindow_t* Win32_GetWindowByGlfwPntr(GLFWwindow* glfwWindowPntr)
 	PlatWindow_t* window = LinkedListFirst(&Platform->windows, PlatWindow_t);
 	for (u64 wIndex = 0; wIndex < Platform->windows.count; wIndex++)
 	{
-		if (window->handle == glfwWindowPntr)
-		{
-			return window;
-		}
+		if (window->handle == glfwWindowPntr) { return window; }
+		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
+	}
+	return nullptr;
+}
+PlatWindow_t* Win32_GetWindowById(u64 id)
+{
+	PlatWindow_t* window = LinkedListFirst(&Platform->windows, PlatWindow_t);
+	for (u64 wIndex = 0; wIndex < Platform->windows.count; wIndex++)
+	{
+		if (window->id == id) { return window; }
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	return nullptr;
@@ -105,6 +112,25 @@ void Win32_GlfwWindowSizeCallback(GLFWwindow* glfwWindowPntr, int windowWidth, i
 	int framebufferHeight = 0;
 	glfwGetFramebufferSize(glfwWindowPntr, &framebufferWidth, &framebufferHeight);
 	
+	//Ignore this size event. It's probably because we are minimized
+	if (framebufferWidth <= 0 || framebufferHeight <= 0) { return; }
+	
+	int windowLeftBorderSize = 0;
+	int windowTopBorderSize = 0;
+	int windowRightBorderSize = 0;
+	int windowBottomBorderSize = 0;
+	glfwGetWindowFrameSize(glfwWindowPntr, &windowLeftBorderSize, &windowTopBorderSize, &windowRightBorderSize, &windowBottomBorderSize);
+	
+	//NOTE: On windows 10, this returns an extra 8 pixels of extra padding on all sides. We don't actually want that
+	if (windowLeftBorderSize >= 8) { windowLeftBorderSize -= 8; }
+	else { windowLeftBorderSize = 0; }
+	if (windowTopBorderSize >= 8) { windowTopBorderSize -= 8; }
+	else { windowTopBorderSize = 0; }
+	if (windowRightBorderSize >= 8) { windowRightBorderSize -= 8; }
+	else { windowRightBorderSize = 0; }
+	if (windowBottomBorderSize >= 8) { windowBottomBorderSize -= 8; }
+	else { windowBottomBorderSize = 0; }
+	
 	//NOTE: We really don't like having to deal with 0 or negative resolutions so we
 	//      will just maintain whatever valid resolution we had if we minimize or something
 	if (windowWidth <= 0) { windowWidth = window->activeInput.windowResolution.width; }
@@ -119,10 +145,24 @@ void Win32_GlfwWindowSizeCallback(GLFWwindow* glfwWindowPntr, int windowWidth, i
 		window->activeInput.windowResolution  = NewVec2i(     windowWidth,      windowHeight);
 		window->activeInput.contextResolution = NewVec2i(framebufferWidth, framebufferHeight); //TODO: When is this different? Only on OSX or High DPI screens?
 		window->activeInput.renderResolution  = NewVec2 ((r32)windowWidth, (r32)windowHeight); //TODO: When is this different? Only on OSX or High DPI screens?
+		window->activeInput.desktopRec.size = NewVec2i(
+			windowLeftBorderSize + windowWidth + windowRightBorderSize,
+			windowTopBorderSize + windowHeight + windowBottomBorderSize
+		);
+		window->activeInput.desktopInnerRec.topLeft = NewVec2i(
+			window->activeInput.desktopRec.x + windowLeftBorderSize,
+			window->activeInput.desktopRec.y + windowTopBorderSize
+		);
+		window->activeInput.desktopInnerRec.size = NewVec2i(windowWidth, windowHeight);
 		if (InitPhase >= Win32InitPhase_DoingFirstUpdate)
 		{
 			window->activeInput.resized = true;
 		}
+	}
+	
+	if (!window->activeInput.maximized)
+	{
+		window->activeInput.unmaximizedWindowSize = window->activeInput.windowResolution;
 	}
 }
 
@@ -139,11 +179,24 @@ void Win32_GlfwWindowMoveCallback(GLFWwindow* glfwWindowPntr, int posX, int posY
 	}
 	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
 	
+	//Ignore insane negative values for window position. It's probably use getting minimized (in testing I get (-3200, -32000) when getting minimized)
+	if (posX < Platform->monitors.desktopRec.x - 100 || posY < Platform->monitors.desktopRec.y - 100) { return; }
+	
+	// PrintLine_D("Window Moved (%d, %d)", posX, posY);
 	window->activeInput.windowInteractionOccurred = true;
-	if (window->activeInput.position.x != posX || window->activeInput.position.y != posY)
+	if (window->activeInput.desktopInnerRec.x != posX || window->activeInput.desktopInnerRec.y != posY)
 	{
-		window->activeInput.position = NewVec2i((i32)posX, (i32)posY);
+		v2i desktopInnerRecOffset = window->activeInput.desktopInnerRec.topLeft - window->activeInput.desktopRec.topLeft;
+		window->activeInput.desktopInnerRec.topLeft = NewVec2i((i32)posX, (i32)posY);
+		window->activeInput.desktopRec.topLeft = window->activeInput.desktopInnerRec.topLeft - desktopInnerRecOffset;
 		window->activeInput.moved = true;
+	}
+	
+	if (!window->activeInput.maximized && !window->activeInput.minimized)
+	{
+		window->activeInput.prevUnmaximizedWindowPos = window->activeInput.unmaximizedWindowPos;
+		window->activeInput.unmaximizedWindowPos = window->activeInput.desktopInnerRec.topLeft;
+		// PrintLine_D("unmaximizedWindowPos: (%d, %d)", window->activeInput.unmaximizedWindowPos.x, window->activeInput.unmaximizedWindowPos.y);
 	}
 }
 
@@ -160,11 +213,70 @@ void Win32_GlfwWindowMinimizeCallback(GLFWwindow* glfwWindowPntr, int isMinimize
 	}
 	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
 	
+	// PrintLine_D("Window %s", ((isMinimized > 0) ? "Minimized" : "Unminimized"));
 	window->activeInput.windowInteractionOccurred = true;
 	if (window->activeInput.minimized != (isMinimized > 0))
 	{
 		window->activeInput.minimized = (isMinimized > 0);
 		window->activeInput.minimizedChanged = true;
+		if (window->activeInput.minimized)
+		{
+			window->activeInput.unmaximizedWindowPos = window->activeInput.prevUnmaximizedWindowPos;
+			// PrintLine_D("Revert unmaximizedWindowPos: (%d, %d)", window->activeInput.unmaximizedWindowPos.x, window->activeInput.unmaximizedWindowPos.y);
+		}
+		else if (!window->activeInput.maximized)
+		{
+			int windowPosX = 0;
+			int windowPosY = 0;
+			glfwGetWindowPos(glfwWindowPntr, &windowPosX, &windowPosY);
+			window->activeInput.prevUnmaximizedWindowPos = window->activeInput.unmaximizedWindowPos;
+			window->activeInput.unmaximizedWindowPos = NewVec2i(windowPosX, windowPosY);
+			// PrintLine_D("Forced update unmaximizedWindowPos: (%d, %d)", window->activeInput.unmaximizedWindowPos.x, window->activeInput.unmaximizedWindowPos.y);
+		}
+	}
+}
+
+void Win32_GlfwWindowMaximizeCallback(GLFWwindow* glfwWindowPntr, int isMaximized)
+{
+	AssertSingleThreaded();
+	NotNull(glfwWindowPntr);
+	
+	PlatWindow_t* window = Win32_GetWindowByGlfwPntr(glfwWindowPntr);
+	if (window == nullptr)
+	{
+		PrintLine_E("Got Win32_GlfwWindowMaximizeCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
+		return;
+	}
+	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
+	
+	// PrintLine_D("Window %s", ((isMaximized > 0) ? "Maximized" : "Unmaximized"));
+	window->activeInput.windowInteractionOccurred = true;
+	if (window->activeInput.maximized != (isMaximized > 0))
+	{
+		window->activeInput.maximized = (isMaximized > 0);
+		window->activeInput.maximizedChanged = true;
+		if (window->activeInput.maximized)
+		{
+			window->activeInput.unmaximizedWindowPos = window->activeInput.prevUnmaximizedWindowPos;
+			// PrintLine_D("Revert unmaximizedWindowPos: (%d, %d)", window->activeInput.unmaximizedWindowPos.x, window->activeInput.unmaximizedWindowPos.y);
+		}
+		else if (!window->activeInput.minimized)
+		{
+			int windowPosX = 0;
+			int windowPosY = 0;
+			glfwGetWindowPos(glfwWindowPntr, &windowPosX, &windowPosY);
+			window->activeInput.prevUnmaximizedWindowPos = window->activeInput.unmaximizedWindowPos;
+			window->activeInput.unmaximizedWindowPos = NewVec2i(windowPosX, windowPosY);
+			// PrintLine_D("Forced update unmaximizedWindowPos: (%d, %d)", window->activeInput.unmaximizedWindowPos.x, window->activeInput.unmaximizedWindowPos.y);
+			
+			if (window->activeInput.desktopInnerRec.x != windowPosX || window->activeInput.desktopInnerRec.y != windowPosY)
+			{
+				v2i desktopInnerRecOffset = window->activeInput.desktopInnerRec.topLeft - window->activeInput.desktopRec.topLeft;
+				window->activeInput.desktopInnerRec.topLeft = NewVec2i((i32)windowPosX, (i32)windowPosY);
+				window->activeInput.desktopRec.topLeft = window->activeInput.desktopInnerRec.topLeft - desktopInnerRecOffset;
+				window->activeInput.moved = true;
+			}
+		}
 	}
 }
 
@@ -176,7 +288,7 @@ void Win32_GlfwWindowFocusCallback(GLFWwindow* glfwWindowPntr, int isFocused)
 	PlatWindow_t* window = Win32_GetWindowByGlfwPntr(glfwWindowPntr);
 	if (window == nullptr)
 	{
-		PrintLine_E("Got Win32_GlfwWindowMinimizeCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
+		PrintLine_E("Got Win32_GlfwWindowFocusCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
 		return;
 	}
 	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
@@ -245,7 +357,7 @@ void Win32_GlfwCursorPosCallback(GLFWwindow* glfwWindowPntr, double mouseX, doub
 	PlatWindow_t* window = Win32_GetWindowByGlfwPntr(glfwWindowPntr);
 	if (window == nullptr)
 	{
-		PrintLine_E("Got Win32_GlfwWindowMinimizeCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
+		PrintLine_E("Got Win32_GlfwCursorPosCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
 		return;
 	}
 	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
@@ -313,7 +425,7 @@ void Win32_GlfwCursorEnteredCallback(GLFWwindow* glfwWindowPntr, int entered)
 	PlatWindow_t* window = Win32_GetWindowByGlfwPntr(glfwWindowPntr);
 	if (window == nullptr)
 	{
-		PrintLine_E("Got Win32_GlfwWindowMinimizeCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
+		PrintLine_E("Got Win32_GlfwCursorEnteredCallback for unknown window %p out of %llu window(s)", glfwWindowPntr, Platform->windows.count);
 		return;
 	}
 	if (window->closed) { WriteLine_W("Got GLFW callback for closed window?"); return; }
@@ -377,7 +489,7 @@ void Win32_GlfwSystemEventCallback(GLFWwindow* glfwWindowPntr, unsigned int uMsg
 		case WM_SIZE:
 		// case WM_SIZING:
 		{
-			if (InitPhase >= Win32InitPhase_PostFirstUpdate && IsMainThread())
+			if (InitPhase >= Win32InitPhase_PostFirstUpdate && glfwWindowPntr != Platform->movingWindowGlfwPntr && IsMainThread())
 			{
 				Win32_DoMainLoopIteration(false);
 			}
@@ -395,6 +507,7 @@ void Win32_RegisterWindowCallbacks(PlatWindow_t* window)
 	glfwSetWindowCloseCallback(window->handle,     Win32_GlfwWindowCloseCallback);
 	glfwSetFramebufferSizeCallback(window->handle, Win32_GlfwWindowSizeCallback);
 	glfwSetWindowPosCallback(window->handle,       Win32_GlfwWindowMoveCallback);
+	glfwSetWindowMaximizeCallback(window->handle,  Win32_GlfwWindowMaximizeCallback);
 	glfwSetWindowIconifyCallback(window->handle,   Win32_GlfwWindowMinimizeCallback);
 	glfwSetWindowFocusCallback(window->handle,     Win32_GlfwWindowFocusCallback);
 	glfwSetKeyCallback(window->handle,             Win32_GlfwKeyPressedCallback);
@@ -576,6 +689,15 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	newWindow->id = Platform->nextWindowId;
 	Platform->nextWindowId++;
 	Platform->numOpenWindows++;
+	
+	if (options->requestWindowedLocation != NewVec2i(-1, -1))
+	{
+		glfwSetWindowPos(newWindow->handle, options->requestWindowedLocation.x, options->requestWindowedLocation.y);
+	}
+	if (options->requestMaximizedWindow)
+	{
+		glfwMaximizeWindow(newWindow->handle);
+	}
 	
 	Win32_InitWindowEngineInput(newWindow, &newWindow->activeInput);
 	Win32_CopyWindowEngineInput(&newWindow->input, &newWindow->activeInput);

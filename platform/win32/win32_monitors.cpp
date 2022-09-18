@@ -38,7 +38,7 @@ bool Win32_AreGlfwVideoModesEqual(const GLFWvidmode* mode1, const GLFWvidmode* m
 // +==============================+
 // |  Win32_GetMonitorVideoMode   |
 // +==============================+
-// const PlatMonitorVideoMode_t* GetMonitorVideoMode(const PlatMonitorInfo_t* monitor, v2i resolution)
+// const PlatMonitorVideoMode_t* GetMonitorVideoMode(const PlatMonitorInfo_t* monitor, v2i resolution, u64* indexOut)
 PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(Win32_GetMonitorVideoMode)
 {
 	NotNull(monitor);
@@ -47,6 +47,7 @@ PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(Win32_GetMonitorVideoMode)
 		VarArrayLoopGet(PlatMonitorVideoMode_t, videoMode, &monitor->videoModes, vIndex);
 		if (videoMode->resolution == resolution)
 		{
+			if (indexOut != nullptr) { *indexOut = vIndex; }
 			return videoMode;
 		}
 	}
@@ -151,15 +152,17 @@ void Win32_FillMonitorInfo()
 		{
 			const GLFWvidmode* glfwMode = &glfwVideoModes[vIndex];
 			v2i resolution = NewVec2i(glfwMode->width, glfwMode->height);
-			PlatMonitorVideoMode_t* newMode = (PlatMonitorVideoMode_t*)Win32_GetMonitorVideoMode(newMonitor, resolution);
+			u64 newModeIndex = 0;
+			PlatMonitorVideoMode_t* newMode = (PlatMonitorVideoMode_t*)Win32_GetMonitorVideoMode(newMonitor, resolution, &newModeIndex);
 			if (newMode == nullptr)
 			{
+				newModeIndex = newMonitor->videoModes.length-1;
 				newMode = VarArrayAdd(&newMonitor->videoModes, PlatMonitorVideoMode_t);
 				NotNull(newMode);
 				ClearPointer(newMode);
 				newMode->id = Platform->nextMonitorVideoModeId;
 				Platform->nextMonitorVideoModeId++;
-				newMode->index = vIndex;
+				newMode->index = newModeIndex;
 				newMode->resolution = resolution;
 				newMode->isCurrent = false;
 				newMode->numFramerates = 0;
@@ -173,7 +176,7 @@ void Win32_FillMonitorInfo()
 			}
 			if (!foundPrimaryVideoMode && Win32_AreGlfwVideoModesEqual(glfwMode, glfwCurrentVideoMode))
 			{
-				newMonitor->currentVideoModeIndex = vIndex;
+				newMonitor->currentVideoModeIndex = newModeIndex;
 				newMode->currentFramerateIndex = newMode->numFramerates-1;
 				newMode->isCurrent = true;
 				foundPrimaryVideoMode = true;

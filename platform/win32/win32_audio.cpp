@@ -570,6 +570,5 @@ THREAD_FUNCTION_DEF(Win32_AudioThreadFunc, userPntr) //pre-declared at top of fi
 		}
 		Win32_SleepForMs(AUDIO_SLEEP_TIME); //TODO: Adjust this time based off how long calculating samples took
 	}
-	WriteLine_W("Audio thread is exiting...");
 	return 0;
 }

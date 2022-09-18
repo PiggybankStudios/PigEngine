@@ -762,4 +762,104 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		RcDrawTextPrint(textPos, MonokaiWhite, "Period:    %g", pig->cyclicFunc.period);    textPos.y -= textLineHeight;
 		RcDrawTextPrint(textPos, MonokaiWhite, "Type:   %s", GetCyclicFuncTypeStr(pig->cyclicFunc.type)); textPos.y -= textLineHeight;
 	}
+	
+	// +===============================+
+	// | Render Monitors Debug Overlay |
+	// +===============================+
+	if (pig->monitorsDebug)
+	{
+		AccessResource(&pig->resources.textures->blueGradientBack);
+		
+		const r32 renderMargin = 25; //px
+		r32 renderScale = MinR32((ScreenSize.width - renderMargin*2) / (r32)platInfo->monitors->desktopRec.width, (ScreenSize.height - renderMargin*2) / (r32)platInfo->monitors->desktopRec.height);
+		rec desktopRec = NewRec(renderMargin, renderMargin, ToVec2(platInfo->monitors->desktopRec.size) * renderScale);
+		// RcDrawRectangle(desktopRec, MonokaiGray1);
+		
+		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+		const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&platInfo->monitors->list, PlatMonitorInfo_t);
+		for (u64 mIndex = 0; mIndex < platInfo->monitors->list.count; mIndex++)
+		{
+			const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&monitorInfo->videoModes, monitorInfo->currentVideoModeIndex, PlatMonitorVideoMode_t);
+			v2i currentResolution = currentVideoMode->resolution;
+			Assert(currentVideoMode->currentFramerateIndex < ArrayCount(currentVideoMode->framerates));
+			i64 currentFramerate = currentVideoMode->framerates[currentVideoMode->currentFramerateIndex];
+			
+			rec monitorRec = NewRec(
+				desktopRec.topLeft + ToVec2(monitorInfo->desktopSpaceRec.topLeft - platInfo->monitors->desktopRec.topLeft) * renderScale,
+				ToVec2(monitorInfo->desktopSpaceRec.size) * renderScale
+			);
+			v2 infoTextPos = monitorRec.topLeft + NewVec2(5, 5 + RcGetMaxAscend());
+			Vec2Align(&infoTextPos);
+			
+			Color_t textColor = MonokaiWhite;
+			Color_t monitorColor = MonokaiGray2;
+			if (monitorInfo->isPrimary) { textColor = Black; monitorColor = MonokaiWhite; }
+			
+			// RcDrawRectangle(monitorRec, ColorTransparent(monitorColor, 0.4f));
+			RcBindTexture1(&pig->resources.textures->blueGradientBack);
+			RcDrawTexturedRectangle(monitorRec, ColorTransparent(monitorColor, 0.4f));
+			RcDrawRectangleOutline(monitorRec, textColor, 3);
+			
+			rec oldViewport = rc->state.viewportRec;
+			RcSetViewport(monitorRec);
+			
+			RcDrawTextPrint(infoTextPos, textColor,
+				"Name: \"%.*s\"%s\n"
+				"Resolution: %dx%d (%lldHz)\n"
+				"Number: %llu\n"
+				"NumVideoModes: %llu\n",
+				monitorInfo->name.length, monitorInfo->name.pntr, (monitorInfo->isPrimary ? " (Primary)" : ""),
+				currentResolution.width, currentResolution.height, currentFramerate,
+				monitorInfo->designatedNumber,
+				monitorInfo->videoModes.length
+			);
+			
+			RcSetViewport(oldViewport);
+			
+			monitorInfo = LinkedListNext(&platInfo->monitors->list, PlatMonitorInfo_t, monitorInfo);
+		}
+		
+		const PlatWindow_t* window = LinkedListFirst(platInfo->windows, PlatWindow_t);
+		for (u64 wIndex = 0; wIndex < platInfo->windows->count; wIndex++)
+		{
+			if (!window->closed)
+			{
+				const PlatMonitorInfo_t* currentMonitorInfo = GetCurrentMonitorInfoForWindow(window);
+				NotNull(currentMonitorInfo);
+				
+				rec windowDrawRec = NewRec(
+					desktopRec.topLeft + ToVec2(window->input.desktopRec.topLeft - platInfo->monitors->desktopRec.topLeft) * renderScale,
+					ToVec2(window->input.desktopRec.size) * renderScale
+				);
+				RecAlign(&windowDrawRec);
+				rec renderDrawRec = NewRec(
+					desktopRec.topLeft + ToVec2(window->input.desktopInnerRec.topLeft - platInfo->monitors->desktopRec.topLeft) * renderScale,
+					ToVec2(window->input.desktopInnerRec.size) * renderScale
+				);
+				RecAlign(&renderDrawRec);
+				v2 windowInfoTextPos = windowDrawRec.topLeft + windowDrawRec.size + NewVec2(-5, -5 - RcGetMaxDescend() - 4*RcGetLineHeight());
+				Vec2Align(&windowInfoTextPos);
+				
+				RcDrawRectangleOutline(renderDrawRec, MonokaiOrange, 1);
+				RcDrawRectangleOutline(windowDrawRec, MonokaiMagenta, 2);
+				
+				RcDrawTextPrintEx(windowInfoTextPos, MonokaiMagenta, TextAlignment_Right, 0,
+					"Window[%llu]\n"
+					"Resolution: %gx%g\n"
+					"DesktopRec: (%d, %d, %d, %d)\n"
+					"DesktopInnerRec: (%d, %d, %d, %d)\n"
+					"MonitorNumber: %llu",
+					wIndex,
+					window->input.renderResolution.width, window->input.renderResolution.height,
+					window->input.desktopRec.x, window->input.desktopRec.y, window->input.desktopRec.width, window->input.desktopRec.height,
+					window->input.desktopInnerRec.x, window->input.desktopInnerRec.y, window->input.desktopInnerRec.width, window->input.desktopInnerRec.height,
+					currentMonitorInfo->designatedNumber
+				);
+				window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
+			}
+		}
+		
+		RcDrawRectangleOutline(desktopRec, Black, 2);
+		RcDrawRectangleOutline(desktopRec, MonokaiYellow, 1);
+	}
 }

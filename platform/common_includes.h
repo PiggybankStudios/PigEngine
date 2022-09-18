@@ -71,6 +71,7 @@ Date:   09\14\2021
 	#include <Functiondiscoverykeys_devpkey.h>
 	#include <Audioclient.h>
 	#include <Audiopolicy.h>
+	#include <Shlobj.h>
 	#if PROCMON_SUPPORTED
 		#include <conio.h>
 		#include <atltime.h>

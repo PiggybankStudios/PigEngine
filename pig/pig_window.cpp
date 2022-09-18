@@ -314,6 +314,32 @@ void Pig_UpdateWindowStates()
 		PigWindowState_t* windowState = GetWindowStateById(window->id);
 		if (windowState != nullptr)
 		{
+			// +======================================+
+			// | Handle Window Lost Between Monitors  |
+			// +======================================+
+			if (IsWindowLostBetweenMonitors(window))
+			{
+				u64 primaryMonitorIndex = 0;
+				const PlatMonitorInfo_t* primaryMonitorInfo = GetPrimaryMonitorInfo(&primaryMonitorIndex);
+				NotifyPrint_W("We were lost between %llu monitors! windowRec: (%d, %d, %d, %d) Moving to the primary monitor[%llu] at (%d, %d, %d, %d)",
+					platInfo->monitors->list.count,
+					window->input.desktopRec.x, window->input.desktopRec.y, window->input.desktopRec.width, window->input.desktopRec.height,
+					primaryMonitorIndex,
+					primaryMonitorInfo->desktopSpaceRec.x, primaryMonitorInfo->desktopSpaceRec.y, primaryMonitorInfo->desktopSpaceRec.width, primaryMonitorInfo->desktopSpaceRec.height
+				);
+				pigOut->moveWindow = true;
+				pigOut->moveWindowId = window->id;
+				pigOut->moveWindowRec = NewReci(
+					primaryMonitorInfo->desktopSpaceRec.x + primaryMonitorInfo->desktopSpaceRec.width/4,
+					primaryMonitorInfo->desktopSpaceRec.y + primaryMonitorInfo->desktopSpaceRec.height/4,
+					primaryMonitorInfo->desktopSpaceRec.width/2,
+					primaryMonitorInfo->desktopSpaceRec.height/2
+				);
+			}
+			
+			// +====================================+
+			// | Handle Window FrameBuffer Resizing |
+			// +====================================+
 			if (windowState->frameBuffer.size != window->input.contextResolution && window->input.contextResolution.width > 0 && window->input.contextResolution.height > 0)
 			{
 				PrintLine_D("Resizing window[%llu] frameBuffer from %dx%d to %dx%d",

@@ -15,6 +15,7 @@ enum SpriteSheetMetaError_t
 	SpriteSheetMetaError_TokenBeforeFilePrefix,
 	SpriteSheetMetaError_InvalidFilePrefix,
 	SpriteSheetMetaError_MultipleFilePrefix,
+	SpriteSheetMetaError_MissingFilePrefix,
 	SpriteSheetMetaError_KeyValuePairBeforeFrameDefined,
 	SpriteSheetMetaError_NumErrors,
 };
@@ -359,6 +360,13 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				DebugAssert(false);
 			} break;
 		}
+	}
+	
+	if (!foundFilePrefix)
+	{
+		LogWriteLine_E(log, "Found no file prefix! This is probably an empty file");
+		LogExitFailure(log, SpriteSheetMetaError_MissingFilePrefix);
+		return false;
 	}
 	
 	LogWriteLine_I(log, "Successfully deserialized sprite sheet meta file");

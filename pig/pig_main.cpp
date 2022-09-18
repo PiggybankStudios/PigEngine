@@ -123,6 +123,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_sounds.cpp"
 #include "pig/pig_music.cpp"
 #include "pig/pig_resources.cpp"
+#include "pig/pig_settings.cpp"
 
 #include "pig/pig_input.cpp"
 #include "pig/pig_window.cpp"

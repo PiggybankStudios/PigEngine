@@ -127,7 +127,11 @@ const char* PigDebugCommandInfoStrs[] = {
 	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
 	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
 	"mute", "Sets Master Volume to 0 (or disables music or sounds if argument is passed)", "{music/sounds}", "\n",
+	"volumes", "Prints out the current audio volume settings", "\n",
+	"set_volume", "Changes the specified volume to the specified value", "[master/music/sounds]", "[value]", "\n",
 	"cyclic_funcs", "Toggles rendering of the cyclic function debug overlay", "\n",
+	"monitors", "Toggles debug overlay for monitor info, resolutions, video modes, window position, etc.", "\n",
+	"set_resolution", "Changes the resolution of the window", "[width]", "[height]", "\n",
 	// "template", "description", "\n",
 };
 DebugCommandInfoList_t PigGetDebugCommandInfoList()
@@ -143,7 +147,7 @@ void PigRegisterDebugCommands()
 	DebugCommandInfoList_t engineCommands = PigGetDebugCommandInfoList();
 	DebugCommandInfoList_t gameCommands = GameGetDebugCommandInfoList();
 	
-	PrintLine_N("There are %llu engine and %llu game commands:", engineCommands.numCommands, gameCommands.numCommands);
+	PrintLine_D("There are %llu engine and %llu game commands", engineCommands.numCommands, gameCommands.numCommands);
 	u64 totalCommandCount = engineCommands.numCommands + gameCommands.numCommands;
 	for (u64 cIndex = 0; cIndex < totalCommandCount; cIndex++)
 	{
@@ -403,7 +407,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				PrintLine_I("Music %s", pig->musicEnabled ? "Enabled" : "Disabled");
 			}
 		}
-		else if (numArguments >= 1 && StrCompareIgnoreCase(arguments[0], "sounds") == 0)
+		else if (numArguments >= 1 && (StrCompareIgnoreCase(arguments[0], "sounds") == 0 || StrCompareIgnoreCase(arguments[0], "sound") == 0))
 		{
 			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
 			{
@@ -416,7 +420,10 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
 			{
-				pig->masterVolume = (pig->masterVolume == 0) ? 0.8f : 0.0f;
+				//TODO: We should save the old volume before we muted it to 0 and restore it when mute is used while 0 volume
+				if (pig->masterVolume != 0) { pig->masterVolumeRestoreAfterMute = pig->masterVolume; }
+				else if (pig->masterVolumeRestoreAfterMute == 0) { pig->masterVolumeRestoreAfterMute = 0.8f; }
+				pig->masterVolume = (pig->masterVolume == 0) ? pig->masterVolumeRestoreAfterMute : 0.0f;
 				plat->UnlockMutex(&pig->volumeMutex);
 				PrintLine_I("Master Volume = %.0f", pig->masterVolume*100);
 			}
@@ -428,6 +435,58 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	}
 	
 	// +==============================+
+	// |           volumes            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "volumes") == 0)
+	{
+		PrintLine_I("Master Volume: %.0f", pig->masterVolume*100);
+		PrintLine_I("Music Volume: %.0f%s", pig->musicVolume*100, (pig->musicEnabled ? "" : " (Disabled)"));
+		PrintLine_I("Sounds Volume: %.0f%s", pig->soundsVolume*100, (pig->soundsEnabled ? "" : " (Disabled)"));
+	}
+	
+	// +==============================+
+	// |          set_volume          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "set_volume") == 0)
+	{
+		if (numArguments != 2) { PrintLine_E("set_volume takes 2 arguments, not %llu", numArguments); return validCommand; }
+		
+		r32 volumeValue = 100;
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		if (!TryParseR32(arguments[1], &volumeValue, &parseFailureReason))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			return validCommand;
+		}
+		if (volumeValue < 0 || volumeValue > 100)
+		{
+			PrintLine_E("Volume must be in range [0, 100], not %g", volumeValue);
+			return validCommand;
+		}
+		
+		if (StrCompareIgnoreCase(arguments[0], "master") == 0)
+		{
+			PrintLine_I("Master volume set to %g (was %.0f)", volumeValue, pig->masterVolume*100);
+			pig->masterVolume = volumeValue/100.0f;
+		}
+		else if (StrCompareIgnoreCase(arguments[0], "music") == 0)
+		{
+			PrintLine_I("Music volume set to %g (was %.0f)", volumeValue, pig->musicVolume*100);
+			pig->musicVolume = volumeValue/100.0f;
+		}
+		else if (StrCompareIgnoreCase(arguments[0], "sounds") == 0 || StrCompareIgnoreCase(arguments[0], "sound") == 0)
+		{
+			PrintLine_I("Sounds volume set to %g (was %.0f)", volumeValue, pig->soundsVolume*100);
+			pig->soundsVolume = volumeValue/100.0f;
+		}
+		else
+		{
+			PrintLine_E("Unknown volume type \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			return validCommand;
+		}
+	}
+	
+	// +==============================+
 	// |         cyclic_funcs         |
 	// +==============================+
 	else if (StrCompareIgnoreCase(command, "cyclic_funcs") == 0)
@@ -435,6 +494,55 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		pig->cyclicFuncsDebug = !pig->cyclicFuncsDebug;
 		pig->cyclicFunc = CyclicFunc_Default;
 		PrintLine_I("Cyclic Functions Overlay %s", pig->cyclicFuncsDebug ? "Enabled" : "Disabled");
+	}
+	
+	// +==============================+
+	// |           monitors           |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "monitors") == 0)
+	{
+		pig->monitorsDebug = !pig->monitorsDebug;
+		PrintLine_I("Monitors Debug Overlay %s", pig->monitorsDebug ? "Enabled" : "Disabled");
+	}
+	
+	// +==============================+
+	// |        set_resolution        |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "set_resolution") == 0)
+	{
+		if (numArguments != 2) { PrintLine_E("set_resolution takes 2 arguments, not %llu", numArguments); return validCommand; }
+		
+		const PlatWindow_t* window = platInfo->mainWindow;
+		NotNull(window);
+		const PlatMonitorInfo_t* monitor = GetCurrentMonitorInfoForWindow(window);
+		NotNull(monitor);
+		Assert(monitor->currentVideoModeIndex < monitor->videoModes.length);
+		const PlatMonitorVideoMode_t* videoMode = VarArrayGet(&monitor->videoModes, monitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+		
+		v2i resolution = Vec2i_Zero;
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		if (!TryParseI32(arguments[0], &resolution.width, &parseFailureReason))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			return validCommand;
+		}
+		if (!TryParseI32(arguments[1], &resolution.height, &parseFailureReason))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			return validCommand;
+		}
+		if (resolution.width <= PIG_WINDOW_MIN_SIZE.width || resolution.y <= PIG_WINDOW_MIN_SIZE.height)
+		{
+			PrintLine_E("Invalid resolution %dx%d. Our minimum size is %dx%d", resolution.width, resolution.height, PIG_WINDOW_MIN_SIZE.width, PIG_WINDOW_MIN_SIZE.height);
+			return validCommand;
+		}
+		if (resolution.width > videoMode->resolution.width) { PrintLine_W("Limiting width to %d", videoMode->resolution.width); resolution.width = videoMode->resolution.width; }
+		if (resolution.height > videoMode->resolution.height) { PrintLine_W("Limiting height to %d", videoMode->resolution.height); resolution.height = videoMode->resolution.height; }
+		
+		pigOut->moveWindow = true;
+		pigOut->moveWindowId = window->id;
+		pigOut->moveWindowRec = NewReci(window->input.desktopInnerRec.topLeft, resolution);
+		PrintLine_I("Moving window to (%d, %d, %d, %d)", pigOut->moveWindowRec.x, pigOut->moveWindowRec.y, pigOut->moveWindowRec.width, pigOut->moveWindowRec.height);
 	}
 	
 	// +==============================+

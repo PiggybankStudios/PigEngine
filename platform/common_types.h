@@ -201,6 +201,8 @@ struct PlatWindowCreateOptions_t
 	i32 requestRefreshRate;
 	bool autoIconify;
 	v2i requestSize;
+	v2i requestWindowedLocation;
+	bool requestMaximizedWindow;
 	PlatMonitorInfo_t* requestMonitor;
 	MyStr_t windowTitle;
 };
@@ -331,6 +333,8 @@ struct WindowEngineInput_t
 	
 	bool minimizedChanged;
 	bool minimized;
+	bool maximizedChanged;
+	bool maximized;
 	
 	bool resized;
 	v2i pixelResolution;       //the actual number of pixels we think we have to work with
@@ -341,7 +345,12 @@ struct WindowEngineInput_t
 	v2  renderResolution;      //the size used for all of our render logic. The "effective" resolution
 	
 	bool moved;
-	v2i position;
+	reci desktopRec; //This can be used in conjunction with PlatMonitorList_t desktopRec to get an idea of where our window is across all monitors
+	reci desktopInnerRec; //Similar to desktopRec but doesn't include the title bar or borders. i.e. it's only the render portion of the window
+	
+	v2i prevUnmaximizedWindowPos; //NOTE: window position callback comes as (0, 0) BEFORE we get the maximized callback. And also comes before we get the unmaximized callback. So we need to revert the value sometimes
+	v2i unmaximizedWindowPos;  //the last value of desktopInnerRec.topLeft when we weren't maximized, minimized, or full screen
+	v2i unmaximizedWindowSize; //the last value of windowResolution when we weren't maximized, minimized, or full screen
 	
 	bool isFocusedChanged;
 	bool isFocused;

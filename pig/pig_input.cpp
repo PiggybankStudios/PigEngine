@@ -1431,3 +1431,97 @@ bool HandleBasicTypingToEditString(MemArena_t* allocAndFreeArena, MyStr_t* editS
 	}
 	return result;
 }
+
+// +--------------------------------------------------------------+
+// |                         Monitor Info                         |
+// +--------------------------------------------------------------+
+const PlatMonitorInfo_t* GetCurrentMonitorInfoForDesktopRec(reci desktopRec, u64* monitorIndexOut = nullptr)
+{
+	const PlatMonitorInfo_t* result = nullptr;
+	u64 resultIndex = 0;
+	i32 resultOverlap = 0;
+	
+	const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&platInfo->monitors->list, PlatMonitorInfo_t);
+	for (u64 mIndex = 0; mIndex < platInfo->monitors->list.count; mIndex++)
+	{
+		reci monitorRec = monitorInfo->desktopSpaceRec;
+		reci overlapWithMonitorRec = ReciOverlap(monitorRec, desktopRec);
+		i32 overlapAmount = (overlapWithMonitorRec.width * overlapWithMonitorRec.height);
+		if (result == nullptr || overlapAmount >= resultOverlap)
+		{
+			result = monitorInfo;
+			resultOverlap = overlapAmount;
+			resultIndex = mIndex;
+		}
+		
+		monitorInfo = LinkedListNext(&platInfo->monitors->list, PlatMonitorInfo_t, monitorInfo);
+	}
+	
+	if (monitorIndexOut != nullptr) { *monitorIndexOut = resultIndex; }
+	return result;
+}
+const PlatMonitorInfo_t* GetCurrentMonitorInfoForWindow(const PlatWindow_t* window, u64* monitorIndexOut = nullptr)
+{
+	NotNull(window);
+	return GetCurrentMonitorInfoForDesktopRec(window->input.desktopRec, monitorIndexOut);
+}
+const PlatMonitorInfo_t* GetCurrentMonitorInfo(u64* monitorIndexOut = nullptr)
+{
+	return GetCurrentMonitorInfoForWindow(pig->currentWindow, monitorIndexOut);
+}
+
+const PlatMonitorInfo_t* GetPrimaryMonitorInfo(u64* monitorIndexOut = nullptr)
+{
+	NotNull(platInfo);
+	NotNull(platInfo->monitors);
+	Assert(platInfo->monitors->primaryIndex < platInfo->monitors->list.count);
+	if (monitorIndexOut != nullptr) { *monitorIndexOut = platInfo->monitors->primaryIndex; }
+	return LinkedListGet(&platInfo->monitors->list, PlatMonitorInfo_t, platInfo->monitors->primaryIndex);
+}
+
+bool IsDesktopRecLostBetweenMonitors(reci desktopRec)
+{
+	const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&platInfo->monitors->list, PlatMonitorInfo_t);
+	for (u64 mIndex = 0; mIndex < platInfo->monitors->list.count; mIndex++)
+	{
+		if (RecsIntersect(ToRec(monitorInfo->desktopSpaceRec), ToRec(desktopRec)))
+		{
+			return false;
+		}
+		monitorInfo = LinkedListNext(&platInfo->monitors->list, PlatMonitorInfo_t, monitorInfo);
+	}
+	return true;
+}
+bool IsWindowLostBetweenMonitors(const PlatWindow_t* window)
+{
+	NotNull(window);
+	if (window->input.minimized) { return false; }
+	if (window->input.maximized) { return false; }
+	//TODO: Add a check for fullscreen
+	return IsDesktopRecLostBetweenMonitors(window->input.desktopRec);
+}
+bool IsCurrentlyLostBetweenMonitors()
+{
+	return IsWindowLostBetweenMonitors(pig->currentWindow);
+}
+
+void UpdateSettingsWithWindowInfo(PigSettings_t* settings, const PlatWindow_t* window, MemArena_t* printArena)
+{
+	NotNull3(settings, window, printArena);
+	const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+	NotNull(currentMonitor);
+	NotNullStr(&currentMonitor->name);
+	v2i windowOffsetInMonitor = window->input.desktopInnerRec.topLeft - currentMonitor->desktopSpaceRec.topLeft;
+	PigSetSettingV2i(settings, "WindowedPosition", window->input.unmaximizedWindowPos - currentMonitor->desktopSpaceRec.topLeft, true, printArena);
+	PigSetSettingV2i(settings, "WindowedResolution", window->input.unmaximizedWindowSize, true, printArena);
+	if (currentMonitor->name.length > 0)
+	{
+		PigSetSettingStr(settings, "Monitor", currentMonitor->name);
+	}
+	else
+	{
+		PigSetSettingStr(settings, "Monitor", NewStr("[Unnamed]"));
+	}
+	PigSetSettingU64(settings, "MonitorNumber", currentMonitor->designatedNumber, true, printArena);
+	PigSetSettingBool(settings, "MaximizedWindow", window->input.maximized, true, printArena);
+}

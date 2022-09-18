@@ -22,15 +22,18 @@ void Win32_FillStartupInfo(StartupInfo_t* info)
 	info->defaultAudioDeviceIndex = Platform->defaultAudioDeviceIndex;
 	MyMemCopy(&info->audioDevices, &Platform->audioDevices, sizeof(VarArray_t));
 	
-	info->ShowMessageBox      = Win32_ShowMessageBox;
-	info->HandleAssertion     = Win32_HandleAssertion;
-	info->DebugOutput         = Win32_DebugOutput;
-	info->GetProgramArg       = Win32_GetProgramArg;
-	info->GetThisThreadId     = Win32_GetThisThreadId;
-	info->DoesFileExist       = Win32_DoesFileExist;
-	info->ReadFileContents    = Win32_ReadFileContents;
-	info->FreeFileContents    = Win32_FreeFileContents;
-	info->GetMonitorVideoMode = Win32_GetMonitorVideoMode;
+	info->monitors = &Platform->monitors;
+	
+	info->ShowMessageBox       = Win32_ShowMessageBox;
+	info->HandleAssertion      = Win32_HandleAssertion;
+	info->DebugOutput          = Win32_DebugOutput;
+	info->GetProgramArg        = Win32_GetProgramArg;
+	info->GetThisThreadId      = Win32_GetThisThreadId;
+	info->DoesFileExist        = Win32_DoesFileExist;
+	info->ReadFileContents     = Win32_ReadFileContents;
+	info->FreeFileContents     = Win32_FreeFileContents;
+	info->GetSpecialFolderPath = Win32_GetSpecialFolderPath;
+	info->GetMonitorVideoMode  = Win32_GetMonitorVideoMode;
 }
 
 void Win32_FillEngineMemory(EngineMemory_t* memory, u64 mainSize, u64 tempSize)
@@ -107,6 +110,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->SwapBuffers            = Win32_SwapBuffers;
 	api->GetFullPath            = Win32_GetFullPath;
 	api->DoesFileExist          = Win32_DoesFileExist;
+	api->CreateFolder           = Win32_CreateFolder;
 	api->ReadFileContents       = Win32_ReadFileContents;
 	api->FreeFileContents       = Win32_FreeFileContents;
 	api->WriteEntireFile        = Win32_WriteEntireFile;
@@ -121,6 +125,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->FreeImageData          = Win32_FreeImageData;
 	api->ShowSourceFile         = Win32_ShowSourceFile;
 	api->ShowFile               = Win32_ShowFile;
+	api->GetSpecialFolderPath   = Win32_GetSpecialFolderPath;
 	api->IsFileWatched          = Win32_IsFileWatched;
 	api->WatchFile              = Win32_WatchFile;
 	api->UnwatchFile            = Win32_UnwatchFile;
@@ -149,6 +154,9 @@ void Win32_ClearEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
 	output->exit = false;
+	output->moveWindow = false;
+	output->moveWindowId = 0;
+	output->moveWindowRec = Reci_Zero;
 }
 
 void Win32_ProcessEngineOutput(EngineOutput_t* output)
@@ -176,5 +184,28 @@ void Win32_ProcessEngineOutput(EngineOutput_t* output)
 		if (output->mouseMode == PlatMouseMode_FirstPersonCamera) { glfwNewValue = GLFW_CURSOR_DISABLED; } //TODO: We may want to also set GLFW_RAW_MOUSE_MOTION to true on some platforms to disable mouse motion scaling and acceleration?
 		glfwSetInputMode(Platform->currentWindow->handle, GLFW_CURSOR, glfwNewValue);
 		Platform->currentMouseMode = output->mouseMode;
+	}
+	
+	if (output->moveWindow)
+	{
+		Assert(output->moveWindowId != 0);
+		Assert(output->moveWindowRec.width > 0 && output->moveWindowRec.height > 0);
+		
+		PlatWindow_t* window = Win32_GetWindowById(output->moveWindowId);
+		NotNull(window);
+		NotNull(window->handle);
+		Assert(!window->closed);
+		
+		//TODO: Should we take out border/titlebar size into account here?
+		//      Do we need to meet the exact position the application wanted the window to move to?
+		Platform->movingWindowGlfwPntr = window->handle;
+		if (window->input.maximized || window->input.minimized)
+		{
+			glfwRestoreWindow(window->handle);
+		}
+		glfwSetWindowPos(window->handle, output->moveWindowRec.x, output->moveWindowRec.y);
+		glfwSetWindowSize(window->handle, output->moveWindowRec.width, output->moveWindowRec.height);
+		Platform->movingWindowGlfwPntr = nullptr;
+		//TODO: Do we need to do any masking of events to make sure we don't get false feedback for stuff we enacted?
 	}
 }

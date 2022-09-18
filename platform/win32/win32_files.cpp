@@ -112,6 +112,31 @@ PLAT_API_DOES_FILE_EXIST_DEF(Win32_DoesFileExist)
 }
 
 // +==============================+
+// |      Win32_CreateFolder      |
+// +==============================+
+// bool CreateFolder(MyStr_t folderPath)
+PLAT_API_CREATE_FOLDER(Win32_CreateFolder)
+{
+	NotNullStr(&folderPath);
+	TempPushMark();
+	MyStr_t fullFolderPath = Win32_GetFullPath(GetTempArena(), folderPath, true);
+	
+	BOOL createResult = CreateDirectoryA(
+		fullFolderPath.pntr, //lpPathName
+		NULL //lpSecurityAttributes
+	);
+	TempPopMark();
+	
+	bool result = (createResult == TRUE);
+	if (createResult != TRUE)
+	{
+		PrintLine_E("Failed to create new folder at \"%.*s\"", fullFolderPath.length, fullFolderPath.pntr);
+	}
+	
+	return result;
+}
+
+// +==============================+
 // |    Win32_ReadFileContents    |
 // +==============================+
 // This function will automatically add a null-term char at the end of the file in case you want to read it as a string
@@ -841,5 +866,61 @@ SHOW_SOURCE_FILE_DEFINITION(Win32_ShowSourceFile)
 	}
 	
 	TempPopMark();
+	return result;
+}
+
+// +==============================+
+// |  Win32_GetSpecialFolderPath  |
+// +==============================+
+//NOTE: applicationName needs to be folder path friendly (no invalid characters)
+// MyStr_t GetSpecialFolderPath(SpecialFolder_t specialFolder, MyStr_t applicationName, MemArena_t* memArena)
+PLAT_API_GET_SPECIAL_FOLDER_PATH(Win32_GetSpecialFolderPath)
+{
+	NotNull(memArena);
+	NotNullStr(&applicationName);
+	Assert(specialFolder != SpecialFolder_None && specialFolder < SpecialFolder_NumTypes);
+	
+	int specialFolderId = 0;
+	switch (specialFolder)
+	{
+		case SpecialFolder_SavesAndSettings: specialFolderId = CSIDL_APPDATA;     break;
+		case SpecialFolder_Screenshots:      specialFolderId = CSIDL_MYPICTURES;  break;
+		case SpecialFolder_Share:            specialFolderId = CSIDL_MYDOCUMENTS; break;
+		default:
+		{
+			PrintLine_E("SpecialFolder_%s (%u) is not implemented by the win32 platform layer!", GetSpecialFolderStr(specialFolder), specialFolder);
+			DebugAssert(false);
+			return MyStr_Empty;
+		} break;
+	}
+	
+	char pathBuffer[MAX_PATH+1];
+	MyMemSet(&pathBuffer[0], 0xFF, MAX_PATH);
+	pathBuffer[MAX_PATH] = '\0';
+	
+	BOOL getFolderPathResult = SHGetSpecialFolderPathA(
+		NULL, //hwnd
+		&pathBuffer[0], //pszPath
+		specialFolderId, //csidl
+		false //fCreate
+	);
+	if (getFolderPathResult == FALSE)
+	{
+		PrintLine_E("SHGetSpecialFolderPathA failed when trying to get SpecialFolder_%s", GetSpecialFolderStr(specialFolder));
+		return MyStr_Empty;
+	}
+	Assert(BufferIsNullTerminated(ArrayCount(pathBuffer), pathBuffer));
+	MyStr_t pathBufferStr = NewStr(MyStrLength64(&pathBuffer[0]), &pathBuffer[0]);
+	StrReplaceInPlace(pathBufferStr, "\\", "/");
+	
+	MyStr_t result = pathBufferStr;
+	switch (specialFolder)
+	{
+		case SpecialFolder_SavesAndSettings: result = PrintInArenaStr(memArena, "%.*s/%.*s",             pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
+		case SpecialFolder_Screenshots:      result = PrintInArenaStr(memArena, "%.*s/%.*s Screenshots", pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
+		case SpecialFolder_Share:            result = PrintInArenaStr(memArena, "%.*s/%.*s",             pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
+		default: Assert(false); break;
+	}
+	
 	return result;
 }

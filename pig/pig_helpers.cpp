@@ -87,6 +87,61 @@ r64 ConvertLoudnessToVolume(r64 loudness)
 	return (r64)ClampR32(EaseLogTwoInCustom((r32)loudness), 0.0f, 1.0f);
 }
 
+//WARNING: Stops at the first period it sees to try and prevent making a folder with the intended file's name
+bool CreateFoldersForPath(MyStr_t folderOrFilePath)
+{
+	NotNull(plat);
+	NotNullStr(&folderOrFilePath);
+	u64 prevFolderByteIndex = 0;
+	u32 previousCodepoint = 0;
+	for (u64 bIndex = 0; bIndex <= folderOrFilePath.length; )
+	{
+		u32 codepoint = 0;
+		u8 codepointSize = 0;
+		if (bIndex < folderOrFilePath.length)
+		{
+			codepointSize = GetCodepointForUtf8Str(folderOrFilePath, bIndex, &codepoint);
+			if (codepointSize == 0)
+			{
+				codepointSize = 1;
+				codepoint = CharToU32(folderOrFilePath.pntr[bIndex]);
+			}
+		}
+		else
+		{
+			codepoint = CharToU32('/');
+			codepointSize = 1;
+		}
+		
+		if (codepoint == '.')
+		{
+			return true;
+		}
+		else if ((codepoint == '/' || codepoint == '\\') && bIndex > 0)
+		{
+			if (bIndex > prevFolderByteIndex && !(bIndex == 2 && previousCodepoint == ':'))
+			{
+				MyStr_t parentFolder = StrSubstring(&folderOrFilePath, 0, bIndex);
+				bool doesFolderExist = false;
+				plat->DoesFileExist(parentFolder, &doesFolderExist);
+				if (!doesFolderExist)
+				{
+					if (!plat->CreateFolder(parentFolder))
+					{
+						PrintLine_E("Failed to create folder at \"%.*s\"", parentFolder.length, parentFolder.pntr);
+						return false;
+					}
+				}
+			}
+			prevFolderByteIndex = bIndex+codepointSize;
+		}
+		
+		previousCodepoint = codepoint;
+		bIndex += codepointSize;
+	}
+	return true;
+}
+
 // +--------------------------------------------------------------+
 // |                       Two Pass Helpers                       |
 // +--------------------------------------------------------------+

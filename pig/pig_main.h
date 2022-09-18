@@ -40,6 +40,8 @@ struct PigState_t
 	u64 reloadIndex;
 	ThreadId_t mainThreadId;
 	
+	PigSettings_t settings;
+	
 	//Memory Arenas
 	MemArena_t platHeap;
 	MemArena_t fixedHeap;
@@ -110,11 +112,13 @@ struct PigState_t
 	r64 physicsSimTimeLastFrame;
 	bool cyclicFuncsDebug;
 	CyclicFunc_t cyclicFunc;
+	bool monitorsDebug;
 	
 	//Audio
 	PlatMutex_t volumeMutex;
 	bool musicEnabled;
 	bool soundsEnabled;
+	r32 masterVolumeRestoreAfterMute;
 	r32 masterVolume;
 	r32 musicVolume;
 	r32 soundsVolume;

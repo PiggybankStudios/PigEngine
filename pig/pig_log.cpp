@@ -9,6 +9,8 @@ Description:
 	** the failure after the code has already executed
 */
 
+//TODO: Add support for routing prints through a non TempArena arena. This is mostly useful in GetStartupOptions where we don't have full platform support yet (and thus GetTempArena will crash)
+
 // +--------------------------------------------------------------+
 // |                       Create and Free                        |
 // +--------------------------------------------------------------+
@@ -45,9 +47,23 @@ void CreateProcessLog(ProcessLog_t* logOut, u64 fifoSize, MemArena_t* fifoArena,
 	}
 	logOut->hadErrors = false;
 	logOut->hadWarnings = false;
+	logOut->debugBreakOnWarningsAndErrors = false;
 	logOut->errorCode = 0;
 	logOut->filePath = NewStringInArenaNt(logOut->allocArena, "[UnspecifiedPath]");
 	logOut->processName = NewStringInArenaNt(logOut->allocArena, "[UnspecifiedName]");
+}
+
+void CreateProcessLogStub(ProcessLog_t* logOut)
+{
+	NotNull(logOut);
+	ClearPointer(logOut);
+	logOut->allocArena = nullptr;
+	logOut->hadErrors = false;
+	logOut->hadWarnings = false;
+	logOut->debugBreakOnWarningsAndErrors = false;
+	logOut->errorCode = 0;
+	logOut->filePath = MyStr_Empty;
+	logOut->processName = MyStr_Empty;
 }
 
 //TODO: Create a CopyProcessLog function?
@@ -59,23 +75,27 @@ void SetProcessLogFilePath(ProcessLog_t* log, MyStr_t filePath)
 {
 	NotNull(log);
 	NotNullStr(&filePath);
-	NotNull(log->allocArena);
-	if (!IsEmptyStr(log->filePath))
+	if (log->allocArena != nullptr)
 	{
-		FreeString(log->allocArena, &log->filePath);
+		if (!IsEmptyStr(log->filePath))
+		{
+			FreeString(log->allocArena, &log->filePath);
+		}
+		log->filePath = AllocString(log->allocArena, &filePath);
 	}
-	log->filePath = AllocString(log->allocArena, &filePath);
 }
 void SetProcessLogName(ProcessLog_t* log, MyStr_t processName)
 {
 	NotNull(log);
 	NotNullStr(&processName);
-	NotNull(log->allocArena);
-	if (!IsEmptyStr(log->processName))
+	if (log->allocArena != nullptr)
 	{
-		FreeString(log->allocArena, &log->processName);
+		if (!IsEmptyStr(log->processName))
+		{
+			FreeString(log->allocArena, &log->processName);
+		}
+		log->processName = AllocString(log->allocArena, &processName);
 	}
-	log->processName = AllocString(log->allocArena, &processName);
 }
 
 // +--------------------------------------------------------------+
@@ -85,6 +105,7 @@ void LogOutput_(ProcessLog_t* log, u8 flags, const char* filePath, u32 lineNumbe
 {
 	NotNull_(log);
 	UNUSED(addNewLine); //TODO: We should probably take this into account
+	if (log->debugBreakOnWarningsAndErrors && (dbgLevel == DbgLevel_Warning || dbgLevel == DbgLevel_Error)) { MyDebugBreak(); }
 	if (log->fifo.bufferSize > 0)
 	{
 		TempPushMark();
@@ -111,6 +132,7 @@ void LogOutput_(ProcessLog_t* log, u8 flags, const char* filePath, u32 lineNumbe
 void LogPrint_(ProcessLog_t* log, u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, const char* formatString, ...)
 {
 	NotNull_(log);
+	if (log->debugBreakOnWarningsAndErrors && (dbgLevel == DbgLevel_Warning || dbgLevel == DbgLevel_Error)) { MyDebugBreak(); }
 	if (log->fifo.bufferSize > 0)
 	{
 		if (GetTempArena() != nullptr)
@@ -163,6 +185,7 @@ void LogExit_(ProcessLog_t* log, bool success, u32 errorCode, const char* filePa
 	else
 	{
 		Assert_(errorCode != 0);
+		if (log->debugBreakOnWarningsAndErrors) { MyDebugBreak(); }
 		log->hadErrors = true;
 		log->errorCode = errorCode;
 		LogPrint_(log, 0x00, filePath, lineNumber, funcName, DbgLevel_Error, true, "Exiting with error code %u(0x%08X)", errorCode, errorCode);

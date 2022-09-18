@@ -195,6 +195,7 @@ struct ProcessLog_t
 {
 	bool hadErrors;
 	bool hadWarnings;
+	bool debugBreakOnWarningsAndErrors;
 	u32 errorCode;
 	TryParseFailureReason_t parseFailureReason;
 	XmlParsingError_t xmlParsingError;
@@ -366,6 +367,18 @@ struct PigNotificationQueue_t
 	
 	rec mainRec;
 	v2 notificationsSize;
+};
+
+struct PigSettingsEntry_t
+{
+	MyStr_t key;
+	MyStr_t value;
+};
+
+struct PigSettings_t
+{
+	MemArena_t* allocArena;
+	VarArray_t entries; // PigSettingsEntry_t
 };
 
 #endif //  _PIG_TYPES_H

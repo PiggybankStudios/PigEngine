@@ -87,12 +87,16 @@ typedef PLAT_API_GET_FULL_PATH_DEF(PlatApiGetFullPath_f);
 #define PLAT_API_DOES_FILE_EXIST_DEF(functionName) bool functionName(MyStr_t filePath, bool* isFolderOut)
 typedef PLAT_API_DOES_FILE_EXIST_DEF(PlatApiDoesFileExist_f);
 
+#define PLAT_API_CREATE_FOLDER(functionName) bool functionName(MyStr_t folderPath)
+typedef PLAT_API_CREATE_FOLDER(PlatApiCreateFolder_f);
+
 #define PLAT_API_READ_FILE_CONTENTS_DEF(functionName) bool functionName(MyStr_t filePath, PlatFileContents_t* contentsOut)
 typedef PLAT_API_READ_FILE_CONTENTS_DEF(PlatApiReadFileContents_f);
 
 #define PLAT_API_FREE_FILE_CONTENTS_DEF(functionName) void functionName(PlatFileContents_t* fileContents)
 typedef PLAT_API_FREE_FILE_CONTENTS_DEF(PlatApiFreeFileContents_f);
 
+//TODO: Add PLAT_API to this
 #define WRITE_ENTIRE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, const void* memory, u64 memorySize)
 typedef WRITE_ENTIRE_FILE_DEFINITION(PlatApiWriteEntireFile_f);
 
@@ -123,11 +127,16 @@ typedef PLAT_API_SAVE_IMAGE_DATA_TO_FILE(PlatApiSaveImageDataToFile_f);
 #define PLAT_API_FREE_IMAGE_DATA_DEF(functionName) void functionName(PlatImageData_t* imageData)
 typedef PLAT_API_FREE_IMAGE_DATA_DEF(PlatApiFreeImageData_f);
 
+//TODO: Add PLAT_API to this
 #define SHOW_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath)
 typedef SHOW_FILE_DEFINITION(PlatApiShowFile_f);
 
+//TODO: Add PLAT_API to this
 #define SHOW_SOURCE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, u64 lineNumber)
 typedef SHOW_SOURCE_FILE_DEFINITION(PlatApiShowSourceFile_f);
+
+#define PLAT_API_GET_SPECIAL_FOLDER_PATH(functionName) MyStr_t functionName(SpecialFolder_t specialFolder, MyStr_t applicationName, MemArena_t* memArena)
+typedef PLAT_API_GET_SPECIAL_FOLDER_PATH(PlatApiGetSpecialFolderPath_f);
 
 #define PLAT_API_IS_FILE_WATCHED_DEF(functionName) bool functionName(MyStr_t filePath, PlatWatchedFile_t** watchedFileOut)
 typedef PLAT_API_IS_FILE_WATCHED_DEF(PlatApiIsFileWatched_f);
@@ -156,22 +165,26 @@ typedef PLAT_API_BAKE_FONT_DEF(PlatApiBakeFont_f);
 #define PLAT_API_DEBUG_READOUT(functionName) void functionName(MyStr_t displayStr, Color_t color, r32 scale)
 typedef PLAT_API_DEBUG_READOUT(PlatApiDebugReadout_f);
 
+//TODO: Add PLAT_API to this
 #define COPY_TEXT_TO_CLIPBOARD_DEFINITION(functionName) bool functionName(MyStr_t text)
 typedef COPY_TEXT_TO_CLIPBOARD_DEFINITION(PlatApiCopyTextToClipboard_f);
 
+//TODO: Add PLAT_API to this
 #define PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(functionName) MyStr_t functionName(MemArena_t* memArena)
 typedef PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(PlatApiPasteTextFromClipboard_f);
 
+//TODO: Add PLAT_API to this
 #define GET_PERF_TIME_DEFINITION(functionName) PerfTime_t functionName()
 typedef GET_PERF_TIME_DEFINITION(PlatApiGetPerfTime_f);
 
+//TODO: Add PLAT_API to this
 #define GET_PERF_TIME_DIFF_DEFINITION(functionName) r64 functionName(const PerfTime_t* tStart, const PerfTime_t* tEnd)
 typedef GET_PERF_TIME_DIFF_DEFINITION(PlatApiGetPerfTimeDiff_f);
 
 #define PLAT_API_GET_PROGRAM_TIME_DEFINITION(functionName) u64 functionName(r64* programTimeR64Out)
 typedef PLAT_API_GET_PROGRAM_TIME_DEFINITION(PlatApiGetProgramTime_f);
 
-#define PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(functionName) const PlatMonitorVideoMode_t* functionName(const PlatMonitorInfo_t* monitor, v2i resolution)
+#define PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(functionName) const PlatMonitorVideoMode_t* functionName(const PlatMonitorInfo_t* monitor, v2i resolution, u64* indexOut)
 typedef PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(PlatApiGetMonitorVideoMode_f);
 
 #endif //  _COMMON_API_FUNCS_H

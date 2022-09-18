@@ -31,6 +31,7 @@ void PigInitialize(EngineMemory_t* memory)
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	PigRegisterDebugCommands();
+	GameLoadSettings(&pig->settings, mainHeap);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
 	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"),  Grey10);
@@ -97,22 +98,18 @@ void PigInitialize(EngineMemory_t* memory)
 	plat->CreateMutex(&pig->volumeMutex);
 	pig->musicEnabled = true;
 	pig->soundsEnabled = true;
-	pig->masterVolume = 0.8f;
+	pig->masterVolume = 1.0f;
 	pig->musicVolume  = 1.0f;
 	pig->soundsVolume = 1.0f;
-	if (plat->GetProgramArg(nullptr, NewStr("mute"), nullptr)) { pig->masterVolume = 0.0f; }
-	if (plat->GetProgramArg(nullptr, NewStr("nomusic"), nullptr)) { pig->musicEnabled = false; }
-	if (plat->GetProgramArg(nullptr, NewStr("nosounds"), nullptr)) { pig->soundsEnabled = false; }
 	
 	// +==============================+
-	// |     Initialize AppState      |
+	// |      Game General Init       |
 	// +==============================+
 	GameInitAppGlobals(&pig->appGlobals);
 	GameAllocateAppStateStructs(&pig->appStateStructs);
 	GameUpdateGlobals();
 	Pig_InitializeAppStateStack();
-	PushAppState(INITIAL_APP_STATE);
-	Pig_HandleAppStateChanges(true);
+	GameGeneralInit();
 	
 	pig->initialized = true;
 	PerfTime_t initEndTime = plat->GetPerfTime();
@@ -327,5 +324,5 @@ void PigPostReload(Version_t oldVersion)
 void PigClosing()
 {
 	WriteLine_W("We are closing. But at least the engine DLL knows about it");
-	//TODO: Implement me!
+	GamePrepareForClose();
 }

@@ -73,9 +73,10 @@ struct Win32PlatformState_t
 	r64 timeSpentOnSwapBuffers;
 	
 	u64 numOpenWindows;
-	LinkedList_t windows;
+	LinkedList_t windows; //PlatWindow_t
 	PlatWindow_t* mainWindow;
 	PlatWindow_t* currentWindow;
+	GLFWwindow* movingWindowGlfwPntr;
 	
 	StartupInfo_t startupInfo;
 	StartupOptions_t startupOptions;

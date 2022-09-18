@@ -50,4 +50,6 @@ Description:
 #define GIF_FRAMERATE  50   //fps
 #define MAX_GIF_SIZE   Gigabytes(1) //frames (1920x1080@50fps that's about 2.5 seconds, but can be like 40 seconds for small-ish sub-rects)
 
+#define PIG_WINDOW_MIN_SIZE   NewVec2i(400, 100)
+
 #endif //  _PIG_DEFINES_H

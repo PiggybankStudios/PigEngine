@@ -22,15 +22,18 @@ struct StartupInfo_t
 	u64 defaultAudioDeviceIndex;
 	VarArray_t audioDevices;
 	
-	PlatApiShowMessageBox_f*      ShowMessageBox;
-	PlatApiHandleAssertion_f*     HandleAssertion;
-	PlatApiDebugOutput_f*         DebugOutput;
-	PlatApiGetProgramArg_f*       GetProgramArg;
-	PlatApiGetThisThreadId_f*     GetThisThreadId;
-	PlatApiDoesFileExist_f*       DoesFileExist;
-	PlatApiReadFileContents_f*    ReadFileContents;
-	PlatApiFreeFileContents_f*    FreeFileContents;
-	PlatApiGetMonitorVideoMode_f* GetMonitorVideoMode;
+	const PlatMonitorList_t* monitors;
+	
+	PlatApiShowMessageBox_f*       ShowMessageBox;
+	PlatApiHandleAssertion_f*      HandleAssertion;
+	PlatApiDebugOutput_f*          DebugOutput;
+	PlatApiGetProgramArg_f*        GetProgramArg;
+	PlatApiGetThisThreadId_f*      GetThisThreadId;
+	PlatApiDoesFileExist_f*        DoesFileExist;
+	PlatApiReadFileContents_f*     ReadFileContents;
+	PlatApiFreeFileContents_f*     FreeFileContents;
+	PlatApiGetSpecialFolderPath_f* GetSpecialFolderPath;
+	PlatApiGetMonitorVideoMode_f*  GetMonitorVideoMode;
 };
 
 struct StartupOptions_t
@@ -75,7 +78,7 @@ struct PlatformInfo_t
 	PerfSectionBundle_t initPerfSectionBundle; //not filled until just before first update
 	
 	const PlatWindow_t* mainWindow;
-	const LinkedList_t* windows;
+	const LinkedList_t* windows; //PlatWindow_t
 	const PlatMonitorList_t* monitors;
 };
 
@@ -107,6 +110,7 @@ struct PlatformApi_t
 	PlatApiSwapBuffers_f*            SwapBuffers;
 	PlatApiGetFullPath_f*            GetFullPath;
 	PlatApiDoesFileExist_f*          DoesFileExist;
+	PlatApiCreateFolder_f*           CreateFolder;
 	PlatApiReadFileContents_f*       ReadFileContents;
 	PlatApiFreeFileContents_f*       FreeFileContents;
 	PlatApiWriteEntireFile_f*        WriteEntireFile;
@@ -121,6 +125,7 @@ struct PlatformApi_t
 	PlatApiFreeImageData_f*          FreeImageData;
 	PlatApiShowFile_f*               ShowFile;
 	PlatApiShowSourceFile_f*         ShowSourceFile;
+	PlatApiGetSpecialFolderPath_f*   GetSpecialFolderPath;
 	PlatApiIsFileWatched_f*          IsFileWatched;
 	PlatApiWatchFile_f*              WatchFile;
 	PlatApiUnwatchFile_f*            UnwatchFile;
@@ -305,6 +310,9 @@ struct EngineOutput_t
 	bool exit;
 	PlatCursor_t cursorType;
 	PlatMouseMode_t mouseMode;
+	bool moveWindow;
+	u64 moveWindowId;
+	reci moveWindowRec;
 };
 
 #define PIG_GET_VERSION_DEF(functionName) Version_t functionName()
