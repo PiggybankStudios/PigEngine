@@ -1,20 +1,19 @@
-[ ] MemArenaType_PagedHeap
 
 # A dumping ground for any and all notes and TODO lists
-	[ ] Add cvars.xml or similar system for saving settings about the game
+	(!) The windowed framerate option doesn't do anything right now!
+	( ) If you fullscreen the window and then use win+left/right to move it to another monitor, we don't see the monitor change and our fullscreen state information becomes incorrect
+	( ) If you maximize the window, then fullscreen, then hit Win+Down, it will sort of unmaximize the window while still being in fullscreen
 	[!] Make sure we select the swap interval properly
 		// The glfwSwapInterval call seems to have a lot of quirks in various graphics drivers.
 		// Our best bet might be to set it to zero and never touch it since GLFW docs mention some drivers not allowing setting back to zero after non-zero value is passed
 		// Then we need to do some sort of detection of whether the glfwSwapBuffers function is frame syncing us or not and if not then we can do our own frame sync stuff.
 	( ) Having multiple windows opened forces us to wait for the monitor vertical sync multiple times
 	[ ] Update loop: frame manual flip synchronization
-	[ ] Can we make sure windows don't get lost in the void between monitors when multiple monitors are being used
 	[ ] Ignore the first click when the window wasn't focused
 	[ ] Add a system that automatically tracks how long various sections of the intitialization are taking and produces a reasonably even loading bar section scaling
-	( ) Are we waiting for the audio thread to exit before closing the program? Are assertions causing crashes on the audio thread?
+	( ) Are assertions causing crashes on the audio thread?
 	[ ] Add convertNewLines options to ReadFileContents and WriteEntireFile
 	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
-	[ ] Add support for fullscreen
 	( ) Make sure all the platform file functions are thread safe
 	[ ] Use the line building stuff of the StringFifo_t in the platform debug output Fifo
 	[!] Switch audio devices on primary device changed
@@ -38,13 +37,12 @@
 	- Line representing 0 - Ms Ticks - Selection - Replay
 	[ ] Hover to readout actual sample values
 	[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
-	[ ] Add support for ellipses (not just circles)
+	[ ] Add support for ellipses in the SVG stuff (not just circles)
 	[ ] Add a confirmation dialogue
 	[ ] Add a GIF export editor AppState that allows you to see and manage what portion of the captured frames you'd like to export
 	[ ] Add a UI button implementation
 	[ ] Add a UI checkbox implementation
 	[ ] Add a UI combobox implementation
-	[ ] Add a resource loading/parsing system
 	[?] MIDI keyboard support
 	[ ] Streaming sampled audio output
 	[?] Entity Component System?
@@ -61,14 +59,13 @@
 	[ ] Add some way to dismiss notifications
 	[ ] Make notifications show up in 1 of the 4 corners, based on context from the game so they don't get in the way as often
 	( ) We are going to need some way to get the ProgramTime (and possible SystemTime and LocalTime) into PigPostReload!
-	[ ] Debug overlay to enable visual of the name of what the mouse is hovering over currently
+	[ ] Debug command to enable overlay that displays the name of what the mouse is hovering over currently right next to the mouse
 	[ ] The beveled drawing that I normally do by drawing the text twice should be an option that you can enable for the font flow somehow (so that uncolorable glyphs don't get messed up)
 	[!] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
 	[ ] Add support for parsing FBX files
 		[ ] Vertex Data
 		[ ] Animation Data
 		[ ] Using the animation data to actually animate a model
-	[ ] Add a proper AppState system
 	[ ] Add a notification for taking screenshots but make sure the notification doesn't show up when rendering a screenshot
 	[ ] Make sure the GIF frames are rendered as if we are running at 50Hz so time is preserved in the GIF output
 	[ ] Once we have debug commands add something akin to "thread_ids" that will read out all relevant IDs for threads
@@ -117,6 +114,13 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] Add support for fullscreen
+	[X] MemArenaType_PagedHeap
+	[X] Add a proper AppState system
+	[X] Add a resource loading/parsing system
+	(X) Are we waiting for the audio thread to exit before closing the program?
+	[X] Can we make sure windows don't get lost in the void between monitors when multiple monitors are being used
+	[X] Add cvars.xml or similar system for saving settings about the game
 	{X} Add an installer?
 	[X] OGG audio file parsing
 	[X] Add a visual showing that we are recorindg a GIF

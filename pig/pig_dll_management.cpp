@@ -104,7 +104,7 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 	if (pigIn != nullptr)
 	{
 		ProgramTime = pigIn->programTime;
-		TimeScale = pigIn->elapsedMs / (1000.0 / PIG_TARGET_FRAMERATE);
+		TimeScale = pigIn->elapsedMs / PIG_DEFAULT_FRAME_TIME;
 		ElapsedMs = pigIn->elapsedMs;
 		UnixTimestamp = pigIn->unixTime.timestamp;
 		LocalTimestamp = pigIn->localTime.timestamp;

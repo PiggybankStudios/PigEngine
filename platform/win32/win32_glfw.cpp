@@ -30,6 +30,16 @@ PlatWindow_t* Win32_GetWindowByGlfwPntr(GLFWwindow* glfwWindowPntr)
 	}
 	return nullptr;
 }
+PlatMonitorInfo_t* Win32_GetMonitorByGlfwPntr(GLFWmonitor* glfwMonitorPntr)
+{
+	PlatMonitorInfo_t* monitor = LinkedListFirst(&Platform->monitors.list, PlatMonitorInfo_t);
+	for (u64 wIndex = 0; wIndex < Platform->monitors.list.count; wIndex++)
+	{
+		if (monitor->glfwHandle == glfwMonitorPntr) { return monitor; }
+		monitor = LinkedListNext(&Platform->monitors.list, PlatMonitorInfo_t, monitor);
+	}
+	return nullptr;
+}
 PlatWindow_t* Win32_GetWindowById(u64 id)
 {
 	PlatWindow_t* window = LinkedListFirst(&Platform->windows, PlatWindow_t);
@@ -37,6 +47,16 @@ PlatWindow_t* Win32_GetWindowById(u64 id)
 	{
 		if (window->id == id) { return window; }
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
+	}
+	return nullptr;
+}
+PlatMonitorInfo_t* Win32_GetMonitorById(u64 monitorId)
+{
+	PlatMonitorInfo_t* monitor = LinkedListFirst(&Platform->monitors.list, PlatMonitorInfo_t);
+	for (u64 wIndex = 0; wIndex < Platform->monitors.list.count; wIndex++)
+	{
+		if (monitor->id == monitorId) { return monitor; }
+		monitor = LinkedListNext(&Platform->monitors.list, PlatMonitorInfo_t, monitor);
 	}
 	return nullptr;
 }
@@ -654,6 +674,11 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 		return nullptr;
 	}
 	
+	PlatWindow_t* newWindow = LinkedListAdd(&Platform->windows, PlatWindow_t);
+	NotNull(newWindow);
+	ClearPointer(newWindow);
+	MyMemCopy(&newWindow->options, options, sizeof(PlatWindowOptions_t));
+	
 	glfwWindowHint(GLFW_RESIZABLE,      options->resizableWindow ? GL_TRUE : GL_FALSE);
 	glfwWindowHint(GLFW_FLOATING,      	options->topmostWindow   ? GL_TRUE : GL_FALSE);
 	glfwWindowHint(GLFW_DECORATED,      options->decoratedWindow ? GL_TRUE : GL_FALSE);
@@ -666,20 +691,37 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	glfwWindowHint(GLFW_DEPTH_BITS,     8);
 	glfwWindowHint(GLFW_STENCIL_BITS,   8);
 	glfwWindowHint(GLFW_SAMPLES,        (int)options->antialiasingNumSamples);
-	glfwWindowHint(GLFW_REFRESH_RATE,   options->requestRefreshRate);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,   options->autoIconify ? GL_TRUE : GL_FALSE);
 	
-	PlatWindow_t* newWindow = LinkedListAdd(&Platform->windows, PlatWindow_t);
-	NotNull(newWindow);
-	ClearPointer(newWindow);
-	MyMemCopy(&newWindow->options, options, sizeof(PlatWindowOptions_t));
-	newWindow->handle = glfwCreateWindow(
-		options->requestSize.width,
-		options->requestSize.height,
-		options->windowTitle.pntr,
-		((options->requestMonitor != nullptr) ? options->requestMonitor->glfwHandle : nullptr),
-		((Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr)
-	);
+	if (options->fullscreen)
+	{
+		NotNull(options->fullscreenMonitor);
+		NotNull(options->fullscreenVideoMode);
+		Assert(options->fullscreenFramerateIndex < options->fullscreenVideoMode->numFramerates);
+		
+		glfwWindowHint(GLFW_REFRESH_RATE, (int)options->fullscreenVideoMode->framerates[options->fullscreenFramerateIndex]);
+		
+		newWindow->handle = glfwCreateWindow(
+			options->fullscreenVideoMode->resolution.width,
+			options->fullscreenVideoMode->resolution.height,
+			options->windowTitle.pntr,
+			options->fullscreenMonitor->glfwHandle,
+			((Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr)
+		);
+	}
+	else
+	{
+		glfwWindowHint(GLFW_REFRESH_RATE, (int)options->windowedFramerate);
+		
+		newWindow->handle = glfwCreateWindow(
+			options->windowedResolution.width,
+			options->windowedResolution.height,
+			options->windowTitle.pntr,
+			nullptr,
+			((Platform->mainWindow != nullptr) ? Platform->mainWindow->handle : nullptr)
+		);
+	}
+	
 	if (newWindow->handle == nullptr)
 	{
 		WriteLine_E("Failed to create GLFW window.");
@@ -690,16 +732,16 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	Platform->nextWindowId++;
 	Platform->numOpenWindows++;
 	
-	if (options->requestWindowedLocation != NewVec2i(-1, -1))
+	if (options->windowedLocation != NewVec2i(-1, -1))
 	{
-		glfwSetWindowPos(newWindow->handle, options->requestWindowedLocation.x, options->requestWindowedLocation.y);
+		glfwSetWindowPos(newWindow->handle, options->windowedLocation.x, options->windowedLocation.y);
 	}
-	if (options->requestMaximizedWindow)
+	if (options->windowedMaximized)
 	{
 		glfwMaximizeWindow(newWindow->handle);
 	}
 	
-	Win32_InitWindowEngineInput(newWindow, &newWindow->activeInput);
+	Win32_InitWindowEngineInput(newWindow, options, &newWindow->activeInput);
 	Win32_CopyWindowEngineInput(&newWindow->input, &newWindow->activeInput);
 	Win32_CopyWindowEngineInput(&newWindow->prevInput, &newWindow->activeInput);
 	

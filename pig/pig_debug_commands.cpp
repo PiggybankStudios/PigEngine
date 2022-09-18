@@ -132,6 +132,8 @@ const char* PigDebugCommandInfoStrs[] = {
 	"cyclic_funcs", "Toggles rendering of the cyclic function debug overlay", "\n",
 	"monitors", "Toggles debug overlay for monitor info, resolutions, video modes, window position, etc.", "\n",
 	"set_resolution", "Changes the resolution of the window", "[width]", "[height]", "\n",
+	"video_modes", "Lists all the video modes for all monitors (or a specific monitor if a monitor number is given)", "{monitor}", "\n",
+	"fullscreen", "Enables or disables fullscreen and also sets resolution and framerate", "[on/off/toggle]", "{width}", "{height}", "{framerate}", "{monitor}", "\n",
 	// "template", "description", "\n",
 };
 DebugCommandInfoList_t PigGetDebugCommandInfoList()
@@ -506,6 +508,68 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	}
 	
 	// +==============================+
+	// |         video_modes          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "video_modes") == 0)
+	{
+		if (numArguments > 1) { PrintLine_E("video_modes only takes 1 optional argument. Not %llu", numArguments); return validCommand; }
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		
+		u64 monitorNumber = 0;
+		if (numArguments >= 1)
+		{
+			if (!TryParseU64(arguments[0], &monitorNumber, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+			if (monitorNumber == 0)
+			{
+				WriteLine_E("Invalid monitor number given. Can't be 0");
+				return validCommand;
+			}
+		}
+		
+		bool foundMonitor = false;
+		const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&platInfo->monitors->list, PlatMonitorInfo_t);
+		for (u64 mIndex = 0; mIndex < platInfo->monitors->list.count; mIndex++)
+		{
+			if (monitorNumber == 0 || monitorInfo->designatedNumber == monitorNumber)
+			{
+				foundMonitor = true;
+				PrintLine_N("Monitor %llu \"%.*s\" supports %llu video mode%s:",
+					monitorInfo->designatedNumber,
+					monitorInfo->name.length,
+					monitorInfo->name.pntr,
+					monitorInfo->videoModes.length,
+					(monitorInfo->videoModes.length == 1 ? "" : "s")
+				);
+				VarArrayLoop(&monitorInfo->videoModes, vIndex)
+				{
+					VarArrayLoopGet(PlatMonitorVideoMode_t, videoMode, &monitorInfo->videoModes, vIndex);
+					Print_D("  Mode[%llu]: %dx%d (%llu framerate%s:",
+						videoMode->index,
+						videoMode->resolution.width, videoMode->resolution.height,
+						videoMode->numFramerates, (videoMode->numFramerates == 1 ? "" : "s")
+					);
+					for (u64 fIndex = 0; fIndex < videoMode->numFramerates; fIndex++)
+					{
+						Print_D(" %lldHz", videoMode->framerates[fIndex]);
+					}
+					WriteLine_D(")");
+				}
+			}
+			monitorInfo = LinkedListNext(&platInfo->monitors->list, PlatMonitorInfo_t, monitorInfo);
+		}
+		
+		if (!foundMonitor)
+		{
+			PrintLine_E("There is not monitor with number %llu", monitorNumber);
+			return validCommand;
+		}
+	}
+	
+	// +==============================+
 	// |        set_resolution        |
 	// +==============================+
 	else if (StrCompareIgnoreCase(command, "set_resolution") == 0)
@@ -531,7 +595,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
-		if (resolution.width <= PIG_WINDOW_MIN_SIZE.width || resolution.y <= PIG_WINDOW_MIN_SIZE.height)
+		if (resolution.width < PIG_WINDOW_MIN_SIZE.width || resolution.height < PIG_WINDOW_MIN_SIZE.height)
 		{
 			PrintLine_E("Invalid resolution %dx%d. Our minimum size is %dx%d", resolution.width, resolution.height, PIG_WINDOW_MIN_SIZE.width, PIG_WINDOW_MIN_SIZE.height);
 			return validCommand;
@@ -543,6 +607,156 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		pigOut->moveWindowId = window->id;
 		pigOut->moveWindowRec = NewReci(window->input.desktopInnerRec.topLeft, resolution);
 		PrintLine_I("Moving window to (%d, %d, %d, %d)", pigOut->moveWindowRec.x, pigOut->moveWindowRec.y, pigOut->moveWindowRec.width, pigOut->moveWindowRec.height);
+	}
+	
+	// +==============================+
+	// |          fullscreen          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "fullscreen") == 0)
+	{
+		if (numArguments != 1 && numArguments != 4 && numArguments != 5) { PrintLine_E("fullscreen takes 1, 4, or 5 arguments, not %llu", numArguments); return validCommand; }
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		
+		const PlatWindow_t* window = platInfo->mainWindow;
+		NotNull(window);
+		
+		if (StrCompareIgnoreCase(arguments[0], "toggle") == 0)
+		{
+			if (window->input.fullscreen)
+			{
+				pigOut->changeFullscreen = true;
+				pigOut->changeFullscreenWindowId = window->id;
+				pigOut->fullscreenEnabled = false;
+				pigOut->windowedResolution = NewVec2i(
+					window->input.fullscreenVideoMode->resolution.width/2,
+					window->input.fullscreenVideoMode->resolution.height/2
+				);
+				Assert(window->input.fullscreenFramerateIndex < window->input.fullscreenVideoMode->numFramerates);
+				pigOut->windowedFramerate = window->input.fullscreenVideoMode->framerates[window->input.fullscreenFramerateIndex];
+				PrintLine_I("Coming out of fullscreen on monitor %llu \"%.*s\". Going to windowed at %dx%d %lldHz",
+					window->input.fullscreenMonitor->designatedNumber,
+					window->input.fullscreenMonitor->name.length, window->input.fullscreenMonitor->name.pntr,
+					pigOut->windowedResolution.width, pigOut->windowedResolution.height,
+					pigOut->windowedFramerate
+				);
+			}
+			else
+			{
+				const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+				NotNull(currentMonitor);
+				const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+				
+				pigOut->changeFullscreen = true;
+				pigOut->changeFullscreenWindowId = window->id;
+				pigOut->fullscreenEnabled = true;
+				pigOut->fullscreenMonitorId = currentMonitor->id;
+				pigOut->fullscreenVideoModeIndex = currentVideoMode->index;
+				Assert(currentVideoMode->currentFramerateIndex < currentVideoMode->numFramerates);
+				pigOut->fullscreenFramerateIndex = currentVideoMode->currentFramerateIndex;
+				PrintLine_I("Enabling fullscreen on monitor %llu \"%.*s\" at %dx%d %lldHz",
+					currentMonitor->designatedNumber,
+					currentMonitor->name.length, currentMonitor->name.pntr,
+					currentVideoMode->resolution.width, currentVideoMode->resolution.height,
+					currentVideoMode->framerates[currentVideoMode->currentFramerateIndex]
+				);
+			}
+		}
+		else
+		{
+			bool fullscreenEnabled = false;
+			if (!TryParseBool(arguments[0], &fullscreenEnabled, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse \"%.*s\" as bool: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+			if (!fullscreenEnabled && numArguments != 4) { PrintLine_E("turning on fullscreen takes 4 arguments, not %llu", numArguments); return validCommand; }
+			if (fullscreenEnabled && numArguments != 5) { PrintLine_E("turning on fullscreen takes 5 arguments, not %llu", numArguments); return validCommand; }
+			
+			v2i resolution = Vec2i_Zero;
+			if (!TryParseI32(arguments[1], &resolution.width, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+			if (!TryParseI32(arguments[2], &resolution.height, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[2].length, arguments[2].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+			
+			i64 framerate = 0;
+			if (!TryParseI64(arguments[3], &framerate, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse \"%.*s\" as i64: %s", arguments[3].length, arguments[3].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+			if (framerate <= 0)
+			{
+				PrintLine_E("Invalid framerate requested. Can't be <= 0: %lld", framerate);
+				return validCommand;
+			}
+			
+			if (fullscreenEnabled)
+			{
+				u64 monitorNumber = 0;
+				if (!TryParseU64(arguments[4], &monitorNumber, &parseFailureReason))
+				{
+					PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[4].length, arguments[4].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+					return validCommand;
+				}
+				
+				const PlatMonitorInfo_t* targetMonitor = GetMonitorInfoByNumber(monitorNumber);
+				if (targetMonitor == nullptr)
+				{
+					PrintLine_E("There are no monitors with number %llu (There are %llu monitors available)", monitorNumber, platInfo->monitors->list.count);
+					return validCommand;
+				}
+				const PlatMonitorVideoMode_t* targetVideoMode = GetVideoModeWithResolution(targetMonitor, resolution);
+				if (targetVideoMode == nullptr)
+				{
+					PrintLine_E("The target monitor does not support resolution %dx%d", resolution.width, resolution.height); 
+					return validCommand;
+				}
+				i64 targetFramerateIndex = FindVideoModeFramerateIndex(targetVideoMode, framerate);
+				if (targetFramerateIndex < 0)
+				{
+					PrintLine_E("The target monitor does not support %lldHz at %dx%d", framerate, resolution.width, resolution.height);
+					return validCommand;
+				}
+				
+				PrintLine_I("Changing to fullscreen mode %dx%d at %lldHz on monitor %d \"%.*s\"", resolution.width, resolution.height, framerate, monitorNumber, targetMonitor->name.length, targetMonitor->name.pntr);
+				pigOut->changeFullscreen = true;
+				pigOut->changeFullscreenWindowId = window->id;
+				pigOut->fullscreenEnabled = true;
+				pigOut->fullscreenMonitorId = targetMonitor->id;
+				pigOut->fullscreenVideoModeIndex = targetVideoMode->index;
+				pigOut->fullscreenFramerateIndex = (u64)targetFramerateIndex;
+			}
+			else
+			{
+				if (framerate < 10 || framerate > 300)
+				{
+					PrintLine_E("Invalid framerate requested. Must be in range [10, 300]: %lld", framerate);
+					return validCommand;
+				}
+				const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+				const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+				if (resolution.width < PIG_WINDOW_MIN_SIZE.width || resolution.height < PIG_WINDOW_MIN_SIZE.height)
+				{
+					PrintLine_E("Invalid resolution %dx%d. Our minimum size is %dx%d", resolution.width, resolution.height, PIG_WINDOW_MIN_SIZE.width, PIG_WINDOW_MIN_SIZE.height);
+					return validCommand;
+				}
+				if (resolution.width > currentVideoMode->resolution.width) { PrintLine_W("Limiting width to %d", currentVideoMode->resolution.width); resolution.width = currentVideoMode->resolution.width; }
+				if (resolution.height > currentVideoMode->resolution.height) { PrintLine_W("Limiting height to %d", currentVideoMode->resolution.height); resolution.height = currentVideoMode->resolution.height; }
+				
+				PrintLine_I("Changing to windowed mode %dx%d at %lldHz", resolution.width, resolution.height, framerate);
+				pigOut->changeFullscreen = true;
+				pigOut->changeFullscreenWindowId = window->id;
+				pigOut->fullscreenEnabled = false;
+				pigOut->windowedResolution = resolution;
+				pigOut->windowedFramerate = framerate;
+			}
+		}
 	}
 	
 	// +==============================+

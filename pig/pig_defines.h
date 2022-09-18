@@ -32,8 +32,8 @@ Description:
 
 #define PIG_TEMP_MAX_MARKS      256
 
-#define PIG_TARGET_FRAMERATE   60 //frames per second //TODO: Make this dependent on the hardware (monitor) we are rendering on
-#define PIG_TARGET_FRAME_TIME  (1000.0 / PIG_TARGET_FRAMERATE) //ms
+#define PIG_DEFAULT_FRAMERATE   60 //frames per second //TODO: Make this dependent on the hardware (monitor) we are rendering on
+#define PIG_DEFAULT_FRAME_TIME  (1000.0 / PIG_DEFAULT_FRAMERATE) //ms
 
 #define PIG_PHYS_FRAMERATE       120 //frames per second
 #define PIG_PHYS_FRAME_TIME_SEC  (1.0 / PIG_PHYS_FRAMERATE) //secs

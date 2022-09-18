@@ -1478,6 +1478,64 @@ const PlatMonitorInfo_t* GetPrimaryMonitorInfo(u64* monitorIndexOut = nullptr)
 	if (monitorIndexOut != nullptr) { *monitorIndexOut = platInfo->monitors->primaryIndex; }
 	return LinkedListGet(&platInfo->monitors->list, PlatMonitorInfo_t, platInfo->monitors->primaryIndex);
 }
+const PlatMonitorInfo_t* GetMonitorInfoByNumber(u64 designatedNumber)
+{
+	const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&platInfo->monitors->list, PlatMonitorInfo_t);
+	for (u64 mIndex = 0; mIndex < platInfo->monitors->list.count; mIndex++)
+	{
+		if (monitorInfo->designatedNumber == designatedNumber) { return monitorInfo; }
+		monitorInfo = LinkedListNext(&platInfo->monitors->list, PlatMonitorInfo_t, monitorInfo);
+	}
+	return nullptr;
+}
+
+const PlatMonitorVideoMode_t* GetVideoModeWithResolution(const PlatMonitorInfo_t* monitorInfo, v2i resolution, bool giveClosestFit = false)
+{
+	NotNull(monitorInfo);
+	const PlatMonitorVideoMode_t* closestFit = nullptr;
+	i64 closestFitDifference = 0;
+	VarArrayLoop(&monitorInfo->videoModes, vIndex)
+	{
+		VarArrayLoopGet(PlatMonitorVideoMode_t, videoMode, &monitorInfo->videoModes, vIndex);
+		if (videoMode->resolution == resolution)
+		{
+			return videoMode;
+		}
+		else if (giveClosestFit)
+		{
+			i64 differenceInArea = ((i64)(videoMode->resolution.width * videoMode->resolution.height) - (i64)(resolution.width * resolution.height));
+			if (closestFit == nullptr || (AbsI64(differenceInArea) < closestFitDifference))
+			{
+				closestFit = videoMode;
+				closestFitDifference = differenceInArea;
+			}
+		}
+	}
+	return closestFit;
+}
+i64 FindVideoModeFramerateIndex(const PlatMonitorVideoMode_t* videoMode, i64 framerate, bool giveClosestFit = false)
+{
+	NotNull(videoMode);
+	i64 closestFitIndex = -1;
+	i64 closestFitDifference = 0;
+	for (u64 fIndex = 0; fIndex < videoMode->numFramerates; fIndex++)
+	{
+		if (videoMode->framerates[fIndex] == framerate)
+		{
+			return (i64)fIndex;
+		}
+		else if (giveClosestFit)
+		{
+			i64 difference = (framerate - videoMode->framerates[fIndex]);
+			if (closestFitIndex == -1 || difference < closestFitDifference)
+			{
+				closestFitIndex = (i64)fIndex;
+				closestFitDifference = difference;
+			}
+		}
+	}
+	return closestFitIndex;
+}
 
 bool IsDesktopRecLostBetweenMonitors(reci desktopRec)
 {
@@ -1508,20 +1566,42 @@ bool IsCurrentlyLostBetweenMonitors()
 void UpdateSettingsWithWindowInfo(PigSettings_t* settings, const PlatWindow_t* window, MemArena_t* printArena)
 {
 	NotNull3(settings, window, printArena);
-	const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
-	NotNull(currentMonitor);
-	NotNullStr(&currentMonitor->name);
-	v2i windowOffsetInMonitor = window->input.desktopInnerRec.topLeft - currentMonitor->desktopSpaceRec.topLeft;
-	PigSetSettingV2i(settings, "WindowedPosition", window->input.unmaximizedWindowPos - currentMonitor->desktopSpaceRec.topLeft, true, printArena);
-	PigSetSettingV2i(settings, "WindowedResolution", window->input.unmaximizedWindowSize, true, printArena);
-	if (currentMonitor->name.length > 0)
+	const bool ignoreCase = true;
+	if (window->input.fullscreen)
 	{
-		PigSetSettingStr(settings, "Monitor", currentMonitor->name);
+		const PlatMonitorInfo_t* fullscreenMonitor = window->input.fullscreenMonitor;
+		NotNull(fullscreenMonitor);
+		const PlatMonitorVideoMode_t* fullscreenVideoMode = window->input.fullscreenVideoMode;
+		NotNull(fullscreenVideoMode);
+		Assert(window->input.fullscreenFramerateIndex < fullscreenVideoMode->numFramerates);
+		i64 fullscreenFramerate = fullscreenVideoMode->framerates[window->input.fullscreenFramerateIndex];
+		Assert(fullscreenFramerate > 0 && fullscreenFramerate < 300);
+		
+		PigSetSettingBool(settings, "Fullscreen", true, ignoreCase, printArena);
+		PigSetSettingV2i(settings, "Resolution", fullscreenVideoMode->resolution, ignoreCase, printArena);
+		
+		PigSetSettingStr(settings, "Monitor", (fullscreenMonitor->name.length > 0) ? fullscreenMonitor->name : NewStr("[Unnamed]"));
+		PigSetSettingU64(settings, "MonitorNumber", fullscreenMonitor->designatedNumber, ignoreCase, printArena);
+		PigSetSettingU64(settings, "Framerate", (u64)fullscreenFramerate, ignoreCase, printArena);
+		
+		PigUnsetSetting(settings, "WindowedPosition");
+		PigUnsetSetting(settings, "MaximizedWindow");
 	}
 	else
 	{
-		PigSetSettingStr(settings, "Monitor", NewStr("[Unnamed]"));
+		const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+		NotNull(currentMonitor);
+		NotNullStr(&currentMonitor->name);
+		v2i windowOffsetInMonitor = window->input.desktopInnerRec.topLeft - currentMonitor->desktopSpaceRec.topLeft;
+		
+		PigSetSettingBool(settings, "Fullscreen", false, ignoreCase, printArena);
+		PigSetSettingV2i(settings, "Resolution", window->input.unmaximizedWindowSize, ignoreCase, printArena);
+		
+		PigSetSettingStr(settings, "Monitor", (currentMonitor->name.length > 0) ? currentMonitor->name : NewStr("[Unnamed]"));
+		PigSetSettingU64(settings, "MonitorNumber", currentMonitor->designatedNumber, ignoreCase, printArena);
+		PigUnsetSetting(settings, "Framerate");
+		
+		PigSetSettingV2i(settings, "WindowedPosition", window->input.unmaximizedWindowPos - currentMonitor->desktopSpaceRec.topLeft, ignoreCase, printArena);
+		PigSetSettingBool(settings, "MaximizedWindow", window->input.maximized, ignoreCase, printArena);
 	}
-	PigSetSettingU64(settings, "MonitorNumber", currentMonitor->designatedNumber, true, printArena);
-	PigSetSettingBool(settings, "MaximizedWindow", window->input.maximized, true, printArena);
 }

@@ -141,6 +141,7 @@ void PigUpdateMainWindow()
 	UpdateDebugConsole(&pig->debugConsole);
 	Pig_HandleScreenshotHotkeys();
 	
+	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);
 	UpdateAppState(pig->currentAppState);
 }

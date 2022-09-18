@@ -187,7 +187,7 @@ void RenderPigPerfGraph(PigPerfGraph_t* graph)
 		RcDrawRectangle(graph->mainRec, ColorTransparent(MonokaiDarkGray, 0.5f));
 		r32 baseY = graph->mainRec.y + graph->mainRec.height;
 		
-		r32 targetFramerateY = baseY - (1000.0f / PIG_TARGET_FRAMERATE) * graph->scale;
+		r32 targetFramerateY = baseY - (r32)PIG_DEFAULT_FRAME_TIME * graph->scale;
 		rec targetFramerateLine = NewRec(graph->mainRec.x, targetFramerateY, graph->mainRec.width, 1);
 		RcDrawRectangle(targetFramerateLine, MonokaiGray1);
 		

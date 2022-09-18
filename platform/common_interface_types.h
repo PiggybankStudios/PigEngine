@@ -308,11 +308,23 @@ struct EngineInput_t
 struct EngineOutput_t
 {
 	bool exit;
+	
 	PlatCursor_t cursorType;
+	
 	PlatMouseMode_t mouseMode;
+	
 	bool moveWindow;
 	u64 moveWindowId;
 	reci moveWindowRec;
+	
+	bool changeFullscreen;
+	u64 changeFullscreenWindowId;
+	bool fullscreenEnabled;
+	u64 fullscreenMonitorId;
+	u64 fullscreenVideoModeIndex;
+	u64 fullscreenFramerateIndex;
+	v2i windowedResolution;
+	i64 windowedFramerate;
 };
 
 #define PIG_GET_VERSION_DEF(functionName) Version_t functionName()

@@ -329,6 +329,10 @@ bool PigUnsetSetting(PigSettings_t* settings, MyStr_t key, bool ignoreCase = tru
 	}
 	return false;
 }
+bool PigUnsetSetting(PigSettings_t* settings, const char* keyNullTerm, bool ignoreCase = true)
+{
+	return PigUnsetSetting(settings, NewStr(keyNullTerm), ignoreCase);
+}
 
 PigSettingsEntry_t* PigSetSettingStr(PigSettings_t* settings, MyStr_t key, MyStr_t value, bool ignoreCase = true)
 {

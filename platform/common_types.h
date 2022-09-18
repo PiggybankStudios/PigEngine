@@ -198,13 +198,17 @@ struct PlatWindowCreateOptions_t
 	bool topmostWindow;
 	bool decoratedWindow;
 	u64 antialiasingNumSamples;
-	i32 requestRefreshRate;
 	bool autoIconify;
-	v2i requestSize;
-	v2i requestWindowedLocation;
-	bool requestMaximizedWindow;
-	PlatMonitorInfo_t* requestMonitor;
 	MyStr_t windowTitle;
+	
+	bool fullscreen;
+	const PlatMonitorInfo_t* fullscreenMonitor;
+	const PlatMonitorVideoMode_t* fullscreenVideoMode;
+	u64 fullscreenFramerateIndex;
+	v2i windowedResolution;
+	v2i windowedLocation;
+	bool windowedMaximized;
+	i64 windowedFramerate;
 };
 struct PlatWindowOptions_t
 {
@@ -331,6 +335,21 @@ struct WindowEngineInput_t
 {
 	bool windowInteractionOccurred; //anything that could cause us to block for a long time and extend ElapsedMs undesirably
 	
+	bool isFocusedChanged;
+	bool isFocused;
+	
+	bool fullscreen;
+	bool fullscreenChanged;
+	const PlatMonitorInfo_t* fullscreenMonitor;
+	const PlatMonitorVideoMode_t* fullscreenVideoMode;
+	u64 fullscreenFramerateIndex;
+	i64 fullscreenFramerate;
+	
+	bool moved;
+	reci desktopRec; //This can be used in conjunction with PlatMonitorList_t desktopRec to get an idea of where our window is across all monitors
+	reci desktopInnerRec; //Similar to desktopRec but doesn't include the title bar or borders. i.e. it's only the render portion of the window
+	i64 windowedFramerate;
+	
 	bool minimizedChanged;
 	bool minimized;
 	bool maximizedChanged;
@@ -344,16 +363,9 @@ struct WindowEngineInput_t
 	v2i contextResolution;     //the size that OpenGL or whatever wants us to talk in when doing stuff like glViewport
 	v2  renderResolution;      //the size used for all of our render logic. The "effective" resolution
 	
-	bool moved;
-	reci desktopRec; //This can be used in conjunction with PlatMonitorList_t desktopRec to get an idea of where our window is across all monitors
-	reci desktopInnerRec; //Similar to desktopRec but doesn't include the title bar or borders. i.e. it's only the render portion of the window
-	
 	v2i prevUnmaximizedWindowPos; //NOTE: window position callback comes as (0, 0) BEFORE we get the maximized callback. And also comes before we get the unmaximized callback. So we need to revert the value sometimes
 	v2i unmaximizedWindowPos;  //the last value of desktopInnerRec.topLeft when we weren't maximized, minimized, or full screen
 	v2i unmaximizedWindowSize; //the last value of windowResolution when we weren't maximized, minimized, or full screen
-	
-	bool isFocusedChanged;
-	bool isFocused;
 	
 	bool mouseInsideWindowChanged;
 	bool mouseInsideWindow;

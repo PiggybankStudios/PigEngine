@@ -24,7 +24,7 @@ Description:
 	Assert_(plat->GetThisThreadId() == pig->mainThreadId); \
 } while(0)
 
-#define TIME_SCALED_ANIM(animTimeMs, timeScale) (((1000.0f / PIG_TARGET_FRAMERATE) / (animTimeMs)) * (r32)(timeScale))
+#define TIME_SCALED_ANIM(animTimeMs, timeScale) (((r32)PIG_DEFAULT_FRAME_TIME / (animTimeMs)) * (r32)(timeScale))
 
 //returns true on 1 frame, when animTimerPntr reaches target
 bool UpdateAnimationUpTo(r32* animTimerPntr, r32 animationTimeMs, r32 target)

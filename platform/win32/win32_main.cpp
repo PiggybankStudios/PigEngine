@@ -108,6 +108,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_assert.cpp"
 
 #include "win32/win32_interface_filling.cpp"
+#include "win32/win32_engine_output.cpp"
 
 // +--------------------------------------------------------------+
 // |                    Win32 Main Entry Point                    |

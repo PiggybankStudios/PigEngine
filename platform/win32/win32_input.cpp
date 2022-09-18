@@ -209,19 +209,12 @@ void Win32_CheckForStableFramerate(r64 elapsedMsLastFrame)
 // +--------------------------------------------------------------+
 // |                     Window Engine Input                      |
 // +--------------------------------------------------------------+
-void Win32_InitWindowEngineInput(PlatWindow_t* window, WindowEngineInput_t* input)
+void Win32_InitWindowEngineInput(PlatWindow_t* window, const PlatWindowCreateOptions_t* creationOptions, WindowEngineInput_t* input)
 {
 	NotNull(window);
 	NotNull(input);
 	
 	ClearPointer(input);
-	
-	input->maximized = (glfwGetWindowAttrib(window->handle, GLFW_MAXIMIZED) > 0);
-	input->minimized = false;
-	
-	int windowPosX = 0;
-	int windowPosY = 0;
-	glfwGetWindowPos(window->handle, &windowPosX, &windowPosY);
 	
 	int windowWidth = 0;
 	int windowHeight = 0;
@@ -231,38 +224,75 @@ void Win32_InitWindowEngineInput(PlatWindow_t* window, WindowEngineInput_t* inpu
 	int framebufferHeight = 0;
 	glfwGetFramebufferSize(window->handle, &framebufferWidth, &framebufferHeight);
 	
-	int windowLeftBorderSize = 0;
-	int windowTopBorderSize = 0;
-	int windowRightBorderSize = 0;
-	int windowBottomBorderSize = 0;
-	glfwGetWindowFrameSize(window->handle, &windowLeftBorderSize, &windowTopBorderSize, &windowRightBorderSize, &windowBottomBorderSize);
+	input->pixelResolution   = NewVec2i(framebufferWidth, framebufferHeight);
+	input->windowResolution  = NewVec2i(     windowWidth,      windowHeight);
+	input->contextResolution = NewVec2i(framebufferWidth, framebufferHeight); //TODO: When is this different? Only on OSX or High DPI screens?
+	input->renderResolution  = NewVec2 ((r32)windowWidth, (r32)windowHeight); //TODO: When is this different? Only on OSX or High DPI screens?
 	
-	//NOTE: On windows 10, this returns an extra 8 pixels of extra padding on all sides. We don't actually want that
-	if (windowLeftBorderSize >= 8) { windowLeftBorderSize -= 8; }
-	else { windowLeftBorderSize = 0; }
-	if (windowTopBorderSize >= 8) { windowTopBorderSize -= 8; }
-	else { windowTopBorderSize = 0; }
-	if (windowRightBorderSize >= 8) { windowRightBorderSize -= 8; }
-	else { windowRightBorderSize = 0; }
-	if (windowBottomBorderSize >= 8) { windowBottomBorderSize -= 8; }
-	else { windowBottomBorderSize = 0; }
-	
-	window->activeInput.pixelResolution   = NewVec2i(framebufferWidth, framebufferHeight);
-	window->activeInput.windowResolution  = NewVec2i(     windowWidth,      windowHeight);
-	window->activeInput.contextResolution = NewVec2i(framebufferWidth, framebufferHeight); //TODO: When is this different? Only on OSX or High DPI screens?
-	window->activeInput.renderResolution  = NewVec2 ((r32)windowWidth, (r32)windowHeight); //TODO: When is this different? Only on OSX or High DPI screens?
-	window->activeInput.desktopRec = NewReci(
-		windowPosX - windowLeftBorderSize, windowPosY - windowTopBorderSize,
-		windowLeftBorderSize + windowWidth + windowRightBorderSize,
-		windowTopBorderSize + windowHeight + windowBottomBorderSize
-	);
-	window->activeInput.desktopInnerRec = NewReci(
-		windowPosX, windowPosY,
-		windowWidth, windowHeight
-	);
-	window->activeInput.unmaximizedWindowPos = window->activeInput.desktopInnerRec.topLeft;
-	window->activeInput.unmaximizedWindowSize = window->activeInput.windowResolution;
-	window->activeInput.resized = false;
+	GLFWmonitor* fullscreenMonitorHandle = glfwGetWindowMonitor(window->handle); 	
+	if (creationOptions->fullscreen)
+	{
+		input->fullscreen = true;
+		NotNull(creationOptions->fullscreenMonitor);
+		NotNull(creationOptions->fullscreenVideoMode);
+		Assert(creationOptions->fullscreenFramerateIndex < creationOptions->fullscreenVideoMode->numFramerates);
+		input->fullscreenMonitor = creationOptions->fullscreenMonitor;
+		input->fullscreenVideoMode = creationOptions->fullscreenVideoMode;
+		input->fullscreenFramerateIndex = creationOptions->fullscreenFramerateIndex;
+		input->fullscreenFramerate = input->fullscreenVideoMode->framerates[input->fullscreenFramerateIndex];
+		
+		input->maximized = false;
+		input->minimized = false;
+		
+		input->desktopRec = input->fullscreenMonitor->desktopSpaceRec;
+		input->desktopInnerRec = input->fullscreenMonitor->desktopSpaceRec;
+		input->unmaximizedWindowPos = NewVec2i(
+			input->fullscreenMonitor->desktopSpaceRec.x + input->fullscreenMonitor->desktopSpaceRec.width/2,
+			input->fullscreenMonitor->desktopSpaceRec.y + input->fullscreenMonitor->desktopSpaceRec.height/2
+		);
+		input->unmaximizedWindowSize = NewVec2i(
+			input->fullscreenMonitor->desktopSpaceRec.width/2,
+			input->fullscreenMonitor->desktopSpaceRec.height/2
+		);
+	}
+	else 
+	{
+		input->fullscreen = false;
+		input->maximized = (glfwGetWindowAttrib(window->handle, GLFW_MAXIMIZED) > 0);
+		input->minimized = false;
+		
+		int windowPosX = 0;
+		int windowPosY = 0;
+		glfwGetWindowPos(window->handle, &windowPosX, &windowPosY);
+		
+		int windowLeftBorderSize = 0;
+		int windowTopBorderSize = 0;
+		int windowRightBorderSize = 0;
+		int windowBottomBorderSize = 0;
+		glfwGetWindowFrameSize(window->handle, &windowLeftBorderSize, &windowTopBorderSize, &windowRightBorderSize, &windowBottomBorderSize);
+		
+		//NOTE: On windows 10, this returns an extra 8 pixels of extra padding on all sides. We don't actually want that
+		if (windowLeftBorderSize >= 8) { windowLeftBorderSize -= 8; }
+		else { windowLeftBorderSize = 0; }
+		if (windowTopBorderSize >= 8) { windowTopBorderSize -= 8; }
+		else { windowTopBorderSize = 0; }
+		if (windowRightBorderSize >= 8) { windowRightBorderSize -= 8; }
+		else { windowRightBorderSize = 0; }
+		if (windowBottomBorderSize >= 8) { windowBottomBorderSize -= 8; }
+		else { windowBottomBorderSize = 0; }
+		
+		input->desktopRec = NewReci(
+			windowPosX - windowLeftBorderSize, windowPosY - windowTopBorderSize,
+			windowLeftBorderSize + windowWidth + windowRightBorderSize,
+			windowTopBorderSize + windowHeight + windowBottomBorderSize
+		);
+		input->desktopInnerRec = NewReci(
+			windowPosX, windowPosY,
+			windowWidth, windowHeight
+		);
+		input->unmaximizedWindowPos = input->desktopInnerRec.topLeft;
+		input->unmaximizedWindowSize = input->windowResolution;
+	}
 }
 
 void Win32_CopyWindowEngineInput(WindowEngineInput_t* dest, WindowEngineInput_t* source)
@@ -281,6 +311,7 @@ void Win32_ResetWindowEngineInput(WindowEngineInput_t* input)
 	input->windowInteractionOccurred = false;
 	input->minimizedChanged = false;
 	input->maximizedChanged = false;
+	input->fullscreenChanged = false;
 	input->resized = false;
 	input->moved = false;
 	input->isFocusedChanged = false;

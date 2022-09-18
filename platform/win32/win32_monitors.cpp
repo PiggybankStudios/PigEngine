@@ -152,33 +152,33 @@ void Win32_FillMonitorInfo()
 		{
 			const GLFWvidmode* glfwMode = &glfwVideoModes[vIndex];
 			v2i resolution = NewVec2i(glfwMode->width, glfwMode->height);
-			u64 newModeIndex = 0;
-			PlatMonitorVideoMode_t* newMode = (PlatMonitorVideoMode_t*)Win32_GetMonitorVideoMode(newMonitor, resolution, &newModeIndex);
-			if (newMode == nullptr)
+			u64 existingModeIndex = 0;
+			PlatMonitorVideoMode_t* existingMode = (PlatMonitorVideoMode_t*)Win32_GetMonitorVideoMode(newMonitor, resolution, &existingModeIndex);
+			if (existingMode == nullptr)
 			{
-				newModeIndex = newMonitor->videoModes.length-1;
-				newMode = VarArrayAdd(&newMonitor->videoModes, PlatMonitorVideoMode_t);
+				PlatMonitorVideoMode_t* newMode = VarArrayAdd(&newMonitor->videoModes, PlatMonitorVideoMode_t);
 				NotNull(newMode);
 				ClearPointer(newMode);
 				newMode->id = Platform->nextMonitorVideoModeId;
 				Platform->nextMonitorVideoModeId++;
-				newMode->index = newModeIndex;
+				newMode->index = newMonitor->videoModes.length-1;
 				newMode->resolution = resolution;
 				newMode->isCurrent = false;
 				newMode->numFramerates = 0;
-				//TODO: Should we incorporate the redBits, blueBits, greenBits members?
+				//TODO: Should we incorporate the redBits, blueBits, greenBits members? Probably not because we don't ask glfw to set the bit depth when we activate fullscreen and choose a resolution+framerate
 				//TODO: Will we ever find multiple video modes that share the same attributes besides bit depth changing?
+				existingMode = newMode;
 			}
-			if (newMode->numFramerates < MAX_MONITOR_FRAMERATES_PER_RESOLUTION)
+			if (existingMode->numFramerates < MAX_MONITOR_FRAMERATES_PER_RESOLUTION)
 			{
-				newMode->framerates[newMode->numFramerates] = glfwMode->refreshRate;
-				newMode->numFramerates++;
+				existingMode->framerates[existingMode->numFramerates] = glfwMode->refreshRate;
+				existingMode->numFramerates++;
 			}
 			if (!foundPrimaryVideoMode && Win32_AreGlfwVideoModesEqual(glfwMode, glfwCurrentVideoMode))
 			{
-				newMonitor->currentVideoModeIndex = newModeIndex;
-				newMode->currentFramerateIndex = newMode->numFramerates-1;
-				newMode->isCurrent = true;
+				newMonitor->currentVideoModeIndex = existingModeIndex;
+				existingMode->currentFramerateIndex = existingMode->numFramerates-1;
+				existingMode->isCurrent = true;
 				foundPrimaryVideoMode = true;
 			}
 			
