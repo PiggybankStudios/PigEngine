@@ -1605,3 +1605,49 @@ void UpdateSettingsWithWindowInfo(PigSettings_t* settings, const PlatWindow_t* w
 		PigSetSettingBool(settings, "MaximizedWindow", window->input.maximized, ignoreCase, printArena);
 	}
 }
+
+// +--------------------------------------------------------------+
+// |                        Debug Bindings                        |
+// +--------------------------------------------------------------+
+void Pig_HandleDebugBindings(PigDebugBindings_t* bindings)
+{
+	NotNull(bindings);
+	VarArrayLoop(&bindings->entries, bIndex)
+	{
+		VarArrayLoopGet(PigDebugBindingsEntry_t, binding, &bindings->entries, bIndex);
+		switch (binding->type)
+		{
+			case PigDebugBindingType_Keyboard:
+			{
+				bool modifiersHeld = true;
+				for (u64 mIndex = 0; mIndex < ModifierKey_NumKeys; mIndex++)
+				{
+					ModifierKey_t modifierKey = (ModifierKey_t)((u8)1 << mIndex);
+					if (IsFlagSet(binding->modifiers, modifierKey))
+					{
+						if (!KeyDownRaw(GetKeyForModifierKey(modifierKey)))
+						{
+							modifiersHeld = false;
+							break;
+						}
+					}
+				}
+				
+				if (modifiersHeld && KeyPressed(binding->key))
+				{
+					HandleKeyExtended(binding->key);
+					PigParseDebugCommand(binding->commandStr);
+				}
+			} break;
+			case PigDebugBindingType_Mouse:
+			{
+				Unimplemented(); //TODO: Implement me!
+			} break;
+			case PigDebugBindingType_Controller:
+			{
+				Unimplemented(); //TODO: Implement me!
+			} break;
+			default: DebugAssert(false); break;
+		}
+	}
+}

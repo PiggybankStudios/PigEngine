@@ -12,6 +12,7 @@ Description:
 void Win32_FillEngineOutput(EngineOutput_t* output)
 {
 	NotNull(output);
+	ClearPointer(output);
 	output->cursorType = Platform->currentCursorType;
 	output->mouseMode = Platform->currentMouseMode;
 }

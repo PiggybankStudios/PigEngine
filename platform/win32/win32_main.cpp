@@ -369,6 +369,10 @@ int main(int argc, char* argv[])
 	Win32_FillEngineMemory(&Platform->engineMemory, Platform->startupOptions.mainMemoryRequest, Platform->startupOptions.tempMemoryRequest);
 	Win32_FillEngineOutput(&Platform->engineOutput);
 	
+	u64 initProgramTime = Win32_GetProgramTime(nullptr, true);
+	u64 initUnixTimestamp = Win32_GetCurrentTimestamp(false);
+	u64 initLocalTimestamp = Win32_GetCurrentTimestamp(true);
+	
 	Platform->loadingPercent = 1.0f;
 	Win32_RenderLoadingScreen(0.0f);
 	
@@ -381,7 +385,7 @@ int main(int argc, char* argv[])
 	PerfTime_t initEndTime = Win32_GetPerfTime();
 	PrintLine_N("Calling Pig_Initialize... (Engine took %.1lfms to init)", Win32_GetPerfTimeDiff(&initStartTime, &initEndTime));
 	Platform->callingEngineInitialize = true;
-	Platform->engine.Initialize(&Platform->info, &Platform->api, &Platform->engineMemory);
+	Platform->engine.Initialize(&Platform->info, &Platform->api, &Platform->engineMemory, initProgramTime, initUnixTimestamp, initLocalTimestamp);
 	Platform->callingEngineInitialize = false;
 	if (Platform->mainWindow == nullptr || Platform->mainWindow->closed || glfwWindowShouldClose(Platform->mainWindow->handle))
 	{

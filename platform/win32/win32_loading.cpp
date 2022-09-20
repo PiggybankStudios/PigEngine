@@ -128,7 +128,7 @@ PLAT_API_RENDER_LOADING_SCREEN(Win32_RenderLoadingScreen)
 	}
 	
 	r32 actualLoadPercent = (Platform->loadingPercent * PLATFORM_LOADING_TIME_SLICE) + (completionPercent * (1.0f - PLATFORM_LOADING_TIME_SLICE));
-	UNUSED(actualLoadPercent); //TODO: Use this!
+	// PrintLine_D("Rendering loading screen for %g%% (%g %g)", actualLoadPercent*100, Platform->loadingPercent, completionPercent);
 	
 	PlatWindow_t* window = LinkedListFirst(&Platform->windows, PlatWindow_t);
 	for (u64 wIndex = 0; wIndex < Platform->windows.count; wIndex++)

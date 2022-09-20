@@ -41,6 +41,9 @@ struct PigState_t
 	ThreadId_t mainThreadId;
 	
 	PigSettings_t settings;
+	PigDebugBindings_t debugBindings;
+	PigDebugBindings_t sessionDebugBindings;
+	RandomSeries_t random;
 	
 	//Memory Arenas
 	MemArena_t platHeap;

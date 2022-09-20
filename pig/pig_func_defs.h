@@ -11,6 +11,17 @@ Description:
 #ifndef _PIG_FUNC_DEFS_H
 #define _PIG_FUNC_DEFS_H
 
+//game_main.h
+void GameInitAppGlobals(AppGlobals_t* globals);
+void GameAllocateAppStateStructs(AppStateStructs_t* appStateStructs);
+void GameUpdateGlobals();
+void GameLoadDebugBindings(PigDebugBindings_t* bindings);
+void GameGeneralInit();
+void GameGeneralUpdate();
+void GameHandleReload();
+void GamePinResources();
+void GamePrepareForClose();
+
 //pig_debug_console.cpp
 void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr_t description, u64 numArguments = 0, MyStr_t* arguments = nullptr);
 void DebugConsoleLineAdded(DebugConsole_t* console, StringFifoLine_t* newLine);
@@ -18,5 +29,16 @@ void DebugConsoleLineAdded(DebugConsole_t* console, StringFifoLine_t* newLine);
 //pig_perf_graph.cpp
 void PigPerfGraphMark_(PigPerfGraph_t* graph);
 #define PigPerfGraphMark() PigPerfGraphMark_(&pig->perfGraph)
+
+//pig_app_states.cpp
+bool IsAppStateInitialized(AppState_t appState);
+bool IsAppStateActive(AppState_t appState);
+AppState_t GetCurrentAppState();
+void ChangeAppState(AppState_t newState);
+void PushAppState(AppState_t newState);
+void PopAppState();
+
+//pig_debug_commands.cpp
+bool PigParseDebugCommand(MyStr_t commandStr);
 
 #endif //  _PIG_FUNC_DEFS_H

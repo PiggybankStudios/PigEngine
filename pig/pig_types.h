@@ -381,4 +381,44 @@ struct PigSettings_t
 	VarArray_t entries; // PigSettingsEntry_t
 };
 
+enum PigDebugBindingType_t
+{
+	PigDebugBindingType_None = 0,
+	PigDebugBindingType_Keyboard,
+	PigDebugBindingType_Mouse,
+	PigDebugBindingType_Controller,
+	PigDebugBindingType_NumTypes,
+};
+const char* GetPigDebugBindingTypeStr(PigDebugBindingType_t bindingType)
+{
+	switch (bindingType)
+	{
+		case PigDebugBindingType_None:       return "None";
+		case PigDebugBindingType_Keyboard:   return "Keyboard";
+		case PigDebugBindingType_Mouse:      return "Mouse";
+		case PigDebugBindingType_Controller: return "Controller";
+		default: return "Unknown";
+	}
+}
+
+struct PigDebugBindingsEntry_t
+{
+	u64 id;
+	PigDebugBindingType_t type;
+	
+	u8 modifiers;
+	Key_t key;
+	MouseBtn_t mouseBtn;
+	ControllerBtn_t controllerBtn;
+	
+	MyStr_t commandStr;
+};
+
+struct PigDebugBindings_t
+{
+	MemArena_t* allocArena;
+	u64 nextId;
+	VarArray_t entries; //PigDebugBindingsEntry_t
+};
+
 #endif //  _PIG_TYPES_H

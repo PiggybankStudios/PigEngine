@@ -7,6 +7,34 @@ Description:
 	** After some basic command checks, we pass info over to the game to handle
 */
 
+const char* PigDebugCommandInfoStrs[] = {
+	//"command", "description", "arg1", "arg2", ... "\n",
+	"help", "Displays this list of commands", "{command}", "\n",
+	"break", "Runs MyDebugBreak", "\n",
+	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
+	"reload", "Reloads a specific resource", "[resource_name]", "{resource_type}", "\n",
+	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
+	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
+	"mute", "Sets Master Volume to 0 (or disables music or sounds if argument is passed)", "{music/sounds}", "\n",
+	"volumes", "Prints out the current audio volume settings", "\n",
+	"set_volume", "Changes the specified volume to the specified value", "[master/music/sounds]", "[value]", "\n",
+	"cyclic_funcs", "Toggles rendering of the cyclic function debug overlay", "\n",
+	"monitors", "Toggles debug overlay for monitor info, resolutions, video modes, window position, etc.", "\n",
+	"set_resolution", "Changes the resolution of the window", "[width]", "[height]", "\n",
+	"video_modes", "Lists all the video modes for all monitors (or a specific monitor if a monitor number is given)", "{monitor}", "\n",
+	"fullscreen", "Enables or disables fullscreen and also sets resolution and framerate", "[on/off/toggle]", "{width}", "{height}", "{framerate}", "{monitor}", "\n",
+	"thread_ids", "Prints out the IDs of all the threads related this application is currently running", "\n",
+	"time_scale", "Fixes and scales the elapsed time that is fed into the game logic to a multiple of 16.666ms (60fps). Set to 2 to test 30 fps logic or 0.5 for 120fps logic. Set to 0 to unfix the time scale", "[scale]", "\n",
+	"bind", "Creates a custom binding that will run a debug command when a specific binding is performed", "[binding]", "[command]", "\n",
+	"unbind", "Removes a previously set custom binding", "[binding]", "\n",
+	"bindings", "Prints out the list of debug bindings", "\n",
+	"reload_bindings", "Reloads the debug bindings from the serialized locations", "\n",
+	"app_states", "Prints out the AppState stack and also the names of all appstates that aren't active for reference", "\n",
+	"pop_app_state", "Pops the current AppState off the stack (unless it's the last AppState on the stack)", "\n",
+	"push_app_state", "Pushes a specified AppState onto the stack (unless it is already active in the stack)", "[app_state]", "\n",
+	"change_app_state", "Swaps out the top AppState with a specified state (unless it is already active in the stack)", "[app_state]", "\n",
+};
+
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
 
 DebugCommandInfoList_t CreateDebugCommandInfoList(const char** infoStrsArray, u64 numInfoStrs)
@@ -79,6 +107,10 @@ DebugCommandInfoList_t CreateDebugCommandInfoList(const char** infoStrsArray, u6
 	
 	return result;
 }
+DebugCommandInfoList_t PigGetDebugCommandInfoList()
+{
+	return CreateDebugCommandInfoList(PigDebugCommandInfoStrs, ArrayCount(PigDebugCommandInfoStrs));
+}
 
 // +--------------------------------------------------------------+
 // |                       Command Helpers                        |
@@ -115,30 +147,34 @@ void DebugPrintArenaInfo(MemArena_t* memArena, const char* arenaName)
 	}
 }
 
-// +--------------------------------------------------------------+
-// |                         Command Info                         |
-// +--------------------------------------------------------------+
-const char* PigDebugCommandInfoStrs[] = {
-	//"command", "description", "arg1", "arg2", ... "\n",
-	"help", "Displays this list of commands", "{command}", "\n",
-	"break", "Runs MyDebugBreak", "\n",
-	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
-	"reload", "Reloads a specific resource", "[resource_name]", "{resource_type}", "\n",
-	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
-	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
-	"mute", "Sets Master Volume to 0 (or disables music or sounds if argument is passed)", "{music/sounds}", "\n",
-	"volumes", "Prints out the current audio volume settings", "\n",
-	"set_volume", "Changes the specified volume to the specified value", "[master/music/sounds]", "[value]", "\n",
-	"cyclic_funcs", "Toggles rendering of the cyclic function debug overlay", "\n",
-	"monitors", "Toggles debug overlay for monitor info, resolutions, video modes, window position, etc.", "\n",
-	"set_resolution", "Changes the resolution of the window", "[width]", "[height]", "\n",
-	"video_modes", "Lists all the video modes for all monitors (or a specific monitor if a monitor number is given)", "{monitor}", "\n",
-	"fullscreen", "Enables or disables fullscreen and also sets resolution and framerate", "[on/off/toggle]", "{width}", "{height}", "{framerate}", "{monitor}", "\n",
-	// "template", "description", "\n",
-};
-DebugCommandInfoList_t PigGetDebugCommandInfoList()
+void DebugPrintDebugBindingEntry(const char* indentation, const PigDebugBindingsEntry_t* binding)
 {
-	return CreateDebugCommandInfoList(PigDebugCommandInfoStrs, ArrayCount(PigDebugCommandInfoStrs));
+	NotNull2(indentation, binding);
+	switch (binding->type)
+	{
+		case PigDebugBindingType_Keyboard:
+		{
+			Print_I("%s", indentation);
+			for (u64 mIndex = 0; mIndex < ModifierKey_NumKeys; mIndex++)
+			{
+				ModifierKey_t modifierKey = (ModifierKey_t)((u8)1 << mIndex);
+				if (IsFlagSet(binding->modifiers, modifierKey))
+				{
+					Print_I("%s+", GetModifierKeyStr(modifierKey));
+				}
+			}
+			PrintLine_I("%s: \"%.*s\"", GetKeyStr(binding->key), binding->commandStr.length, binding->commandStr.pntr);
+		} break;
+		case PigDebugBindingType_Mouse:
+		{
+			PrintLine_I("%sMouse_%s: \"%.*s\"", indentation, GetMouseBtnStr(binding->mouseBtn), binding->commandStr.length, binding->commandStr.pntr);
+		} break;
+		case PigDebugBindingType_Controller:
+		{
+			PrintLine_I("%sController_%s: \"%.*s\"", indentation, GetControllerBtnStr(binding->controllerBtn), binding->commandStr.length, binding->commandStr.pntr);
+		} break;
+		default: DebugAssert(false); break;
+	}
 }
 
 // +--------------------------------------------------------------+
@@ -760,6 +796,293 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	}
 	
 	// +==============================+
+	// |          thread_ids          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "thread_ids") == 0)
+	{
+		PrintLine_I("MainThread:         %llu (%lld or 0x%08X)", platInfo->mainThreadId.internalId, (i64)platInfo->mainThreadId.osId, (i64)platInfo->mainThreadId.osId);
+		PrintLine_I("FileWatchingThread: %llu (%lld or 0x%08X)", platInfo->fileWatchingThreadId.internalId, (i64)platInfo->fileWatchingThreadId.osId, (i64)platInfo->fileWatchingThreadId.osId);
+		PrintLine_I("AudioThread:        %llu (%lld or 0x%08X)", platInfo->audioThreadId.internalId, (i64)platInfo->audioThreadId.osId, (i64)platInfo->audioThreadId.osId);
+		for (u64 tIndex = 0; tIndex < platInfo->numThreadPoolThreads; tIndex++)
+		{
+			PrintLine_I("ThreadPool[%llu]:      %llu (%lld or 0x%08X)", tIndex, platInfo->threadPoolIds[tIndex].internalId, (i64)platInfo->threadPoolIds[tIndex].osId, (i64)platInfo->threadPoolIds[tIndex].osId);
+		}
+	}
+	
+	// +==============================+
+	// |          time_scale          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "time_scale") == 0)
+	{
+		if (numArguments != 1) { PrintLine_E("time_scale takes 1 argument, not %llu", numArguments); return validCommand; }
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		
+		r32 requestedScale = 0;
+		if (!TryParseR32(arguments[0], &requestedScale, &parseFailureReason))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			return validCommand;
+		}
+		if (requestedScale < 0 || requestedScale > 20)
+		{
+			PrintLine_E("Invalid scale value. Must be in range [0, 20] not %f", requestedScale);
+		}
+		
+		if (requestedScale == 0)
+		{
+			if (pigOut->fixedTimeScaleEnabled)
+			{
+				pigOut->fixedTimeScaleEnabled = false;
+				PrintLine_I("Time scale fixing disabled");
+			}
+			else
+			{
+				WriteLine_W("Time scale fixing is already disabled");
+			}
+		}
+		else
+		{
+			pigOut->fixedTimeScaleEnabled = true;
+			pigOut->fixedTimeScale = (r64)requestedScale;
+			r64 fixedElapsedMs = PIG_DEFAULT_FRAME_TIME * pigOut->fixedTimeScale;
+			PrintLine_I("Time scale fixing set to %lgx (%lgfps logic)", pigOut->fixedTimeScale, 1000.0 / fixedElapsedMs);
+		}
+	}
+	
+	// +==============================+
+	// |             bind             |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "bind") == 0)
+	{
+		if (numArguments < 2) { PrintLine_E("bind takes at least 2 arguments, not %llu", numArguments); return validCommand; }
+		
+		PigDebugBindingsEntry_t binding = {};
+		if (!PigTryDeserBindingStr(arguments[0], &binding))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as binding", arguments[0].length, arguments[0].pntr);
+			return validCommand;
+		}
+		
+		switch (binding.type)
+		{
+			case PigDebugBindingType_Keyboard:
+			{
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryKey(&pig->sessionDebugBindings, binding.modifiers, binding.key, arguments[1]);
+				NotNull(newEntry);
+				WriteLine_I("Keyboard binding created!");
+			} break;
+			case PigDebugBindingType_Mouse:
+			{
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryMouse(&pig->sessionDebugBindings, binding.mouseBtn, arguments[1]);
+				NotNull(newEntry);
+				WriteLine_I("Mouse binding created!");
+			} break;
+			case PigDebugBindingType_Controller:
+			{
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryController(&pig->sessionDebugBindings, binding.controllerBtn, arguments[1]);
+				NotNull(newEntry);
+				WriteLine_I("Controller binding created!");
+			} break;
+			default: DebugAssert(false); break;
+		}
+	}
+	
+	// +==============================+
+	// |            unbind            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "unbind") == 0)
+	{
+		if (numArguments != 1) { PrintLine_E("unbind takes at 1 argument, not %llu", numArguments); return validCommand; }
+		
+		PigDebugBindingsEntry_t binding = {};
+		if (!PigTryDeserBindingStr(arguments[0], &binding))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as binding", arguments[0].length, arguments[0].pntr);
+			return validCommand;
+		}
+		
+		u64 existingBindingIndex = 0;
+		PigDebugBindingsEntry_t* existingBinding = PigFindDebugBinding(&pig->sessionDebugBindings, &binding, &existingBindingIndex);
+		if (existingBinding != nullptr)
+		{
+			PigFreeDebugBindingsEntry(existingBinding, pig->sessionDebugBindings.allocArena);
+			VarArrayRemove(&pig->sessionDebugBindings.entries, existingBindingIndex, PigDebugBindingsEntry_t);
+			WriteLine_I("Removed binding!");
+		}
+		else
+		{
+			WriteLine_E("That combination is not bound!");
+		}
+	}
+	
+	// +==============================+
+	// |           bindings           |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "bindings") == 0)
+	{
+		PrintLine_N("%llu debug binding%s:", pig->debugBindings.entries.length, (pig->debugBindings.entries.length == 1 ? "" : "s"));
+		VarArrayLoop(&pig->debugBindings.entries, bIndex)
+		{
+			VarArrayLoopGet(PigDebugBindingsEntry_t, binding, &pig->debugBindings.entries, bIndex);
+			DebugPrintDebugBindingEntry("  ", binding);
+		}
+		
+		if (pig->sessionDebugBindings.entries.length > 0)
+		{
+			PrintLine_N("%llu user debug binding%s:", pig->sessionDebugBindings.entries.length, (pig->sessionDebugBindings.entries.length == 1 ? "" : "s"));
+			VarArrayLoop(&pig->sessionDebugBindings.entries, bIndex)
+			{
+				VarArrayLoopGet(PigDebugBindingsEntry_t, binding, &pig->sessionDebugBindings.entries, bIndex);
+				DebugPrintDebugBindingEntry("  ", binding);
+			}
+		}
+	}
+	
+	// +==============================+
+	// |       reload_bindings        |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "reload_bindings") == 0)
+	{
+		PigClearDebugBindings(&pig->debugBindings);
+		GameLoadDebugBindings(&pig->debugBindings);
+	}
+	
+	// +==============================+
+	// |          app_states          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "app_states") == 0)
+	{
+		PrintLine_N("%llu active AppState%s:", pig->appStateStackSize, ((pig->appStateStackSize == 1) ? "" : "s"));
+		for (u64 sIndex = 0; sIndex < pig->appStateStackSize; sIndex++)
+		{
+			AppState_t activeAppState = pig->appStateStack[sIndex];
+			PrintLine_I("[%llu]: %s", sIndex, GetAppStateStr(activeAppState));
+		}
+		
+		WriteLine_N("Initialized AppStates:");
+		u64 numInitializedAppStates = 0;
+		for (u64 aIndex = 1; aIndex < AppState_NumStates; aIndex++)
+		{
+			AppState_t appState = (AppState_t)aIndex;
+			if (IsAppStateInitialized(appState) && !IsAppStateActive(appState))
+			{
+				if (numInitializedAppStates > 0)
+				{
+					Write_D(", ");
+				}
+				Print_D("%s", GetAppStateStr(appState));
+				numInitializedAppStates++;
+			}
+		}
+		if (numInitializedAppStates > 0) { WriteLine_D(""); }
+		
+		WriteLine_N("Uninitialized AppStates:");
+		u64 numUninitializedAppStates = 0;
+		for (u64 aIndex = 1; aIndex < AppState_NumStates; aIndex++)
+		{
+			AppState_t appState = (AppState_t)aIndex;
+			if (!IsAppStateInitialized(appState))
+			{
+				if (numUninitializedAppStates > 0)
+				{
+					Write_D(", ");
+				}
+				Print_D("%s", GetAppStateStr(appState));
+				numUninitializedAppStates++;
+			}
+		}
+		if (numUninitializedAppStates > 0) { WriteLine_D(""); }
+	}
+	
+	// +==============================+
+	// |        pop_app_state         |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "pop_app_state") == 0)
+	{
+		if (pig->appStateStackSize > 1)
+		{
+			PrintLine_I("Popping AppState_%s", GetAppStateStr(GetCurrentAppState()));
+			PopAppState();
+		}
+		else
+		{
+			PrintLine_W("AppState_%s is the only AppState left. Can't pop!", GetAppStateStr(GetCurrentAppState()));
+		}
+	}
+	
+	// +==============================+
+	// |        push_app_state        |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "push_app_state") == 0)
+	{
+		if (numArguments != 1) { PrintLine_E("push_app_state takes 1 argument, not %llu", numArguments); return validCommand; }
+		
+		AppState_t requestedAppState = AppState_None;
+		for (u64 aIndex = 1; aIndex < AppState_NumStates; aIndex++)
+		{
+			AppState_t appState = (AppState_t)aIndex;
+			const char* appStateStr = GetAppStateStr(appState);
+			if (StrCompareIgnoreCase(arguments[0], appStateStr) == 0)
+			{
+				requestedAppState = appState;
+				break;
+			}
+		}
+		if (requestedAppState == AppState_None)
+		{
+			PrintLine_E("There is no AppState \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			return validCommand;
+		}
+		
+		if (!IsAppStateActive(requestedAppState))
+		{
+			PrintLine_I("Pushing AppState_%s", GetAppStateStr(requestedAppState));
+			PushAppState(requestedAppState);
+		}
+		else
+		{
+			PrintLine_E("AppState_%s is already active! Can't push!", GetAppStateStr(requestedAppState));
+			return validCommand;
+		}
+	}
+	
+	// +==============================+
+	// |       change_app_state       |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "change_app_state") == 0)
+	{
+		if (numArguments != 1) { PrintLine_E("change_app_state takes 1 argument, not %llu", numArguments); return validCommand; }
+		
+		AppState_t requestedAppState = AppState_None;
+		for (u64 aIndex = 1; aIndex < AppState_NumStates; aIndex++)
+		{
+			AppState_t appState = (AppState_t)aIndex;
+			const char* appStateStr = GetAppStateStr(appState);
+			if (StrCompareIgnoreCase(arguments[0], appStateStr) == 0)
+			{
+				requestedAppState = appState;
+				break;
+			}
+		}
+		if (requestedAppState == AppState_None)
+		{
+			PrintLine_E("There is no AppState \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			return validCommand;
+		}
+		
+		if (!IsAppStateActive(requestedAppState))
+		{
+			PrintLine_I("Changing to AppState_%s from AppState_%s", GetAppStateStr(requestedAppState), GetAppStateStr(GetCurrentAppState()));
+			ChangeAppState(requestedAppState);
+		}
+		else
+		{
+			PrintLine_E("AppState_%s is already active! Can't change to it!", GetAppStateStr(requestedAppState));
+			return validCommand;
+		}
+	}
+	
+	// +==============================+
 	// |       Unknown Command        |
 	// +==============================+
 	else
@@ -770,27 +1093,34 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	return validCommand;
 }
 
-bool PigParseDebugCommand(MyStr_t commandStr)
+bool PigParseDebugCommand(MyStr_t commandStr) //pre-declared in pig_func_defs.h
 {
+	if (commandStr.length == 0) { return false; }
+	
 	TempPushMark();
 	u64 numPieces = 0;
-	MyStr_t* pieces = SplitStringBySpacesFastTemp(TempArena, commandStr, &numPieces);
-	if (numPieces == 0) { TempPopMark(); return false; }
-	NotNull(pieces);
+	MyStr_t* pieces = SplitStringBySpacesWithQuotesAndUnescape(TempArena, commandStr, &numPieces);
+	Assert(numPieces > 0);
+	Assert(pieces[0].pntr != nullptr);
+	
 	MyStr_t command = pieces[0];
 	u64 numArguments = numPieces-1;
 	MyStr_t* arguments = &pieces[1];
 	
-	bool validCommand = true;
+	if (command.length == 0) { TempPopMark(); return false; }
 	
-	// +==============================+
-	// |             help             |
-	// +==============================+
-	if (!PigHandleDebugCommand(command, numArguments, arguments, commandStr) &&
-		!GameHandleDebugCommand(command, numArguments, arguments, commandStr))
+	bool validCommand = false;
+	if (PigHandleDebugCommand(command, numArguments, arguments, commandStr))
+	{
+		validCommand = true;
+	}
+	else if (GameHandleDebugCommand(command, numArguments, arguments, commandStr))
+	{
+		validCommand = true;
+	}
+	else
 	{
 		PrintLine_E("Unknown command \"%.*s\"", command.length, command.pntr);
-		validCommand = false;
 	}
 	
 	TempPopMark();

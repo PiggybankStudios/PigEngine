@@ -137,7 +137,7 @@ bool Win32_CheckForEngineDllChange(EngineDll_t* engine)
 	u32 watchChanged = Win32_InterlockedExchange(&engine->watch->changed, 0);
 	if (watchChanged != 0)
 	{
-		engine->lastChangeProgramTime = Platform->engineInput.programTime;
+		engine->lastChangeProgramTime = Win32_GetProgramTime(nullptr, true);
 		engine->needToReload = true;
 	}
 	if (engine->needToReload && Platform->engineInput.programTime >= engine->lastChangeProgramTime + ENGINE_DLL_RELOAD_WAIT_TIME)
@@ -177,8 +177,11 @@ void Win32_ReloadEngineDll(MyStr_t filePath, MyStr_t tempFormatStr, EngineDll_t*
 	AssertMsg(freeResult, "Failed to free old engine DLL after successful reload");
 	MyMemCopy(engine, &newDll, sizeof(EngineDll_t));
 	
+	u64 unixTime = Win32_GetCurrentTimestamp(false);
+	u64 localTime = Win32_GetCurrentTimestamp(true);
+	
 	PrintLine_N("Calling PostReload on v%u.%02u(%03u)...", engine->version.major, engine->version.minor, engine->version.build);
-	engine->PostReload(&Platform->info, &Platform->api, &Platform->engineMemory, oldVersion, Win32_GetProgramTime(nullptr));
+	engine->PostReload(&Platform->info, &Platform->api, &Platform->engineMemory, oldVersion, Win32_GetProgramTime(nullptr, false), unixTime, localTime);
 	
 	TempPopMark();
 }

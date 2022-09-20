@@ -7,7 +7,8 @@ Description:
 	** Generally this is keyboard, mouse, gamepad (joystick or controller), time, and other misc information
 */
 
-#define TARGET_FRAMERATE                    60 //fps TODO: Move this into a proper configurable
+#define TARGET_FRAMERATE                    60 //fps
+#define TARGET_FRAME_TIME                   (1000.0 / 60) //ms
 #define NUM_FRAMERATE_AVGS                  5  //frames
 #define CONTROLLER_STICK_DEADZONE           0.2f //magnitude
 #define CONTROLLER_STICK_DIR_DEADZONE       0.6f //magnitude
@@ -124,26 +125,55 @@ void Win32_ResetEngineInput(EngineInput_t* input)
 	VarArrayClear(&input->inputEvents);
 }
 
-#define WIN32_FILETIME_SEC_OFFSET 11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
-
 void Win32_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* newInput, bool windowInteractionOccurred)
 {
 	NotNull(newInput);
 	
-	r64 lastTimeF = (prevInput != nullptr ? prevInput->programTimeF : 0.0);
-	newInput->programTime = Win32_GetProgramTime(&newInput->programTimeF);
-	newInput->elapsedMs = newInput->programTimeF - lastTimeF;
+	if (Platform->engineOutput.fixedTimeScaleEnabled)
+	{
+		r64 lastTimeF = (prevInput != nullptr ? prevInput->programTimeF : 0.0);
+		r64 scaledFrameTime = TARGET_FRAME_TIME * Platform->engineOutput.fixedTimeScale;
+		r64 pretendProgramTimeF = lastTimeF + scaledFrameTime;
+		u64 pretendProgramTime = (u64)pretendProgramTimeF;
+		r64 actualProgramTimeF = 0;
+		u64 actualProgramTime = Win32_GetProgramTime(&actualProgramTimeF, true);
+		Platform->programTimeIsBehind = (pretendProgramTime < actualProgramTime);
+		Platform->programTimeIsAhead = (pretendProgramTime > actualProgramTime);
+		Platform->absProgramTimeDiffF = (Platform->programTimeIsBehind ? (actualProgramTimeF - pretendProgramTimeF) : (pretendProgramTimeF - actualProgramTimeF));
+		Platform->absProgramTimeDiff  = (Platform->programTimeIsBehind ? (actualProgramTime  - pretendProgramTime)  : (pretendProgramTime  - actualProgramTime));
+		newInput->programTimeF = pretendProgramTimeF;
+		newInput->programTime = pretendProgramTime;
+		newInput->elapsedMs = newInput->programTimeF - lastTimeF;
+	}
+	else
+	{
+		r64 lastTimeF = (prevInput != nullptr ? prevInput->programTimeF : 0.0);
+		newInput->programTime = Win32_GetProgramTime(&newInput->programTimeF, true);
+		if (Platform->programTimeIsBehind)
+		{
+			newInput->programTimeF -= Platform->absProgramTimeDiffF;
+			newInput->programTime -= Platform->absProgramTimeDiff;
+		}
+		else if (Platform->programTimeIsAhead)
+		{
+			newInput->programTimeF += Platform->absProgramTimeDiffF;
+			newInput->programTime += Platform->absProgramTimeDiff;
+		}
+		newInput->elapsedMs = newInput->programTimeF - lastTimeF;
+	}
+	
 	newInput->lastUpdateElapsedMs = newInput->elapsedMs - Platform->timeSpentOnSwapBuffers;
 	newInput->timeSpentWaitingLastFrame = Platform->timeSpentOnSwapBuffers;
 	Platform->timeSpentOnSwapBuffers = 0.0;
+	
 	newInput->uncappedElapsedMs = newInput->elapsedMs;
-	if (windowInteractionOccurred || !Platform->hasReachedStableFramerate)
+	if (!Platform->engineOutput.fixedTimeScaleEnabled && (windowInteractionOccurred || !Platform->hasReachedStableFramerate))
 	{
 		//NOTE: Anything based off programTime will still jump far ahead but I think that should be fine.
 		//      Anything that shouldn't be scaled arbitrarily by long frame hitches should be based off elapsedMs, not programTime
 		// PrintLine_D("Clamping elapsedMs from %lf to %lf", newInput->elapsedMs, (1000.0 / 60.0));
 		newInput->actualElapsedMsIgnored = true;
-		r64 newElapsedMs = (1000.0 / TARGET_FRAMERATE);
+		r64 newElapsedMs = TARGET_FRAME_TIME;
 		newInput->lastUpdateElapsedMs = (newInput->lastUpdateElapsedMs / newInput->elapsedMs) * newElapsedMs;
 		newInput->timeSpentWaitingLastFrame = (newInput->timeSpentWaitingLastFrame / newInput->elapsedMs) * newElapsedMs;
 		newInput->elapsedMs = newElapsedMs;
@@ -152,39 +182,24 @@ void Win32_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* ne
 	{
 		newInput->actualElapsedMsIgnored = false;
 	}
+	
 	newInput->framerate = 1000.0 / newInput->elapsedMs;
 	newInput->timeDelta = newInput->elapsedMs / (1000.0 / (r64)TARGET_FRAMERATE);
 	newInput->avgElapsedMs = ((newInput->avgElapsedMs * (NUM_FRAMERATE_AVGS-1)) + newInput->elapsedMs) / NUM_FRAMERATE_AVGS;
 	newInput->avgFramerate = ((newInput->avgFramerate * (NUM_FRAMERATE_AVGS-1)) + newInput->framerate) / NUM_FRAMERATE_AVGS;
 	
-	u64 unixTimestamp = 0;
-	//TODO: We could use the higher accuracy from this file time to determine sub-second timestamp values
-	FILETIME systemFileTime = {};
-	GetSystemTimeAsFileTime(&systemFileTime);
-	ULARGE_INTEGER systemLargeIntegerTime = {};
-	systemLargeIntegerTime.HighPart = systemFileTime.dwHighDateTime;
-	systemLargeIntegerTime.LowPart = systemFileTime.dwLowDateTime;
-	//NOTE: FILETIME value is number of 100-nanosecond intervals since Jan 1st 1601 UTC
-	//      We want number of seconds since Jan 1st 1970 UTC so divide by 10,000,000 and subtract off 369 years
-	unixTimestamp = (u64)(systemLargeIntegerTime.QuadPart/10000000ULL);
-	if (unixTimestamp >= WIN32_FILETIME_SEC_OFFSET) { unixTimestamp -= WIN32_FILETIME_SEC_OFFSET; }
+	u64 unixTimestamp = Win32_GetCurrentTimestamp(false);
 	ConvertTimestampToRealTime(unixTimestamp, &newInput->unixTime, false);
 	
-	u64 localTimestamp = 0;
-	TIME_ZONE_INFORMATION timezoneInfo = {};
-	DWORD timezoneResult = GetTimeZoneInformation(&timezoneInfo);
-	DebugAssertAndUnusedMsg(timezoneResult != TIME_ZONE_ID_INVALID, timezoneResult, "GetTimeZoneInformation failed and gave TIME_ZONE_ID_INVALID");
-	newInput->localTimezoneOffset = -((i64)timezoneInfo.Bias * NUM_SEC_PER_MINUTE);
-	localTimestamp = unixTimestamp + newInput->localTimezoneOffset;
-	newInput->localTimezoneDoesDst = (timezoneInfo.DaylightBias != 0); //TODO: It's possible that DaylightBias isn't -60 minutes. Should we handle that?
-	MyStr_t timezoneName = ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
+	MyStr_t timezoneName = MyStr_Empty;
+	u64 localTimestamp = Win32_GetCurrentTimestamp(true, &newInput->localTimezoneOffset, &newInput->localTimezoneDoesDst, &timezoneName);
+	ConvertTimestampToRealTime(localTimestamp, &newInput->localTime, newInput->localTimezoneDoesDst);
 	if (StrCompareIgnoreCase(Platform->localTimezoneName, timezoneName) != 0)
 	{
 		if (!IsEmptyStr(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }
 		Platform->localTimezoneName = AllocString(&Platform->mainHeap, &timezoneName);
 	}
 	newInput->localTimezoneName = Platform->localTimezoneName;
-	ConvertTimestampToRealTime(localTimestamp, &newInput->localTime, newInput->localTimezoneDoesDst);
 }
 
 void Win32_CheckForStableFramerate(r64 elapsedMsLastFrame)
@@ -471,7 +486,7 @@ bool Win32_HandleMouseEvent(PlatWindow_t* window, EngineInput_t* currentInput, i
 			IncrementU8(btnState->numPresses);
 			IncrementU8(btnState->numTransitions);
 			btnState->isDown = true;
-			btnState->lastChangeTime = Win32_GetProgramTime(nullptr);
+			btnState->lastChangeTime = Win32_GetProgramTime(nullptr, false);
 			
 			//TODO: Move this logic to the calling code?
 			// if (button == MouseButton_Left)
@@ -522,7 +537,7 @@ bool Win32_HandleMouseEvent(PlatWindow_t* window, EngineInput_t* currentInput, i
 				IncrementU8(btnState->numReleases);
 				IncrementU8(btnState->numTransitions);
 				btnState->isDown = false;
-				btnState->lastChangeTime = Win32_GetProgramTime(nullptr);
+				btnState->lastChangeTime = Win32_GetProgramTime(nullptr, false);
 				
 				InputEvent_t* newEvent = Win32_CreateInputEvent(window, currentInput, modifiers, InputEventType_MouseBtn);
 				if (newEvent != nullptr)
@@ -577,7 +592,7 @@ bool Win32_HandleKeyEvent(PlatWindow_t* window, EngineInput_t* currentInput, int
 			IncrementU8(btnState->numPresses);
 			IncrementU8(btnState->numTransitions);
 			btnState->isDown = true;
-			btnState->lastChangeTime = Win32_GetProgramTime(nullptr);
+			btnState->lastChangeTime = Win32_GetProgramTime(nullptr, false);
 			
 			InputEvent_t* newEvent = Win32_CreateInputEvent(window, currentInput, modifiers, InputEventType_Key);
 			if (newEvent != nullptr)
@@ -612,7 +627,7 @@ bool Win32_HandleKeyEvent(PlatWindow_t* window, EngineInput_t* currentInput, int
 				IncrementU8(btnState->numReleases);
 				IncrementU8(btnState->numTransitions);
 				btnState->isDown = false;
-				btnState->lastChangeTime = Win32_GetProgramTime(nullptr);
+				btnState->lastChangeTime = Win32_GetProgramTime(nullptr, false);
 				
 				InputEvent_t* newEvent = Win32_CreateInputEvent(window, currentInput, modifiers, InputEventType_Key);
 				if (newEvent != nullptr)
@@ -645,7 +660,7 @@ bool Win32_UpdateControllerButton(EngineInput_t* currentInput, PlatControllerSta
 		result = true;
 		btnState->isDown = isDown;
 		IncrementU8(btnState->numTransitions);
-		btnState->lastChangeTime = Win32_GetProgramTime(nullptr);
+		btnState->lastChangeTime = Win32_GetProgramTime(nullptr, false);
 		if (isDown) { IncrementU8(btnState->numPresses); }
 		else { IncrementU8(btnState->numReleases); }
 		

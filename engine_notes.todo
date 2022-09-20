@@ -1,8 +1,11 @@
+{ } Rename game stuff to App
 
 # A dumping ground for any and all notes and TODO lists
 	(!) The windowed framerate option doesn't do anything right now!
 	( ) If you fullscreen the window and then use win+left/right to move it to another monitor, we don't see the monitor change and our fullscreen state information becomes incorrect
 	( ) If you maximize the window, then fullscreen, then hit Win+Down, it will sort of unmaximize the window while still being in fullscreen
+	[!] Add keybindings that let us quickly change the time scale of the game
+	[!] Switch audio devices on primary device changed
 	[!] Make sure we select the swap interval properly
 		// The glfwSwapInterval call seems to have a lot of quirks in various graphics drivers.
 		// Our best bet might be to set it to zero and never touch it since GLFW docs mention some drivers not allowing setting back to zero after non-zero value is passed
@@ -16,10 +19,11 @@
 	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
 	( ) Make sure all the platform file functions are thread safe
 	[ ] Use the line building stuff of the StringFifo_t in the platform debug output Fifo
-	[!] Switch audio devices on primary device changed
+	[ ] Finish adding support for mouse and controller debug bindings
 	[ ] 
 
 # Gylib
+	(!) type and index are out of order for LinkedListGet compared to VarArrayGet
 	{ } gy_collision.h
 	{ } gy_rays.h
 	[ ] VarArray max length option
@@ -28,50 +32,50 @@
 	[ ] Add a cube sphere implementation in gy_primitives.h
 	[ ] Fill out MemArenaVerify for all memory arena types
 	[ ] Fill out ReallocMem for all memory arena types
+	[ ] Seperating axis theroem implementation
 	[ ] 
 
 # Engine
+	[!] Add a confirmation dialogue
 	[!] Do a debug dump when an assertion fails
 	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
+	[!] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
+	{ } Assertions and debug output in GetStartupOptions? Maybe even notifications?
+	{ } Debug visual for resources
+	[ ] Add a debug command to read out the window engine input fullscreen related information
 	[ ] Improve the audio debug window
 	- Line representing 0 - Ms Ticks - Selection - Replay
 	[ ] Hover to readout actual sample values
 	[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
 	[ ] Add support for ellipses in the SVG stuff (not just circles)
-	[ ] Add a confirmation dialogue
 	[ ] Add a GIF export editor AppState that allows you to see and manage what portion of the captured frames you'd like to export
 	[ ] Add a UI button implementation
 	[ ] Add a UI checkbox implementation
 	[ ] Add a UI combobox implementation
+	[ ] Add a UI ListView implementation
 	[?] MIDI keyboard support
 	[ ] Streaming sampled audio output
 	[?] Entity Component System?
 	[ ] Zip compression/decompression
-	( ) Assertions in GetStartupOptions in release mode are not really clear to the user. The program just starts and immediately exits
 	[ ] Add support for replace colors with the new dynamic shader uniforms (or maybe make it a proper uniform but make it an array?)
-	[ ] Debug visual for resources
 	[?] Did we like the EaseMover_t implementation we made in PCQ? Maybe we should get that moved over here?
 	[ ] Debug visual for input events
 	[ ] Add a system for localization of strings
-	( ) Why are text stylings not working in notifications? Why does it crash with an OpenGL error when I do underline? Is it only when we do SelectDefaultFontFace??
 	[ ] Finish adding support for adding new images to a font pack AFTER it originally was generated
 	[ ] Add support for clicking on notifications to take you either to the source line that generated the notification OR if the notification is augmented with a specific filepath, that path
 	[ ] Add some way to dismiss notifications
 	[ ] Make notifications show up in 1 of the 4 corners, based on context from the game so they don't get in the way as often
-	( ) We are going to need some way to get the ProgramTime (and possible SystemTime and LocalTime) into PigPostReload!
 	[ ] Debug command to enable overlay that displays the name of what the mouse is hovering over currently right next to the mouse
 	[ ] The beveled drawing that I normally do by drawing the text twice should be an option that you can enable for the font flow somehow (so that uncolorable glyphs don't get messed up)
-	[!] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
 	[ ] Add support for parsing FBX files
 		[ ] Vertex Data
 		[ ] Animation Data
 		[ ] Using the animation data to actually animate a model
 	[ ] Add a notification for taking screenshots but make sure the notification doesn't show up when rendering a screenshot
 	[ ] Make sure the GIF frames are rendered as if we are running at 50Hz so time is preserved in the GIF output
-	[ ] Once we have debug commands add something akin to "thread_ids" that will read out all relevant IDs for threads
-	[ ] Add debug commands that allow us to change the timestep to a fixed amount. Basically allowing us to slow down time across the entire application
-	[ ] Add debug commands that allow us to set up key bindings to other debug commands
-	[ ] Make the command parsing stuff for debug commands automatically handle quotation marks around arguments and escape sequences in the quotes
+	[ ] Add a system for de-duplicating sound effects
+	[ ] Add debug command to visualize handling of specific keys over time
+	[ ] Port the sprite sheet editing appstate over
 
 # Web Assembly TODO
 	[ ] How do I do a game loop?
@@ -114,6 +118,16 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] Make the command parsing stuff for debug commands automatically handle quotation marks around arguments and escape sequences in the quotes
+	[X] Add debug commands that allow us to set up key bindings to other debug commands
+	(X) Figure out why GetRandU64 is giving us always odd numbers for LinearCongruential64
+	[X] Add debug commands that allow us to change the timestep to a fixed amount. Basically allowing us to slow down time across the entire application
+	[X] Once we have debug commands add something akin to "thread_ids" that will read out all relevant IDs for threads
+	(X) Why are text stylings not working in notifications? Why does it crash with an OpenGL error when I do underline? Is it only when we do SelectDefaultFontFace??
+	(X) Fix particle effect parsing for empty lines with whitespace
+	[X] Add pig sound effect for notifications
+	[X] Add calls to update the loading progress during startup (resource loading probably)
+	(X) We are going to need some way to get the ProgramTime (and possible SystemTime and LocalTime) into PigPostReload!
 	[X] Add support for fullscreen
 	[X] MemArenaType_PagedHeap
 	[X] Add a proper AppState system

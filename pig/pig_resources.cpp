@@ -300,7 +300,7 @@ ResourceWatch_t* WatchFileForResource(ResourceType_t resourceType, u64 resourceI
 	PlatWatchedFile_t* newWatch = plat->WatchFile(filePath);
 	if (newWatch == nullptr) { return nullptr; }
 	
-	PrintLine_D("Watching resource file \"%.*s\"", filePath.length, filePath.pntr);
+	// PrintLine_D("Watching resource file \"%.*s\"", filePath.length, filePath.pntr);
 	ResourceWatch_t* newResourceWatch = VarArrayAdd(&pig->resources.watches, ResourceWatch_t);
 	NotNull(newResourceWatch);
 	ClearPointer(newResourceWatch);
@@ -1017,6 +1017,9 @@ void Pig_LoadAllMusics(bool onlyPinned = false)
 	}
 }
 
+// +==============================+
+// |           Generic            |
+// +==============================+
 void Pig_LoadResource(ResourceType_t type, u64 resourceIndex)
 {
 	switch (type)
@@ -1040,6 +1043,46 @@ void Pig_LoadAllResources(bool onlyPinned = false)
 	Pig_LoadAllFonts(onlyPinned);
 	Pig_LoadAllSounds(onlyPinned);
 	Pig_LoadAllMusics(onlyPinned);
+}
+void Pig_LoadResourceAtStartup(bool onlyPinned, r32 loadingBarBase, r32 loadingBarAmount)
+{
+	NotNull(pig);
+	AssertMsg(pig->initialized == false, "Pig_LoadResourceAtStartup should only be called in Pig_Initialize");
+	NotNull2(plat, plat->RenderLoadingScreen);
+	
+	u64 numResourcesToLoad = 0;
+	for (u64 tIndex = 1; tIndex < ResourceType_NumTypes; tIndex++)
+	{
+		ResourceType_t resourceType = (ResourceType_t)tIndex;
+		u64 numResourcesOfType = GetNumResourcesOfType(resourceType);
+		for (u64 rIndex = 0; rIndex < numResourcesOfType; rIndex++)
+		{
+			if (!onlyPinned || IsResourcePinned(resourceType, rIndex))
+			{
+				numResourcesToLoad++;
+			}
+		}
+	}
+	
+	u64 numResourcesLoaded = 0;
+	for (u64 tIndex = 1; tIndex < ResourceType_NumTypes; tIndex++)
+	{
+		ResourceType_t resourceType = (ResourceType_t)tIndex;
+		u64 numResourcesOfType = GetNumResourcesOfType(resourceType);
+		for (u64 rIndex = 0; rIndex < numResourcesOfType; rIndex++)
+		{
+			if (!onlyPinned || IsResourcePinned(resourceType, rIndex))
+			{
+				Pig_LoadResource(resourceType, rIndex);
+				
+				numResourcesLoaded++;
+				// PrintLine_D("Loaded resource %llu/%llu", numResourcesLoaded, numResourcesToLoad);
+				r32 loadingPercent = (r32)numResourcesLoaded / (r32)numResourcesToLoad;
+				loadingPercent = loadingBarBase + (loadingPercent * loadingBarAmount);
+				plat->RenderLoadingScreen(loadingPercent);
+			}
+		}
+	}
 }
 
 // +--------------------------------------------------------------+

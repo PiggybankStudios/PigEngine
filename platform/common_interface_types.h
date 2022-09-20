@@ -72,10 +72,15 @@ struct PlatformInfo_t
 	GlfwVersion_t glfwVersion;
 	RenderApi_t renderApi;
 	
-	ThreadId_t mainThreadId;
 	PlatAudioFormat_t audioFormat;
 	PerfTime_t programStartPerfTime;
 	PerfSectionBundle_t initPerfSectionBundle; //not filled until just before first update
+	
+	PlatThreadIdPair_t mainThreadId;
+	PlatThreadIdPair_t fileWatchingThreadId;
+	PlatThreadIdPair_t audioThreadId;
+	u64 numThreadPoolThreads;
+	PlatThreadIdPair_t threadPoolIds[PLAT_MAX_THREADPOOL_SIZE];
 	
 	const PlatWindow_t* mainWindow;
 	const LinkedList_t* windows; //PlatWindow_t
@@ -309,6 +314,9 @@ struct EngineOutput_t
 {
 	bool exit;
 	
+	bool fixedTimeScaleEnabled;
+	r64 fixedTimeScale;
+	
 	PlatCursor_t cursorType;
 	
 	PlatMouseMode_t mouseMode;
@@ -333,7 +341,7 @@ typedef PIG_GET_VERSION_DEF(PigGetVersion_f);
 #define PIG_GET_STARTUP_OPTIONS_DEF(functionName) void functionName(const StartupInfo_t* info, StartupOptions_t* optionsOut)
 typedef PIG_GET_STARTUP_OPTIONS_DEF(PigGetStartupOptions_f);
 
-#define PIG_INITIALIZE_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory)
+#define PIG_INITIALIZE_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 typedef PIG_INITIALIZE_DEF(PigInitialize_f);
 
 #define PIG_UPDATE_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)
@@ -351,7 +359,7 @@ typedef PIG_CLOSING_DEF(PigClosing_f);
 #define PIG_PRE_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t newVersion)
 typedef PIG_PRE_RELOAD_DEF(PigPreReload_f);
 
-#define PIG_POST_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime)
+#define PIG_POST_RELOAD_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 typedef PIG_POST_RELOAD_DEF(PigPostReload_f);
 
 #define PIG_PERFORM_TASK_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThreadPoolThread_t* thread, PlatTask_t* task)

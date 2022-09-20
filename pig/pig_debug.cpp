@@ -25,7 +25,7 @@ void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, con
 		metaInfo.fileLineNumber = lineNumber;
 		metaInfo.dbgLevel = dbgLevel;
 		metaInfo.programTime = ProgramTime;
-		metaInfo.preciseProgramTime = plat->GetProgramTime(nullptr);
+		metaInfo.preciseProgramTime = plat->GetProgramTime(nullptr, false);
 		metaInfo.timestamp = LocalTimestamp;
 		metaInfo.thread = plat->GetThisThreadId();
 		

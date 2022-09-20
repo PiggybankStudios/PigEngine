@@ -358,42 +358,29 @@ FontFace_t* GetFontFace(Font_t* font, FontFaceSelector_t selector)
 {
 	NotNull(font);
 	
-	if (selector.selectDefault)
-	{
-		if (font->defaultFaceIndex < font->faces.length)
-		{
-			return VarArrayGet(&font->faces, font->defaultFaceIndex, FontFace_t);
-		}
-		else if (font->faces.length > 0)
-		{
-			//If there is no default face, then we will treat the first face as the default
-			return VarArrayGet(&font->faces, 0, FontFace_t);
-		}
-		else
-		{
-			return nullptr;
-		}
-	}
-	
 	FontFace_t* result = nullptr;
-	u64 resultFitness = UINT64_MAX;
+	u64 resultMismatch = UINT64_MAX;
 	VarArrayLoop(&font->faces, fIndex)
 	{
 		VarArrayLoopGet(FontFace_t, face, &font->faces, fIndex);
 		
-		u64 fitness = 0;
+		bool isDefaultFace = (fIndex == font->defaultFaceIndex || (font->defaultFaceIndex >= font->faces.length && fIndex == 0));
+		
+		u64 mismatch = 0;
 		if (selector.fontSize != 0)
 		{
-			fitness += (u64)AbsI32(face->fontSize - selector.fontSize);
+			mismatch += (u64)AbsI32(face->fontSize - selector.fontSize);
 		}
-		fitness <<= 2; //shift up by two to give 2-bit space for bold and italic mismatch
-		if (selector.bold != IsFlagSet(face->flags, FontFaceFlag_IsBold)) { fitness++; }
-		if (selector.italic != IsFlagSet(face->flags, FontFaceFlag_IsItalic)) { fitness++; }
+		mismatch <<= 2; //shift up by two to give 2-bit space for bold and italic mismatch
+		if (selector.bold != IsFlagSet(face->flags, FontFaceFlag_IsBold)) { mismatch++; }
+		if (selector.italic != IsFlagSet(face->flags, FontFaceFlag_IsItalic)) { mismatch++; }
+		mismatch <<= 1; //shift up by one to give 1-bit space for default mismatch
+		if (selector.selectDefault && !isDefaultFace) { mismatch++; }
 		
-		if (fitness < resultFitness)
+		if (mismatch < resultMismatch)
 		{
 			result = face;
-			resultFitness = fitness;
+			resultMismatch = mismatch;
 		}
 	}
 	return result;

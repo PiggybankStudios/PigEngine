@@ -108,9 +108,9 @@ PigNotification_t* PigPushNotification(PigNotificationQueue_t* queue, const char
 		notification->lifespan = lifespan;
 	}
 	
-	//TODO: Change this to a proper sound effect!
-	PlaySawNote(PIG_NOTIFICATIONS_VOLUME*0.75f, FREQUENCY_C3, 200, 80, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
-	PlaySawNote(PIG_NOTIFICATIONS_VOLUME, FREQUENCY_E4, 280, 160, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
+	PlaySound(&pig->resources.sounds->notification, 1.0f);
+	// PlaySawNote(PIG_NOTIFICATIONS_VOLUME*0.75f, FREQUENCY_C3, 200, 80, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
+	// PlaySawNote(PIG_NOTIFICATIONS_VOLUME, FREQUENCY_E4, 280, 160, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
 	
 	return notification;
 }

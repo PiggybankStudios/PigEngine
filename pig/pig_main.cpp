@@ -124,6 +124,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_music.cpp"
 #include "pig/pig_resources.cpp"
 #include "pig/pig_settings.cpp"
+#include "pig/pig_debug_bindings.cpp"
 
 #include "pig/pig_input.cpp"
 #include "pig/pig_window.cpp"
@@ -202,10 +203,13 @@ PIG_GET_STARTUP_OPTIONS_DEF(Pig_GetStartupOptions)
 // +==============================+
 // |        Pig_Initialize        |
 // +==============================+
-// void Pig_Initialize(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory)
+// void Pig_Initialize(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 PIG_INITIALIZE_DEF(Pig_Initialize)
 {
 	PigEntryPoint(PigEntryPoint_Initialize, info, api, memory, nullptr, nullptr);
+	ProgramTime = programTime;
+	UnixTimestamp = unixTimestamp;
+	LocalTimestamp = localTimestamp;
 	PigInitialize(memory);
 	PigExitPoint(PigEntryPoint_Initialize);
 }
@@ -275,11 +279,13 @@ PIG_PRE_RELOAD_DEF(Pig_PreReload)
 // +==============================+
 // |        Pig_PostReload        |
 // +==============================+
-// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime)
+// void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 PIG_POST_RELOAD_DEF(Pig_PostReload)
 {
 	PigEntryPoint(PigEntryPoint_PostReload, info, api, memory, nullptr, nullptr);
 	ProgramTime = programTime;
+	UnixTimestamp = unixTimestamp;
+	LocalTimestamp = localTimestamp;
 	PigPostReload(oldVersion);
 	PigExitPoint(PigEntryPoint_PostReload);
 }

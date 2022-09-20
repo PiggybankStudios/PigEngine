@@ -66,6 +66,11 @@ struct Win32PlatformState_t
 	HWND windowHandle; //TODO: Should we have one for each window we create?
 	HANDLE processHandle;
 	
+	bool programTimeIsBehind;
+	bool programTimeIsAhead;
+	r64 absProgramTimeDiffF;
+	u64 absProgramTimeDiff;
+	
 	PlatMonitorList_t monitors;
 	
 	i64 perfCountFrequency;

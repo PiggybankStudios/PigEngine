@@ -57,7 +57,9 @@ void PigInitialize(EngineMemory_t* memory)
 	AssertMsg(isFolder, "Failed to find Resources directory. Please make sure that the executable is next to the Resources folder!");
 	#endif
 	
-	SeedRand(11); //TODO: Get the timestamp and feed it in here!
+	SeedRand((u32)LocalTimestamp);
+	CreateRandomSeries(&pig->random);
+	SeedRandomSeriesU64(&pig->random, LocalTimestamp);
 	PigInitGlad();
 	InitRenderContext();
 	PigInitAudioOutput();
@@ -79,21 +81,11 @@ void PigInitialize(EngineMemory_t* memory)
 	RcLoadBasicResources();
 	Pig_InitResources();
 	GamePinResources();
-	Pig_LoadAllResources(!LOAD_ALL_RESOURCES_ON_STARTUP);
+	Pig_LoadResourceAtStartup(!LOAD_ALL_RESOURCES_ON_STARTUP, BEFORE_RESOURCES_LOAD_PERCENT, RESOURCES_LOAD_PERCENT);
 	PigInitMusicSystem(&pig->musicSystem);
-	
-	// plat->DebugReadout(NewStr("Hello from Pig Engine!"), White, 1.0f);
-	#if 0
-	while (true)
-	{
-		for (u32 loadingStep = 0; loadingStep < 100; loadingStep++)
-		{
-			if (plat->RenderLoadingScreen((r32)loadingStep / 100.0f)) { return; }
-			// if (plat->RenderLoadingScreen(1.0f)) { return; }
-			Sleep(5);
-		}
-	}
-	#endif
+	PigInitDebugBindings(&pig->sessionDebugBindings, fixedHeap);
+	PigInitDebugBindings(&pig->debugBindings, fixedHeap);
+	GameLoadDebugBindings(&pig->debugBindings);
 	
 	plat->CreateMutex(&pig->volumeMutex);
 	pig->musicEnabled = true;
@@ -140,6 +132,8 @@ void PigUpdateMainWindow()
 	UpdatePigMemGraph(&pig->memGraph);
 	UpdateDebugConsole(&pig->debugConsole);
 	Pig_HandleScreenshotHotkeys();
+	Pig_HandleDebugBindings(&pig->sessionDebugBindings);
+	Pig_HandleDebugBindings(&pig->debugBindings);
 	
 	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);

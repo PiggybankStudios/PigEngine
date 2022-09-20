@@ -82,7 +82,7 @@ void Win32_DebugOutputFromPlat(u8 flags, const char* filePath, u32 lineNumber, c
 		metaInfo.fileLineNumber = lineNumber;
 		metaInfo.dbgLevel = dbgLevel;
 		metaInfo.programTime = Platform->engineActiveInput.programTime;
-		metaInfo.preciseProgramTime = Win32_GetProgramTime(nullptr);
+		metaInfo.preciseProgramTime = Win32_GetProgramTime(nullptr, false);
 		metaInfo.timestamp = Platform->engineActiveInput.localTime.timestamp;
 		metaInfo.thread = Win32_GetThisThreadId();
 		

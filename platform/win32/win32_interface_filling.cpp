@@ -72,12 +72,29 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->version.build = WIN32_VERSION_BUILD;
 	info->glfwVersion = Platform->glfwVersion;
 	info->renderApi = Platform->renderApi;
-	info->mainThreadId = MainThreadId;
 	info->audioFormat = Platform->audioFormat;
 	info->programStartPerfTime = programStartPerfTime;
 	info->mainWindow = Platform->mainWindow;
 	info->windows = &Platform->windows;
 	info->monitors = &Platform->monitors;
+	
+	info->mainThreadId.internalId = 0;
+	info->mainThreadId.osId = MainThreadId;
+	info->fileWatchingThreadId.internalId = ((Platform->fileWatchingThread != nullptr) ? Platform->fileWatchingThread->id : 0);
+	info->fileWatchingThreadId.osId = ((Platform->fileWatchingThread != nullptr) ? (ThreadId_t)Platform->fileWatchingThread->win32_id : 0);
+	info->audioThreadId.internalId = ((Platform->audioThread != nullptr) ? Platform->audioThread->id : 0);
+	info->audioThreadId.osId = ((Platform->audioThread != nullptr) ? (ThreadId_t)Platform->audioThread->win32_id : 0);
+	u64 filledThreadIndex = 0;
+	for (u64 tIndex = 0; tIndex < PLAT_MAX_THREADPOOL_SIZE; tIndex++)
+	{
+		if (Platform->threadPool[tIndex].threadPntr != nullptr)
+		{
+			info->threadPoolIds[filledThreadIndex].internalId = Platform->threadPool[tIndex].threadPntr->id;
+			info->threadPoolIds[filledThreadIndex].osId = (ThreadId_t)Platform->threadPool[tIndex].threadPntr->win32_id;
+			filledThreadIndex++;
+		}
+	}
+	info->numThreadPoolThreads = filledThreadIndex;
 }
 
 void Win32_FillPlatformApi(PlatformApi_t* api)

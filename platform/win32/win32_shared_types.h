@@ -76,6 +76,12 @@ typedef DWORD ThreadId_t;
 #define THREAD_FUNCTION_DEF(functionName, userPntrVarName) DWORD WINAPI functionName(LPVOID userPntrVarName)
 typedef THREAD_FUNCTION_DEF(PlatThreadFunction_f, userPntr);
 
+struct PlatThreadIdPair_t
+{
+	u64 internalId;
+	ThreadId_t osId;
+};
+
 struct PlatThread_t
 {
 	u64 id;

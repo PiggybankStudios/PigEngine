@@ -20,7 +20,7 @@ Description:
 #define PAUSE_PERF_GRAPH_ONCE_FULL      false
 #define LOCK_PERF_GRAPH_SCALE           true
 
-#define LOAD_ALL_RESOURCES_ON_STARTUP   false
+#define LOAD_ALL_RESOURCES_ON_STARTUP     false
 
 #define DEBUG_OUTPUT_ENABLED   1
 #define REGULAR_OUTPUT_ENABLED 1

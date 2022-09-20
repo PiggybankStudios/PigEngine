@@ -6,6 +6,8 @@ Description:
 	** This file holds a bunch of core functionality for the windows platform layer
 */
 
+#define WIN32_FILETIME_SEC_OFFSET           11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
+
 // +--------------------------------------------------------------+
 // |                       Helper Functions                       |
 // +--------------------------------------------------------------+
@@ -132,6 +134,41 @@ void Win32_OpenConsoleWindow()
 		}
 		Platform->consoleWindowIsOpen = true;
 	}
+}
+
+u64 Win32_GetCurrentTimestamp(bool local, i64* timezoneOffsetOut = nullptr, bool* timezoneDoesDstOut = nullptr, MyStr_t* timezoneNameOut = nullptr)
+{
+	u64 result = 0;
+	if (local)
+	{
+		u64 unixTimestamp = Win32_GetCurrentTimestamp(false);
+		TIME_ZONE_INFORMATION timezoneInfo = {};
+		DWORD timezoneResult = GetTimeZoneInformation(&timezoneInfo);
+		DebugAssertAndUnusedMsg(timezoneResult != TIME_ZONE_ID_INVALID, timezoneResult, "GetTimeZoneInformation failed and gave TIME_ZONE_ID_INVALID");
+		i64 localTimezoneOffset = -((i64)timezoneInfo.Bias * NUM_SEC_PER_MINUTE);
+		if (timezoneOffsetOut != nullptr) { *timezoneOffsetOut = localTimezoneOffset; }
+		result = unixTimestamp + localTimezoneOffset;
+		bool localTimezoneDoesDst = (timezoneInfo.DaylightBias != 0); //TODO: It's possible that DaylightBias isn't -60 minutes. Should we handle that?
+		if (timezoneDoesDstOut != nullptr) { *timezoneDoesDstOut = localTimezoneDoesDst; }
+		if (timezoneNameOut != nullptr)
+		{
+			*timezoneNameOut = ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
+		}
+	}
+	else
+	{
+		//TODO: We could use the higher accuracy from this file time to determine sub-second timestamp values
+		FILETIME systemFileTime = {};
+		GetSystemTimeAsFileTime(&systemFileTime);
+		ULARGE_INTEGER systemLargeIntegerTime = {};
+		systemLargeIntegerTime.HighPart = systemFileTime.dwHighDateTime;
+		systemLargeIntegerTime.LowPart = systemFileTime.dwLowDateTime;
+		//NOTE: FILETIME value is number of 100-nanosecond intervals since Jan 1st 1601 UTC
+		//      We want number of seconds since Jan 1st 1970 UTC so divide by 10,000,000 and subtract off 369 years
+		result = (u64)(systemLargeIntegerTime.QuadPart/10000000ULL);
+		if (result >= WIN32_FILETIME_SEC_OFFSET) { result -= WIN32_FILETIME_SEC_OFFSET; }
+	}
+	return result;
 }
 
 // +--------------------------------------------------------------+

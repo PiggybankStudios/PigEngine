@@ -13,6 +13,7 @@ Description:
 enum PigTryDeserSettingsError_t
 {
 	PigTryDeserSettingsError_None = 0,
+	PigTryDeserSettingsError_CantOpenFile,
 	PigTryDeserSettingsError_EmptyFile,
 	PigTryDeserSettingsError_MissingFilePrefix,
 	PigTryDeserSettingsError_TokenBeforeFilePrefix,
@@ -26,6 +27,7 @@ const char* GetPigTryDeserSettingsErrorStr(PigTryDeserSettingsError_t error)
 	switch (error)
 	{
 		case PigTryDeserSettingsError_None:                      return "None";
+		case PigTryDeserSettingsError_CantOpenFile:              return "CantOpenFile";
 		case PigTryDeserSettingsError_EmptyFile:                 return "EmptyFile";
 		case PigTryDeserSettingsError_MissingFilePrefix:         return "MissingFilePrefix";
 		case PigTryDeserSettingsError_TokenBeforeFilePrefix:     return "TokenBeforeFilePrefix";
@@ -221,6 +223,11 @@ bool PigTryLoadSettings(MyStr_t filePath, ProcessLog_t* log, PigSettings_t* sett
 		result = PigTryDeserSettings(NewStr(settingsFile.size, settingsFile.chars), log, settingsOut, memArena);
 		if (freeFileFunc != nullptr) { freeFileFunc(&settingsFile); }
 		else { plat->FreeFileContents(&settingsFile); }
+	}
+	else
+	{
+		LogPrintLine_E(log, "Failed to open settings file at \"%.*s\"", filePath.length, filePath.pntr);
+		LogExitFailure(log, PigTryDeserSettingsError_CantOpenFile);
 	}
 	return result;
 }

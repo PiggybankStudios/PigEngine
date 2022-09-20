@@ -163,6 +163,7 @@ bool TextParserGetToken(TextParser_t* parser, ParsingToken_t* tokenOut)
 		u64 numTrimmedWhitespaceChars = TrimLeadingWhitespace(&line);
 		if (line.length == 0)
 		{
+			parser->byteIndex = parser->currentLine.length;
 			continue;
 		}
 		

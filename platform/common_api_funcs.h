@@ -181,7 +181,7 @@ typedef GET_PERF_TIME_DEFINITION(PlatApiGetPerfTime_f);
 #define GET_PERF_TIME_DIFF_DEFINITION(functionName) r64 functionName(const PerfTime_t* tStart, const PerfTime_t* tEnd)
 typedef GET_PERF_TIME_DIFF_DEFINITION(PlatApiGetPerfTimeDiff_f);
 
-#define PLAT_API_GET_PROGRAM_TIME_DEFINITION(functionName) u64 functionName(r64* programTimeR64Out)
+#define PLAT_API_GET_PROGRAM_TIME_DEFINITION(functionName) u64 functionName(r64* programTimeR64Out, bool ignoreFixedTimeScaleEffects)
 typedef PLAT_API_GET_PROGRAM_TIME_DEFINITION(PlatApiGetProgramTime_f);
 
 #define PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(functionName) const PlatMonitorVideoMode_t* functionName(const PlatMonitorInfo_t* monitor, v2i resolution, u64* indexOut)

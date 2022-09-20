@@ -358,7 +358,7 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 			}
 			else
 			{
-				if (!Vec2BasicallyEqual(flowState->underlineStartPos, underlinePos))
+				if (!flowState->justMeasuring && !Vec2BasicallyEqual(flowState->underlineStartPos, underlinePos))
 				{
 					rec underlineRec = NewRecBetween(flowState->underlineStartPos, underlinePos);
 					if (underlineRec.height < underlineThickness * flowState->scale) { underlineRec.height = underlineThickness * flowState->scale; }

@@ -68,7 +68,7 @@ void Pig_HandleAppStateChanges(bool initialAppState)
 	pig->newAppState = AppState_None;
 }
 
-bool IsAppStateInitialized(AppState_t appState)
+bool IsAppStateInitialized(AppState_t appState) //pre-declared in pig_func_defs.h
 {
 	Assert(appState != AppState_None && appState < AppState_NumStates);
 	for (u64 sIndex = 0; sIndex < pig->appStateStackSize; sIndex++)
@@ -78,20 +78,36 @@ bool IsAppStateInitialized(AppState_t appState)
 	return false;
 }
 
-void ChangeAppState(AppState_t newState)
+bool IsAppStateActive(AppState_t appState) //pre-declared in pig_func_defs.h
+{
+	for (u64 sIndex = 0; sIndex < pig->appStateStackSize; sIndex++)
+	{
+		if (pig->appStateStack[sIndex] == appState) { return true; }
+	}
+	return false;
+}
+
+AppState_t GetCurrentAppState() //pre-declared in pig_func_defs.h
+{
+	if (pig->appStateStackSize == 0) { return AppState_None; }
+	return pig->appStateStack[pig->appStateStackSize-1];
+}
+
+void ChangeAppState(AppState_t newState) //pre-declared in pig_func_defs.h
 {
 	AssertSingleThreaded();
 	pig->appStateChange = AppStateChange_Change;
 	pig->newAppState = newState;
 }
 
-void PushAppState(AppState_t newState)
+void PushAppState(AppState_t newState) //pre-declared in pig_func_defs.h
 {
 	AssertSingleThreaded();
 	pig->appStateChange = AppStateChange_Push;
 	pig->newAppState = newState;
 }
-void PopAppState()
+
+void PopAppState() //pre-declared in pig_func_defs.h
 {
 	AssertSingleThreaded();
 	pig->appStateChange = AppStateChange_Pop;

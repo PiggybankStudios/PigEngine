@@ -28,7 +28,7 @@ struct EngineDll_t
 	HMODULE handle;
 	PlatWatchedFile_t* watch;
 	bool needToReload;
-	u64 lastChangeProgramTime;
+	u64 lastChangeProgramTime; //NOTE: This is programTime unaffected by time scale fixing
 };
 
 #endif //  _WIN_32_DLL_LOADING_H

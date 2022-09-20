@@ -117,7 +117,7 @@ void LogOutput_(ProcessLog_t* log, u8 flags, const char* filePath, u32 lineNumbe
 		metaInfo.fileLineNumber = lineNumber;
 		metaInfo.dbgLevel = dbgLevel;
 		metaInfo.programTime = ProgramTime;
-		metaInfo.preciseProgramTime = plat->GetProgramTime(nullptr);
+		metaInfo.preciseProgramTime = plat->GetProgramTime(nullptr, false);
 		metaInfo.timestamp = LocalTimestamp;
 		metaInfo.thread = plat->GetThisThreadId();
 		metaInfo.programTime = ProgramTime;

@@ -147,7 +147,8 @@ THREAD_FUNCTION_DEF(Win32_FileWatchingThreadFunc, userPntr) //pre-declared at to
 			FILETIME newWriteTime = Win32_GetFileWriteTime(filePntr->fullPath);
 			if (CompareFileTime(&newWriteTime, &filePntr->lastWriteTime) != 0)
 			{
-				filePntr->lastWriteTimeChange = Win32_GetProgramTime(nullptr);
+				//TODO: Passing false for ignoreFixedTimeScaleEffects might mean this is no longer thread safe!? Since we access Platform-> variables that might be changing!
+				filePntr->lastWriteTimeChange = Win32_GetProgramTime(nullptr, false);
 				filePntr->lastWriteTime = newWriteTime;
 			}
 			if (filePntr->lastWriteTimeChange != 0 && Win32_TimeSince(filePntr->lastWriteTimeChange) >= 1000)
