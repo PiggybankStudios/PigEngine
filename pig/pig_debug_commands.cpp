@@ -24,7 +24,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"video_modes", "Lists all the video modes for all monitors (or a specific monitor if a monitor number is given)", "{monitor}", "\n",
 	"fullscreen", "Enables or disables fullscreen and also sets resolution and framerate", "[on/off/toggle]", "{width}", "{height}", "{framerate}", "{monitor}", "\n",
 	"thread_ids", "Prints out the IDs of all the threads related this application is currently running", "\n",
-	"time_scale", "Fixes and scales the elapsed time that is fed into the game logic to a multiple of 16.666ms (60fps). Set to 2 to test 30 fps logic or 0.5 for 120fps logic. Set to 0 to unfix the time scale", "[scale]", "\n",
+	"time_scale", "Fixes and scales the elapsed time that is fed into the game logic to a multiple of 16.666ms (60fps). Set to 2 to test 30 fps logic or 0.5 for 120fps logic. Set to 0 to unfix the time scale", "[scale/up/down]", "\n",
 	"bind", "Creates a custom binding that will run a debug command when a specific binding is performed", "[binding]", "[command]", "\n",
 	"unbind", "Removes a previously set custom binding", "[binding]", "\n",
 	"bindings", "Prints out the list of debug bindings", "\n",
@@ -658,44 +658,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		
 		if (StrCompareIgnoreCase(arguments[0], "toggle") == 0)
 		{
-			if (window->input.fullscreen)
-			{
-				pigOut->changeFullscreen = true;
-				pigOut->changeFullscreenWindowId = window->id;
-				pigOut->fullscreenEnabled = false;
-				pigOut->windowedResolution = NewVec2i(
-					window->input.fullscreenVideoMode->resolution.width/2,
-					window->input.fullscreenVideoMode->resolution.height/2
-				);
-				Assert(window->input.fullscreenFramerateIndex < window->input.fullscreenVideoMode->numFramerates);
-				pigOut->windowedFramerate = window->input.fullscreenVideoMode->framerates[window->input.fullscreenFramerateIndex];
-				PrintLine_I("Coming out of fullscreen on monitor %llu \"%.*s\". Going to windowed at %dx%d %lldHz",
-					window->input.fullscreenMonitor->designatedNumber,
-					window->input.fullscreenMonitor->name.length, window->input.fullscreenMonitor->name.pntr,
-					pigOut->windowedResolution.width, pigOut->windowedResolution.height,
-					pigOut->windowedFramerate
-				);
-			}
-			else
-			{
-				const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
-				NotNull(currentMonitor);
-				const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
-				
-				pigOut->changeFullscreen = true;
-				pigOut->changeFullscreenWindowId = window->id;
-				pigOut->fullscreenEnabled = true;
-				pigOut->fullscreenMonitorId = currentMonitor->id;
-				pigOut->fullscreenVideoModeIndex = currentVideoMode->index;
-				Assert(currentVideoMode->currentFramerateIndex < currentVideoMode->numFramerates);
-				pigOut->fullscreenFramerateIndex = currentVideoMode->currentFramerateIndex;
-				PrintLine_I("Enabling fullscreen on monitor %llu \"%.*s\" at %dx%d %lldHz",
-					currentMonitor->designatedNumber,
-					currentMonitor->name.length, currentMonitor->name.pntr,
-					currentVideoMode->resolution.width, currentVideoMode->resolution.height,
-					currentVideoMode->framerates[currentVideoMode->currentFramerateIndex]
-				);
-			}
+			ToggleFullscreen(true);
 		}
 		else
 		{
@@ -760,13 +723,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					return validCommand;
 				}
 				
-				PrintLine_I("Changing to fullscreen mode %dx%d at %lldHz on monitor %d \"%.*s\"", resolution.width, resolution.height, framerate, monitorNumber, targetMonitor->name.length, targetMonitor->name.pntr);
-				pigOut->changeFullscreen = true;
-				pigOut->changeFullscreenWindowId = window->id;
-				pigOut->fullscreenEnabled = true;
-				pigOut->fullscreenMonitorId = targetMonitor->id;
-				pigOut->fullscreenVideoModeIndex = targetVideoMode->index;
-				pigOut->fullscreenFramerateIndex = (u64)targetFramerateIndex;
+				DoFullscreenOnMonitor(window, targetMonitor, resolution, framerate, true);
 			}
 			else
 			{
@@ -782,15 +739,8 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					PrintLine_E("Invalid resolution %dx%d. Our minimum size is %dx%d", resolution.width, resolution.height, PIG_WINDOW_MIN_SIZE.width, PIG_WINDOW_MIN_SIZE.height);
 					return validCommand;
 				}
-				if (resolution.width > currentVideoMode->resolution.width) { PrintLine_W("Limiting width to %d", currentVideoMode->resolution.width); resolution.width = currentVideoMode->resolution.width; }
-				if (resolution.height > currentVideoMode->resolution.height) { PrintLine_W("Limiting height to %d", currentVideoMode->resolution.height); resolution.height = currentVideoMode->resolution.height; }
 				
-				PrintLine_I("Changing to windowed mode %dx%d at %lldHz", resolution.width, resolution.height, framerate);
-				pigOut->changeFullscreen = true;
-				pigOut->changeFullscreenWindowId = window->id;
-				pigOut->fullscreenEnabled = false;
-				pigOut->windowedResolution = resolution;
-				pigOut->windowedFramerate = framerate;
+				StopFullscreen(window, resolution, framerate, true);
 			}
 		}
 	}
@@ -816,13 +766,41 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		if (numArguments != 1) { PrintLine_E("time_scale takes 1 argument, not %llu", numArguments); return validCommand; }
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		r32 timeScaleOptions[] = { 0.01f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f, 1.2f, 1.5f, 2.0f, 5.0f, 10.0f, 20.0f };
 		
-		r32 requestedScale = 0;
-		if (!TryParseR32(arguments[0], &requestedScale, &parseFailureReason))
+		r32 requestedScale = 1.0;
+		if (StrCompareIgnoreCase(arguments[0], "up") == 0)
+		{
+			if (pigOut->fixedTimeScaleEnabled) { requestedScale = (r32)pigOut->fixedTimeScale; }
+			for (u64 oIndex = 0; oIndex < ArrayCount(timeScaleOptions); oIndex++)
+			{
+				if (timeScaleOptions[oIndex] > requestedScale)
+				{
+					requestedScale = timeScaleOptions[oIndex];
+					break;
+				}
+			}
+			if (requestedScale == 1.0) { requestedScale = 0; }
+		}
+		else if (StrCompareIgnoreCase(arguments[0], "down") == 0)
+		{
+			if (pigOut->fixedTimeScaleEnabled) { requestedScale = (r32)pigOut->fixedTimeScale; }
+			for (u64 oIndex = ArrayCount(timeScaleOptions); oIndex > 0; oIndex--)
+			{
+				if (timeScaleOptions[oIndex-1] < requestedScale)
+				{
+					requestedScale = timeScaleOptions[oIndex-1];
+					break;
+				}
+			}
+			if (requestedScale == 1.0) { requestedScale = 0; }
+		}
+		else if (!TryParseR32(arguments[0], &requestedScale, &parseFailureReason))
 		{
 			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
+		
 		if (requestedScale < 0 || requestedScale > 20)
 		{
 			PrintLine_E("Invalid scale value. Must be in range [0, 20] not %f", requestedScale);

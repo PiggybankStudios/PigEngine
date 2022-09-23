@@ -76,9 +76,9 @@ PLAT_API_GET_PROGRAM_TIME_DEFINITION(Win32_GetProgramTime) //pre-declared in win
 	}
 }
 
-u64 Win32_TimeSince(u64 programTimeSnapshot) //pre-declared in win32_func_defs.cpp
+u64 Win32_TimeSince(u64 programTimeSnapshot, bool ignoreFixedTimeScaleEffects) //pre-declared in win32_func_defs.cpp
 {
-	u64 currentProgramTime = Win32_GetProgramTime(nullptr, false);
+	u64 currentProgramTime = Win32_GetProgramTime(nullptr, ignoreFixedTimeScaleEffects);
 	if (programTimeSnapshot <= currentProgramTime)
 	{
 		return currentProgramTime - programTimeSnapshot;

@@ -225,6 +225,25 @@ void RcDrawDonut(v2 center, r32 innerRadius, r32 radius, Color_t color, bool bin
 	RcSetCircleInnerRadius(oldInnerCircleRadius);
 	if (bindShader) { RcBindShader(oldShader); }
 }
+void RcDrawInverseCircle(v2 center, r32 radius, Color_t outerColor, bool bindShader = true)
+{
+	NotNull(rc);
+	
+	Shader_t* oldShader = rc->state.boundShader;
+	v2 oldShiftVec = rc->state.shiftVec;
+	r32 oldCircleRadius = rc->state.circleRadius;
+	r32 oldInnerCircleRadius = rc->state.circleInnerRadius;
+	
+	if (bindShader) { RcBindShader(&pig->resources.shaders->main2D); }
+	RcSetCircleRadius(10.0f);
+	RcSetCircleInnerRadius(1.0f);
+	
+	RcDrawRectangle(NewRecCentered(center, Vec2Fill(radius*2)), outerColor);
+	
+	RcSetCircleRadius(oldCircleRadius);
+	RcSetCircleInnerRadius(oldInnerCircleRadius);
+	if (bindShader) { RcBindShader(oldShader); }
+}
 
 void RcDrawObb2(obb2 boundingBox, Color_t color)
 {
@@ -1033,6 +1052,91 @@ void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, 
 	localVertsArray[6] = vert6;
 	localVertsArray[7] = vert7;
 	RcDrawConvexPolygonWithShader(color, 8, &localVertsArray[0]);
+}
+
+void RcDrawQuarterCircleFoldedRec(rec rectangle, r32 circleRadius, r32 circleMargin, r32 borderThickness, r32 circleBorderThickness, Color_t fillColor, Color_t circleFillColor, Color_t borderColor, Color_t circleBorderColor)
+{
+	//NOTE: This takes 31 draw calls to perform. May not be the cheapest, all things considered
+	rec oldViewport = rc->state.viewportRec;
+	Shader_t* oldShader = rc->state.boundShader;
+	r32 foldSize = circleRadius + circleMargin + borderThickness;
+	
+	if (fillColor.a > 0)
+	{
+		rec innerRec1 = NewRec(rectangle.x + foldSize, rectangle.y + borderThickness, rectangle.width - 2*foldSize, rectangle.height - 2*borderThickness);
+		rec innerRec2 = NewRec(rectangle.x + borderThickness, rectangle.y + foldSize, foldSize - borderThickness, rectangle.height - 2*foldSize);
+		rec innerRec3 = NewRec(rectangle.x + rectangle.width - foldSize, rectangle.y + foldSize, foldSize - borderThickness, rectangle.height - 2*foldSize);
+		RcDrawRectangle(innerRec1, fillColor);
+		RcDrawRectangle(innerRec2, fillColor);
+		RcDrawRectangle(innerRec3, fillColor);
+	}
+	
+	if (borderThickness > 0 && borderColor.a > 0)
+	{
+		rec leftBorderRec = NewRec(rectangle.x, rectangle.y + foldSize, borderThickness, rectangle.height - 2*foldSize);
+		rec topBorderRec = NewRec(rectangle.x + foldSize, rectangle.y, rectangle.width - 2*foldSize, borderThickness);
+		rec rightBorderRec = NewRec(rectangle.x + rectangle.width - borderThickness, rectangle.y + foldSize, borderThickness, rectangle.height - 2*foldSize);
+		rec bottomBorderRec = NewRec(rectangle.x + foldSize, rectangle.y + rectangle.height - borderThickness, rectangle.width - 2*foldSize, borderThickness);
+		RcDrawRectangle(leftBorderRec, borderColor);
+		RcDrawRectangle(topBorderRec, borderColor);
+		RcDrawRectangle(rightBorderRec, borderColor);
+		RcDrawRectangle(bottomBorderRec, borderColor);
+	}
+	
+	if (circleBorderThickness > 0 && circleBorderColor.a > 0)
+	{
+		rec quarterCircleTopLeftRec1 = NewRec(rectangle.x, rectangle.y, circleRadius - circleBorderThickness, circleBorderThickness);
+		rec quarterCircleTopLeftRec2 = NewRec(rectangle.x, rectangle.y, circleBorderThickness, circleRadius - circleBorderThickness);
+		rec quarterCircleTopRightRec1 = NewRec(rectangle.x + rectangle.width - (circleRadius - circleBorderThickness), rectangle.y, circleRadius - circleBorderThickness, circleBorderThickness);
+		rec quarterCircleTopRightRec2 = NewRec(rectangle.x + rectangle.width - circleBorderThickness, rectangle.y, circleBorderThickness, circleRadius - circleBorderThickness);
+		rec quarterCircleBottomLeftRec1 = NewRec(rectangle.x, rectangle.y + rectangle.height - circleBorderThickness, circleRadius - circleBorderThickness, circleBorderThickness);
+		rec quarterCircleBottomLeftRec2 = NewRec(rectangle.x, rectangle.y + rectangle.height - (circleRadius - circleBorderThickness), circleBorderThickness, circleRadius - circleBorderThickness);
+		rec quarterCircleBottomRightRec1 = NewRec(rectangle.x + rectangle.width - (circleRadius - circleBorderThickness), rectangle.y + rectangle.height - circleBorderThickness, circleRadius - circleBorderThickness, circleBorderThickness);
+		rec quarterCircleBottomRightRec2 = NewRec(rectangle.x + rectangle.width - circleBorderThickness, rectangle.y + rectangle.height - (circleRadius - circleBorderThickness), circleBorderThickness, circleRadius - circleBorderThickness);
+		RcDrawRectangle(quarterCircleTopLeftRec1, circleBorderColor);
+		RcDrawRectangle(quarterCircleTopLeftRec2, circleBorderColor);
+		RcDrawRectangle(quarterCircleTopRightRec1, circleBorderColor);
+		RcDrawRectangle(quarterCircleTopRightRec2, circleBorderColor);
+		RcDrawRectangle(quarterCircleBottomLeftRec1, circleBorderColor);
+		RcDrawRectangle(quarterCircleBottomLeftRec2, circleBorderColor);
+		RcDrawRectangle(quarterCircleBottomRightRec1, circleBorderColor);
+		RcDrawRectangle(quarterCircleBottomRightRec2, circleBorderColor);
+	}
+	
+	RcBindShader(&pig->resources.shaders->main2D);
+	RcSetViewport(RecDeflate(rectangle, circleBorderThickness, circleBorderThickness));
+	if (circleFillColor.a > 0)
+	{
+		RcDrawCircle(NewVec2(rectangle.x + circleBorderThickness, rectangle.y + circleBorderThickness),                                      circleRadius - 2*circleBorderThickness, circleFillColor, false);
+		RcDrawCircle(NewVec2(rectangle.x + rectangle.width - circleBorderThickness, rectangle.y + circleBorderThickness),                    circleRadius - 2*circleBorderThickness, circleFillColor, false);
+		RcDrawCircle(NewVec2(rectangle.x + circleBorderThickness, rectangle.y + rectangle.height - circleBorderThickness),                   circleRadius - 2*circleBorderThickness, circleFillColor, false);
+		RcDrawCircle(NewVec2(rectangle.x + rectangle.width - circleBorderThickness, rectangle.y + rectangle.height - circleBorderThickness), circleRadius - 2*circleBorderThickness, circleFillColor, false);
+	}
+	RcSetViewport(rectangle);
+	if (fillColor.a > 0)
+	{
+		RcDrawInverseCircle(NewVec2(rectangle.x, rectangle.y),                                      foldSize, fillColor, false);
+		RcDrawInverseCircle(NewVec2(rectangle.x + rectangle.width, rectangle.y),                    foldSize, fillColor, false);
+		RcDrawInverseCircle(NewVec2(rectangle.x, rectangle.y + rectangle.height),                   foldSize, fillColor, false);
+		RcDrawInverseCircle(NewVec2(rectangle.x + rectangle.width, rectangle.y + rectangle.height), foldSize, fillColor, false);
+	}
+	if (circleBorderThickness > 0 && circleBorderColor.a > 0)
+	{
+		RcDrawDonut(NewVec2(rectangle.x, rectangle.y),                                      circleRadius - circleBorderThickness*2, circleRadius, circleBorderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x + rectangle.width, rectangle.y),                    circleRadius - circleBorderThickness*2, circleRadius, circleBorderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x, rectangle.y + rectangle.height),                   circleRadius - circleBorderThickness*2, circleRadius, circleBorderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x + rectangle.width, rectangle.y + rectangle.height), circleRadius - circleBorderThickness*2, circleRadius, circleBorderColor, false);
+	}
+	if (borderThickness > 0 && borderColor.a > 0)
+	{
+		RcDrawDonut(NewVec2(rectangle.x, rectangle.y),                                      circleRadius + circleMargin, circleRadius + circleMargin + borderThickness + 0.5f, borderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x + rectangle.width, rectangle.y),                    circleRadius + circleMargin, circleRadius + circleMargin + borderThickness + 0.5f, borderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x, rectangle.y + rectangle.height),                   circleRadius + circleMargin, circleRadius + circleMargin + borderThickness + 0.5f, borderColor, false);
+		RcDrawDonut(NewVec2(rectangle.x + rectangle.width, rectangle.y + rectangle.height), circleRadius + circleMargin, circleRadius + circleMargin + borderThickness + 0.5f, borderColor, false);
+	}
+	RcBindShader(oldShader);
+	
+	RcSetViewport(oldViewport);
 }
 
 // +--------------------------------------------------------------+

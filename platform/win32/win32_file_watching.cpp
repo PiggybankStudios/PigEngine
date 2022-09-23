@@ -148,10 +148,10 @@ THREAD_FUNCTION_DEF(Win32_FileWatchingThreadFunc, userPntr) //pre-declared at to
 			if (CompareFileTime(&newWriteTime, &filePntr->lastWriteTime) != 0)
 			{
 				//TODO: Passing false for ignoreFixedTimeScaleEffects might mean this is no longer thread safe!? Since we access Platform-> variables that might be changing!
-				filePntr->lastWriteTimeChange = Win32_GetProgramTime(nullptr, false);
+				filePntr->lastWriteTimeChange = Win32_GetProgramTime(nullptr, true);
 				filePntr->lastWriteTime = newWriteTime;
 			}
-			if (filePntr->lastWriteTimeChange != 0 && Win32_TimeSince(filePntr->lastWriteTimeChange) >= 1000)
+			if (filePntr->lastWriteTimeChange != 0 && Win32_TimeSince(filePntr->lastWriteTimeChange, true) >= 1000)
 			{
 				u32 oldChangedValue = Win32_InterlockedExchange(&filePntr->changed, 1);
 				UNUSED(oldChangedValue);

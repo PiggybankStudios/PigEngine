@@ -9,8 +9,8 @@ Date:   01\11\2022
 
 struct Textbox_t
 {
-	MemArena_t* allocArena;
 	u64 id;
+	MemArena_t* allocArena;
 	MyStr_t hintText;
 	FontHandle_t font;
 	FontFaceSelector_t fontFaceSelector;

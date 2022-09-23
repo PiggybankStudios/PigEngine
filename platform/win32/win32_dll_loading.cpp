@@ -140,7 +140,8 @@ bool Win32_CheckForEngineDllChange(EngineDll_t* engine)
 		engine->lastChangeProgramTime = Win32_GetProgramTime(nullptr, true);
 		engine->needToReload = true;
 	}
-	if (engine->needToReload && Platform->engineInput.programTime >= engine->lastChangeProgramTime + ENGINE_DLL_RELOAD_WAIT_TIME)
+	u64 currentProgramTime = Win32_GetProgramTime(nullptr, true);
+	if (engine->needToReload && currentProgramTime >= engine->lastChangeProgramTime + ENGINE_DLL_RELOAD_WAIT_TIME)
 	{
 		return true;
 	}

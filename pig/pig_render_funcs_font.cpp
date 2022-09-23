@@ -178,6 +178,20 @@ void RcDrawTextPrint(v2 position, Color_t color, const char* formatString, ...)
 	}
 }
 
+void RcDrawTextPrintWithBackgroundEx(v2 position, Color_t textColor, Color_t backgroundColor, v2 padding, TextAlignment_t alignment, r32 maxWidth, const char* formatString, ...)
+{
+	TempPrintVa(textPntr, textLength, formatString);
+	MyStr_t textStr = MyStr_Empty;
+	if (textPntr != nullptr) { textStr = NewStr(textLength, textPntr); }
+	else { textStr = NewStr(formatString); }
+	TextMeasure_t textMeasure = RcMeasureText(textPntr, maxWidth);
+	rec backgroundRec = NewRec(position.x - textMeasure.offset.x, position.y - textMeasure.offset.y, textMeasure.size.width, textMeasure.size.height);
+	if (alignment == TextAlignment_Right) { backgroundRec.x -= backgroundRec.width; }
+	if (alignment == TextAlignment_Center) { backgroundRec.x -= backgroundRec.width/2; }
+	backgroundRec = RecInflate(backgroundRec, padding);
+	RcDrawRectangle(backgroundRec, backgroundColor);
+	RcDrawText(textStr, position, textColor, alignment, maxWidth);
+}
 void RcDrawTextPrintWithBackground(v2 position, Color_t textColor, Color_t backgroundColor, v2 padding, const char* formatString, ...)
 {
 	TempPrintVa(textPntr, textLength, formatString);

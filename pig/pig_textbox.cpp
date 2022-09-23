@@ -729,6 +729,8 @@ void UpdateTextbox(Textbox_t* tb)
 			{
 				if (inputEvent->type == InputEventType_Character)
 				{
+					HandleInputEvent(inputEvent);
+					
 					u8 codepointBytes[UTF8_MAX_CHAR_SIZE];
 					u8 codepointSize = GetUtf8BytesForCode(inputEvent->character.codepoint, &codepointBytes[0]);
 					if (codepointSize > 0)
@@ -738,8 +740,6 @@ void UpdateTextbox(Textbox_t* tb)
 						{
 							//TODO: Should we somehow let the user know? Maybe a sound effect?
 						}
-						
-						HandleInputEvent(inputEvent);
 					}
 					else
 					{

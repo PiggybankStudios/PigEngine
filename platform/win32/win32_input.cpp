@@ -667,6 +667,7 @@ bool Win32_UpdateControllerButton(EngineInput_t* currentInput, PlatControllerSta
 		InputEvent_t* newEvent = Win32_CreateInputEvent(nullptr, currentInput, ModifierKey_None, InputEventType_ControllerBtn);
 		if (newEvent != nullptr)
 		{
+			newEvent->controllerBtn.controllerIndex = (i32)controller->index;
 			newEvent->controllerBtn.btn = controllerBtn;
 			newEvent->controllerBtn.pressed = isDown;
 			newEvent->controllerBtn.released = !isDown;

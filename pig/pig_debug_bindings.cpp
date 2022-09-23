@@ -175,8 +175,29 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		bindingOut->type = PigDebugBindingType_Mouse;
 		bindingStr = StrSubstring(&bindingStr, MyStrLength64(PIG_DBG_BINDINGS_MOUSE_BINDING_PREFIX));
 		TrimWhitespace(&bindingStr);
-		Unimplemented(); //TODO: Implement me!
-		return false;
+		
+		bindingOut->mouseBtn = MouseBtn_None;
+		for (u64 bIndex = 0; bIndex < MouseBtn_NumBtns; bIndex++)
+		{
+			MouseBtn_t mouseBtn = (MouseBtn_t)bIndex;
+			const char* buttonName = GetMouseBtnStr(mouseBtn);
+			if (StrCompareIgnoreCase(bindingStr, buttonName) == 0)
+			{
+				bindingOut->mouseBtn = mouseBtn;
+				break;
+			}
+		}
+		if (bindingOut->mouseBtn == MouseBtn_None)
+		{
+			if (log != nullptr)
+			{
+				LogPrintLine_W(log, "Unknown mouse button in binding: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+				log->hadWarnings = true;
+			}
+			return false;
+		}
+		
+		return true;
 	}
 	// +==============================+
 	// |   Parse Controller Binding   |
@@ -186,8 +207,29 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		bindingOut->type = PigDebugBindingType_Controller;
 		bindingStr = StrSubstring(&bindingStr, MyStrLength64(PIG_DBG_BINDINGS_CONTROLLER_BINDING_PREFIX));
 		TrimWhitespace(&bindingStr);
-		Unimplemented(); //TODO: Implement me!
-		return false;
+		
+		bindingOut->controllerBtn = ControllerBtn_None;
+		for (u64 bIndex = 0; bIndex < ControllerBtn_NumBtns; bIndex++)
+		{
+			ControllerBtn_t controllerBtn = (ControllerBtn_t)bIndex;
+			const char* buttonName = GetControllerBtnStr(controllerBtn);
+			if (StrCompareIgnoreCase(bindingStr, buttonName) == 0)
+			{
+				bindingOut->controllerBtn = controllerBtn;
+				break;
+			}
+		}
+		if (bindingOut->controllerBtn == ControllerBtn_None)
+		{
+			if (log != nullptr)
+			{
+				LogPrintLine_W(log, "Unknown controller button in binding: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+				log->hadWarnings = true;
+			}
+			return false;
+		}
+		
+		return true;
 	}
 	// +==============================+
 	// |      Parse Key Binding       |

@@ -32,7 +32,7 @@ PLAT_API_GET_THIS_THREAD_ID_DEF(Win32_GetThisThreadId);
 // |    win32_performance.cpp     |
 // +==============================+
 PLAT_API_GET_PROGRAM_TIME_DEFINITION(Win32_GetProgramTime);
-u64 Win32_TimeSince(u64 programTimeSnapshot);
+u64 Win32_TimeSince(u64 programTimeSnapshot, bool ignoreFixedTimeScaleEffects);
 
 // +==============================+
 // |      win32_overlays.cpp      |

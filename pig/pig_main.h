@@ -80,6 +80,7 @@ struct PigState_t
 	u64 nextSpriteSheetId;
 	u64 nextUiId;
 	u64 nextWavOggAudioDataId;
+	u64 nextConfirmDialogId;
 	
 	//Resources
 	Resources_t resources;
@@ -135,6 +136,8 @@ struct PigState_t
 	u64 numAudioClips;
 	
 	MusicSystemState_t musicSystem;
+	
+	VarArray_t confirmDialogs; //ConfirmDialog_t
 };
 
 #endif //  _PIG_MAIN_H

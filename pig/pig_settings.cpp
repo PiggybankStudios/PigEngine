@@ -51,6 +51,23 @@ MyStr_t PigGetSettingsFilePath(MemArena_t* tempArena, MemArena_t* memArena, MySt
 	return MyStr_Empty;
 }
 
+void PigFreeSettings(PigSettings_t* settings)
+{
+	NotNull(settings);
+	if (settings->entries.items != nullptr)
+	{
+		NotNull(settings->allocArena);
+		VarArrayLoop(&settings->entries, sIndex)
+		{
+			VarArrayLoopGet(PigSettingsEntry_t, setting, &settings->entries, sIndex);
+			FreeString(settings->allocArena, &setting->key);
+			FreeString(settings->allocArena, &setting->value);
+		}
+		FreeVarArray(&settings->entries);
+	}
+	ClearPointer(settings);
+}
+
 void PigInitSettings(PigSettings_t* settings, MemArena_t* memArena, u64 numEntriesExpected = 0)
 {
 	NotNull(settings);
@@ -421,6 +438,18 @@ PigSettingsEntry_t* PigSetSettingV2(PigSettings_t* settings, const char* keyNull
 	return PigSetSettingV2(settings, NewStr(keyNullTerm), value, ignoreCase, useArenaForPrint);
 }
 
+PigSettingsEntry_t* PigSetSettingV3(PigSettings_t* settings, MyStr_t key, v3 value, bool ignoreCase = true, MemArena_t* useArenaForPrint = nullptr)
+{
+	MemArena_t* printArena = (useArenaForPrint != nullptr) ? useArenaForPrint : GetTempArena();
+	NotNull(printArena);
+	MyStr_t valueStr = PrintInArenaStr(printArena, "(%g, %g, %g)", value.x, value.y, value.z);
+	return PigSetSettingStr(settings, key, valueStr, ignoreCase);
+}
+PigSettingsEntry_t* PigSetSettingV3(PigSettings_t* settings, const char* keyNullTerm, v3 value, bool ignoreCase = true, MemArena_t* useArenaForPrint = nullptr)
+{
+	return PigSetSettingV3(settings, NewStr(keyNullTerm), value, ignoreCase, useArenaForPrint);
+}
+
 PigSettingsEntry_t* PigSetSettingV2i(PigSettings_t* settings, MyStr_t key, v2i value, bool ignoreCase = true, MemArena_t* useArenaForPrint = nullptr)
 {
 	MemArena_t* printArena = (useArenaForPrint != nullptr) ? useArenaForPrint : GetTempArena();
@@ -606,6 +635,35 @@ v2 PigGetSettingV2(const PigSettings_t* settings, MyStr_t key, v2 defaultValue, 
 v2 PigGetSettingV2(const PigSettings_t* settings, const char* keyNullTerm, v2 defaultValue, bool ignoreCase = true)
 {
 	return PigGetSettingV2(settings, NewStr(keyNullTerm), defaultValue, ignoreCase);
+}
+
+TryGetSettingResult_t PigTryGetSettingV3(const PigSettings_t* settings, MyStr_t key, v3* valueOut = nullptr, bool ignoreCase = true, TryParseFailureReason_t* parseFailureReasonOut = nullptr)
+{
+	NotNull(settings);
+	NotNullStr(&key);
+	MyStr_t settingValue;
+	if (PigTryGetSettingStr(settings, key, &settingValue, ignoreCase))
+	{
+		if (TryParseV3(settingValue, valueOut, parseFailureReasonOut)) { return TryGetSettingResult_Success; }
+		else { return TryGetSettingResult_ParseError; }
+	}
+	return TryGetSettingResult_Missing;
+}
+TryGetSettingResult_t PigTryGetSettingV3(const PigSettings_t* settings, const char* keyNullTerm, v3* valueOut = nullptr, bool ignoreCase = true, TryParseFailureReason_t* parseFailureReasonOut = nullptr)
+{
+	return PigTryGetSettingV3(settings, NewStr(keyNullTerm), valueOut, ignoreCase, parseFailureReasonOut);
+}
+v3 PigGetSettingV3(const PigSettings_t* settings, MyStr_t key, v3 defaultValue, bool ignoreCase = true)
+{
+	v3 result = defaultValue;
+	TryGetSettingResult_t foundSetting = PigTryGetSettingV3(settings, key, &result, ignoreCase);
+	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
+	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	return result;
+}
+v3 PigGetSettingV3(const PigSettings_t* settings, const char* keyNullTerm, v3 defaultValue, bool ignoreCase = true)
+{
+	return PigGetSettingV3(settings, NewStr(keyNullTerm), defaultValue, ignoreCase);
 }
 
 TryGetSettingResult_t PigTryGetSettingV2i(const PigSettings_t* settings, MyStr_t key, v2i* valueOut = nullptr, bool ignoreCase = true, TryParseFailureReason_t* parseFailureReasonOut = nullptr)

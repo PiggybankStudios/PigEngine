@@ -956,6 +956,26 @@ bool IsControllerBtnHandled(i32 controllerIndex, ControllerBtn_t btn, bool check
 	}
 }
 
+bool IsControllerConnected(i32 controllerIndex)
+{
+	Assert(controllerIndex == CONTROLLER_INDEX_ANY || (controllerIndex >= 0 && controllerIndex < MAX_NUM_CONTROLLERS));
+	if (controllerIndex == CONTROLLER_INDEX_ANY)
+	{
+		for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+		{
+			if (controllerIndex == CONTROLLER_INDEX_ANY)
+			{
+				if (pigIn->controllerStates[cIndex].connected) { return true; }
+			}
+		}
+		return false;
+	}
+	else
+	{
+		return pigIn->controllerStates[controllerIndex].connected;
+	}
+}
+
 // +==============================+
 // |      No Handled Regard       |
 // +==============================+
@@ -1309,7 +1329,7 @@ bool CheckIfInputEventWasHandled(InputEvent_t* inputEvent)
 	if (inputEvent->handled) { isHandled = true; }
 	if (inputEvent->type == InputEventType_Key && IsKeyHandled(inputEvent->key.key, (inputEvent->key.pressed || inputEvent->key.repeated), inputEvent->key.released)) { isHandled = true; }
 	if (inputEvent->type == InputEventType_MouseBtn && IsMouseHandled(inputEvent->mouseBtn.btn, (inputEvent->mouseBtn.pressed || inputEvent->mouseBtn.repeated), inputEvent->mouseBtn.released)) { isHandled = true; }
-	//TODO: Add support for InputEventType_ControllerBtn
+	if (inputEvent->type == InputEventType_ControllerBtn && IsControllerBtnHandled(inputEvent->controllerBtn.controllerIndex, inputEvent->controllerBtn.btn, (inputEvent->controllerBtn.pressed || inputEvent->controllerBtn.repeated), inputEvent->controllerBtn.released)) { isHandled = true; }
 	
 	if (inputEvent->pairedEventIndex >= 0 && (u64)inputEvent->pairedEventIndex < pigIn->inputEvents.length)
 	{
@@ -1317,7 +1337,7 @@ bool CheckIfInputEventWasHandled(InputEvent_t* inputEvent)
 		if (pairedEvent->handled) { isHandled = true; }
 		if (pairedEvent->type == InputEventType_Key && IsKeyHandled(pairedEvent->key.key, (pairedEvent->key.pressed || pairedEvent->key.repeated), pairedEvent->key.released)) { isHandled = true; }
 		if (pairedEvent->type == InputEventType_MouseBtn && IsMouseHandled(pairedEvent->mouseBtn.btn, (pairedEvent->mouseBtn.pressed || pairedEvent->mouseBtn.repeated), pairedEvent->mouseBtn.released)) { isHandled = true; }
-		//TODO: Add support for InputEventType_ControllerBtn
+		if (pairedEvent->type == InputEventType_ControllerBtn && IsControllerBtnHandled(pairedEvent->controllerBtn.controllerIndex, pairedEvent->controllerBtn.btn, (pairedEvent->controllerBtn.pressed || pairedEvent->controllerBtn.repeated), pairedEvent->controllerBtn.released)) { isHandled = true; }
 		
 		if (isHandled) { pairedEvent->handled = true; }
 	}
@@ -1342,7 +1362,12 @@ void HandleInputEvent(InputEvent_t* inputEvent, bool extended = false)
 		else if (inputEvent->mouseBtn.pressed || inputEvent->mouseBtn.repeated) { HandleMouse(inputEvent->mouseBtn.btn); }
 		else { HandleMouseRelease(inputEvent->mouseBtn.btn); }
 	}
-	//TODO: Add support for InputEventType_ControllerBtn
+	if (inputEvent->type == InputEventType_ControllerBtn)
+	{
+		if (extended) { HandleControllerBtnExtended(inputEvent->controllerBtn.controllerIndex, inputEvent->controllerBtn.btn); }
+		else if (inputEvent->controllerBtn.pressed || inputEvent->controllerBtn.repeated) { HandleControllerBtn(inputEvent->controllerBtn.controllerIndex, inputEvent->controllerBtn.btn); }
+		else { HandleControllerBtnRelease(inputEvent->controllerBtn.controllerIndex, inputEvent->controllerBtn.btn); }
+	}
 	
 	if (inputEvent->pairedEventIndex >= 0 && (u64)inputEvent->pairedEventIndex < pigIn->inputEvents.length)
 	{
@@ -1360,7 +1385,12 @@ void HandleInputEvent(InputEvent_t* inputEvent, bool extended = false)
 			else if (pairedEvent->mouseBtn.pressed || pairedEvent->mouseBtn.repeated) { HandleMouse(pairedEvent->mouseBtn.btn); }
 			else { HandleMouseRelease(pairedEvent->mouseBtn.btn); }
 		}
-		//TODO: Add support for InputEventType_ControllerBtn
+		if (pairedEvent->type == InputEventType_ControllerBtn)
+		{
+			if (extended) { HandleControllerBtnExtended(pairedEvent->controllerBtn.controllerIndex, pairedEvent->controllerBtn.btn); }
+			else if (pairedEvent->controllerBtn.pressed || pairedEvent->controllerBtn.repeated) { HandleControllerBtn(pairedEvent->controllerBtn.controllerIndex, pairedEvent->controllerBtn.btn); }
+			else { HandleControllerBtnRelease(pairedEvent->controllerBtn.controllerIndex, pairedEvent->controllerBtn.btn); }
+		}
 	}
 }
 
@@ -1607,6 +1637,117 @@ void UpdateSettingsWithWindowInfo(PigSettings_t* settings, const PlatWindow_t* w
 }
 
 // +--------------------------------------------------------------+
+// |                 Fullscreen Related Functions                 |
+// +--------------------------------------------------------------+
+void ToggleFullscreen(bool doDebugOutput = false)
+{
+	NotNull(platInfo);
+	NotNull(pigOut);
+	
+	const PlatWindow_t* window = platInfo->mainWindow;
+	NotNull(window);
+	
+	if (window->input.fullscreen)
+	{
+		pigOut->changeFullscreen = true;
+		pigOut->changeFullscreenWindowId = window->id;
+		pigOut->fullscreenEnabled = false;
+		pigOut->windowedResolution = NewVec2i(
+			window->input.fullscreenVideoMode->resolution.width/2,
+			window->input.fullscreenVideoMode->resolution.height/2
+		);
+		Assert(window->input.fullscreenFramerateIndex < window->input.fullscreenVideoMode->numFramerates);
+		pigOut->windowedFramerate = window->input.fullscreenVideoMode->framerates[window->input.fullscreenFramerateIndex];
+		if (doDebugOutput)
+		{
+			PrintLine_I("Coming out of fullscreen on monitor %llu \"%.*s\". Going to windowed at %dx%d %lldHz",
+				window->input.fullscreenMonitor->designatedNumber,
+				window->input.fullscreenMonitor->name.length, window->input.fullscreenMonitor->name.pntr,
+				pigOut->windowedResolution.width, pigOut->windowedResolution.height,
+				pigOut->windowedFramerate
+			);
+		}
+	}
+	else
+	{
+		const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+		NotNull(currentMonitor);
+		const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+		
+		pigOut->changeFullscreen = true;
+		pigOut->changeFullscreenWindowId = window->id;
+		pigOut->fullscreenEnabled = true;
+		pigOut->fullscreenMonitorId = currentMonitor->id;
+		pigOut->fullscreenVideoModeIndex = currentVideoMode->index;
+		Assert(currentVideoMode->currentFramerateIndex < currentVideoMode->numFramerates);
+		pigOut->fullscreenFramerateIndex = currentVideoMode->currentFramerateIndex;
+		if (doDebugOutput)
+		{
+			PrintLine_I("Enabling fullscreen on monitor %llu \"%.*s\" at %dx%d %lldHz",
+				currentMonitor->designatedNumber,
+				currentMonitor->name.length, currentMonitor->name.pntr,
+				currentVideoMode->resolution.width, currentVideoMode->resolution.height,
+				currentVideoMode->framerates[currentVideoMode->currentFramerateIndex]
+			);
+		}
+	}
+}
+
+void DoFullscreenOnMonitor(const PlatWindow_t* window, const PlatMonitorInfo_t* monitor, v2i resolution, i64 framerate, bool doDebugOutput = false)
+{
+	NotNull(platInfo);
+	NotNull(pigOut);
+	NotNull(window);
+	NotNull(monitor);
+	const PlatMonitorVideoMode_t* targetVideoMode = GetVideoModeWithResolution(monitor, resolution);
+	Assert(targetVideoMode != nullptr);
+	i64 targetFramerateIndex = FindVideoModeFramerateIndex(targetVideoMode, framerate);
+	Assert(targetFramerateIndex >= 0);
+	
+	if (doDebugOutput)
+	{
+		PrintLine_I("Changing to fullscreen mode %dx%d at %lldHz on monitor %d \"%.*s\"", resolution.width, resolution.height, framerate, monitor->designatedNumber, monitor->name.length, monitor->name.pntr);
+	}
+	pigOut->changeFullscreen = true;
+	pigOut->changeFullscreenWindowId = window->id;
+	pigOut->fullscreenEnabled = true;
+	pigOut->fullscreenMonitorId = monitor->id;
+	pigOut->fullscreenVideoModeIndex = targetVideoMode->index;
+	pigOut->fullscreenFramerateIndex = (u64)targetFramerateIndex;
+}
+
+void StopFullscreen(const PlatWindow_t* window, v2i resolution, i64 framerate, bool doDebugOutput = false)
+{
+	NotNull(platInfo);
+	NotNull(pigOut);
+	NotNull(window);
+	const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+	const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+	NotNull2(currentMonitor, currentVideoMode);
+	
+	if (resolution.width > currentVideoMode->resolution.width)
+	{
+		if (doDebugOutput) { PrintLine_W("Limiting width to %d", currentVideoMode->resolution.width); }
+		resolution.width = currentVideoMode->resolution.width;
+	}
+	if (resolution.height > currentVideoMode->resolution.height)
+	{
+		if (doDebugOutput) { PrintLine_W("Limiting height to %d", currentVideoMode->resolution.height); }
+		resolution.height = currentVideoMode->resolution.height;
+	}
+				
+	if (doDebugOutput)
+	{
+		PrintLine_I("Changing to windowed mode %dx%d at %lldHz", resolution.width, resolution.height, framerate);
+	}
+	pigOut->changeFullscreen = true;
+	pigOut->changeFullscreenWindowId = window->id;
+	pigOut->fullscreenEnabled = false;
+	pigOut->windowedResolution = resolution;
+	pigOut->windowedFramerate = framerate;
+}
+
+// +--------------------------------------------------------------+
 // |                        Debug Bindings                        |
 // +--------------------------------------------------------------+
 void Pig_HandleDebugBindings(PigDebugBindings_t* bindings)
@@ -1641,11 +1782,22 @@ void Pig_HandleDebugBindings(PigDebugBindings_t* bindings)
 			} break;
 			case PigDebugBindingType_Mouse:
 			{
-				Unimplemented(); //TODO: Implement me!
+				if (MousePressed(binding->mouseBtn))
+				{
+					HandleMouseExtended(binding->mouseBtn);
+					PigParseDebugCommand(binding->commandStr);
+				}
 			} break;
 			case PigDebugBindingType_Controller:
 			{
-				Unimplemented(); //TODO: Implement me!
+				for (i32 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+				{
+					if (ControllerBtnPressed(cIndex, binding->controllerBtn))
+					{
+						HandleControllerBtnExtended(cIndex, binding->controllerBtn);
+						PigParseDebugCommand(binding->commandStr);
+					}
+				}
 			} break;
 			default: DebugAssert(false); break;
 		}

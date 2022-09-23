@@ -1,6 +1,8 @@
-{ } Rename game stuff to App
+[ ] Add a UI checkbox implementation
+[ ] Add a UI combobox implementation
 
 # A dumping ground for any and all notes and TODO lists
+	{ } Rename game stuff to App
 	(!) The windowed framerate option doesn't do anything right now!
 	( ) If you fullscreen the window and then use win+left/right to move it to another monitor, we don't see the monitor change and our fullscreen state information becomes incorrect
 	( ) If you maximize the window, then fullscreen, then hit Win+Down, it will sort of unmaximize the window while still being in fullscreen
@@ -19,8 +21,6 @@
 	[ ] Add a debug visual to show the status of the task queue and the worker threads (what task ID they are working on and how long they've been working on it)
 	( ) Make sure all the platform file functions are thread safe
 	[ ] Use the line building stuff of the StringFifo_t in the platform debug output Fifo
-	[ ] Finish adding support for mouse and controller debug bindings
-	[ ] 
 
 # Gylib
 	(!) type and index are out of order for LinkedListGet compared to VarArrayGet
@@ -36,22 +36,16 @@
 	[ ] 
 
 # Engine
-	[!] Add a confirmation dialogue
 	[!] Do a debug dump when an assertion fails
 	[!] Update the name we give to a debug console dump so it uses the local time for a readable time in the file name
-	[!] Add support for "Handling" a InputEvent_t and therefore handling it's related events and keys/btns
 	{ } Assertions and debug output in GetStartupOptions? Maybe even notifications?
 	{ } Debug visual for resources
 	[ ] Add a debug command to read out the window engine input fullscreen related information
 	[ ] Improve the audio debug window
-	- Line representing 0 - Ms Ticks - Selection - Replay
-	[ ] Hover to readout actual sample values
+	- Line representing 0 - Ms Ticks - Selection - Replay - Hover to readout actual sample values
 	[ ] Change the way we render transformed vector image parts by using a matrix in renderContext rather than making separate functions for each type of transformation
 	[ ] Add support for ellipses in the SVG stuff (not just circles)
 	[ ] Add a GIF export editor AppState that allows you to see and manage what portion of the captured frames you'd like to export
-	[ ] Add a UI button implementation
-	[ ] Add a UI checkbox implementation
-	[ ] Add a UI combobox implementation
 	[ ] Add a UI ListView implementation
 	[?] MIDI keyboard support
 	[ ] Streaming sampled audio output
@@ -118,6 +112,11 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] Add a UI button implementation
+	[X] Move "fullscreen" command logic into a function and call that instead of running a debug command when F11 is pressed
+	[X] Add support for "Handling" an InputEvent_t and therefore handling it's related events and keys/btns
+	[X] Finish adding support for mouse and controller debug bindings
+	[X] Add a confirmation dialogue
 	[X] Make the command parsing stuff for debug commands automatically handle quotation marks around arguments and escape sequences in the quotes
 	[X] Add debug commands that allow us to set up key bindings to other debug commands
 	(X) Figure out why GetRandU64 is giving us always odd numbers for LinearCongruential64

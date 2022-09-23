@@ -11,6 +11,8 @@ Description:
 
 //TODO: Add support for routing prints through a non TempArena arena. This is mostly useful in GetStartupOptions where we don't have full platform support yet (and thus GetTempArena will crash)
 
+#define DEFAULT_PROCESS_LOG_FIFO_SIZE Kilobytes(8)
+
 // +--------------------------------------------------------------+
 // |                       Create and Free                        |
 // +--------------------------------------------------------------+
@@ -51,6 +53,12 @@ void CreateProcessLog(ProcessLog_t* logOut, u64 fifoSize, MemArena_t* fifoArena,
 	logOut->errorCode = 0;
 	logOut->filePath = NewStringInArenaNt(logOut->allocArena, "[UnspecifiedPath]");
 	logOut->processName = NewStringInArenaNt(logOut->allocArena, "[UnspecifiedName]");
+}
+
+void CreateDefaultProcessLog(ProcessLog_t* logOut)
+{
+	NotNull2(TempArena, mainHeap);
+	CreateProcessLog(logOut, DEFAULT_PROCESS_LOG_FIFO_SIZE, TempArena, mainHeap);
 }
 
 void CreateProcessLogStub(ProcessLog_t* logOut)

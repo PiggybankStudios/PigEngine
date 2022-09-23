@@ -230,6 +230,7 @@ struct InputEvent_t
 		} key;
 		struct
 		{
+			i32 controllerIndex;
 			ControllerBtn_t btn;
 			bool pressed;
 			bool released;

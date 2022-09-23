@@ -43,6 +43,7 @@ void PigInitialize(EngineMemory_t* memory)
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);
+	PigInitConfirmDialogs();
 	
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
@@ -124,6 +125,7 @@ void PigUpdateMainWindow()
 	PigAudioOutGraphCaptureMouse(&pig->audioOutGraph);
 	PigMemGraphCaptureMouse(&pig->memGraph);
 	DebugConsoleCaptureMouse(&pig->debugConsole);
+	PigCaptureMouseConfirmDialogs();
 	
 	PigUpdateNotifications(&pig->notificationsQueue);
 	UpdatePigDebugOverlay(&pig->debugOverlay);
@@ -131,6 +133,7 @@ void PigUpdateMainWindow()
 	UpdatePigAudioOutGraph(&pig->audioOutGraph);
 	UpdatePigMemGraph(&pig->memGraph);
 	UpdateDebugConsole(&pig->debugConsole);
+	PigUpdateConfirmDialogs();
 	Pig_HandleScreenshotHotkeys();
 	Pig_HandleDebugBindings(&pig->sessionDebugBindings);
 	Pig_HandleDebugBindings(&pig->debugBindings);
@@ -143,22 +146,11 @@ void PigUpdateMainWindow()
 // +--------------------------------------------------------------+
 // |                            Render                            |
 // +--------------------------------------------------------------+
-void PigRenderDebugOverlays()
+void PigRenderForcedOverlays()
 {
-	RcBindShader(&pig->resources.shaders->main2D);
-	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
-	RcSetViewMatrix(Mat4_Identity);
-	RcClearDepth(1.0f);
-	RcSetDepth(0.0f);
-	
-	RenderDebugConsole(&pig->debugConsole);
-	RenderPigAudioOutGraph(&pig->audioOutGraph);
-	RenderPigPerfGraph(&pig->perfGraph);
-	RenderPigMemGraph(&pig->memGraph);
-	Pig_InputRenderDebugInfo();
-	RenderPigDebugOverlay(&pig->debugOverlay);
-	PigRenderNotifications(&pig->notificationsQueue);
-	
+	// +==============================+
+	// |   Render Capture Area Rec    |
+	// +==============================+
 	if (pig->currentWindowState->selectingSubPart || pig->currentWindowState->recordingGif)
 	{
 		reci selectedRec = pig->currentWindowState->screenSubPart;
@@ -169,6 +161,63 @@ void PigRenderDebugOverlays()
 		selectedRec = ReciOverlap(selectedRec, NewReci(0, 0, pig->currentWindow->input.contextResolution));
 		RcDrawRectangleOutline(ToRec(selectedRec), ColorTransparent(Black, 0.5f), 1000000, true);
 	}
+	
+	// +==============================+
+	// | Render Time Scale Indicator  |
+	// +==============================+
+	if (pigOut->fixedTimeScaleEnabled)
+	{
+		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+		v2 scaleTextPos = NewVec2(5, ScreenSize.height - 5 - RcGetMaxDescend());
+		Vec2Align(&scaleTextPos);
+		MyStr_t timeScaleStr = TempPrintStr("Time %lgx (%lgfps)", pigOut->fixedTimeScale, 1000.0 / (PIG_DEFAULT_FRAME_TIME * pigOut->fixedTimeScale));
+		RcDrawText(timeScaleStr, scaleTextPos + NewVec2(0, 2), Black);
+		RcDrawText(timeScaleStr, scaleTextPos, White);
+	}
+}
+void PigRenderOutOfScreenshotOverlays()
+{
+	RcBindShader(&pig->resources.shaders->main2D);
+	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+	RcSetViewMatrix(Mat4_Identity);
+	RcSetDepth(0.0f);
+	
+	// +================================+
+	// | Render Recording GIF Indicator |
+	// +================================+
+	if (pig->currentWindowState->recordingGif)
+	{
+		rec gifRecordingRec;
+		gifRecordingRec.size = pig->resources.textures->gifRecording.size;
+		gifRecordingRec.x = ScreenSize.width/2 - gifRecordingRec.width/2;
+		gifRecordingRec.y = 10;
+		RecAlign(&gifRecordingRec);
+		RcBindTexture1(&pig->resources.textures->gifRecording);
+		RcDrawTexturedRectangle(gifRecordingRec, White);
+		
+		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+		i32 gifRecordTime = RoundR32i(pig->currentWindowState->gifFrames.count * (1000.0f / GIF_FRAMERATE));
+		v2 recordingTextPos = NewVec2(gifRecordingRec.x + gifRecordingRec.width/2, gifRecordingRec.y + gifRecordingRec.height + 5 + RcGetMaxAscend());
+		Vec2Align(&recordingTextPos);
+		RcDrawTextPrintEx(recordingTextPos, White, TextAlignment_Center, 0, "F4 to stop (%s)", FormatMillisecondsNt(gifRecordTime, TempArena));
+	}
+}
+void PigRenderDebugOverlays()
+{
+	RcBindShader(&pig->resources.shaders->main2D);
+	RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+	RcSetViewMatrix(Mat4_Identity);
+	RcClearDepth(1.0f); //TODO: Do we need this?
+	RcSetDepth(0.0f);
+	
+	PigRenderConfirmDialogs();
+	RenderDebugConsole(&pig->debugConsole);
+	RenderPigAudioOutGraph(&pig->audioOutGraph);
+	RenderPigPerfGraph(&pig->perfGraph);
+	RenderPigMemGraph(&pig->memGraph);
+	Pig_InputRenderDebugInfo();
+	RenderPigDebugOverlay(&pig->debugOverlay);
+	PigRenderNotifications(&pig->notificationsQueue);
 }
 
 void PigHandleTaskCompletedInputEvents()
@@ -225,6 +274,7 @@ void PigUpdate()
 				{
 					RenderAppState(pig->currentAppState, renderBuffer);
 					PigRenderDebugOverlays();
+					PigRenderForcedOverlays();
 				}
 				else
 				{
@@ -239,27 +289,7 @@ void PigUpdate()
 					RcDrawTexturedRectangle(NewRec(Vec2_Zero, ScreenSize), White);
 				}
 				Pig_UpdateCaptureHandling(pig->currentWindow, pig->currentWindowState);
-				
-				if (pig->currentWindowState->recordingGif)
-				{
-					RcBindShader(&pig->resources.shaders->main2D);
-					RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
-					RcSetViewMatrix(Mat4_Identity);
-					RcSetDepth(0.0f);
-					rec gifRecordingRec;
-					gifRecordingRec.size = pig->resources.textures->gifRecording.size;
-					gifRecordingRec.x = ScreenSize.width/2 - gifRecordingRec.width/2;
-					gifRecordingRec.y = 10;
-					RecAlign(&gifRecordingRec);
-					RcBindTexture1(&pig->resources.textures->gifRecording);
-					RcDrawTexturedRectangle(gifRecordingRec, White);
-					
-					RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
-					i32 gifRecordTime = RoundR32i(pig->currentWindowState->gifFrames.count * (1000.0f / GIF_FRAMERATE));
-					v2 recordingTextPos = NewVec2(gifRecordingRec.x + gifRecordingRec.width/2, gifRecordingRec.y + gifRecordingRec.height + 5 + RcGetMaxAscend());
-					Vec2Align(&recordingTextPos);
-					RcDrawTextPrintEx(recordingTextPos, White, TextAlignment_Center, 0, "F4 to stop (%s)", FormatMillisecondsNt(gifRecordTime, TempArena));
-				}
+				PigRenderOutOfScreenshotOverlays();
 			}
 			window = LinkedListNext(platInfo->windows, PlatWindow_t, window);
 		}

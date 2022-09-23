@@ -478,65 +478,68 @@ void FontFlow_Main(FontFlowState_t* flowState, FontFlowCallbacks_t* callbacks = 
 		flowState->charIndex++;
 		flowState->byteIndex += numBytesInCodepoint;
 		
-		// Handle Line Wrap
-		if (flowState->byteIndex == flowState->nextLineBreakIndex && flowState->nextLineBreakIndex < flowState->text.length)
+		// Handle New Line(s) and Line Wrap(s)
+		do
 		{
-			Assert(flowState->maxWidth > 0 || flowState->alignment != TextAlignment_Left); //we shouldn't be in here if there is no maxWidth and no alignment is needed
-			bool isCausedByNewLine = false;
-			if (flowState->consumeCharAtLineBreak)
+			if (flowState->byteIndex == flowState->nextLineBreakIndex && flowState->nextLineBreakIndex < flowState->text.length)
 			{
-				u32 consumedCodepoint = 0;
-				u8 consumeCodepointSize = GetCodepointForUtf8(flowState->text.length - flowState->byteIndex, &flowState->text.pntr[flowState->byteIndex], &consumedCodepoint);
-				if (consumedCodepoint == '\n') { isCausedByNewLine = true; }
-				if (infoOut != nullptr)
+				Assert(flowState->maxWidth > 0 || flowState->alignment != TextAlignment_Left); //we shouldn't be in here if there is no maxWidth and no alignment is needed
+				bool isCausedByNewLine = false;
+				if (flowState->consumeCharAtLineBreak)
 				{
-					if (isCausedByNewLine) { infoOut->numNewLineCharacters++; }
-					else if (consumedCodepoint == ' ' || consumedCodepoint == '\t') { infoOut->numWhitespaceCharacters++; }
-					else { /*TODO: Should we do a warning here of some kind?*/ }
+					u32 consumedCodepoint = 0;
+					u8 consumeCodepointSize = GetCodepointForUtf8(flowState->text.length - flowState->byteIndex, &flowState->text.pntr[flowState->byteIndex], &consumedCodepoint);
+					if (consumedCodepoint == '\n') { isCausedByNewLine = true; }
+					if (infoOut != nullptr)
+					{
+						if (isCausedByNewLine) { infoOut->numNewLineCharacters++; }
+						else if (consumedCodepoint == ' ' || consumedCodepoint == '\t') { infoOut->numWhitespaceCharacters++; }
+						else { /*TODO: Should we do a warning here of some kind?*/ }
+					}
+					flowState->charIndex++;
+					flowState->byteIndex += consumeCodepointSize;
 				}
-				flowState->charIndex++;
-				flowState->byteIndex += consumeCodepointSize;
+				
+				if (infoOut != nullptr && flowState->byteIndex < flowState->text.length)
+				{
+					infoOut->numLines++;
+					if (!isCausedByNewLine) { infoOut->numLineWraps++; }
+				}
+				
+				if (callbacks != nullptr && callbacks->afterLine != nullptr)
+				{
+					callbacks->afterLine(!isCausedByNewLine, flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
+					flowState->calledAfterLineOnThisLine = true;
+				}
+				if (callbacks != nullptr && callbacks->betweenChar != nullptr)
+				{
+					callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
+				}
+				
+				FontFlow_DoLineBreak(flowState, callbacks);
+				
+				flowState->nextLineBreakIndex = flowState->byteIndex + FontFlow_FindNextLineBreak(flowState, &flowState->widthToLineBreak, &flowState->consumeCharAtLineBreak);
+				Assert(flowState->nextLineBreakIndex > flowState->byteIndex || (flowState->nextLineBreakIndex == flowState->byteIndex && flowState->consumeCharAtLineBreak) || flowState->byteIndex >= flowState->text.length);
+				if (flowState->alignment == TextAlignment_Right)
+				{
+					flowState->position.x -= flowState->widthToLineBreak;
+					flowState->lineStartPos.x -= flowState->widthToLineBreak;
+					flowState->underlineStartPos.x -= flowState->widthToLineBreak;
+				}
+				else if (flowState->alignment == TextAlignment_Center)
+				{
+					flowState->position.x -= RoundR32(flowState->widthToLineBreak/2);
+					flowState->lineStartPos.x -= RoundR32(flowState->widthToLineBreak/2);
+					flowState->underlineStartPos.x -= RoundR32(flowState->widthToLineBreak/2);
+				}
+				
+				if (callbacks != nullptr && callbacks->beforeLine != nullptr)
+				{
+					callbacks->beforeLine(flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
+					flowState->calledBeforeLineOnThisLine = true;
+				}
 			}
-			
-			if (infoOut != nullptr && flowState->byteIndex < flowState->text.length)
-			{
-				infoOut->numLines++;
-				if (!isCausedByNewLine) { infoOut->numLineWraps++; }
-			}
-			
-			if (callbacks != nullptr && callbacks->afterLine != nullptr)
-			{
-				callbacks->afterLine(!isCausedByNewLine, flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
-				flowState->calledAfterLineOnThisLine = true;
-			}
-			if (callbacks != nullptr && callbacks->betweenChar != nullptr)
-			{
-				callbacks->betweenChar(flowState->byteIndex, flowState->charIndex, flowState->position, flowState, callbacks->context);
-			}
-			
-			FontFlow_DoLineBreak(flowState, callbacks);
-			
-			flowState->nextLineBreakIndex = flowState->byteIndex + FontFlow_FindNextLineBreak(flowState, &flowState->widthToLineBreak, &flowState->consumeCharAtLineBreak);
-			Assert(flowState->nextLineBreakIndex > flowState->byteIndex || flowState->byteIndex >= flowState->text.length);
-			if (flowState->alignment == TextAlignment_Right)
-			{
-				flowState->position.x -= flowState->widthToLineBreak;
-				flowState->lineStartPos.x -= flowState->widthToLineBreak;
-				flowState->underlineStartPos.x -= flowState->widthToLineBreak;
-			}
-			else if (flowState->alignment == TextAlignment_Center)
-			{
-				flowState->position.x -= RoundR32(flowState->widthToLineBreak/2);
-				flowState->lineStartPos.x -= RoundR32(flowState->widthToLineBreak/2);
-				flowState->underlineStartPos.x -= RoundR32(flowState->widthToLineBreak/2);
-			}
-			
-			if (callbacks != nullptr && callbacks->beforeLine != nullptr)
-			{
-				callbacks->beforeLine(flowState->lineIndex, flowState->byteIndex, flowState, callbacks->context);
-				flowState->calledBeforeLineOnThisLine = true;
-			}
-		}
+		} while (flowState->nextLineBreakIndex == flowState->byteIndex && flowState->nextLineBreakIndex < flowState->text.length);
 	}
 	
 	//if there were any characters on the last line then count that in numLines as well
