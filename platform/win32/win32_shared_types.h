@@ -15,6 +15,21 @@ Description:
 // +--------------------------------------------------------------+
 // |                            Files                             |
 // +--------------------------------------------------------------+
+struct PlatFileEnumerator_t
+{
+	MyStr_t folderPath;
+	MyStr_t folderPathWithWildcard;
+	bool enumerateFiles;
+	bool enumerateFolders;
+	
+	bool finished;
+	u64 index;
+	u64 nextIndex;
+	
+	WIN32_FIND_DATAA findData;
+	HANDLE handle;
+};
+
 struct PlatFileContents_t
 {
 	u64 id;

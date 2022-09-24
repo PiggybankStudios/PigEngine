@@ -367,7 +367,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 	NotNull(bindingsOut->allocArena);
 	
 	LogWriteLine_N(log, "Entering PigTryDeserDebugBindings...");
-	SetProcessLogName(log, NewStr("PigTryDeserDebugBindings"));
+	SetProcessLogName(log, NewStr("Deser Debug Bindings"));
 	
 	TextParser_t textParser = NewTextParser(fileContents);
 	
@@ -467,6 +467,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 		return false;
 	}
 	
+	LogExitSuccess(log);
 	return true;
 }
 
@@ -474,6 +475,8 @@ bool PigTryLoadDebugBindings(MyStr_t filePath, ProcessLog_t* log, PigDebugBindin
 {
 	NotNullStr(&filePath);
 	bool result = false;
+	
+	SetProcessLogFilePath(log, filePath);
 	
 	PlatFileContents_t bindingsFile = {};
 	if (plat->ReadFileContents(filePath, &bindingsFile))

@@ -127,6 +127,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->SwapBuffers            = Win32_SwapBuffers;
 	api->GetFullPath            = Win32_GetFullPath;
 	api->DoesFileExist          = Win32_DoesFileExist;
+	api->StartEnumeratingFiles  = Win32_StartEnumeratingFiles;
+	api->EnumerateFiles         = Win32_EnumerateFiles;
 	api->CreateFolder           = Win32_CreateFolder;
 	api->ReadFileContents       = Win32_ReadFileContents;
 	api->FreeFileContents       = Win32_FreeFileContents;

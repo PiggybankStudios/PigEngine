@@ -1122,7 +1122,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +======================================+
 	// | Handle Scroll Wheel on Autocomplete  |
 	// +======================================+
-	if (IsMouseOverNamedPartial("DebugConsoleAutocomplete") && pigIn->scrollChangedY)
+	if (IsMouseOverNamedPartial("DebugConsoleAutocomplete") && MouseScrolledY())
 	{
 		HandleMouseScrollY();
 		console->autocompleteScrollGoto += -pigIn->scrollDelta.y * DBG_CONSOLE_SCROLL_SPEED;

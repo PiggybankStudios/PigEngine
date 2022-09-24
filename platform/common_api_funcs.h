@@ -87,6 +87,12 @@ typedef PLAT_API_GET_FULL_PATH_DEF(PlatApiGetFullPath_f);
 #define PLAT_API_DOES_FILE_EXIST_DEF(functionName) bool functionName(MyStr_t filePath, bool* isFolderOut)
 typedef PLAT_API_DOES_FILE_EXIST_DEF(PlatApiDoesFileExist_f);
 
+#define PLAT_API_START_ENUMERATING_FILES_DEF(functionName) PlatFileEnumerator_t functionName(MyStr_t folderPath, bool enumerateFiles, bool enumerateFolders)
+typedef PLAT_API_START_ENUMERATING_FILES_DEF(PlatApiStartEnumeratingFiles_f);
+
+#define PLAT_API_ENUMERATE_FILES_DEF(functionName) bool functionName(PlatFileEnumerator_t* enumerator, MyStr_t* pathOut, MemArena_t* pathOutArena, bool giveFullPath)
+typedef PLAT_API_ENUMERATE_FILES_DEF(PlatApiEnumerateFiles_f);
+
 #define PLAT_API_CREATE_FOLDER(functionName) bool functionName(MyStr_t folderPath)
 typedef PLAT_API_CREATE_FOLDER(PlatApiCreateFolder_f);
 

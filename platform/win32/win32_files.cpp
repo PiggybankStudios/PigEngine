@@ -112,6 +112,94 @@ PLAT_API_DOES_FILE_EXIST_DEF(Win32_DoesFileExist)
 }
 
 // +==============================+
+// | Win32_StartEnumeratingFiles  |
+// +==============================+
+// PlatFileEnumerator_t StartEnumeratingFiles(MyStr_t folderPath, bool enumerateFiles, bool enumerateFolders)
+PLAT_API_START_ENUMERATING_FILES_DEF(Win32_StartEnumeratingFiles)
+{
+	PlatFileEnumerator_t result = {};
+	result.folderPath = Win32_GetFullPath(GetTempArena(), folderPath, true);
+	NotNullStr(&result.folderPath);
+	//NOTE: File enumeration in windows requires that we have a slash on the end and a * wildcard character
+	result.folderPath = PrintInArenaStr(GetTempArena(), "%.*s%s", result.folderPath.length, result.folderPath.pntr, (StrEndsWith(result.folderPath, "\\") ? "" : "\\"));
+	NotNullStr(&result.folderPath);
+	result.folderPathWithWildcard = PrintInArenaStr(GetTempArena(), "%.*s*", result.folderPath.length, result.folderPath.pntr);
+	NotNullStr(&result.folderPathWithWildcard);
+	result.enumerateFiles = enumerateFiles;
+	result.enumerateFolders = enumerateFolders;
+	result.index = UINT64_MAX;
+	result.nextIndex = 0;
+	result.finished = false;
+	return result;
+}
+
+// +==============================+
+// |     Win32_EnumerateFiles     |
+// +==============================+
+// bool EnumerateFiles(PlatFileEnumerator_t* enumerator, MyStr_t* pathOut, MemArena_t* pathOutArena, bool giveFullPath)
+PLAT_API_ENUMERATE_FILES_DEF(Win32_EnumerateFiles)
+{
+	NotNull(enumerator);
+	NotNull2(pathOut, pathOutArena);
+	if (enumerator->finished) { return false; }
+	while (true)
+	{
+		bool firstEnumeration = (enumerator->index == UINT64_MAX);
+		enumerator->index = enumerator->nextIndex;
+		if (firstEnumeration)
+		{
+			enumerator->handle = FindFirstFileA(enumerator->folderPathWithWildcard.pntr, &enumerator->findData);
+			if (enumerator->handle == INVALID_HANDLE_VALUE)
+			{
+				enumerator->finished = true;
+				return false;
+			}
+		}
+		else
+		{
+			BOOL findNextResult = FindNextFileA(enumerator->handle, &enumerator->findData);
+			if (findNextResult == 0)
+			{
+				enumerator->finished = true;
+				return false;
+			}
+		}
+		
+		//Skip the generic "this" folder listing
+		if (enumerator->findData.cFileName[0] == '.' && enumerator->findData.cFileName[1] == '\0')
+		{
+			continue;
+		}
+		//Skip the parent folder listing
+		if (enumerator->findData.cFileName[0] == '.' && enumerator->findData.cFileName[1] == '.' && enumerator->findData.cFileName[2] == '\0')
+		{
+			continue;
+		}
+		
+		bool isFolder = IsFlagSet(enumerator->findData.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY);
+		if ((isFolder && enumerator->enumerateFolders) || (!isFolder && enumerator->enumerateFiles))
+		{
+			if (giveFullPath)
+			{
+				*pathOut = PrintInArenaStr(pathOutArena, "%.*s%s", enumerator->folderPath.length, enumerator->folderPath.pntr, enumerator->findData.cFileName);
+				NotNullStr(pathOut);
+				StrReplaceInPlace(*pathOut, "\\", "/");
+			}
+			else
+			{
+				*pathOut = NewStringInArenaNt(pathOutArena, enumerator->findData.cFileName);
+				NotNullStr(pathOut);
+				StrReplaceInPlace(*pathOut, "\\", "/");
+			}
+			enumerator->nextIndex = enumerator->index+1;
+			return true;
+		}
+	}
+	Assert(false); //Shouldn't be possible to get here
+	return false;
+}
+
+// +==============================+
 // |      Win32_CreateFolder      |
 // +==============================+
 // bool CreateFolder(MyStr_t folderPath)

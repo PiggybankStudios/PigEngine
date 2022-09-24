@@ -115,6 +115,8 @@ struct PlatformApi_t
 	PlatApiSwapBuffers_f*            SwapBuffers;
 	PlatApiGetFullPath_f*            GetFullPath;
 	PlatApiDoesFileExist_f*          DoesFileExist;
+	PlatApiStartEnumeratingFiles_f*  StartEnumeratingFiles;
+	PlatApiEnumerateFiles_f*         EnumerateFiles;
 	PlatApiCreateFolder_f*           CreateFolder;
 	PlatApiReadFileContents_f*       ReadFileContents;
 	PlatApiFreeFileContents_f*       FreeFileContents;
