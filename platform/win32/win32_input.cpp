@@ -244,7 +244,7 @@ void Win32_InitWindowEngineInput(PlatWindow_t* window, const PlatWindowCreateOpt
 	input->contextResolution = NewVec2i(framebufferWidth, framebufferHeight); //TODO: When is this different? Only on OSX or High DPI screens?
 	input->renderResolution  = NewVec2 ((r32)windowWidth, (r32)windowHeight); //TODO: When is this different? Only on OSX or High DPI screens?
 	
-	GLFWmonitor* fullscreenMonitorHandle = glfwGetWindowMonitor(window->handle); 	
+	// GLFWmonitor* fullscreenMonitorHandle = glfwGetWindowMonitor(window->handle); 	
 	if (creationOptions->fullscreen)
 	{
 		input->fullscreen = true;

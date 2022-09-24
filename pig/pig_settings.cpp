@@ -543,6 +543,7 @@ bool PigGetSettingBool(const PigSettings_t* settings, MyStr_t key, bool defaultV
 	TryGetSettingResult_t foundSetting = PigTryGetSettingBool(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 bool PigGetSettingBool(const PigSettings_t* settings, const char* keyNullTerm, bool defaultValue, bool ignoreCase = true)
@@ -572,6 +573,7 @@ r32 PigGetSettingR32(const PigSettings_t* settings, MyStr_t key, r32 defaultValu
 	TryGetSettingResult_t foundSetting = PigTryGetSettingR32(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 r32 PigGetSettingR32(const PigSettings_t* settings, const char* keyNullTerm, r32 defaultValue, bool ignoreCase = true)
@@ -601,6 +603,7 @@ u64 PigGetSettingU64(const PigSettings_t* settings, MyStr_t key, u64 defaultValu
 	TryGetSettingResult_t foundSetting = PigTryGetSettingU64(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 u64 PigGetSettingU64(const PigSettings_t* settings, const char* keyNullTerm, u64 defaultValue, bool ignoreCase = true)
@@ -630,6 +633,7 @@ v2 PigGetSettingV2(const PigSettings_t* settings, MyStr_t key, v2 defaultValue, 
 	TryGetSettingResult_t foundSetting = PigTryGetSettingV2(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 v2 PigGetSettingV2(const PigSettings_t* settings, const char* keyNullTerm, v2 defaultValue, bool ignoreCase = true)
@@ -659,6 +663,7 @@ v3 PigGetSettingV3(const PigSettings_t* settings, MyStr_t key, v3 defaultValue, 
 	TryGetSettingResult_t foundSetting = PigTryGetSettingV3(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 v3 PigGetSettingV3(const PigSettings_t* settings, const char* keyNullTerm, v3 defaultValue, bool ignoreCase = true)
@@ -688,6 +693,7 @@ v2i PigGetSettingV2i(const PigSettings_t* settings, MyStr_t key, v2i defaultValu
 	TryGetSettingResult_t foundSetting = PigTryGetSettingV2i(settings, key, &result, ignoreCase);
 	//TODO: If the setting is unparsable, we should do a debug output here with info maybe?
 	DebugAssert(foundSetting == TryGetSettingResult_Success || foundSetting == TryGetSettingResult_Missing);
+	UNUSED(foundSetting);
 	return result;
 }
 v2i PigGetSettingV2i(const PigSettings_t* settings, const char* keyNullTerm, v2i defaultValue, bool ignoreCase = true)

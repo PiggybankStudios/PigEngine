@@ -732,8 +732,8 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					PrintLine_E("Invalid framerate requested. Must be in range [10, 300]: %lld", framerate);
 					return validCommand;
 				}
-				const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
-				const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
+				// const PlatMonitorInfo_t* currentMonitor = GetCurrentMonitorInfoForWindow(window);
+				// const PlatMonitorVideoMode_t* currentVideoMode = VarArrayGet(&currentMonitor->videoModes, currentMonitor->currentVideoModeIndex, PlatMonitorVideoMode_t);
 				if (resolution.width < PIG_WINDOW_MIN_SIZE.width || resolution.height < PIG_WINDOW_MIN_SIZE.height)
 				{
 					PrintLine_E("Invalid resolution %dx%d. Our minimum size is %dx%d", resolution.width, resolution.height, PIG_WINDOW_MIN_SIZE.width, PIG_WINDOW_MIN_SIZE.height);

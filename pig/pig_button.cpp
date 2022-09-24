@@ -177,6 +177,7 @@ void UpdateButton(Button_t* btn, v2 renderOffset)
 {
 	NotNull(btn);
 	ButtonLayout(btn);
+	UNUSED(renderOffset);
 	
 	// +==============================+
 	// |     Handle Mouse Clicked     |
