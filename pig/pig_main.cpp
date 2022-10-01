@@ -113,6 +113,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_vertex_buffer.cpp"
 #include "pig/pig_shader.cpp"
 #include "pig/pig_texture.cpp"
+#include "pig/pig_texture_array.cpp"
 #include "pig/pig_frame_buffer.cpp"
 #include "pig/pig_sprite_sheet.cpp"
 #include "pig/pig_sprite_sheet_meta.cpp"

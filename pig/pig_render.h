@@ -409,6 +409,7 @@ struct Texture_t
 		v2i sizei;
 		struct { i32 widthi, heighti; };
 	};
+	union { u64 numLayers; u64 depth; };
 	
 	#if OPENGL_SUPPORTED
 	GLuint glId;

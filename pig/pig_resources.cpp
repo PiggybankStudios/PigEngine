@@ -113,9 +113,8 @@ const char* GetPathOrNameForResource(ResourceType_t type, u64 resourceIndex)
 	{
 		case ResourceType_Texture:
 		{
-			bool isPixelated = false;
-			bool isRepeating = false;
-			result = Resources_GetPathForTexture(resourceIndex, &isPixelated, &isRepeating);
+			ResourceTextureMetaInfo_t metaInfo = {};
+			result = Resources_GetPathForTexture(resourceIndex, &metaInfo);
 		} break;
 		case ResourceType_VectorImage:
 		{
@@ -327,25 +326,57 @@ void Pig_LoadTextureResource(u64 textureIndex)
 	Texture_t* texture = &pig->resources.textures->items[textureIndex];
 	ResourceStatus_t* textureStatus = &pig->resources.textureStatus[textureIndex];
 	textureStatus->lastAccessTime = ProgramTime;
-	bool isPixelated = true;
-	bool isRepeating = true;
-	const char* texturePath = Resources_GetPathForTexture(textureIndex, &isPixelated, &isRepeating);
+	ResourceTextureMetaInfo_t metaInfo = {};
+	const char* texturePath = Resources_GetPathForTexture(textureIndex, &metaInfo);
 	NotNull(texturePath);
-	MyStr_t texturePathStr = NewStr(texturePath);
 	Texture_t newTexture = {};
-	if (!LoadTexture(fixedHeap, &newTexture, texturePathStr, isPixelated, isRepeating))
+	if (metaInfo.numLayers == 0)
 	{
-		PrintLine_E("Failed to load texture[%u] from \"%s\"! Error %s%s%s",
-			textureIndex,
-			GetFileNamePart(texturePathStr).pntr,
-			GetTextureErrorStr(newTexture.error),
-			(newTexture.error == TextureError_ApiError) ? ": " : "",
-			(newTexture.error == TextureError_ApiError) ? newTexture.apiErrorStr.pntr : ""
-		);
-		DestroyTexture(&newTexture);
-		textureStatus->state = ResourceStateWarnOrError(textureStatus->state);
-		return;
+		MyStr_t texturePathStr = NewStr(texturePath);
+		if (!LoadTexture(fixedHeap, &newTexture, texturePathStr, metaInfo.pixelated, metaInfo.repeating))
+		{
+			PrintLine_E("Failed to load texture[%u] from \"%s\"! Error %s",
+				textureIndex,
+				GetFileNamePart(texturePathStr).pntr,
+				PrintTextureError(&newTexture)
+			);
+			DestroyTexture(&newTexture);
+			textureStatus->state = ResourceStateWarnOrError(textureStatus->state);
+			return;
+		}
+		
+		StopWatchingFilesForResource(ResourceType_Texture, textureIndex);
+		WatchFileForResource(ResourceType_Texture, textureIndex, texturePathStr);
 	}
+	else
+	{
+		Assert(metaInfo.numLayers > 1);
+		MyStr_t filePathStrs[RESOURCE_TEXTURE_MAX_NUM_LAYERS];
+		for (u64 lIndex = 0; lIndex < metaInfo.numLayers; lIndex++)
+		{
+			NotNull(metaInfo.filePaths[lIndex]);
+			filePathStrs[lIndex] = NewStr(metaInfo.filePaths[lIndex]);
+		}
+		if (!LoadTextureArrayFromMultipleFiles(fixedHeap, &newTexture, metaInfo.numLayers, &filePathStrs[0], metaInfo.pixelated, metaInfo.repeating))
+		{
+			PrintLine_E("Failed to load texture[%u] from \"%s\" +%llu other files! Error %s",
+				textureIndex,
+				metaInfo.filePaths[0],
+				metaInfo.numLayers-1,
+				PrintTextureError(&newTexture)
+			);
+			DestroyTexture(&newTexture);
+			textureStatus->state = ResourceStateWarnOrError(textureStatus->state);
+			return;
+		}
+		
+		StopWatchingFilesForResource(ResourceType_Texture, textureIndex);
+		for (u64 lIndex = 0; lIndex < metaInfo.numLayers; lIndex++)
+		{
+			WatchFileForResource(ResourceType_Texture, textureIndex, filePathStrs[lIndex]);
+		}
+	}
+	
 	if (texture->isValid)
 	{
 		textureStatus->state = ResourceState_Unloaded;
@@ -353,9 +384,6 @@ void Pig_LoadTextureResource(u64 textureIndex)
 	}
 	MyMemCopy(texture, &newTexture, sizeof(Texture_t));
 	textureStatus->state = ResourceState_Loaded;
-	
-	StopWatchingFilesForResource(ResourceType_Texture, textureIndex);
-	WatchFileForResource(ResourceType_Texture, textureIndex, texturePathStr);
 }
 void Pig_LoadAllTextures(bool onlyPinned = false)
 {

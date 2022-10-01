@@ -272,7 +272,16 @@ void PigUpdate()
 				
 				if (isMainWindow)
 				{
-					RenderAppState(pig->currentAppState, renderBuffer);
+					u64 firstRenderingAppStateIndex = pig->appStateStackSize-1;
+					for (u64 aIndex = pig->appStateStackSize; aIndex > 0; aIndex--)
+					{
+						firstRenderingAppStateIndex = aIndex-1;
+						if (DoesAppStateCoverBelow(pig->appStateStack[aIndex-1])) { break; }
+					}
+					for (u64 aIndex = firstRenderingAppStateIndex; aIndex < pig->appStateStackSize; aIndex++)
+					{
+						RenderAppState(pig->appStateStack[aIndex], renderBuffer, (aIndex == firstRenderingAppStateIndex));
+					}
 					PigRenderDebugOverlays();
 					PigRenderForcedOverlays();
 				}

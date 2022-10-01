@@ -86,6 +86,16 @@ struct ResourceWatch_t
 	PlatWatchedFile_t* watchedFile;
 };
 
+#define RESOURCE_TEXTURE_MAX_NUM_LAYERS   256
+
+struct ResourceTextureMetaInfo_t
+{
+	bool pixelated;
+	bool repeating;
+	u64 numLayers;
+	const char* filePaths[RESOURCE_TEXTURE_MAX_NUM_LAYERS];
+};
+
 struct ResourceSheetMetaInfo_t
 {
 	v2i numFrames;

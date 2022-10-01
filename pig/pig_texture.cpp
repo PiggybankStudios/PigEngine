@@ -58,6 +58,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 	textureOut->antialiasingNumSamples = antialiasingNumSamples;
 	textureOut->sizei = imageData->size;
 	textureOut->size = ToVec2(imageData->size);
+	textureOut->numLayers = 1;
 	textureOut->error = TextureError_None;
 	bool hasAntialiasing = (antialiasingNumSamples > 0);
 	

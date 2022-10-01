@@ -99,6 +99,14 @@ void DisposeConfirmDialog(ConfirmDialog_t* dialog)
 	FreeConfirmDialog(dialog);
 	VarArrayRemove(&pig->confirmDialogs, dialogIndex, ConfirmDialog_t);
 }
+void DisposeConfirmDialog(u64 dialogId)
+{
+	ConfirmDialog_t* dialog = GetConfirmDialogById(dialogId);
+	if (dialog != nullptr)
+	{
+		DisposeConfirmDialog(dialog);
+	}
+}
 
 // +--------------------------------------------------------------+
 // |                   Alloc and Show Functions                   |
@@ -373,7 +381,7 @@ void PigUpdateConfirmDialogs()
 		// | Handle Click Outside to Close Dialog |
 		// +======================================+
 		if (dialog->isOpen && dialog->escapeButtonIndex >= 0 && dialog->openAnimProgress >= 1.0f &&
-			!IsMouseOverNamedPartial("ConfirmDialog%llu", dialog->id))
+			!IsMouseOverNamedPartial(TempPrint("ConfirmDialog%llu", dialog->id)))
 		{
 			if (MousePressedAndHandleExtended(MouseBtn_Left))
 			{

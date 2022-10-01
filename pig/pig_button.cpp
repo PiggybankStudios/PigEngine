@@ -39,7 +39,7 @@ void CreateButton(Button_t* btn, MemArena_t* memArena, ButtonStyle_t style, MySt
 	btn->fontScale = 1.0f;
 	btn->cornerRadius = 0;
 	btn->borderThickness = 1;
-	btn->backColor = MonokaiGreen;
+	btn->backColor = ColorTransparent(Black, 0.5f);
 	btn->textColor = MonokaiWhite;
 	btn->borderColor = MonokaiWhite;
 	btn->innerMargin = NewVec2(5, 5);
@@ -208,6 +208,8 @@ void RenderButton(Button_t* btn, v2 renderOffset)
 	NotNull(btn);
 	ButtonLayout(btn);
 	if (!btn->isVisible) { return; }
+	
+	RcBindFont(GetPointer(&btn->font), btn->fontFaceSelector, btn->fontScale);
 	
 	bool isHovered = IsMouseOverButton(btn);
 	bool isDown = (isHovered && MouseDownRaw(MouseBtn_Left));

@@ -145,8 +145,9 @@ void RcBindTexture1_OpenGL(Texture_t* texture)
 	if (texture != nullptr)
 	{
 		Assert(texture->isValid);
+		GLenum targetEnum = ((texture->numLayers > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D);
 		glActiveTexture(GL_TEXTURE0); AssertNoOpenGlError();
-		glBindTexture(GL_TEXTURE_2D, texture->glId); AssertNoOpenGlError();
+		glBindTexture(targetEnum, texture->glId); AssertNoOpenGlError();
 		glUniform1i(rc->state.boundShader->glLocations.texture1, 0); AssertNoOpenGlError();
 		glUniform2f(rc->state.boundShader->glLocations.texture1Size, texture->width, texture->height); AssertNoOpenGlError();
 	}
@@ -1833,12 +1834,12 @@ void RcLoadBasicResources()
 			bool flipXAxis = true;
 			switch (index->faceIndex)
 			{
-				case 0: faceSourceRec = NewRec(0.25f, 0.00f, 0.25f, 0.25f); break; //top
-				case 1: faceSourceRec = NewRec(0.00f, 0.25f, 0.25f, 0.25f); break; //right
-				case 2: faceSourceRec = NewRec(0.25f, 0.25f, 0.25f, 0.25f); break; //front
-				case 3: faceSourceRec = NewRec(0.50f, 0.25f, 0.25f, 0.25f); break; //left
-				case 4: faceSourceRec = NewRec(0.75f, 0.25f, 0.25f, 0.25f); break; //back
-				case 5: faceSourceRec = NewRec(0.25f, 0.50f, 0.25f, 0.25f); flipYAxis = true; flipXAxis = false; break; //bottom
+				case 0: faceSourceRec = NewRec( 4.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //top
+				case 1: faceSourceRec = NewRec( 0.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //right
+				case 2: faceSourceRec = NewRec( 8.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //front
+				case 3: faceSourceRec = NewRec( 2.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //left
+				case 4: faceSourceRec = NewRec(10.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //back
+				case 5: faceSourceRec = NewRec( 6.5f + 1.0f, 0.0f, -1.0f, 1.0f); break; //bottom
 				default: Assert(index->faceIndex < 6); break;
 			}
 			if (flipXAxis) { index->texCoord.x = (1 - index->texCoord.x); }

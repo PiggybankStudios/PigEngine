@@ -264,9 +264,15 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 	{
 		contentsOut->readSuccess = false;
 		contentsOut->errorCode = GetLastError();
-		// Assert(contentsOut->errorCode != ERROR_FILE_NOT_FOUND); //already checked for this TODO: Re-enable this if we re-enable the check above
-		PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
-		//The file might have permissions that prevent us from reading it
+		if (contentsOut->errorCode == ERROR_FILE_NOT_FOUND)
+		{
+			PrintLine_E("File not found at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+		}
+		else
+		{
+			//The file might have permissions that prevent us from reading it
+			PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+		}
 		TempPopMark();
 		CloseHandle(fileHandle);
 		return false;
@@ -853,7 +859,7 @@ PLAT_API_SAVE_IMAGE_DATA_TO_FILE(Win32_SaveImageDataToFile)
 // +==============================+
 // |     Win32_FreeImageData      |
 // +==============================+
-// void Win32_FreeImageData(PlatImageData_t* imageData)
+// void FreeImageData(PlatImageData_t* imageData)
 PLAT_API_FREE_IMAGE_DATA_DEF(Win32_FreeImageData)
 {
 	//NOTE: This function should be multi-thread safe!
