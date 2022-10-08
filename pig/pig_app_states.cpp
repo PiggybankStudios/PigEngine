@@ -24,7 +24,7 @@ void Pig_HandleAppStateChanges(bool initialAppState)
 		Assert(pig->appStateStackSize < MAX_APP_STATE_STACK_SIZE);
 		if (pig->currentAppState != AppState_None)
 		{
-			StopAppState(pig->currentAppState, pig->newAppState, false);
+			StopAppState(pig->currentAppState, pig->newAppState, false, false);
 		}
 		pig->appStateStack[pig->appStateStackSize] = pig->newAppState;
 		pig->appStateStackSize++;
@@ -39,7 +39,7 @@ void Pig_HandleAppStateChanges(bool initialAppState)
 		AppState_t newAppState = ((pig->appStateStackSize > 1) ? pig->appStateStack[pig->appStateStackSize-2] : AppState_None);
 		if (pig->appStateInitialized[pig->currentAppState])
 		{
-			StopAppState(pig->currentAppState, newAppState, true);
+			StopAppState(pig->currentAppState, newAppState, true, false);
 			pig->appStateInitialized[pig->currentAppState] = false;
 		}
 		pig->appStateStackSize--;
@@ -53,7 +53,7 @@ void Pig_HandleAppStateChanges(bool initialAppState)
 		Assert(pig->appStateStackSize > 0);
 		if (pig->appStateInitialized[pig->currentAppState])
 		{
-			StopAppState(pig->currentAppState, pig->newAppState, true);
+			StopAppState(pig->currentAppState, pig->newAppState, true, false);
 			pig->appStateInitialized[pig->currentAppState] = false;
 		}
 		pig->appStateStack[pig->appStateStackSize-1] = pig->newAppState;

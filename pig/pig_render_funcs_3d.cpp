@@ -155,6 +155,31 @@ void RcDrawTexturedBox(box boundingBox, Color_t color, rec sourceRec)
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+void RcDrawTexturedBoxEx(box boundingBox, Color_t color,
+	rec rightSourceRec, rec topSourceRec, rec frontSourceRec,
+	rec leftSourceRec, rec bottomSourceRec, rec backSourceRec)
+{
+	NotNull(rc->state.boundTexture1);
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Scale3(boundingBox.size));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.bottomLeft));
+	RcSetWorldMatrix(worldMatrix);
+	RcSetColor1(color);
+	RcBindVertBuffer(&rc->cubeBuffer);
+	
+	RcSetSourceRec1(topSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 0*6, 6);
+	RcSetSourceRec1(rightSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 1*6, 6);
+	RcSetSourceRec1(frontSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 2*6, 6);
+	RcSetSourceRec1(leftSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 3*6, 6);
+	RcSetSourceRec1(backSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 4*6, 6);
+	RcSetSourceRec1(bottomSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 5*6, 6);
+}
 
 void RcDrawObb3D(obb3 boundingBox, Color_t color)
 {
@@ -197,6 +222,33 @@ void RcDrawTexturedObb3D(obb3 boundingBox, Color_t color, rec sourceRec)
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
+}
+void RcDrawTexturedObb3DEx(obb3 boundingBox, Color_t color,
+	rec rightSourceRec, rec topSourceRec, rec frontSourceRec,
+	rec leftSourceRec, rec bottomSourceRec, rec backSourceRec)
+{
+	NotNull(rc->state.boundTexture1);
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Translate3(-Vec3_Half));
+	Mat4Transform(worldMatrix, Mat4Scale3(boundingBox.size));
+	Mat4Transform(worldMatrix, Mat4Quaternion(boundingBox.rotation));
+	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.center));
+	RcSetWorldMatrix(worldMatrix);
+	RcSetColor1(color);
+	RcBindVertBuffer(&rc->cubeBuffer);
+	
+	RcSetSourceRec1(topSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 0*6, 6);
+	RcSetSourceRec1(rightSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 1*6, 6);
+	RcSetSourceRec1(frontSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 2*6, 6);
+	RcSetSourceRec1(leftSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 3*6, 6);
+	RcSetSourceRec1(backSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 4*6, 6);
+	RcSetSourceRec1(bottomSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, 5*6, 6);
 }
 
 //NOTE: This draws an actual 3D box in the world so apparent thickness is dependent on distance from the camera

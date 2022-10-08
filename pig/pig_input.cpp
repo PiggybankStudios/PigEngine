@@ -126,6 +126,8 @@ void Pig_UpdateInputAfter()
 	NotNull(pig);
 	NotNull(pigIn);
 	pig->prevProgramTime = ProgramTime;
+	pig->isMouseFullyCaptured = pig->wasMouseCapturedLastFrame;
+	pig->wasMouseCapturedLastFrame = (pigOut->mouseMode == PlatMouseMode_FirstPersonCamera);
 }
 
 void Pig_InputRenderDebugInfo()

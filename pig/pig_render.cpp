@@ -1810,7 +1810,9 @@ void RcLoadBasicResources()
 	{
 		TempPushMark();
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
-		InvertPrimitiveVerts(&primVerts);
+		NotNull(primVerts.vertices);
+		NotNull(primVerts.indices);
+		// InvertPrimitiveVerts(&primVerts);
 		if (!CreateVertBufferFromIndexedPrimitiveVerts3D(fixedHeap, &rc->cubeBuffer, false, &primVerts, White, true))
 		{
 			WriteLine_E("Failed to create the cube vertex buffer!");
@@ -1825,7 +1827,7 @@ void RcLoadBasicResources()
 		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
-		// InvertPrimitiveVerts(&primVerts);
+		InvertPrimitiveVerts(&primVerts);
 		for (u64 iIndex = 0; iIndex < primVerts.numIndices; iIndex++)
 		{
 			PrimitiveIndex3D_t* index = &primVerts.indices[iIndex];

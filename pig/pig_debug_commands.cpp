@@ -33,6 +33,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"pop_app_state", "Pops the current AppState off the stack (unless it's the last AppState on the stack)", "\n",
 	"push_app_state", "Pushes a specified AppState onto the stack (unless it is already active in the stack)", "[app_state]", "\n",
 	"change_app_state", "Swaps out the top AppState with a specified state (unless it is already active in the stack)", "[app_state]", "\n",
+	"regen_basic_resources", "Regenerates the \"basic\" resources used by the render context (like the primitive shape vertex buffers)", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1058,6 +1059,15 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			PrintLine_E("AppState_%s is already active! Can't change to it!", GetAppStateStr(requestedAppState));
 			return validCommand;
 		}
+	}
+	
+	// +==============================+
+	// |    regen_basic_resources     |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "regen_basic_resources") == 0)
+	{
+		WriteLine_D("Reloading render context basic resources");
+		RcLoadBasicResources();
 	}
 	
 	// +==============================+

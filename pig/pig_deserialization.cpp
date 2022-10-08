@@ -19,6 +19,23 @@ const void* BinDeser_ReadStruct_(const void* dataPntr, u64 dataSize, u64* byteIn
 }
 #define BinDeser_ReadStruct(dataPntr, dataSize, byteIndexPntr, type) (type*)BinDeser_ReadStruct_((dataPntr), (dataSize), (byteIndexPntr), sizeof(type))
 
+const void* BinDeser_ReadStructDynamicSize_(const void* dataPntr, u64 dataSize, u64* byteIndexPntr, u64* structSizeOut, u64 sizeMemberOffset, u64 minStructSize, u64 maxStructSize)
+{
+	NotNull2(dataPntr, byteIndexPntr);
+	Assert (sizeMemberOffset + sizeof(u64) <= minStructSize);
+	if ((*byteIndexPntr) + minStructSize > dataSize) { return nullptr; }
+	const u64* sizePntr = (const u64*)(((u8*)dataPntr) + (*byteIndexPntr) + sizeMemberOffset);
+	if (*sizePntr < minStructSize) { return nullptr; }
+	if (*sizePntr > maxStructSize) { return nullptr; }
+	if (structSizeOut != nullptr) { *structSizeOut = *sizePntr; }
+	const void* result = ((u8*)dataPntr) + (*byteIndexPntr);
+	*byteIndexPntr = (*byteIndexPntr) + (*sizePntr);
+	return result;
+}
+#define BinDeser_ReadStructDynamicSize(dataPntr, dataSize, byteIndexPntr, structSizeOut, type, sizeMemberName, firstOptionalMemberName) (type*)BinDeser_ReadStructDynamicSize_((dataPntr), (dataSize), (byteIndexPntr), (structSizeOut), STRUCT_VAR_OFFSET(type, sizeMemberName), STRUCT_VAR_OFFSET(type, firstOptionalMemberName), sizeof(type))
+
+#define BinDeser_IsMemberPresent(structSize, type, memberName) (structSize >= (STRUCT_VAR_OFFSET(type, memberName) + sizeof(((type*)0)->memberName)))
+
 bool BinDeser_ReadVariable_(const void* dataPntr, u64 dataSize, u64* byteIndexPntr, u64 valueSize, void* valueOutPntr)
 {
 	NotNull3(dataPntr, byteIndexPntr, valueOutPntr);

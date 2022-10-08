@@ -326,6 +326,9 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ScreenSize: %.0fx%.0f MousePos (%.0f, %.0f) TimeScale: %lf ElapsedMs: %lf", ScreenSize.width, ScreenSize.height, MousePos.x, MousePos.y, TimeScale, ElapsedMs);
 			textPos.y += stepY;
 			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "AspectRatio: %g (w/h) %g (h/w)", ScreenSize.width/ScreenSize.height, ScreenSize.height/ScreenSize.width);
+			textPos.y += stepY;
+			
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
 			textPos.y += stepY;
 			

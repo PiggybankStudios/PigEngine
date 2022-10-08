@@ -359,4 +359,9 @@ void PigClosing()
 {
 	WriteLine_W("We are closing. But at least the engine DLL knows about it");
 	GamePrepareForClose();
+	for (u64 sIndex = pig->appStateStackSize; sIndex > 0; sIndex--)
+	{
+		StopAppState(pig->appStateStack[sIndex-1], AppState_None, true, true);
+	}
+	pig->appStateStackSize = 0;
 }

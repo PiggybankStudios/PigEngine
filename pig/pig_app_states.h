@@ -31,7 +31,7 @@ const char* GetAppStateChangeStr(AppStateChange_t stateChange)
 
 //Implemented in app_state_list.cpp which is provided by the player
 void StartAppState(AppState_t appState, AppState_t oldAppState, bool initialize);
-void StopAppState(AppState_t appState, AppState_t newAppState, bool deinitialize);
+void StopAppState(AppState_t appState, AppState_t newAppState, bool deinitialize, bool shuttingDown);
 void UpdateAppState(AppState_t appState);
 void RenderAppState(AppState_t appState, FrameBuffer_t* renderBuffer);
 

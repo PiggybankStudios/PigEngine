@@ -91,6 +91,8 @@ struct PigState_t
 	LinkedList_t windowStates;
 	
 	//Input Handling
+	bool isMouseFullyCaptured;
+	bool wasMouseCapturedLastFrame;
 	MouseHitInfo_t prevMouseHit;
 	MouseHitInfo_t mouseHit;
 	u64 prevProgramTime;
