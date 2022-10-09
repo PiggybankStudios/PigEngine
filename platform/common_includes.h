@@ -31,6 +31,18 @@ Date:   09\14\2021
 #if !defined(PROCMON_SUPPORTED)
 #error You must define PROCMON_SUPPORTED in the build options
 #endif
+#if !defined(ASSERTIONS_ENABLED)
+#error You must define ASSERTIONS_ENABLED in the build options
+#endif
+#if !defined(DEVELOPER_BUILD)
+#error You must define DEVELOPER_BUILD in the build options
+#endif
+#if !defined(DEBUG_BUILD)
+#error You must define DEBUG_BUILD in the build options
+#endif
+#if !defined(DEMO_BUILD)
+#error You must define DEMO_BUILD in the build options
+#endif
 
 #ifdef PLATFORM_LAYER
 #undef PLATFORM_LAYER
@@ -56,6 +68,7 @@ Date:   09\14\2021
 // +--------------------------------------------------------------+
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
+#define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
 #include "gylib/gy_defines_check.h"
 #include "gylib/gy_basic_macros.h"
 

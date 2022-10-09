@@ -16,6 +16,7 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->renderApi = platInfo->renderApi;
 	pig->dllReloaded = false;
 	pig->reloadIndex = 1;
+	pig->dontExitOnAssert = DEBUG_BUILD;
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;

@@ -10,7 +10,9 @@ Description:
 const char* PigDebugCommandInfoStrs[] = {
 	//"command", "description", "arg1", "arg2", ... "\n",
 	"help", "Displays this list of commands", "{command}", "\n",
-	"break", "Runs MyDebugBreak", "\n",
+	"break", "Runs MyDebugBreak()", "\n",
+	"assert", "Runs Assert()", "\n",
+	"assert_exit", "Toggles whether assertions should force close the application when hit", "{on/off}", "\n",
 	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
 	"reload", "Reloads a specific resource", "[resource_name]", "{resource_type}", "\n",
 	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
@@ -239,6 +241,34 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		WriteLine_I("Hitting manual breakpoint...");
 		MyDebugBreak();
+	}
+	
+	// +==============================+
+	// |            assert            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "assert") == 0)
+	{
+		WriteLine_I("Hitting manual assertion...");
+		AssertMsg(false, "Manual assertion triggered by debug command");
+		#if !GYLIB_ASSERTIONS_ENABLED
+		WriteLine_W("Assertions are not enabled!");
+		#endif
+	}
+	
+	// +==============================+
+	// |         assert_exit          |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "assert_exit") == 0)
+	{
+		bool newValue = !pig->dontExitOnAssert;
+		if (numArguments >= 1)
+		{
+			TryParseFailureReason_t parseFailureReason;
+			if (!TryParseBool(arguments[0], &newValue, &parseFailureReason)) { PrintLine_E("Failed to parse \"%.*s\" as boolean: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason)); return validCommand; }
+			newValue = !newValue; //this is a negative boolean value
+		}
+		pig->dontExitOnAssert = newValue;
+		PrintLine_I("Assertions %s", pig->dontExitOnAssert ? "Won't Exit" : "Will Exit");
 	}
 	
 	// +==============================+

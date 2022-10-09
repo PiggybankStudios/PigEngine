@@ -348,11 +348,14 @@ void GyLibAssertFailure(const char* filePath, int lineNumber, const char* funcNa
 		}
 	}
 	
+	bool shouldExit = true;
+	if (pig != nullptr && pig->dontExitOnAssert) { shouldExit = false; }
+	
 	if (plat != nullptr && plat->HandleAssertion != nullptr)
 	{
-		plat->HandleAssertion(filePath, lineNumber, funcName, expressionStr, messageStr);
+		plat->HandleAssertion(shouldExit, filePath, lineNumber, funcName, expressionStr, messageStr);
 	}
-	else
+	else if (shouldExit)
 	{
 		MyBreak();
 		exit(EXIT_CODE_ASSERTION_FAILED);

@@ -39,6 +39,7 @@ struct PigState_t
 	bool dllReloaded;
 	u64 reloadIndex;
 	ThreadId_t mainThreadId;
+	bool dontExitOnAssert;
 	
 	PigSettings_t settings;
 	PigDebugBindings_t debugBindings;

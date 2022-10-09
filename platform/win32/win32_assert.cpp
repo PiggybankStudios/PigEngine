@@ -9,7 +9,7 @@ Description:
 // +==============================+
 // |    Win32_HandleAssertion     |
 // +==============================+
-// void HandleAssertion(const char* filePath, int lineNumber, const char* funcName, const char* expressionStr, const char* messageStr)
+// void HandleAssertion(bool shouldExit, const char* filePath, int lineNumber, const char* funcName, const char* expressionStr, const char* messageStr)
 PLAT_API_HANDLE_ASSERTION_DEFINITION(Win32_HandleAssertion)
 {
 	ThreadId_t threadId = Win32_GetThisThreadId();
@@ -56,7 +56,7 @@ PLAT_API_HANDLE_ASSERTION_DEFINITION(Win32_HandleAssertion)
 		
 		if (IsDebuggerPresent() != 0) { MyBreak(); }
 		
-		exit(EXIT_CODE_ASSERTION_FAILED);
+		if (shouldExit) { exit(EXIT_CODE_ASSERTION_FAILED); }
 	}
 	else
 	{
@@ -74,7 +74,7 @@ PLAT_API_HANDLE_ASSERTION_DEFINITION(Win32_HandleAssertion)
 		if (IsDebuggerPresent() != 0) { MyBreak(); }
 		
 		ThreadingWriteBarrier();
-		ExitThread(EXIT_CODE_ASSERTION_FAILED);
+		if (shouldExit) { ExitThread(EXIT_CODE_ASSERTION_FAILED); }
 	}
 }
 
@@ -88,7 +88,7 @@ void Win32_CheckForThreadAssertions()
 		PlatThread_t* thread = &Platform->threads[tIndex];
 		if (thread->assertionFailed)
 		{
-			Win32_HandleAssertion(thread->assertionFailedFilepath, thread->assertionFailedLineNum, thread->assertionFailedFuncName, thread->assertionFailedExpression, thread->assertionFailedMessage);
+			Win32_HandleAssertion(true, thread->assertionFailedFilepath, thread->assertionFailedLineNum, thread->assertionFailedFuncName, thread->assertionFailedExpression, thread->assertionFailedMessage);
 		}
 	}
 }
@@ -134,7 +134,7 @@ void GyLibAssertFailure(const char* filePath, int lineNumber, const char* funcNa
 		}
 	}
 	
-	Win32_HandleAssertion(filePath, lineNumber, funcName, expressionStr, messageStr);
+	Win32_HandleAssertion(true, filePath, lineNumber, funcName, expressionStr, messageStr);
 	
 	#if DEBUG_BUILD
 	insideAssertFailure = false;
