@@ -84,6 +84,9 @@ void PigInitialize(EngineMemory_t* memory)
 	Pig_InitResources();
 	GamePinResources();
 	Pig_LoadResourceAtStartup(!LOAD_ALL_RESOURCES_ON_STARTUP, BEFORE_RESOURCES_LOAD_PERCENT, RESOURCES_LOAD_PERCENT);
+	#if STEAM_BUILD
+	Pig_InitializeSteamAvatars();
+	#endif
 	PigInitMusicSystem(&pig->musicSystem);
 	PigInitDebugBindings(&pig->sessionDebugBindings, fixedHeap);
 	PigInitDebugBindings(&pig->debugBindings, fixedHeap);
@@ -138,6 +141,7 @@ void PigUpdateMainWindow()
 	Pig_HandleScreenshotHotkeys();
 	Pig_HandleDebugBindings(&pig->sessionDebugBindings);
 	Pig_HandleDebugBindings(&pig->debugBindings);
+	Pig_UpdateSteamAvatars();
 	
 	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);
@@ -211,6 +215,7 @@ void PigRenderDebugOverlays()
 	RcClearDepth(1.0f); //TODO: Do we need this?
 	RcSetDepth(0.0f);
 	
+	RenderPigDebugOverlayBelowConsole(&pig->debugOverlay);
 	PigRenderConfirmDialogs();
 	RenderDebugConsole(&pig->debugConsole);
 	RenderPigAudioOutGraph(&pig->audioOutGraph);

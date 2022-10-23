@@ -101,6 +101,7 @@ struct ResourceSheetMetaInfo_t
 	v2i numFrames;
 	v2i padding;
 	bool pixelated;
+	bool useTextureArray;
 	MyStr_t metaFilePath;
 };
 

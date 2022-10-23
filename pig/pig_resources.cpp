@@ -506,7 +506,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 	MyStr_t sheetPathStr = NewStr(sheetPath);
 	
 	SpriteSheet_t tempSheet = {};
-	if (!LoadSpriteSheet(mainHeap, &tempSheet, sheetPathStr, metaInfo.padding, metaInfo.numFrames, metaInfo.pixelated))
+	if (!LoadSpriteSheet(mainHeap, &tempSheet, sheetPathStr, metaInfo.padding, metaInfo.numFrames, metaInfo.pixelated, metaInfo.useTextureArray))
 	{
 		NotifyPrint_E("Failed to load sheet[%u] from \"%s\"! Error %s%s%s",
 			sheetIndex,
@@ -643,7 +643,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 	NotNull(memArena);
 	NotNull(spriteSheetOut);
 	bool result = false;
-	if (!LoadSpriteSheet(mainHeap, spriteSheetOut, filePath, padding, sheetSize, pixelated))
+	if (!LoadSpriteSheet(mainHeap, spriteSheetOut, filePath, padding, sheetSize, pixelated, false))
 	{
 		if (dumpLogOnFailure)
 		{

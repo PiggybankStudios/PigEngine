@@ -293,345 +293,8 @@ void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatCon
 	}
 }
 
-void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
+void RenderPigDebugOverlayBelowConsole(PigDebugOverlay_t* overlay)
 {
-	NotNull(overlay);
-	PigDebugOverlayLayout(overlay);
-	
-	if (overlay->enabled)
-	{
-		RcBindShader(&pig->resources.shaders->main2D);
-		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
-		v2 textPos = NewVec2(10, 10);
-		if (pig->perfGraph.enabled) { textPos.y = pig->perfGraph.infoTextPos.y + 10; }
-		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
-		textPos.y += RcGetMaxAscend();
-		Vec2Align(&textPos);
-		Color_t backgroundColor = ColorTransparent(Black, 0.5f);
-		v2 backgroundPadding = NewVec2(3, 1);
-		r32 stepY = RoundR32(RcGetLineHeight());
-		
-		// +==============================+
-		// |    Render Debug Readouts     |
-		// +==============================+
-		if (overlay->debugReadoutsEnabled)
-		{
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Engine v%u.%02u(%04u) Game v%u.%02u(%04u) %s v%u.%02u(%04u)",
-				ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD,
-				GAME_VERSION_MAJOR, GAME_VERSION_MINOR, GAME_VERSION_BUILD,
-				GetPlatTypeStr(platInfo->type), platInfo->version.major, platInfo->version.minor, platInfo->version.build
-			);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ScreenSize: %.0fx%.0f MousePos (%.0f, %.0f) TimeScale: %lf ElapsedMs: %lf", ScreenSize.width, ScreenSize.height, MousePos.x, MousePos.y, TimeScale, ElapsedMs);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "AspectRatio: %g (w/h) %g (h/w)", ScreenSize.width/ScreenSize.height, ScreenSize.height/ScreenSize.width);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Unix Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->unixTime), pigIn->unixTime.timestamp);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
-				"Timezone: %.*s %s%s",
-				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
-				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
-			);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, ((pig->focusedItemPntr != nullptr) ? MonokaiWhite : MonokaiGray1), backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
-			textPos.y += stepY;
-			
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Music Fade: %.0f%% %s", pig->musicSystem.currentFadeProgress*100, GetMusicFadeStr(pig->musicSystem.currentFade));
-			textPos.y += stepY;
-			
-			if (pig->mouseHit.priority > 0)
-			{
-				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", pig->mouseHit.name.length, pig->mouseHit.name.pntr, pig->mouseHit.priority, pig->mouseHit.pntr);
-				textPos.y += stepY;
-			}
-			else
-			{
-				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
-				textPos.y += stepY;
-			}
-			
-			#if PROCMON_SUPPORTED
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "nextProcmonEventId: %llu", pigIn->nextProcmonEventId);
-			textPos.y += stepY;
-			
-			textPos.x += 600;
-			textPos.y = 10 + RcGetMaxAscend();
-			
-			#if 1
-			u64 numFilePaths = 0;
-			StrHashDictIter_t touchedFilesIter = StrHashDictGetIter(&pigIn->touchedFiles, ProcmonFile_t);
-			for (ProcmonFile_t* touchedFile = nullptr; StrHashDictIter(&touchedFilesIter, ProcmonFile_t, &touchedFile); )
-			{
-				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, touchedFile->filePath.length, touchedFile->filePath.pntr);
-				textPos.y += stepY;
-				numFilePaths++;
-			}
-			
-			textPos.x += 600;
-			textPos.y = 10 + RcGetMaxAscend();
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu files total", numFilePaths);
-			textPos.y += stepY;
-			#else
-			u64 numProcessNames = 0;
-			for (u64 pIndex = 0; pIndex < pigIn->processEntries.numItemsAlloc; pIndex++)
-			{
-				StrHashDictItem_t* slot = (StrHashDictItem_t*)(((u8*)pigIn->processEntries.base) + (pIndex * (sizeof(StrHashDictItem_t) + sizeof(ProcmonEntry_t))));
-				if (slot->hash != 0)
-				{
-					ProcmonEntry_t* processEntry = (ProcmonEntry_t*)(slot + 1);
-					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, processEntry->processName.length, processEntry->processName.pntr);
-					#if 0
-					r32 resetPosX = textPos.x;
-					textPos.x += rc->flowInfo.renderRec.width + 10;
-					for (u64 eIndex = 0; eIndex < ArrayCount(processEntry->lastFewEvents); eIndex++)
-					{
-						RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%s", GetProcmonEventTypeStr(processEntry->lastFewEvents[eIndex]));
-						textPos.x += rc->flowInfo.renderRec.width + 10;
-					}
-					textPos.x = resetPosX;
-					#endif
-					textPos.y += stepY;
-					numProcessNames++;
-				}
-			}
-			
-			textPos.x += 600;
-			textPos.y = 10 + RcGetMaxAscend();
-			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu processes total", numProcessNames);
-			textPos.y += stepY;
-			#endif
-			
-			#endif //PROCMON_SUPPORTED
-		}
-		
-		// +==============================+
-		// |     Render Easing Styles     |
-		// +==============================+
-		if (overlay->easingFuncsEnabled)
-		{
-			r32 bottomOfAudioOutGraph = pig->audioOutGraph.mainRec.y + pig->audioOutGraph.mainRec.height + RcGetLineHeight() + 10;
-			if (pig->audioOutGraph.enabled && textPos.y < bottomOfAudioOutGraph) { textPos.y = bottomOfAudioOutGraph; }
-			rec baseGraphRec = NewRec(textPos + NewVec2(0, RcGetLineHeight()), 100, 100);
-			for (u64 eIndex = 1; eIndex < EasingStyle_NumStyles; eIndex++)
-			{
-				EasingStyle_t style = (EasingStyle_t)eIndex;
-				
-				RcDrawRectangleOutline(baseGraphRec, MonokaiWhite, 1, true);
-				RcDrawRectangle(baseGraphRec, ColorTransparent(Black, 0.5f));
-				
-				RcDrawTextPrint(baseGraphRec.topLeft + NewVec2(0, -5), White, "%s", GetEasingStyleStr(style));
-				
-				u64 numPointsInCurve = 33;
-				for (u64 pIndex = 0; pIndex < numPointsInCurve; pIndex++)
-				{
-					r32 inputValue1 = (r32)(pIndex + 0) / (r32)numPointsInCurve;
-					r32 inputValue2 = (r32)(pIndex + 1) / (r32)numPointsInCurve;
-					r32 outputValue1 = Ease(style, inputValue1);
-					r32 outputValue2 = Ease(style, inputValue2);
-					v2 lineStart = NewVec2(baseGraphRec.x + baseGraphRec.width * inputValue1, baseGraphRec.y + (baseGraphRec.height * (1.0f - outputValue1)));
-					v2 lineEnd   = NewVec2(baseGraphRec.x + baseGraphRec.width * inputValue2, baseGraphRec.y + (baseGraphRec.height * (1.0f - outputValue2)));
-					RcDrawLine(lineStart, lineEnd, 1, MonokaiYellow);
-				}
-				
-				baseGraphRec.x += baseGraphRec.width + 5;
-				if (baseGraphRec.x + baseGraphRec.width >= ScreenSize.width)
-				{
-					baseGraphRec.x = textPos.x;
-					baseGraphRec.y += baseGraphRec.height + 5 + RcGetLineHeight();
-				}
-			}
-			textPos.y = baseGraphRec.y + baseGraphRec.height + RcGetLineHeight();
-		}
-		
-		// +==============================+
-		// |   Render Controller States   |
-		// +==============================+
-		if (overlay->controllerDebugEnabled)
-		{
-			u64 lastConnectedControllerIndex = 0;
-			for (u64 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
-			{
-				if (pigIn->controllerStates[cIndex].connected) { lastConnectedControllerIndex = cIndex; }
-			}
-			rec controllerBaseRec = NewRec(textPos + NewVec2(0, RcGetLineHeight()), 250, 250);
-			for (u64 cIndex = 0; cIndex <= lastConnectedControllerIndex+1 && cIndex < MAX_NUM_CONTROLLERS; cIndex++)
-			{
-				RenderDebugOverlayControllerState(overlay, &pigIn->controllerStates[cIndex], controllerBaseRec);
-				controllerBaseRec.x += controllerBaseRec.width + 5;
-				if (controllerBaseRec.x + controllerBaseRec.width >= ScreenSize.width)
-				{
-					controllerBaseRec.x = textPos.x;
-					controllerBaseRec.y += controllerBaseRec.height + 5;
-				}
-			}
-			textPos.y = controllerBaseRec.y + controllerBaseRec.height + RcGetLineHeight();
-		}
-		
-		// +==============================+
-		// |      Render Pie Charts       |
-		// +==============================+
-		if (overlay->pieChartsEnabled)
-		{
-			RcBindShader(&pig->resources.shaders->pieChart);
-			
-			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
-			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec + NewVec2(0, 8), Grey11);
-			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec, White, true);
-			
-			#if 1
-			r64 elapsedMsPieChartPercentages[3];
-			elapsedMsPieChartPercentages[0] = (pigIn->timeSpentWaitingLastFrame / pigIn->elapsedMs);
-			elapsedMsPieChartPercentages[1] = ((pigIn->lastUpdateElapsedMs - overlay->physicsSimTimeLastFrame) / pigIn->elapsedMs);
-			elapsedMsPieChartPercentages[2] = (overlay->physicsSimTimeLastFrame / pigIn->elapsedMs);
-			RcDrawPieChart(3, &elapsedMsPieChartPercentages[0], NewRec(overlay->initPieChartRec.x, overlay->initPieChartRec.y - 10 - overlay->initPieChartRec.height, overlay->initPieChartRec.size), Grey11);
-			RcDrawPieChart(3, &elapsedMsPieChartPercentages[0], NewRec(overlay->initPieChartRec.x, overlay->initPieChartRec.y - 18 - overlay->initPieChartRec.height, overlay->initPieChartRec.size), White);
-			#endif
-			
-			// RcDrawPieChartTest(NewRec(ScreenSize.width - 630, ScreenSize.height - 210, 200, 200));
-			
-			RcBindShader(&pig->resources.shaders->main2D);
-		}
-		
-		// +==============================+
-		// |    Render Audio Instances    |
-		// +==============================+
-		if (overlay->audioInstancesEnabled)
-		{
-			RcBindFont(&pig->resources.fonts->pixel, SelectDefaultFontFace());
-			rec baseProgressRec = NewRec(0, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + 5, 100, RcGetLineHeight());
-			baseProgressRec.x = (pig->audioOutGraph.enabled ? pig->audioOutGraph.mainRec.x : ScreenSize.width) - 10 - baseProgressRec.width;
-			RecAlign(&baseProgressRec);
-			for (u64 iIndex = 0; iIndex < PIG_MAX_SOUND_INSTANCES; iIndex++)
-			{
-				SoundInstance_t* instance = &pig->soundInstances[iIndex];
-				if (instance->playing && instance->sound != nullptr)
-				{
-					const Sound_t* soundPntr = instance->sound;
-					u64 foundIndex = 0;
-					ResourceType_t foundType = GetResourceByPntr(soundPntr, &foundIndex);
-					MyStr_t displayText = TempPrintStr("Unknown[%p]", soundPntr);
-					r32 progressRecWidth = baseProgressRec.width;
-					Color_t displayColor = MonokaiMagenta;
-					r32 soundDurationSecs = ((r32)soundPntr->numFrames / (r32)soundPntr->format.samplesPerSecond);
-					r32 currentTimeSecs = ((r32)instance->frameIndex / (r32)soundPntr->numFrames) * soundDurationSecs;
-					progressRecWidth = soundDurationSecs * 10;
-					if (progressRecWidth < 10) { progressRecWidth = 10; }
-					if (foundType == ResourceType_Music)
-					{
-						i32 totalMinutes = RoundR32i(soundDurationSecs) / 60;
-						i32 totalSeconds = RoundR32i(soundDurationSecs) % 60;
-						i32 totalHundredths = RoundR32i(DecimalPartR32(soundDurationSecs) * 100);
-						i32 currentMinutes = RoundR32i(currentTimeSecs) / 60;
-						i32 currentSeconds = RoundR32i(currentTimeSecs) % 60;
-						i32 currentHundredths = RoundR32i(DecimalPartR32(currentTimeSecs) * 100);
-						MyStr_t musicName = GetFileNamePart(NewStr(Resources_GetPathForMusic(foundIndex)));
-						displayText = TempPrintStr("(%d:%02d.%02d/%d:%02d.%02d) %.*s",
-							currentMinutes, currentSeconds, currentHundredths,
-							totalMinutes, totalSeconds, totalHundredths,
-							musicName.length, musicName.pntr
-						);
-						displayColor = MonokaiWhite;
-					}
-					else if (foundType == ResourceType_Sound)
-					{
-						displayText = GetFileNamePart(NewStr(Resources_GetPathForSound(foundIndex)));
-						displayColor = MonokaiLightBlue;
-					}
-					
-					rec progressTotalRec = baseProgressRec;
-					progressTotalRec.width = progressRecWidth;
-					progressTotalRec.x = baseProgressRec.x + baseProgressRec.width - progressTotalRec.width;
-					RecAlign(&progressTotalRec);
-					rec progressRec = progressTotalRec;
-					progressRec.width *= ((r32)instance->frameIndex / (r32)soundPntr->numFrames);
-					RecAlign(&progressRec);
-					v2 displayTextPos = NewVec2(progressTotalRec.x - 5, progressTotalRec.y + progressTotalRec.height/2 - RcGetLineHeight()/2 + RcGetMaxAscend());
-					Vec2Align(&displayTextPos);
-					r32 progressAlpha = LerpR32(0.3f, 1.0f, ConvertVolumeToLoudness(instance->volume));
-					if (instance->volume == 0) { progressAlpha = 0.0f; }
-					
-					RcDrawRectangle(RecInflate(progressTotalRec, 1, 1), displayColor);
-					RcDrawRectangle(progressTotalRec, Black);
-					RcDrawRectangle(progressRec, ColorTransparent(displayColor, progressAlpha));
-					RcDrawText(displayText, displayTextPos, displayColor, TextAlignment_Right);
-					
-					baseProgressRec.y = progressTotalRec.y + progressTotalRec.height + 5;
-				}
-			}
-		}
-	}
-	
-	// +==============================+
-	// |    Render Toggle Buttons     |
-	// +==============================+
-	if (overlay->openAnimTime > 0.0f)
-	{
-		RcDrawRectangleOutline(overlay->totalToggleBtnsRec, MonokaiWhite, 2, true);
-		for (u64 bIndex = 0; bIndex < ArrayCount(overlay->toggleBtnRecs); bIndex++)
-		{
-			rec btnRec = overlay->toggleBtnRecs[bIndex];
-			// bool isMouseOver = IsMouseOverPrint("DebugOverlayToggleBtn%llu", bIndex);
-			bool enabled = false;
-			Color_t btnColor = MonokaiBack;
-			switch (bIndex)
-			{
-				case 0: enabled = overlay->debugReadoutsEnabled;   btnColor = MonokaiLightGray; break;
-				case 1: enabled = pig->perfGraph.enabled;          btnColor = MonokaiYellow;    break;
-				case 2: enabled = pig->audioOutGraph.enabled;      btnColor = MonokaiBlue;      break;
-				case 3: enabled = overlay->audioInstancesEnabled;  btnColor = MonokaiPurple;    break;
-				case 4: enabled = pig->memGraph.enabled;           btnColor = MonokaiOrange;    break;
-				case 5: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
-				case 6: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
-				case 7: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
-				default: DebugAssert(false);
-			}
-			Color_t outlineColor = Transparent;
-			if (enabled)
-			{
-				btnColor.a = 255;
-			}
-			else
-			{
-				outlineColor = btnColor;
-				btnColor.a = 0;
-			}
-			RcDrawRectangle(btnRec, ColorDarken(btnColor, 60));
-			RcDrawRectangle(RecRetractY(btnRec, 2), btnColor);
-			if (outlineColor.a > 0)
-			{
-				RcDrawRectangleOutline(btnRec, outlineColor, 2);
-			}
-			
-		}
-		
-		MyStr_t displayText = TempPrintStr("Press %s to hide", GetKeyStr(DEBUG_OVERLAY_TOGGLE_KEY));
-		if (IsMouseOverNamed("DebugOverlayToggleBtn0")) { displayText = NewStr("Debug Readouts"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn1")) { displayText = NewStr("Perf Graph"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn2")) { displayText = NewStr("Audio Graph"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn3")) { displayText = NewStr("Audio Instances"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn4")) { displayText = NewStr("Memory Graph"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Pie Charts"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Easing Functions"); }
-		if (IsMouseOverNamed("DebugOverlayToggleBtn7")) { displayText = NewStr("Controller Debug"); }
-		
-		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12, true));
-		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
-		Vec2Align(&textPos, 2);
-		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);
-	}
-	
 	// +==================================+
 	// | Render Cyclic Functions Overlay  |
 	// +==================================+
@@ -864,5 +527,379 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		
 		RcDrawRectangleOutline(desktopRec, Black, 2);
 		RcDrawRectangleOutline(desktopRec, MonokaiYellow, 1);
+	}
+	
+	#if STEAM_BUILD
+	// +==============================+
+	// |  Render Steam Friends List   |
+	// +==============================+
+	if (pig->debugRenderSteamFriendsList)
+	{
+		v2 minSize = NewVec2(300, 0);
+		v2 maxSize = NewVec2(300, 0);
+		r32 scale = 1.0f; //Animate(1.0f, 10.0f, 20000);
+		v2 startPos = NewVec2(50, 15);
+		r32 maxWidth = 0;
+		v2 drawPos = startPos;
+		VarArrayLoop(&platInfo->steamFriendsList->friends, fIndex)
+		{
+			VarArrayLoopGet(PlatSteamFriendInfo_t, friendInfo, &platInfo->steamFriendsList->friends, fIndex);
+			v2 friendCardSize = RcDrawSteamFriendCard(friendInfo->id, drawPos, minSize, maxSize, scale, true);
+			if (drawPos.y + friendCardSize.height >= ScreenSize.height - 15)
+			{
+				drawPos.x += maxWidth + 5;
+				drawPos.y = startPos.y;
+				maxWidth = 0;
+			}
+			RcDrawSteamFriendCard(friendInfo->id, drawPos, minSize, maxSize, scale);
+			drawPos.y += friendCardSize.height + 5;
+			if (maxWidth < friendCardSize.width) { maxWidth = friendCardSize.width; }
+		}
+	}
+	#endif
+}
+
+void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
+{
+	NotNull(overlay);
+	PigDebugOverlayLayout(overlay);
+	
+	if (overlay->enabled)
+	{
+		RcBindShader(&pig->resources.shaders->main2D);
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
+		v2 textPos = NewVec2(10, 10);
+		if (pig->perfGraph.enabled) { textPos.y = pig->perfGraph.infoTextPos.y + 10; }
+		if (pig->memGraph.enabled) { textPos.x = pig->memGraph.mainRec.x + pig->memGraph.mainRec.width + 10; }
+		textPos.y += RcGetMaxAscend();
+		Vec2Align(&textPos);
+		Color_t backgroundColor = ColorTransparent(Black, 0.5f);
+		v2 backgroundPadding = NewVec2(3, 1);
+		r32 stepY = RoundR32(RcGetLineHeight());
+		
+		// +==============================+
+		// |    Render Debug Readouts     |
+		// +==============================+
+		if (overlay->debugReadoutsEnabled)
+		{
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Engine v%u.%02u(%04u) Game v%u.%02u(%04u) %s v%u.%02u(%04u)",
+				ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD,
+				GAME_VERSION_MAJOR, GAME_VERSION_MINOR, GAME_VERSION_BUILD,
+				GetPlatTypeStr(platInfo->type), platInfo->version.major, platInfo->version.minor, platInfo->version.build
+			);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ScreenSize: %.0fx%.0f MousePos (%.0f, %.0f) TimeScale: %lf ElapsedMs: %lf", ScreenSize.width, ScreenSize.height, MousePos.x, MousePos.y, TimeScale, ElapsedMs);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "AspectRatio: %g (w/h) %g (h/w)", ScreenSize.width/ScreenSize.height, ScreenSize.height/ScreenSize.width);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "ProgramTime: %llu (%lf)", pigIn->programTime, pigIn->programTimeF);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Unix Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->unixTime), pigIn->unixTime.timestamp);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Local Time: %s (%llu)", TempFormatRealTimeNt(&pigIn->localTime), pigIn->localTime.timestamp);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
+				"Timezone: %.*s %s%s",
+				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
+				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
+			);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, ((pig->focusedItemPntr != nullptr) ? MonokaiWhite : MonokaiGray1), backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
+			textPos.y += stepY;
+			
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Music Fade: %.0f%% %s", pig->musicSystem.currentFadeProgress*100, GetMusicFadeStr(pig->musicSystem.currentFade));
+			textPos.y += stepY;
+			
+			if (pig->mouseHit.priority > 0)
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", pig->mouseHit.name.length, pig->mouseHit.name.pntr, pig->mouseHit.priority, pig->mouseHit.pntr);
+				textPos.y += stepY;
+			}
+			else
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiGray1, backgroundColor, backgroundPadding, "Mouse Hit: Nothing at (%.0f, %.0f)", MousePos.x, MousePos.y);
+				textPos.y += stepY;
+			}
+			
+			#if PROCMON_SUPPORTED
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "nextProcmonEventId: %llu", pigIn->nextProcmonEventId);
+			textPos.y += stepY;
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			
+			#if 1
+			u64 numFilePaths = 0;
+			StrHashDictIter_t touchedFilesIter = StrHashDictGetIter(&pigIn->touchedFiles, ProcmonFile_t);
+			for (ProcmonFile_t* touchedFile = nullptr; StrHashDictIter(&touchedFilesIter, ProcmonFile_t, &touchedFile); )
+			{
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, touchedFile->filePath.length, touchedFile->filePath.pntr);
+				textPos.y += stepY;
+				numFilePaths++;
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu files total", numFilePaths);
+			textPos.y += stepY;
+			#else
+			u64 numProcessNames = 0;
+			for (u64 pIndex = 0; pIndex < pigIn->processEntries.numItemsAlloc; pIndex++)
+			{
+				StrHashDictItem_t* slot = (StrHashDictItem_t*)(((u8*)pigIn->processEntries.base) + (pIndex * (sizeof(StrHashDictItem_t) + sizeof(ProcmonEntry_t))));
+				if (slot->hash != 0)
+				{
+					ProcmonEntry_t* processEntry = (ProcmonEntry_t*)(slot + 1);
+					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, processEntry->processName.length, processEntry->processName.pntr);
+					#if 0
+					r32 resetPosX = textPos.x;
+					textPos.x += rc->flowInfo.renderRec.width + 10;
+					for (u64 eIndex = 0; eIndex < ArrayCount(processEntry->lastFewEvents); eIndex++)
+					{
+						RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%s", GetProcmonEventTypeStr(processEntry->lastFewEvents[eIndex]));
+						textPos.x += rc->flowInfo.renderRec.width + 10;
+					}
+					textPos.x = resetPosX;
+					#endif
+					textPos.y += stepY;
+					numProcessNames++;
+				}
+			}
+			
+			textPos.x += 600;
+			textPos.y = 10 + RcGetMaxAscend();
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%llu processes total", numProcessNames);
+			textPos.y += stepY;
+			#endif
+			
+			#endif //PROCMON_SUPPORTED
+			
+			#if STEAM_BUILD
+			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Steam IPC Call Count: %llu", pigIn->steamIpcCallCount);
+			textPos.y += stepY;
+			#endif
+		}
+		
+		// +==============================+
+		// |     Render Easing Styles     |
+		// +==============================+
+		if (overlay->easingFuncsEnabled)
+		{
+			r32 bottomOfAudioOutGraph = pig->audioOutGraph.mainRec.y + pig->audioOutGraph.mainRec.height + RcGetLineHeight() + 10;
+			if (pig->audioOutGraph.enabled && textPos.y < bottomOfAudioOutGraph) { textPos.y = bottomOfAudioOutGraph; }
+			rec baseGraphRec = NewRec(textPos + NewVec2(0, RcGetLineHeight()), 100, 100);
+			for (u64 eIndex = 1; eIndex < EasingStyle_NumStyles; eIndex++)
+			{
+				EasingStyle_t style = (EasingStyle_t)eIndex;
+				
+				RcDrawRectangleOutline(baseGraphRec, MonokaiWhite, 1, true);
+				RcDrawRectangle(baseGraphRec, ColorTransparent(Black, 0.5f));
+				
+				RcDrawTextPrint(baseGraphRec.topLeft + NewVec2(0, -5), White, "%s", GetEasingStyleStr(style));
+				
+				u64 numPointsInCurve = 33;
+				for (u64 pIndex = 0; pIndex < numPointsInCurve; pIndex++)
+				{
+					r32 inputValue1 = (r32)(pIndex + 0) / (r32)numPointsInCurve;
+					r32 inputValue2 = (r32)(pIndex + 1) / (r32)numPointsInCurve;
+					r32 outputValue1 = Ease(style, inputValue1);
+					r32 outputValue2 = Ease(style, inputValue2);
+					v2 lineStart = NewVec2(baseGraphRec.x + baseGraphRec.width * inputValue1, baseGraphRec.y + (baseGraphRec.height * (1.0f - outputValue1)));
+					v2 lineEnd   = NewVec2(baseGraphRec.x + baseGraphRec.width * inputValue2, baseGraphRec.y + (baseGraphRec.height * (1.0f - outputValue2)));
+					RcDrawLine(lineStart, lineEnd, 1, MonokaiYellow);
+				}
+				
+				baseGraphRec.x += baseGraphRec.width + 5;
+				if (baseGraphRec.x + baseGraphRec.width >= ScreenSize.width)
+				{
+					baseGraphRec.x = textPos.x;
+					baseGraphRec.y += baseGraphRec.height + 5 + RcGetLineHeight();
+				}
+			}
+			textPos.y = baseGraphRec.y + baseGraphRec.height + RcGetLineHeight();
+		}
+		
+		// +==============================+
+		// |   Render Controller States   |
+		// +==============================+
+		if (overlay->controllerDebugEnabled)
+		{
+			u64 lastConnectedControllerIndex = 0;
+			for (u64 cIndex = 0; cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+			{
+				if (pigIn->controllerStates[cIndex].connected) { lastConnectedControllerIndex = cIndex; }
+			}
+			rec controllerBaseRec = NewRec(textPos + NewVec2(0, RcGetLineHeight()), 250, 250);
+			for (u64 cIndex = 0; cIndex <= lastConnectedControllerIndex+1 && cIndex < MAX_NUM_CONTROLLERS; cIndex++)
+			{
+				RenderDebugOverlayControllerState(overlay, &pigIn->controllerStates[cIndex], controllerBaseRec);
+				controllerBaseRec.x += controllerBaseRec.width + 5;
+				if (controllerBaseRec.x + controllerBaseRec.width >= ScreenSize.width)
+				{
+					controllerBaseRec.x = textPos.x;
+					controllerBaseRec.y += controllerBaseRec.height + 5;
+				}
+			}
+			textPos.y = controllerBaseRec.y + controllerBaseRec.height + RcGetLineHeight();
+		}
+		
+		// +==============================+
+		// |      Render Pie Charts       |
+		// +==============================+
+		if (overlay->pieChartsEnabled)
+		{
+			RcBindShader(&pig->resources.shaders->pieChart);
+			
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12));
+			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec + NewVec2(0, 8), Grey11);
+			RcDrawPieChartForPerfSectionBundle(&platInfo->initPerfSectionBundle, overlay->initPieChartRec, White, true);
+			
+			#if 1
+			r64 elapsedMsPieChartPercentages[3];
+			elapsedMsPieChartPercentages[0] = (pigIn->timeSpentWaitingLastFrame / pigIn->elapsedMs);
+			elapsedMsPieChartPercentages[1] = ((pigIn->lastUpdateElapsedMs - overlay->physicsSimTimeLastFrame) / pigIn->elapsedMs);
+			elapsedMsPieChartPercentages[2] = (overlay->physicsSimTimeLastFrame / pigIn->elapsedMs);
+			RcDrawPieChart(3, &elapsedMsPieChartPercentages[0], NewRec(overlay->initPieChartRec.x, overlay->initPieChartRec.y - 10 - overlay->initPieChartRec.height, overlay->initPieChartRec.size), Grey11);
+			RcDrawPieChart(3, &elapsedMsPieChartPercentages[0], NewRec(overlay->initPieChartRec.x, overlay->initPieChartRec.y - 18 - overlay->initPieChartRec.height, overlay->initPieChartRec.size), White);
+			#endif
+			
+			// RcDrawPieChartTest(NewRec(ScreenSize.width - 630, ScreenSize.height - 210, 200, 200));
+			
+			RcBindShader(&pig->resources.shaders->main2D);
+		}
+		
+		// +==============================+
+		// |    Render Audio Instances    |
+		// +==============================+
+		if (overlay->audioInstancesEnabled)
+		{
+			RcBindFont(&pig->resources.fonts->pixel, SelectDefaultFontFace());
+			rec baseProgressRec = NewRec(0, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + 5, 100, RcGetLineHeight());
+			baseProgressRec.x = (pig->audioOutGraph.enabled ? pig->audioOutGraph.mainRec.x : ScreenSize.width) - 10 - baseProgressRec.width;
+			RecAlign(&baseProgressRec);
+			for (u64 iIndex = 0; iIndex < PIG_MAX_SOUND_INSTANCES; iIndex++)
+			{
+				SoundInstance_t* instance = &pig->soundInstances[iIndex];
+				if (instance->playing && instance->sound != nullptr)
+				{
+					const Sound_t* soundPntr = instance->sound;
+					u64 foundIndex = 0;
+					ResourceType_t foundType = GetResourceByPntr(soundPntr, &foundIndex);
+					MyStr_t displayText = TempPrintStr("Unknown[%p]", soundPntr);
+					r32 progressRecWidth = baseProgressRec.width;
+					Color_t displayColor = MonokaiMagenta;
+					r32 soundDurationSecs = ((r32)soundPntr->numFrames / (r32)soundPntr->format.samplesPerSecond);
+					r32 currentTimeSecs = ((r32)instance->frameIndex / (r32)soundPntr->numFrames) * soundDurationSecs;
+					progressRecWidth = soundDurationSecs * 10;
+					if (progressRecWidth < 10) { progressRecWidth = 10; }
+					if (foundType == ResourceType_Music)
+					{
+						i32 totalMinutes = RoundR32i(soundDurationSecs) / 60;
+						i32 totalSeconds = RoundR32i(soundDurationSecs) % 60;
+						i32 totalHundredths = RoundR32i(DecimalPartR32(soundDurationSecs) * 100);
+						i32 currentMinutes = RoundR32i(currentTimeSecs) / 60;
+						i32 currentSeconds = RoundR32i(currentTimeSecs) % 60;
+						i32 currentHundredths = RoundR32i(DecimalPartR32(currentTimeSecs) * 100);
+						MyStr_t musicName = GetFileNamePart(NewStr(Resources_GetPathForMusic(foundIndex)));
+						displayText = TempPrintStr("(%d:%02d.%02d/%d:%02d.%02d) %.*s",
+							currentMinutes, currentSeconds, currentHundredths,
+							totalMinutes, totalSeconds, totalHundredths,
+							musicName.length, musicName.pntr
+						);
+						displayColor = MonokaiWhite;
+					}
+					else if (foundType == ResourceType_Sound)
+					{
+						displayText = GetFileNamePart(NewStr(Resources_GetPathForSound(foundIndex)));
+						displayColor = MonokaiLightBlue;
+					}
+					
+					rec progressTotalRec = baseProgressRec;
+					progressTotalRec.width = progressRecWidth;
+					progressTotalRec.x = baseProgressRec.x + baseProgressRec.width - progressTotalRec.width;
+					RecAlign(&progressTotalRec);
+					rec progressRec = progressTotalRec;
+					progressRec.width *= ((r32)instance->frameIndex / (r32)soundPntr->numFrames);
+					RecAlign(&progressRec);
+					v2 displayTextPos = NewVec2(progressTotalRec.x - 5, progressTotalRec.y + progressTotalRec.height/2 - RcGetLineHeight()/2 + RcGetMaxAscend());
+					Vec2Align(&displayTextPos);
+					r32 progressAlpha = LerpR32(0.3f, 1.0f, ConvertVolumeToLoudness(instance->volume));
+					if (instance->volume == 0) { progressAlpha = 0.0f; }
+					
+					RcDrawRectangle(RecInflate(progressTotalRec, 1, 1), displayColor);
+					RcDrawRectangle(progressTotalRec, Black);
+					RcDrawRectangle(progressRec, ColorTransparent(displayColor, progressAlpha));
+					RcDrawText(displayText, displayTextPos, displayColor, TextAlignment_Right);
+					
+					baseProgressRec.y = progressTotalRec.y + progressTotalRec.height + 5;
+				}
+			}
+		}
+	}
+	
+	// +==============================+
+	// |    Render Toggle Buttons     |
+	// +==============================+
+	if (overlay->openAnimTime > 0.0f)
+	{
+		RcDrawRectangleOutline(overlay->totalToggleBtnsRec, MonokaiWhite, 2, true);
+		for (u64 bIndex = 0; bIndex < ArrayCount(overlay->toggleBtnRecs); bIndex++)
+		{
+			rec btnRec = overlay->toggleBtnRecs[bIndex];
+			// bool isMouseOver = IsMouseOverPrint("DebugOverlayToggleBtn%llu", bIndex);
+			bool enabled = false;
+			Color_t btnColor = MonokaiBack;
+			switch (bIndex)
+			{
+				case 0: enabled = overlay->debugReadoutsEnabled;   btnColor = MonokaiLightGray; break;
+				case 1: enabled = pig->perfGraph.enabled;          btnColor = MonokaiYellow;    break;
+				case 2: enabled = pig->audioOutGraph.enabled;      btnColor = MonokaiBlue;      break;
+				case 3: enabled = overlay->audioInstancesEnabled;  btnColor = MonokaiPurple;    break;
+				case 4: enabled = pig->memGraph.enabled;           btnColor = MonokaiOrange;    break;
+				case 5: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
+				case 6: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
+				case 7: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
+				default: DebugAssert(false);
+			}
+			Color_t outlineColor = Transparent;
+			if (enabled)
+			{
+				btnColor.a = 255;
+			}
+			else
+			{
+				outlineColor = btnColor;
+				btnColor.a = 0;
+			}
+			RcDrawRectangle(btnRec, ColorDarken(btnColor, 60));
+			RcDrawRectangle(RecRetractY(btnRec, 2), btnColor);
+			if (outlineColor.a > 0)
+			{
+				RcDrawRectangleOutline(btnRec, outlineColor, 2);
+			}
+			
+		}
+		
+		MyStr_t displayText = TempPrintStr("Press %s to hide", GetKeyStr(DEBUG_OVERLAY_TOGGLE_KEY));
+		if (IsMouseOverNamed("DebugOverlayToggleBtn0")) { displayText = NewStr("Debug Readouts"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn1")) { displayText = NewStr("Perf Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn2")) { displayText = NewStr("Audio Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn3")) { displayText = NewStr("Audio Instances"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn4")) { displayText = NewStr("Memory Graph"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Pie Charts"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Easing Functions"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn7")) { displayText = NewStr("Controller Debug"); }
+		
+		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12, true));
+		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());
+		Vec2Align(&textPos, 2);
+		RcDrawText(displayText, textPos, ColorTransparent(MonokaiWhite, overlay->openAnimTime), TextAlignment_Center, 0);
 	}
 }

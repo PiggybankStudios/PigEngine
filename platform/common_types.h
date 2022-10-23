@@ -637,4 +637,143 @@ struct ProcmonFile_t
 
 #endif
 
+#if STEAM_BUILD
+
+struct PlatSteamFriendPresenceStr_t
+{
+	bool needsToBeRemoved;
+	MyStr_t key;
+	MyStr_t value;
+};
+
+enum PlatSteamFriendOnlineStatus_t
+{
+	PlatSteamFriendOnlineStatus_Unknown = 0,
+	PlatSteamFriendOnlineStatus_Offline,
+	PlatSteamFriendOnlineStatus_Snooze,
+	PlatSteamFriendOnlineStatus_Away,
+	PlatSteamFriendOnlineStatus_Busy,
+	PlatSteamFriendOnlineStatus_Online,
+	PlatSteamFriendOnlineStatus_LookingForTrade,
+	PlatSteamFriendOnlineStatus_LookingToPlay,
+	PlatSteamFriendOnlineStatus_NumTypes,
+};
+const char* GetPlatSteamFriendOnlineStatusStr(PlatSteamFriendOnlineStatus_t onlineStatus)
+{
+	switch (onlineStatus)
+	{
+		case PlatSteamFriendOnlineStatus_Unknown:         return "Unknown";
+		case PlatSteamFriendOnlineStatus_Offline:         return "Offline";
+		case PlatSteamFriendOnlineStatus_Snooze:          return "Snooze";
+		case PlatSteamFriendOnlineStatus_Away:            return "Away";
+		case PlatSteamFriendOnlineStatus_Busy:            return "Busy";
+		case PlatSteamFriendOnlineStatus_Online:          return "Online";
+		case PlatSteamFriendOnlineStatus_LookingForTrade: return "LookingForTrade";
+		case PlatSteamFriendOnlineStatus_LookingToPlay:   return "LookingToPlay";
+		default: return "Unknown";
+	}
+}
+
+enum PlatSteamFriendState_t
+{
+	PlatSteamFriendState_Unknown = 0,
+	PlatSteamFriendState_Incoming,
+	PlatSteamFriendState_Normal,
+	PlatSteamFriendState_Outgoing,
+	PlatSteamFriendState_NumStates,
+};
+const char* GetPlatSteamFriendStateStr(PlatSteamFriendState_t friendState)
+{
+	switch (friendState)
+	{
+		case PlatSteamFriendState_Unknown:  return "Unknown";
+		case PlatSteamFriendState_Incoming: return "Incoming";
+		case PlatSteamFriendState_Normal:   return "Normal";
+		case PlatSteamFriendState_Outgoing: return "Outgoing";
+		default: return "Unknown";
+	}
+}
+
+enum PlatSteamFriendAvatarSize_t
+{
+	PlatSteamFriendAvatarSize_None = 0,
+	PlatSteamFriendAvatarSize_Small, //?x?
+	PlatSteamFriendAvatarSize_Medium, //?x?
+	PlatSteamFriendAvatarSize_Large, //128x128
+	PlatSteamFriendAvatarSize_NumSizes,
+};
+const char* GetPlatSteamFriendAvatarSizeStr(PlatSteamFriendAvatarSize_t avatarSize)
+{
+	switch (avatarSize)
+	{
+		case PlatSteamFriendAvatarSize_None:   return "None";
+		case PlatSteamFriendAvatarSize_Small:  return "Small";
+		case PlatSteamFriendAvatarSize_Medium: return "Medium";
+		case PlatSteamFriendAvatarSize_Large:  return "Large";
+		default: return "Unknown";
+	}
+}
+
+struct PlatSteamFriendInfo_t
+{
+	u64 id;
+	CSteamID steamId;
+	bool needsToBeRemoved;
+	
+	PlatSteamFriendState_t state;
+	PlatSteamFriendOnlineStatus_t onlineStatus;
+	MyStr_t name; //UTF-8 Encoded!
+	MyStr_t nickname; //UTF-8 Encoded!
+	u64 numGroups;
+	
+	bool isRequestingAvatar;
+	PlatSteamFriendAvatarSize_t avatarSize;
+	bool freeAvatarImageData;
+	PlatImageData_t avatarImageData;
+	
+	//Status Information
+	u64 lastStatusUpdateAttemptTime;
+	u64 lastStatusUpdateSuccessTime;
+	
+	bool isInGame;
+	u64 inGameSteamAppId;
+	CSteamID inGameLobbySteamId;
+	u32 inGameIP;
+	u16 inGamePort;
+	u16 inGameQueryPort;
+	
+	VarArray_t presenceStrs; //PlatSteamFriendPresenceStr_t
+};
+
+struct PlatSteamFriendGroup_t
+{
+	u64 id;
+	FriendsGroupID_t steamId;
+	bool needsToBeRemoved;
+	MyStr_t name; //UTF-8 Encoded!
+	VarArray_t memberIds; //u64 (sorted by friend info)
+};
+
+enum PlatSteamFriendsListQueryError_t
+{
+	PlatSteamFriendsListQueryError_None = 0,
+	PlatSteamFriendsListQueryError_NumErrors,
+};
+
+struct PlatSteamFriendsList_t
+{
+	MemArena_t* allocArena;
+	
+	u64 lastQueryAttemptTime; //0 means we've never queried before
+	u64 lastQuerySuccessTime; //0 means we've never successfully queried before
+	PlatSteamFriendsListQueryError_t lastQueryError;
+	
+	u64 nextFriendId;
+	u64 nextGroupId;
+	VarArray_t friends; //PlatSteamFriendInfo_t //Sorted by friend info
+	VarArray_t groups; //PlatSteamFriendGroup_t
+};
+
+#endif //STEAM_BUILD
+
 #endif //  _COMMON_TYPES_H

@@ -304,7 +304,7 @@ void RcDrawLine3D(v3 point1, v3 point2, r32 thickness, Color_t color)
 	RcDrawBuffer(VertBufferPrimitive_Lines);
 }
 
-void RcDrawPoint3D(v3 point, r32 radius, Color_t color, bool useBox = false)
+void RcDrawPoint3D(v3 point, r32 radius, Color_t color, bool useBox = false, SphereQuality_t sphereQuality = SphereQuality_SuperLow)
 {
 	if (useBox)
 	{
@@ -312,7 +312,7 @@ void RcDrawPoint3D(v3 point, r32 radius, Color_t color, bool useBox = false)
 	}
 	else
 	{
-		RcDrawSphere(point, radius, color, SphereQuality_SuperLow);
+		RcDrawSphere(point, radius, color, sphereQuality);
 	}
 }
 

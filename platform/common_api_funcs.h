@@ -193,4 +193,26 @@ typedef PLAT_API_GET_PROGRAM_TIME_DEFINITION(PlatApiGetProgramTime_f);
 #define PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(functionName) const PlatMonitorVideoMode_t* functionName(const PlatMonitorInfo_t* monitor, v2i resolution, u64* indexOut)
 typedef PLAT_API_GET_MONITOR_VIDEO_MODE_DEFINITION(PlatApiGetMonitorVideoMode_f);
 
+#if STEAM_BUILD
+
+#define PLAT_API_GET_STEAM_FRIEND_INFO_BY_ID_DEFINITION(functionName) PlatSteamFriendInfo_t* functionName(u64 id)
+typedef PLAT_API_GET_STEAM_FRIEND_INFO_BY_ID_DEFINITION(PlatApiGetSteamFriendInfoById_f);
+
+#define PLAT_API_GET_STEAM_FRIEND_GROUP_BY_ID_DEFINITION(functionName) PlatSteamFriendGroup_t* functionName(u64 id)
+typedef PLAT_API_GET_STEAM_FRIEND_GROUP_BY_ID_DEFINITION(PlatApiGetSteamFriendGroupById_f);
+
+#define PLAT_API_GET_STEAM_FRIEND_PRESENCE_STR_DEFINITION(functionName) PlatSteamFriendPresenceStr_t* functionName(u64 friendId, MyStr_t keyStr)
+typedef PLAT_API_GET_STEAM_FRIEND_PRESENCE_STR_DEFINITION(PlatApiGetSteamFriendPresenceStr_f);
+
+#define PLAT_API_START_STEAM_FRIENDS_QUERY_DEFINITION(functionName) void functionName()
+typedef PLAT_API_START_STEAM_FRIENDS_QUERY_DEFINITION(PlatApiStartSteamFriendsQuery_f);
+
+#define PLAT_API_UPDATE_STEAM_STATUS_DEFINITION(functionName) void functionName()
+typedef PLAT_API_UPDATE_STEAM_STATUS_DEFINITION(PlatApiUpdateSteamFriendStatus_f);
+
+#define PLAT_API_REQUEST_STREAM_FRIEND_AVATAR(functionName) bool functionName(u64 friendId, PlatSteamFriendAvatarSize_t size)
+typedef PLAT_API_REQUEST_STREAM_FRIEND_AVATAR(PlatApiRequestSteamFriendAvatar_f);
+
+#endif //STEAM_BUILD
+
 #endif //  _COMMON_API_FUNCS_H

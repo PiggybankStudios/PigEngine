@@ -43,6 +43,9 @@ Date:   09\14\2021
 #if !defined(DEMO_BUILD)
 #error You must define DEMO_BUILD in the build options
 #endif
+#if !defined(STEAM_BUILD)
+#error You must define STEAM_BUILD in the build options
+#endif
 
 #ifdef PLATFORM_LAYER
 #undef PLATFORM_LAYER
@@ -144,6 +147,10 @@ Date:   09\14\2021
 	#include "GL/glew.h"
 	#endif
 	#include "GLFW/glfw3.h"
+#endif
+
+#if STEAM_BUILD
+#include "steam/steam_api.h"
 #endif
 
 #include "stb/stb_rect_pack.h"

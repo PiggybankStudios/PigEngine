@@ -513,6 +513,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			CreateShader_FindUniform(shaderOut->glLocations.viewMatrix,        "ViewMatrix",        ShaderUniform_ViewMatrix);
 			CreateShader_FindUniform(shaderOut->glLocations.projectionMatrix,  "ProjectionMatrix",  ShaderUniform_ProjectionMatrix);
 			CreateShader_FindUniform(shaderOut->glLocations.cameraPosition,    "CameraPosition",    ShaderUniform_CameraPosition);
+			CreateShader_FindUniform(shaderOut->glLocations.playerPosition,    "PlayerPosition",    ShaderUniform_PlayerPosition);
 			CreateShader_FindUniform(shaderOut->glLocations.texture1,          texture1UniName,     ShaderUniform_Texture1);
 			CreateShader_FindUniform(shaderOut->glLocations.texture1Size,      "Texture1Size",      ShaderUniform_Texture1Size);
 			CreateShader_FindUniform(shaderOut->glLocations.texture2,          texture2UniName,     ShaderUniform_Texture2);

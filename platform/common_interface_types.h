@@ -85,69 +85,83 @@ struct PlatformInfo_t
 	const PlatWindow_t* mainWindow;
 	const LinkedList_t* windows; //PlatWindow_t
 	const PlatMonitorList_t* monitors;
+	
+	#if STEAM_BUILD
+	u32 steamAppId;
+	CSteamID steamUserId;
+	PlatSteamFriendsList_t* steamFriendsList;
+	#endif
 };
 
 struct PlatformApi_t
 {
-	PlatApiShowMessageBox_f*         ShowMessageBox;
-	PlatApiHandleAssertion_f*        HandleAssertion;
-	PlatApiDebugOutput_f*            DebugOutput;
-	PlatApiGetProgramArg_f*          GetProgramArg;
-	PlatApiCreateMutex_f*            CreateMutex;
-	PlatApiDestroyMutex_f*           DestroyMutex;
-	PlatApiLockMutex_f*              LockMutex;
-	PlatApiUnlockMutex_f*            UnlockMutex;
-	PlatApiCreateSemaphore_f*        CreateSemaphore;
-	PlatApiDestroySemaphore_f*       DestroySemaphore;
-	PlatApiWaitOnSemaphore_f*        WaitOnSemaphore;
-	PlatApiTriggerSemaphore_f*       TriggerSemaphore;
-	PlatApiCreateInterlockedInt_f*   CreateInterlockedInt;
-	PlatApiInterlockedExchange_f*    InterlockedExchange;
-	PlatApiDestroyInterlockedInt_f*  DestroyInterlockedInt;
-	PlatApiGetThisThreadId_f*        GetThisThreadId;
-	PlatApiGetThreadContext_f*       GetThreadContext;
-	PlatApiSleepForMs_f*             SleepForMs;
-	PlatApiQueueTask_f*              QueueTask;
-	PlatApiAllocateMemory_f*         AllocateMemory;
-	PlatApiReallocMemory_f*          ReallocMemory;
-	PlatApiFreeMemory_f*             FreeMemory;
-	PlatApiChangeWindowTarget_f*     ChangeWindowTarget;
-	PlatApiSwapBuffers_f*            SwapBuffers;
-	PlatApiGetFullPath_f*            GetFullPath;
-	PlatApiDoesFileExist_f*          DoesFileExist;
-	PlatApiStartEnumeratingFiles_f*  StartEnumeratingFiles;
-	PlatApiEnumerateFiles_f*         EnumerateFiles;
-	PlatApiCreateFolder_f*           CreateFolder;
-	PlatApiReadFileContents_f*       ReadFileContents;
-	PlatApiFreeFileContents_f*       FreeFileContents;
-	PlatApiWriteEntireFile_f*        WriteEntireFile;
-	PlatApiOpenFile_f*               OpenFile;
-	PlatApiWriteToFile_f*            WriteToFile;
-	PlatApiMoveFileCursor_f*         MoveFileCursor;
-	PlatApiSeekToOffsetInFile_f*     SeekToOffsetInFile;
-	PlatApiReadFromFile_f*           ReadFromFile;
-	PlatApiCloseFile_f*              CloseFile;
-	PlatApiTryParseImageFile_f*      TryParseImageFile;
-	PlatApiSaveImageDataToFile_f*    SaveImageDataToFile;
-	PlatApiFreeImageData_f*          FreeImageData;
-	PlatApiShowFile_f*               ShowFile;
-	PlatApiShowSourceFile_f*         ShowSourceFile;
-	PlatApiGetSpecialFolderPath_f*   GetSpecialFolderPath;
-	PlatApiIsFileWatched_f*          IsFileWatched;
-	PlatApiWatchFile_f*              WatchFile;
-	PlatApiUnwatchFile_f*            UnwatchFile;
-	PlatApiGetLoadProcAddressFunc_f* GetLoadProcAddressFunc;
-	PlatApiRenderLoadingScreen_f*    RenderLoadingScreen;
-	PlatApiFreeFontData_f*           FreeFontData;
-	PlatApiReadPlatformFont_f*       ReadPlatformFont;
-	PlatApiBakeFont_f*               BakeFont;
-	PlatApiDebugReadout_f*           DebugReadout;
-	PlatApiCopyTextToClipboard_f*    CopyTextToClipboard;
-	PlatApiPasteTextFromClipboard_f* PasteTextFromClipboard;
-	PlatApiGetPerfTime_f*            GetPerfTime;
-	PlatApiGetPerfTimeDiff_f*        GetPerfTimeDiff;
-	PlatApiGetProgramTime_f*         GetProgramTime;
-	PlatApiGetMonitorVideoMode_f*    GetMonitorVideoMode;
+	PlatApiShowMessageBox_f*            ShowMessageBox;
+	PlatApiHandleAssertion_f*           HandleAssertion;
+	PlatApiDebugOutput_f*               DebugOutput;
+	PlatApiGetProgramArg_f*             GetProgramArg;
+	PlatApiCreateMutex_f*               CreateMutex;
+	PlatApiDestroyMutex_f*              DestroyMutex;
+	PlatApiLockMutex_f*                 LockMutex;
+	PlatApiUnlockMutex_f*               UnlockMutex;
+	PlatApiCreateSemaphore_f*           CreateSemaphore;
+	PlatApiDestroySemaphore_f*          DestroySemaphore;
+	PlatApiWaitOnSemaphore_f*           WaitOnSemaphore;
+	PlatApiTriggerSemaphore_f*          TriggerSemaphore;
+	PlatApiCreateInterlockedInt_f*      CreateInterlockedInt;
+	PlatApiInterlockedExchange_f*       InterlockedExchange;
+	PlatApiDestroyInterlockedInt_f*     DestroyInterlockedInt;
+	PlatApiGetThisThreadId_f*           GetThisThreadId;
+	PlatApiGetThreadContext_f*          GetThreadContext;
+	PlatApiSleepForMs_f*                SleepForMs;
+	PlatApiQueueTask_f*                 QueueTask;
+	PlatApiAllocateMemory_f*            AllocateMemory;
+	PlatApiReallocMemory_f*             ReallocMemory;
+	PlatApiFreeMemory_f*                FreeMemory;
+	PlatApiChangeWindowTarget_f*        ChangeWindowTarget;
+	PlatApiSwapBuffers_f*               SwapBuffers;
+	PlatApiGetFullPath_f*               GetFullPath;
+	PlatApiDoesFileExist_f*             DoesFileExist;
+	PlatApiStartEnumeratingFiles_f*     StartEnumeratingFiles;
+	PlatApiEnumerateFiles_f*            EnumerateFiles;
+	PlatApiCreateFolder_f*              CreateFolder;
+	PlatApiReadFileContents_f*          ReadFileContents;
+	PlatApiFreeFileContents_f*          FreeFileContents;
+	PlatApiWriteEntireFile_f*           WriteEntireFile;
+	PlatApiOpenFile_f*                  OpenFile;
+	PlatApiWriteToFile_f*               WriteToFile;
+	PlatApiMoveFileCursor_f*            MoveFileCursor;
+	PlatApiSeekToOffsetInFile_f*        SeekToOffsetInFile;
+	PlatApiReadFromFile_f*              ReadFromFile;
+	PlatApiCloseFile_f*                 CloseFile;
+	PlatApiTryParseImageFile_f*         TryParseImageFile;
+	PlatApiSaveImageDataToFile_f*       SaveImageDataToFile;
+	PlatApiFreeImageData_f*             FreeImageData;
+	PlatApiShowFile_f*                  ShowFile;
+	PlatApiShowSourceFile_f*            ShowSourceFile;
+	PlatApiGetSpecialFolderPath_f*      GetSpecialFolderPath;
+	PlatApiIsFileWatched_f*             IsFileWatched;
+	PlatApiWatchFile_f*                 WatchFile;
+	PlatApiUnwatchFile_f*               UnwatchFile;
+	PlatApiGetLoadProcAddressFunc_f*    GetLoadProcAddressFunc;
+	PlatApiRenderLoadingScreen_f*       RenderLoadingScreen;
+	PlatApiFreeFontData_f*              FreeFontData;
+	PlatApiReadPlatformFont_f*          ReadPlatformFont;
+	PlatApiBakeFont_f*                  BakeFont;
+	PlatApiDebugReadout_f*              DebugReadout;
+	PlatApiCopyTextToClipboard_f*       CopyTextToClipboard;
+	PlatApiPasteTextFromClipboard_f*    PasteTextFromClipboard;
+	PlatApiGetPerfTime_f*               GetPerfTime;
+	PlatApiGetPerfTimeDiff_f*           GetPerfTimeDiff;
+	PlatApiGetProgramTime_f*            GetProgramTime;
+	PlatApiGetMonitorVideoMode_f*       GetMonitorVideoMode;
+	#if STEAM_BUILD
+	PlatApiGetSteamFriendInfoById_f*    GetSteamFriendInfoById;
+	PlatApiGetSteamFriendGroupById_f*   GetSteamFriendGroupById;
+	PlatApiGetSteamFriendPresenceStr_f* GetSteamFriendPresenceStr;
+	PlatApiStartSteamFriendsQuery_f*    StartSteamFriendsQuery;
+	PlatApiUpdateSteamFriendStatus_f*   UpdateSteamFriendStatus;
+	PlatApiRequestSteamFriendAvatar_f*  RequestSteamFriendAvatar;
+	#endif
 };
 
 struct EngineMemory_t
@@ -310,6 +324,10 @@ struct EngineInput_t
 	u64 nextProcmonEventId;
 	StrHashDict_t processEntries; //ProcmonEntry_t
 	StrHashDict_t touchedFiles; //ProcmonFile_t
+	#endif
+	
+	#if STEAM_BUILD
+	u64 steamIpcCallCount;
 	#endif
 };
 

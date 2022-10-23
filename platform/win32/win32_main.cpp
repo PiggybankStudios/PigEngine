@@ -94,6 +94,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_files.cpp"
 #include "win32/win32_file_watching.cpp"
 #include "win32/win32_dll_loading.cpp"
+#include "win32/win32_steam.cpp"
 #include "win32/win32_box2d.cpp"
 #include "win32/win32_audio.cpp"
 #include "win32/win32_clipboard.cpp"
@@ -346,7 +347,7 @@ int main(int argc, char* argv[])
 	PerfSection("SteamInitialization");
 	InitPhase = Win32InitPhase_ResourcesLoaded;
 	
-	//TODO: Initialize Steam API
+	Win32_SteamInit();
 	
 	Platform->loadingPercent = 0.5f;
 	// Win32_RenderLoadingScreen(0.0f);
@@ -459,6 +460,9 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_CheckForThreadAssertions();
 	Win32_UpdateAudio();
 	Win32_UpdateFileWatching();
+	#if STEAM_BUILD
+	Win32_UpdateSteamStuff();
+	#endif
 	Win32_CheckControllerInputs(&Platform->engineActiveInput);
 	
 	Win32_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
@@ -486,6 +490,9 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Platform->engineInput.nextProcmonEventId = Platform->nextProcmonEventId;
 	Platform->engineInput.processEntries = Platform->processEntries;
 	Platform->engineInput.touchedFiles = Platform->touchedFiles;
+	#endif
+	#if STEAM_BUILD
+	Win32_UpdateEngineInputSteamInfo(&Platform->enginePreviousInput, &Platform->engineInput);
 	#endif
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);

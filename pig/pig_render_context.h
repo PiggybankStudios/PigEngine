@@ -37,6 +37,7 @@ struct RenderContextState_t
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
 	v3 cameraPosition;
+	v3 playerPosition;
 	r32 depth;
 	
 	rec sourceRec1;

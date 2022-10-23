@@ -1481,7 +1481,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +==================================+
 	// | Handle Select All Hotkey Ctrl+A  |
 	// +==================================+
-	if (KeyPressed(Key_A) && KeyDownRaw(Key_Control))
+	if (KeyPressed(Key_A) && KeyDownRaw(Key_Control) && console->state != DbgConsoleState_Closed && !console->overlayMode)
 	{
 		HandleKeyExtended(Key_A);
 		if (console->selectionActive)

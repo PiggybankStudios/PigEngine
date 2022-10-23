@@ -36,6 +36,13 @@ const char* PigDebugCommandInfoStrs[] = {
 	"push_app_state", "Pushes a specified AppState onto the stack (unless it is already active in the stack)", "[app_state]", "\n",
 	"change_app_state", "Swaps out the top AppState with a specified state (unless it is already active in the stack)", "[app_state]", "\n",
 	"regen_basic_resources", "Regenerates the \"basic\" resources used by the render context (like the primitive shape vertex buffers)", "\n",
+	#if STEAM_BUILD
+	"steam_friends", "Exercises the steam friend list enumeration APIs", "\n",
+	"update_friend_status", "Manually requests a refresh on the status of all steam friends", "\n",
+	"get_friend_avatar", "Manually requests the avatar image of a specific steam friend", "[friend_name]", "\n",
+	"clear_friend_avatars", "Clears the steam friend avatar texture cache", "\n",
+	"show_friends_list", "Toggles showing of a debug overlay of all your steam friends", "\n",
+	#endif
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1099,6 +1106,174 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		WriteLine_D("Reloading render context basic resources");
 		RcLoadBasicResources();
 	}
+	
+	#if STEAM_BUILD
+	// +==============================+
+	// |        steam_friends         |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "steam_friends") == 0)
+	{
+		plat->StartSteamFriendsQuery();
+		if (platInfo->steamFriendsList->lastQuerySuccessTime != 0)
+		{
+			PrintLine_N("You have %llu friend%s (as of %s ago):",
+				platInfo->steamFriendsList->friends.length,
+				(platInfo->steamFriendsList->friends.length == 1) ? "" : "s",
+				FormatMillisecondsNt(TimeSince(platInfo->steamFriendsList->lastQuerySuccessTime), TempArena)
+			);
+			VarArrayLoop(&platInfo->steamFriendsList->friends, fIndex)
+			{
+				VarArrayLoopGet(PlatSteamFriendInfo_t, friendInfo, &platInfo->steamFriendsList->friends, fIndex);
+				DbgLevel_t dbgLevel = DbgLevel_Debug;
+				if (friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Online) { dbgLevel = DbgLevel_Info; }
+				if (friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Away || friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Snooze) { dbgLevel = DbgLevel_Warning; }
+				PrintLineAt(dbgLevel,
+					"  Friend[%llu]: ID: %llu \"%.*s%s%.*s%s\" %s %llu group%s%s",
+					fIndex,
+					friendInfo->id,
+					friendInfo->name.length, friendInfo->name.pntr,
+					(friendInfo->nickname.length > 0) ? " (" : "",
+					friendInfo->nickname.length, friendInfo->nickname.pntr,
+					(friendInfo->nickname.length > 0) ? ")" : "",
+					GetPlatSteamFriendOnlineStatusStr(friendInfo->onlineStatus),
+					friendInfo->numGroups, (friendInfo->numGroups == 1) ? "" : "s",
+					(friendInfo->state == PlatSteamFriendState_Incoming) ? " (Incoming)" : ((friendInfo->state == PlatSteamFriendState_Outgoing) ? " (Outgoing)" : "")
+				);
+				if (friendInfo->avatarSize != PlatSteamFriendAvatarSize_None)
+				{
+					PrintLine_N("    Avatar %s is %dx%d (%s)",
+						GetPlatSteamFriendAvatarSizeStr(friendInfo->avatarSize),
+						friendInfo->avatarImageData.width, friendInfo->avatarImageData.height,
+						FormatBytesNt(friendInfo->avatarImageData.dataSize, TempArena)
+					);
+				}
+				if (friendInfo->isInGame)
+				{
+					// "APICO" ID=1390190
+					// "Mx Bikes" ID=655500
+					// friendInfo->inGameLobbySteamId
+					PrintLine_N("    In-Game: AppId %llu IP 0x%08X Port %u (Query Port %u)",
+						friendInfo->inGameSteamAppId,
+						friendInfo->inGameIP,
+						friendInfo->inGamePort,
+						friendInfo->inGameQueryPort
+					);
+				}
+				if (friendInfo->presenceStrs.length > 0)
+				{
+					Print_D("    Presence %llux:", friendInfo->presenceStrs.length);
+					VarArrayLoop(&friendInfo->presenceStrs, sIndex)
+					{
+						VarArrayLoopGet(PlatSteamFriendPresenceStr_t, presenceStr, &friendInfo->presenceStrs, sIndex);
+						Print_D(" \"%.*s\"=\"%.*s\"", presenceStr->key.length, presenceStr->key.pntr, presenceStr->value.length, presenceStr->value.pntr);
+					}
+					WriteLine_D("");
+				}
+			}
+			PrintLine_N("You have %llu friend group%s:",
+				platInfo->steamFriendsList->groups.length,
+				(platInfo->steamFriendsList->groups.length == 1) ? "" : "s"
+			);
+			VarArrayLoop(&platInfo->steamFriendsList->groups, gIndex)
+			{
+				VarArrayLoopGet(PlatSteamFriendGroup_t, group, &platInfo->steamFriendsList->groups, gIndex);
+				PrintLine_I("  Group[%llu]: \"%.*s\" (%llu member%s)", gIndex, group->name.length, group->name.pntr, group->memberIds.length, (group->memberIds.length == 1) ? "" : "s");
+				VarArrayLoop(&group->memberIds, mIndex)
+				{
+					VarArrayLoopGet(u64, memberIdPntr, &group->memberIds, mIndex);
+					PlatSteamFriendInfo_t* friendInfo = plat->GetSteamFriendInfoById(*memberIdPntr);
+					NotNull(friendInfo);
+					DbgLevel_t dbgLevel = DbgLevel_Debug;
+					if (friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Online) { dbgLevel = DbgLevel_Info; }
+					if (friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Away || friendInfo->onlineStatus == PlatSteamFriendOnlineStatus_Snooze) { dbgLevel = DbgLevel_Warning; }
+					PrintLineAt(dbgLevel,
+						"    Member[%llu]: \"%.*s%s%.*s%s\" %s",
+						mIndex,
+						friendInfo->name.length, friendInfo->name.pntr,
+						(friendInfo->nickname.length > 0) ? " (" : "",
+						friendInfo->nickname.length, friendInfo->nickname.pntr,
+						(friendInfo->nickname.length > 0) ? ")" : "",
+						GetPlatSteamFriendOnlineStatusStr(friendInfo->onlineStatus)
+					);
+				}
+			}
+		}
+		else
+		{
+			WriteLine_D("Run this command again. If the query succeeded, we should have a valid friends list");
+		}
+	}
+	// +==============================+
+	// |     update_friend_status     |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "update_friend_status") == 0)
+	{
+		if (platInfo->steamFriendsList->lastQuerySuccessTime == 0) { WriteLine_E("We don't have the steam friends list right now!"); return validCommand; }
+		WriteLine_I("Refreshing steam friend statuses");
+		plat->UpdateSteamFriendStatus();
+	}
+	// +==============================+
+	// |      get_friend_avatar       |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "get_friend_avatar") == 0)
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu", numArguments); return validCommand; }
+		if (platInfo->steamFriendsList->lastQuerySuccessTime == 0) { WriteLine_E("We don't have the steam friends list right now!"); return validCommand; }
+		
+		PlatSteamFriendInfo_t* friendInfo = nullptr;
+		MyStr_t friendName = arguments[0];
+		VarArrayLoop(&platInfo->steamFriendsList->friends, fIndex)
+		{
+			VarArrayLoopGet(PlatSteamFriendInfo_t, iterFriendInfo, &platInfo->steamFriendsList->friends, fIndex);
+			if (StrCompareIgnoreCase(iterFriendInfo->name, friendName) == 0)
+			{
+				friendInfo = iterFriendInfo;
+				break;
+			}
+		}
+		if (friendInfo == nullptr)
+		{
+			PrintLine_E("Unknown friend \"%.*s\"", friendName.length, friendName.pntr);
+			return validCommand;
+		}
+		
+		if (plat->RequestSteamFriendAvatar(friendInfo->id, PlatSteamFriendAvatarSize_Large))
+		{
+			PrintLine_I("Requesting friend %llu avatar...", friendInfo->id);
+		}
+		else
+		{
+			PrintLine_E("Failed to request friend %llu avatar!", friendInfo->id);
+		}
+	}
+	// +==============================+
+	// |     clear_friend_avatars     |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "clear_friend_avatars") == 0)
+	{
+		u64 numAvatars = pig->steamAvatars.length;
+		VarArrayLoop(&pig->steamAvatars, aIndex)
+		{
+			VarArrayLoopGet(SteamAvatar_t, steamAvatar, &pig->steamAvatars, aIndex);
+			DestroyTexture(&steamAvatar->texture);
+		}
+		VarArrayClear(&pig->steamAvatars);
+		PrintLine_I("Cleared %llu avatar%s", numAvatars, (numAvatars == 1) ? "" : "s");
+	}
+	// +==============================+
+	// |      show_friends_list       |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "show_friends_list") == 0)
+	{
+		pig->debugRenderSteamFriendsList = !pig->debugRenderSteamFriendsList;
+		if (platInfo->steamFriendsList->lastQueryAttemptTime == 0)
+		{
+			WriteLine_W("Kicking off first steam friends query...");
+			plat->StartSteamFriendsQuery();
+		}
+		PrintLine_I("Friends List %s", pig->debugRenderSteamFriendsList ? "Shown" : "Hidden");
+	}
+	#endif
 	
 	// +==============================+
 	// |       Unknown Command        |

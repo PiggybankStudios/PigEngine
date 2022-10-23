@@ -128,6 +128,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_resources.cpp"
 #include "pig/pig_settings.cpp"
 #include "pig/pig_debug_bindings.cpp"
+#include "pig/pig_steam.cpp"
 
 #include "pig/pig_input.cpp"
 #include "pig/pig_window.cpp"
@@ -145,6 +146,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_textbox.cpp"
 #include "pig/pig_value_slider.cpp"
 #include "pig/pig_checkbox.cpp"
+#include "pig/pig_render_funcs_extra.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"

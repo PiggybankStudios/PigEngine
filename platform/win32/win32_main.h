@@ -167,6 +167,11 @@ struct Win32PlatformState_t
 	StrHashDict_t touchedFiles; //ProcmonFile_t
 	#endif
 	
+	#if STEAM_BUILD
+	u32 steamAppId;
+	CSteamID steamUserId;
+	PlatSteamFriendsList_t steamFriendsList;
+	#endif
 };
 
 #endif //  _WIN_32_MAIN_H

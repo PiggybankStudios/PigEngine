@@ -421,4 +421,13 @@ struct PigDebugBindings_t
 	VarArray_t entries; //PigDebugBindingsEntry_t
 };
 
+#if STEAM_BUILD
+struct SteamAvatar_t
+{
+	u64 friendId;
+	PlatSteamFriendAvatarSize_t size;
+	Texture_t texture;
+};
+#endif
+
 #endif //  _PIG_TYPES_H

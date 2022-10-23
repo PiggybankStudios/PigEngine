@@ -123,6 +123,10 @@ void Win32_ResetEngineInput(EngineInput_t* input)
 		}
 	}
 	VarArrayClear(&input->inputEvents);
+	
+	#if STEAM_BUILD
+	input->steamIpcCallCount = 0;
+	#endif
 }
 
 void Win32_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* newInput, bool windowInteractionOccurred)

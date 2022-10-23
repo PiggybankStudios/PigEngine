@@ -114,7 +114,7 @@ bool CreateTextureArray(MemArena_t* memArena, Texture_t* textureOut, u64 numLaye
 			
 			glTexStorage3D(
 				GL_TEXTURE_2D_ARRAY,         //bound texture type
-				1,                           //num mipmap levels TODO: Change me?
+				4,                           //num mipmap levels TODO: Change me?
 				internalFormat,              //internal format
 				(GLsizei)textureSize.width,  //image width
 				(GLsizei)textureSize.height, //image height

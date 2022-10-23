@@ -141,6 +141,11 @@ struct PigState_t
 	MusicSystemState_t musicSystem;
 	
 	VarArray_t confirmDialogs; //ConfirmDialog_t
+	
+	#if STEAM_BUILD
+	bool debugRenderSteamFriendsList;
+	VarArray_t steamAvatars; //SteamAvatar_t
+	#endif
 };
 
 #endif //  _PIG_MAIN_H

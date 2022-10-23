@@ -200,6 +200,25 @@ const void* GetFocusedItemPntr()
 {
 	return pig->focusedItemPntr;
 }
+bool IsKeyTypingRelated(Key_t key)
+{
+	if (key >= Key_A && key <= Key_Z) { return true; }
+	if (key >= Key_0 && key <= Key_9) { return true; }
+	if (key >= Key_Plus && key <= Key_Space) { return true; }
+	if (key == Key_Enter)     { return true; }
+	if (key == Key_Backspace) { return true; }
+	if (key == Key_Delete)    { return true; }
+	if (key == Key_Home)      { return true; }
+	if (key == Key_End)       { return true; }
+	if (key == Key_Shift)     { return true; }
+	if (key == Key_CapsLock)  { return true; }
+	if (key == Key_Tab)       { return true; }
+	if (key == Key_Left)      { return true; }
+	if (key == Key_Right)     { return true; }
+	if (key == Key_Up)        { return true; }
+	if (key == Key_Down)      { return true; }
+	return false;
+}
 bool IsFocused(const void* itemPntr)
 {
 	return (pig->focusedItemPntr == itemPntr);
@@ -1762,24 +1781,39 @@ void Pig_HandleDebugBindings(PigDebugBindings_t* bindings)
 		{
 			case PigDebugBindingType_Keyboard:
 			{
-				bool modifiersHeld = true;
-				for (u64 mIndex = 0; mIndex < ModifierKey_NumKeys; mIndex++)
+				if (!IsFocusedItemTyping() || !IsKeyTypingRelated(binding->key))
 				{
-					ModifierKey_t modifierKey = (ModifierKey_t)((u8)1 << mIndex);
-					if (IsFlagSet(binding->modifiers, modifierKey))
+					bool modifiersHeld = true;
+					for (u64 mIndex = 0; mIndex < ModifierKey_NumKeys; mIndex++)
 					{
-						if (!KeyDownRaw(GetKeyForModifierKey(modifierKey)))
+						ModifierKey_t modifierKey = (ModifierKey_t)((u8)1 << mIndex);
+						if (IsFlagSet(binding->modifiers, modifierKey))
 						{
-							modifiersHeld = false;
-							break;
+							if (!KeyDownRaw(GetKeyForModifierKey(modifierKey)))
+							{
+								modifiersHeld = false;
+								break;
+							}
 						}
 					}
-				}
-				
-				if (modifiersHeld && KeyPressed(binding->key))
-				{
-					HandleKeyExtended(binding->key);
-					PigParseDebugCommand(binding->commandStr);
+					
+					u8 sensitiveModifiers = ModifierKey_None;
+					VarArrayLoop(&bindings->entries, bIndex2)
+					{
+						VarArrayLoopGet(PigDebugBindingsEntry_t, binding2, &bindings->entries, bIndex2);
+						if (binding2->type == PigDebugBindingType_Keyboard && binding2->key == binding->key) { sensitiveModifiers |= binding2->modifiers; }
+					}
+					
+					bool extraModifiersDown = false;
+					if (!IsFlagSet(binding->modifiers, ModifierKey_Ctrl)  && IsFlagSet(sensitiveModifiers, ModifierKey_Ctrl)  && KeyDownRaw(Key_Control)) { extraModifiersDown = true; }
+					if (!IsFlagSet(binding->modifiers, ModifierKey_Shift) && IsFlagSet(sensitiveModifiers, ModifierKey_Shift) && KeyDownRaw(Key_Shift))   { extraModifiersDown = true; }
+					if (!IsFlagSet(binding->modifiers, ModifierKey_Alt)   && IsFlagSet(sensitiveModifiers, ModifierKey_Alt)   && KeyDownRaw(Key_Alt))     { extraModifiersDown = true; }
+					
+					if (modifiersHeld && !extraModifiersDown && KeyPressed(binding->key))
+					{
+						HandleKeyExtended(binding->key);
+						PigParseDebugCommand(binding->commandStr);
+					}
 				}
 			} break;
 			case PigDebugBindingType_Mouse:

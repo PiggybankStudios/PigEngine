@@ -310,6 +310,17 @@ void RcSetCameraPosition_OpenGL(v3 cameraPos)
 		AssertNoOpenGlError();
 	}
 }
+void RcSetPlayerPosition_OpenGL(v3 playerPos)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_PlayerPosition))
+	{
+		Assert(rc->state.boundShader->glLocations.playerPosition >= 0);
+		glUniform3f(rc->state.boundShader->glLocations.playerPosition, playerPos.x, playerPos.y, playerPos.z);
+		AssertNoOpenGlError();
+	}
+}
 
 void RcSetViewport_OpenGL(rec viewportRec)
 {
@@ -429,6 +440,18 @@ void RcSetCircleInnerRadius_OpenGL(r32 innerRadius)
 	{
 		Assert(rc->state.boundShader->glLocations.circleInnerRadius >= 0);
 		glUniform1f(rc->state.boundShader->glLocations.circleInnerRadius, innerRadius);
+		AssertNoOpenGlError();
+	}
+}
+
+void RcSetTime_OpenGL(r32 time)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_Time))
+	{
+		Assert(rc->state.boundShader->glLocations.time >= 0);
+		glUniform1f(rc->state.boundShader->glLocations.time, time);
 		AssertNoOpenGlError();
 	}
 }
@@ -784,6 +807,7 @@ void RcBindShader(Shader_t* shader)
 			RcSetViewMatrix_OpenGL(rc->state.viewMatrix);
 			RcSetProjectionMatrix_OpenGL(rc->state.projectionMatrix);
 			RcSetCameraPosition_OpenGL(rc->state.cameraPosition);
+			RcSetPlayerPosition_OpenGL(rc->state.playerPosition);
 			RcSetColor1_OpenGL(rc->state.color1f);
 			RcSetColor2_OpenGL(rc->state.color2f);
 			if (rc->state.boundTexture1 != nullptr) { RcSetSourceRec1_OpenGL(rc->state.sourceRec1, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height); }
@@ -792,6 +816,7 @@ void RcBindShader(Shader_t* shader)
 			RcSetCount_OpenGL(rc->state.count);
 			RcSetCircleRadius_OpenGL(rc->state.circleRadius);
 			RcSetCircleInnerRadius_OpenGL(rc->state.circleInnerRadius);
+			RcSetTime_OpenGL(rc->state.time);
 			RcSetSaturation_OpenGL(rc->state.saturation);
 			RcSetBrightness_OpenGL(rc->state.brightness);
 			RcSetPolygonPlanes_OpenGL(&rc->state.polygonPlanes[0]);
@@ -1066,6 +1091,23 @@ void RcSetCameraPosition(v3 cameraPos)
 		default: DebugAssertMsg(false, "Unsupported render API in RcSetCameraPosition!"); break;
 	}
 }
+void RcSetPlayerPosition(v3 playerPos)
+{
+	NotNull(rc);
+	if (rc->state.playerPosition == playerPos) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetPlayerPosition_OpenGL(playerPos);
+			rc->state.playerPosition = playerPos;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetPlayerPosition!"); break;
+	}
+}
 
 void RcSetDepth(r32 depth)
 {
@@ -1302,6 +1344,23 @@ void RcSetCircleInnerRadius(r32 innerRadius)
 	}
 }
 
+void RcSetTime(r32 time)
+{
+	NotNull(rc);
+	if (BasicallyEqualR32(rc->state.time, time)) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetTime_OpenGL(time);
+			rc->state.time = time;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetSaturation!"); break;
+	}
+}
 void RcSetSaturation(r32 saturation)
 {
 	NotNull(rc);
@@ -1560,6 +1619,9 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 	}
 }
 
+// +==============================+
+// |           Stencil            |
+// +==============================+
 void RcStartStencilDrawing()
 {
 	NotNull(rc);
@@ -1682,6 +1744,7 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	rc->state.projectionMatrix = Mat4_Identity;
 	
 	rc->state.cameraPosition = Vec3_Zero;
+	rc->state.playerPosition = Vec3_Zero;
 	
 	rc->state.depth = clearDepth;
 	
