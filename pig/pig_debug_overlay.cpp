@@ -295,6 +295,8 @@ void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatCon
 
 void RenderPigDebugOverlayBelowConsole(PigDebugOverlay_t* overlay)
 {
+	UNUSED(overlay);
+	
 	// +==================================+
 	// | Render Cyclic Functions Overlay  |
 	// +==================================+

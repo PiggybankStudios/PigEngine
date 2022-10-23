@@ -199,6 +199,7 @@ void Win32_UpdateFriendsList()
 // i32 Win32_CompareFriendInfo(const void* left, const void* right, void* contextPntr)
 COMPARE_FUNC_DEFINITION(Win32_CompareFriendInfo)
 {
+	UNUSED(contextPntr);
 	PlatSteamFriendInfo_t* leftFriend = (PlatSteamFriendInfo_t*)left;
 	PlatSteamFriendInfo_t* rightFriend = (PlatSteamFriendInfo_t*)right;
 	NotNull2(leftFriend, rightFriend);
@@ -221,6 +222,7 @@ COMPARE_FUNC_DEFINITION(Win32_CompareFriendInfo)
 // i32 Win32_CompareFriendGroupMemberId(const void* left, const void* right, void* contextPntr)
 COMPARE_FUNC_DEFINITION(Win32_CompareFriendGroupMemberId)
 {
+	UNUSED(contextPntr);
 	u64* leftMemberId = (u64*)left;
 	u64* rightMemberId = (u64*)right;
 	PlatSteamFriendInfo_t* leftFriend = Win32_GetSteamFriendInfoById(*leftMemberId);
