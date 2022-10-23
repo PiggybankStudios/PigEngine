@@ -141,7 +141,9 @@ void PigUpdateMainWindow()
 	Pig_HandleScreenshotHotkeys();
 	Pig_HandleDebugBindings(&pig->sessionDebugBindings);
 	Pig_HandleDebugBindings(&pig->debugBindings);
+	#if STEAM_BUILD
 	Pig_UpdateSteamAvatars();
+	#endif
 	
 	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);
