@@ -113,7 +113,7 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 		}
 		
 		//TODO: Should we have the calling code decide if the textures should repeat? I think we may just always want this, it's part of the reason we would use a texture array in the first place
-		const bool repeating = true;
+		const bool repeating = false;
 		if (!CreateTextureArray(memArena, &sheetOut->texture, totalNumFrames, frameDatas, pixelated, repeating))
 		{
 			sheetOut->error = SpriteSheetError_TextureError;

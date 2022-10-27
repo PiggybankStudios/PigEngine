@@ -1991,7 +1991,7 @@ void RcLoadBasicResources()
 	gradientImageData.rowSize = gradientImageData.pixelSize * gradientImageData.width;
 	gradientImageData.dataSize = gradientImageData.rowSize * gradientImageData.height;
 	gradientImageData.data32 = (u32*)&gradientColors[0];
-	if (!CreateTexture(fixedHeap, &rc->gradientHorizontal, &gradientImageData, false, true, false))
+	if (!CreateTexture(fixedHeap, &rc->gradientHorizontal, &gradientImageData, false, false))
 	{
 		PrintLine_E("Failed to load gradientHorizontal texture! Error %s%s%s", GetTextureErrorStr(rc->gradientHorizontal.error), (rc->gradientHorizontal.error == TextureError_ApiError) ? ": " : "", (rc->gradientHorizontal.error == TextureError_ApiError) ? rc->gradientHorizontal.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientHorizontal);
@@ -1999,7 +1999,7 @@ void RcLoadBasicResources()
 	}
 	gradientImageData.size = NewVec2i(1, ArrayCount(gradientColors));
 	gradientImageData.rowSize = gradientImageData.pixelSize * gradientImageData.width;
-	if (!CreateTexture(fixedHeap, &rc->gradientVertical, &gradientImageData, false, true, false))
+	if (!CreateTexture(fixedHeap, &rc->gradientVertical, &gradientImageData, false, false))
 	{
 		PrintLine_E("Failed to load gradientVertical texture! Error %s%s%s", GetTextureErrorStr(rc->gradientVertical.error), (rc->gradientVertical.error == TextureError_ApiError) ? ": " : "", (rc->gradientVertical.error == TextureError_ApiError) ? rc->gradientVertical.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientVertical);
