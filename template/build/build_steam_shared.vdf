@@ -1,0 +1,110 @@
+"DepotBuildConfig"
+{
+	"FileMapping"
+	{
+		"LocalPath" "steam_api64.dll"
+		"DepotPath" "."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon.ico"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}"FileMapping"
+	{
+		"LocalPath" "Resources/icon16.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon24.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon32.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon64.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon120.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/icon256.png"
+		"DepotPath" "Resources/."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Fonts/*"
+		"DepotPath" "Resources/Fonts/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Models/*"
+		"DepotPath" "Resources/Models/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Music/*"
+		"DepotPath" "Resources/Music/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Shaders/*"
+		"DepotPath" "Resources/Shaders/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Sheets/*"
+		"DepotPath" "Resources/Sheets/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Sounds/*"
+		"DepotPath" "Resources/Sounds/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Sprites/*"
+		"DepotPath" "Resources/Sprites/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Text/*"
+		"DepotPath" "Resources/Text/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Textures/*"
+		"DepotPath" "Resources/Textures/."
+		"recursive" "1"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "Resources/Vector/*"
+		"DepotPath" "Resources/Vector/."
+		"recursive" "1"
+	}
+}

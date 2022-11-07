@@ -1,16 +1,24 @@
 @echo off
 
-set ProjectName=NewProjectName
+rem NOTE: We need to change this in the build_installer.nsi as well
+rem The "Safe" name doesn't have spaces or invalid characters and also doesn't change for Demo vs non-Demo
+set ProjectName=Pig Engine Template
+set ProjectNameSafe=PigEngineTemplate
 
-set CompilePlatform=1
+set CompilePlatform=0
 set CompileEngine=1
+set CompileInstaller=0
 
 set DebugBuild=1
 set DeveloperBuild=1
+set DemoBuild=0
+set SteamBuild=0
 set OpenGlSupport=1
 set VulkanSupport=0
 set DirectXSupport=0
 set Box2DSupport=0
+set ProcmonSupport=0
+set AssertionsEnabled=1
 
 set CopyToDataDirectory=1
 
@@ -29,7 +37,7 @@ set TimeString=%date:~-4,4%%date:~-10,2%%date:~-7,2%%time:~0,2%%time:~3,2%%time:
 echo Running on %ComputerName%
 
 if "%DemoBuild%"=="1" (
-	set ProjectName=%ProjectName%_Demo
+	set ProjectName=%ProjectName% Demo
 )
 
 python --version 2>NUL
@@ -44,7 +52,7 @@ rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" 
 rem call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 -no_logo
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
 
-set CompilerFlags=-DWINDOWS_COMPILATION -DPROJECT_NAME=\"%ProjectName%\" -DDEBUG_BUILD=%DebugBuild% -DDEVELOPER_BUILD=%DeveloperBuild% -DBOX2D_SUPPORTED=%Box2DSupport% -DOPENGL_SUPPORTED=%OpenGlSupport% -DVULKAN_SUPPORTED=%VulkanSupport% -DDIRECTX_SUPPORTED=%DirectXSupport% -DSLUG_SUPPORTED=0
+set CompilerFlags=-DWINDOWS_COMPILATION -DPROJECT_NAME="\"%ProjectName%\"" -DPROJECT_NAME_SAFE=\"%ProjectNameSafe%\" -DDEBUG_BUILD=%DebugBuild% -DDEVELOPER_BUILD=%DeveloperBuild% -DDEMO_BUILD=%DemoBuild% -DSTEAM_BUILD=%SteamBuild% -DPROCMON_SUPPORTED=%ProcmonSupport% -DBOX2D_SUPPORTED=%Box2DSupport% -DOPENGL_SUPPORTED=%OpenGlSupport% -DVULKAN_SUPPORTED=%VulkanSupport% -DDIRECTX_SUPPORTED=%DirectXSupport% -DSLUG_SUPPORTED=0 -DASSERTIONS_ENABLED=%AssertionsEnabled%
 rem /FC = Full path for error messages
 rem /EHsc = Exception Handling Model: Standard C++ Stack Unwinding. Functions declared as extern "C" can't throw exceptions
 rem /EHa- = TODO: Do we really need this?? It seems like this option should be off if we specify s and c earlier
@@ -74,7 +82,7 @@ rem TODO: Do we really need all of these? Maybe go through and document what fun
 rem glfw3.lib    = GLFW, platform independent window creation + device context + input
 rem gdi32.lib    = ?
 rem User32.lib   = ?
-rem Shell32.lib  = ?
+rem Shell32.lib  = Shlobj.h ? 
 rem kernel32.lib = ?
 rem winmm.lib    = ?
 rem Winhttp.lib  = ?
@@ -83,7 +91,7 @@ rem Ole32.lib    = Combaseapi.h, CoCreateInstance
 set PlatformLibraries=glfw3.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib Winhttp.lib Shlwapi.lib Ole32.lib
 set IncludeDirectories=/I"%EngineSourceDirectory%" /I"%EngineSourceDirectory%"\platform /I"%GameSourceDirectory%" /I"%LibDirectory%\include" /I"%LibDirectory%\include\my_glfw\include" /I"%LibDirectory%\include\bullet3\src" /I"%LibDirectory%\include\slug\SlugCode" /I"%LibDirectory%\include\slug\TerathonCode"
 set EngineDllExports=/EXPORT:Pig_GetVersion /EXPORT:Pig_GetStartupOptions /EXPORT:Pig_Initialize /EXPORT:Pig_Update /EXPORT:Pig_AudioService /EXPORT:Pig_ShouldWindowClose /EXPORT:Pig_Closing /EXPORT:Pig_PreReload /EXPORT:Pig_PostReload /EXPORT:Pig_PerformTask
-set EngineDllDirective=/DLL /PDB:"%ProjectName%_%TimeString%.pdb"
+set EngineDllDirective=/DLL /PDB:"%ProjectNameSafe%_%TimeString%.pdb"
 
 if "%DebugBuild%"=="1" (
 	rem /Od = Optimization level: Debug
@@ -120,6 +128,12 @@ if "%Box2DSupport%"=="1" (
 	set IncludeDirectories=%IncludeDirectories% /I"%LibDirectory%\include\Box2D\include"
 )
 
+if "%ProcmonSupport%"=="1" (
+	set CompilerFlags=%CompilerFlags% -DUNICODE -D_UNICODE
+	set IncludeDirectories=%IncludeDirectories% /I"%LibDirectory%\include\procmonsdk\sdk\procmonsdk"
+	set PlatformLibraries=%PlatformLibraries% procmonsdk.lib winspool.lib
+)
+
 rem Compile the resources file to generate resources.res which defines our program icon
 rem TODO: Make the .res file show up in the build folder. Also maybe make this file path another define above
 rc /nologo resources.rc
@@ -133,11 +147,11 @@ if "%CompilePlatform%"=="1" (
 		python %IncVersNumScriptPath% %PlatformVersionFilePath%
 	)
 	
-	cl /Fe%ProjectName%.exe %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
+	cl /Fe%ProjectNameSafe%.exe %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
 	
 	if "%CopyToDataDirectory%"=="1" (
-		echo [Copying %ProjectName%.exe to data directory]
-		XCOPY ".\%ProjectName%.exe" "%DataDirectory%\" /Y > NUL
+		echo [Copying %ProjectNameSafe%.exe to data directory]
+		XCOPY ".\%ProjectNameSafe%.exe" "%DataDirectory%\" /Y > NUL
 	) else (
 		echo [Platform Build Finished!]
 	)
@@ -151,12 +165,18 @@ if "%CompileEngine%"=="1" (
 		python %IncVersNumScriptPath% %GameVersionFilePath%
 	)
 	
-	cl /Fe%ProjectName%.dll %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
+	cl /Fe%ProjectNameSafe%.dll %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
 	
 	if "%CopyToDataDirectory%"=="1" (
-		echo [Copying %ProjectName%.dll to data directory]
-		XCOPY ".\%ProjectName%.dll" "%DataDirectory%\" /Y > NUL
+		echo [Copying %ProjectNameSafe%.dll to data directory]
+		XCOPY ".\%ProjectNameSafe%.dll" "%DataDirectory%\" /Y > NUL
 	) else (
 		echo [Engine Build Finished!]
 	)
+)
+
+if "%CompileInstaller%"=="1" (
+	echo[
+	
+	makensis build_installer.nsi
 )

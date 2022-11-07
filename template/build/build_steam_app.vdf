@@ -1,0 +1,16 @@
+"appbuild"
+{
+	"appid"       "2185480" //NOTE: Auto Updated by Python
+	"desc"        "Developer Build v0.01(3540)" //NOTE: Auto Updated by Python
+	"buildoutput" "release/log"
+	"contentroot" "../release/win_developer/" //NOTE: Auto Updated by Python
+	"setlive"     ""  // branch to set live after successful build, non if empty
+	"preview"     "0" // to enable preview builds
+	"local"       ""  // set to file path of local content server 
+	
+	"depots"
+	{
+		"2185481" "build_steam_main.vdf" //NOTE: Auto Updated by Python
+		"2185482" "build_steam_shared.vdf" //NOTE: Auto Updated by Python
+	}
+}

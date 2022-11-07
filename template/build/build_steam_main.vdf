@@ -1,0 +1,13 @@
+"DepotBuildConfig"
+{
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "0"
+	}
+	
+	// but exclude all symbol files  
+	// This can be a full path, or a path relative to ContentRoot
+	"FileExclusion" "steam_api64.dll"
+}
