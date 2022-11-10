@@ -12,6 +12,8 @@ Description:
 #include "main_menu/main_menu_state.cpp"
 #include "app_state_list.cpp"
 
+#include "game_settings.cpp"
+#include "game_tasks.cpp"
 #include "game_debug_commands.cpp"
 
 // +--------------------------------------------------------------+

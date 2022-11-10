@@ -82,6 +82,7 @@ struct Win32PlatformState_t
 	PlatWindow_t* mainWindow;
 	PlatWindow_t* currentWindow;
 	GLFWwindow* movingWindowGlfwPntr;
+	bool isChangingMinimization;
 	
 	StartupInfo_t startupInfo;
 	StartupOptions_t startupOptions;
@@ -135,6 +136,11 @@ struct Win32PlatformState_t
 	PlatMutex_t audioOutputMutex;
 	AudioServiceInfo_t audioServiceInfo;
 	bool audioWaitForFirstUpdateAfterReload;
+	
+	//Processes
+	PlatMutex_t runningProcessesMutex;
+	u64 nextRunningProcessId;
+	BktArray_t runningProcesses;
 	
 	//Basic Rendering
 	VarArray_t vertexArrayObjs;

@@ -50,6 +50,7 @@ struct PigState_t
 	MemArena_t platHeap;
 	MemArena_t fixedHeap;
 	MemArena_t mainHeap;
+	MemArena_t largeAllocHeap;
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	MemArena_t audioHeap;
@@ -134,7 +135,7 @@ struct PigState_t
 	SoundInstance_t soundInstances[PIG_MAX_SOUND_INSTANCES];
 	PlatMutex_t audioOutSamplesMutex;
 	u64 audioOutWriteIndex;
-	r64 audioOutSamples[PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH];
+	r64* audioOutSamples;
 	r64 audioMixerTime;
 	u64 numAudioClips;
 	

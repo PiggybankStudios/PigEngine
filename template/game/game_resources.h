@@ -12,7 +12,7 @@ Description:
 #define RESOURCES_NUM_TEXTURES    14
 #define RESOURCES_NUM_VECTORS     2
 #define RESOURCES_NUM_SHEETS      4
-#define RESOURCES_NUM_SHADERS     11
+#define RESOURCES_NUM_SHADERS     12
 #define RESOURCES_NUM_FONTS       4
 #define RESOURCES_NUM_SOUNDS      3
 #define RESOURCES_NUM_MUSICS      2
@@ -92,6 +92,7 @@ union ATTR_PACKED ResourceShaders_t
 		Shader_t bezier3;
 		Shader_t bezier4;
 		Shader_t ellipseArc;
+		Shader_t convexPolygon2D;
 		
 		Shader_t testShader;
 	};
@@ -154,7 +155,7 @@ const char* Resources_GetPathForTexture(u64 textureIndex, ResourceTextureMetaInf
 		case 9:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_purple.png");        //| defaultPurple    |
 		case 10: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_red.png");           //| defaultRed       |
 		case 11: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_yellow.png");        //| defaultYellow    |
-		case 12: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "blue_gradient_back.png");    //| blueGradientBack |
+		case 12: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "blue_gradient.png");        //| blueGradientBack |
 		
 		case 13: NORMAL_TEXTURE_META_INFO(false, false, SPRITES,  "main_menu.png");             //| mainMenuBackground    |
 		
@@ -172,7 +173,6 @@ const char* Resources_GetPathForVectorImg(u64 vectorImgIndex)
 	{
 		case 0: return RESOURCE_FOLDER_VECTOR  "/test.svg";             //| test           |
 		case 1: return RESOURCE_FOLDER_VECTOR  "/pig.svg";              //| pig            |
-		case 2: return RESOURCE_FOLDER_VECTOR  "/pig_parts_title.svg";  //| pigPartsTitle  |
 		default: DebugAssert(false); return nullptr;
 	}
 }
@@ -374,6 +374,30 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
 			}
 			return RESOURCE_FOLDER_SHADERS "/ellipseArc.glsl"; 
+		} break;
+		// +==============================+
+		// |       convexPolygon2D        |
+		// +==============================+
+		case 10:
+		{
+			if (metaInfo != nullptr)
+			{
+				metaInfo->vertexType = VertexType_Default2D;
+				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
+			}
+			return RESOURCE_FOLDER_SHADERS "/convexPolygon2D.glsl"; 
+		} break;
+		// +==============================+
+		// |          testShader          |
+		// +==============================+
+		case 11:
+		{
+			if (metaInfo != nullptr)
+			{
+				metaInfo->vertexType = VertexType_Default2D;
+				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
+			}
+			return RESOURCE_FOLDER_SHADERS "/test.glsl"; 
 		} break;
 		default: DebugAssert(false); return nullptr;
 	}

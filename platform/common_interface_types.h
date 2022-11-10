@@ -162,6 +162,9 @@ struct PlatformApi_t
 	PlatApiUpdateSteamFriendStatus_f*   UpdateSteamFriendStatus;
 	PlatApiRequestSteamFriendAvatar_f*  RequestSteamFriendAvatar;
 	#endif
+	PlatApiCheckRunningProcess_f*       CheckRunningProcess;
+	PlatApiStartProcess_f*              StartProcess;
+	PlatApiCloseRunningProcess_f*       CloseRunningProcess;
 };
 
 struct EngineMemory_t
@@ -354,6 +357,10 @@ struct EngineOutput_t
 	u64 fullscreenFramerateIndex;
 	v2i windowedResolution;
 	i64 windowedFramerate;
+	
+	bool changeWindowMinimized;
+	bool minizedWindow;
+	u64 minimizeWindowId;
 };
 
 #define PIG_GET_VERSION_DEF(functionName) Version_t functionName()

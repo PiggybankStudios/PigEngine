@@ -15,7 +15,9 @@ void PigInitAudioOutput()
 	AssertSingleThreaded();
 	
 	plat->CreateMutex(&pig->audioOutSamplesMutex);
-	ClearArray(pig->audioOutSamples);
+	pig->audioOutSamples = AllocArray(&pig->largeAllocHeap, r64, PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH);
+	NotNull(pig->audioOutSamples);
+	MyMemSet(pig->audioOutSamples, 0x00, sizeof(r64) * PIG_AUDIO_OUT_SAMPLES_BUFFER_LENGTH);
 	pig->audioOutWriteIndex = 0;
 }
 

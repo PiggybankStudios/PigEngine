@@ -1871,8 +1871,7 @@ void RcLoadBasicResources()
 	
 	//cubeBuffer
 	{
-		TempPushMark();
-		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
+		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), &pig->largeAllocHeap);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
 		// InvertPrimitiveVerts(&primVerts);
@@ -1881,13 +1880,12 @@ void RcLoadBasicResources()
 			WriteLine_E("Failed to create the cube vertex buffer!");
 			DebugAssert(false);
 		}
-		TempPopMark();
+		FreePrimitiveIndexedVerts(&primVerts);
 	}
 	
 	//skyboxBuffer
 	{
-		TempPushMark();
-		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), TempArena);
+		PrimitiveIndexedVerts_t primVerts = GenerateVertsForBox(NewBox(0, 0, 0, 1, 1, 1), &pig->largeAllocHeap);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
 		InvertPrimitiveVerts(&primVerts);
@@ -1916,7 +1914,7 @@ void RcLoadBasicResources()
 			WriteLine_E("Failed to create the skybox vertex buffer!");
 			DebugAssert(false);
 		}
-		TempPopMark();
+		FreePrimitiveIndexedVerts(&primVerts);
 	}
 	
 	//sphereBuffer
@@ -1926,8 +1924,7 @@ void RcLoadBasicResources()
 	Assert(ArrayCount(sphereSegmentCounts) == SphereQuality_NumQualities);
 	for (u64 sIndex = 0; sIndex < SphereQuality_NumQualities; sIndex++)
 	{
-		TempPushMark();
-		PrimitiveIndexedVerts_t primVerts = GenerateVertsForSphere(NewSphere(Vec3_Zero, 1), sphereRingCounts[sIndex], sphereSegmentCounts[sIndex], true, TempArena);
+		PrimitiveIndexedVerts_t primVerts = GenerateVertsForSphere(NewSphere(Vec3_Zero, 1), sphereRingCounts[sIndex], sphereSegmentCounts[sIndex], true, &pig->largeAllocHeap);
 		NotNull(primVerts.vertices);
 		NotNull(primVerts.indices);
 		InvertPrimitiveVerts(&primVerts);
@@ -1937,7 +1934,7 @@ void RcLoadBasicResources()
 			WriteLine_E("Failed to create the sphere vertex buffer!");
 			DebugAssert(false);
 		}
-		TempPopMark();
+		FreePrimitiveIndexedVerts(&primVerts);
 	}
 	
 	r32 triangleHeight = SqrtR32(3)/2.0f;

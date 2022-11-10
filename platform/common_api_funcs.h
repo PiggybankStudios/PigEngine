@@ -215,4 +215,13 @@ typedef PLAT_API_REQUEST_STREAM_FRIEND_AVATAR(PlatApiRequestSteamFriendAvatar_f)
 
 #endif //STEAM_BUILD
 
+#define PLAT_API_START_PROCESS_DEFINITION(functionName) PlatRunningProcess_t* functionName(MyStr_t filePath, MyStr_t argumentsString, MyStr_t workingDirectory)
+typedef PLAT_API_START_PROCESS_DEFINITION(PlatApiStartProcess_f);
+
+#define PLAT_API_CHECK_RUNNING_PROCESS_DEFINITION(functionName) void functionName(PlatRunningProcess_t* runningProcess)
+typedef PLAT_API_CHECK_RUNNING_PROCESS_DEFINITION(PlatApiCheckRunningProcess_f);
+
+#define PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(functionName) void functionName(PlatRunningProcess_t* runningProcess)
+typedef PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(PlatApiCloseRunningProcess_f);
+
 #endif //  _COMMON_API_FUNCS_H

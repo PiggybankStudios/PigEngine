@@ -11,9 +11,6 @@ Description:
 //TODO: Add support for hovering over a line to see the timestamp and/or programTime comparison
 //TODO: Add pause and clear buttons
 
-#define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
-#define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
-
 #define DBG_CONSOLE_OPEN_KEY                Key_Tilde
 #define DBG_CONSOLE_INPUT_HISTORY_LENGTH    16 //items
 #define DBG_CONSOLE_OPEN_TIME               200 //ms

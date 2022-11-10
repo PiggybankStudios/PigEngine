@@ -94,6 +94,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_files.cpp"
 #include "win32/win32_file_watching.cpp"
 #include "win32/win32_dll_loading.cpp"
+#include "win32/win32_process.cpp"
 #include "win32/win32_steam.cpp"
 #include "win32/win32_box2d.cpp"
 #include "win32/win32_audio.cpp"
@@ -360,6 +361,7 @@ int main(int argc, char* argv[])
 	
 	//TODO: Initialize DirectSound or other audio library
 	//TODO: Initialize WinHTTP
+	Win32_InitProcessManagement();
 	Win32_InitFileWatching();
 	#if DEBUG_BUILD
 	Win32_WatchEngineDll(Platform->engineDllPath, Platform->engineDllTempPath, &Platform->engine);
@@ -458,6 +460,7 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	TempPushMark();
 	
 	Win32_CheckForThreadAssertions();
+	Win32_UpdateRunningProcesses();
 	Win32_UpdateAudio();
 	Win32_UpdateFileWatching();
 	#if STEAM_BUILD

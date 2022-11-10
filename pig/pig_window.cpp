@@ -200,7 +200,7 @@ void Pig_SaveScreenshot(FrameBuffer_t* frameBuffer, reci subPartRec, MyStr_t fil
 {
 	NotNull(frameBuffer);
 	PlatImageData_t imageData = {};
-	if (GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, TempArena, &imageData))
+	if (GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, &pig->largeAllocHeap, &imageData))
 	{
 		if (plat->SaveImageDataToFile(filePath, &imageData, PlatImageFormat_Png, nullptr))
 		{
@@ -210,6 +210,7 @@ void Pig_SaveScreenshot(FrameBuffer_t* frameBuffer, reci subPartRec, MyStr_t fil
 		{
 			NotifyPrint_E("Failed to save screenshot to %.*s!", filePath.length, filePath.pntr);
 		}
+		FreeMem(&pig->largeAllocHeap, imageData.data8, imageData.dataSize);
 	}
 	else
 	{

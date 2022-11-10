@@ -77,7 +77,9 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 	{
 		NotNull_(api);
 		NotNull_(memory->persistentDataPntr);
-		Assert_(memory->persistentDataSize >= sizeof(PigState_t));
+		u64 pigStateSize = sizeof(PigState_t);
+		Assert_(memory->persistentDataSize >= pigStateSize);
+		UNUSED(pigStateSize);
 		pig = (PigState_t*)memory->persistentDataPntr;
 		fixedHeap = &pig->fixedHeap;
 		mainHeap = &pig->mainHeap;

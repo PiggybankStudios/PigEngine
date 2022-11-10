@@ -509,7 +509,7 @@ void Win32_GlfwSystemEventCallback(GLFWwindow* glfwWindowPntr, unsigned int uMsg
 		case WM_SIZE:
 		// case WM_SIZING:
 		{
-			if (InitPhase >= Win32InitPhase_PostFirstUpdate && glfwWindowPntr != Platform->movingWindowGlfwPntr && IsMainThread())
+			if (InitPhase >= Win32InitPhase_PostFirstUpdate && glfwWindowPntr != Platform->movingWindowGlfwPntr && IsMainThread() && !Platform->isChangingMinimization)
 			{
 				Win32_DoMainLoopIteration(false);
 			}

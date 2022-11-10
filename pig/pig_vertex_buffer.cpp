@@ -193,13 +193,11 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 
 bool CreateVertBufferFromIndexedPrimitiveVerts3D(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynamic, const PrimitiveIndexedVerts_t* primVerts, Color_t color, bool copyVertices)
 {
-	Assert(memArena != TempArena);
 	NotNull(primVerts);
 	Assert(primVerts->numIndices > 0);
-	TempPushMark();
 	
 	v4 colorVec = ToVec4(color);
-	Vertex3D_t* vertices = AllocArray(TempArena, Vertex3D_t, primVerts->numIndices);
+	Vertex3D_t* vertices = AllocArray(&pig->largeAllocHeap, Vertex3D_t, primVerts->numIndices);
 	NotNull(vertices);
 	for (u64 iIndex = 0; iIndex < primVerts->numIndices; iIndex++)
 	{
@@ -213,7 +211,7 @@ bool CreateVertBufferFromIndexedPrimitiveVerts3D(MemArena_t* memArena, VertBuffe
 	}
 	bool result = CreateVertBuffer3D(memArena, bufferOut, dynamic, primVerts->numIndices, vertices, copyVertices);
 	
-	TempPopMark();
+	FreeMem(&pig->largeAllocHeap, vertices, sizeof(Vertex3D_t) * primVerts->numIndices);
 	return result;
 }
 

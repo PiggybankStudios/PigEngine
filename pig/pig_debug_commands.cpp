@@ -36,6 +36,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"push_app_state", "Pushes a specified AppState onto the stack (unless it is already active in the stack)", "[app_state]", "\n",
 	"change_app_state", "Swaps out the top AppState with a specified state (unless it is already active in the stack)", "[app_state]", "\n",
 	"regen_basic_resources", "Regenerates the \"basic\" resources used by the render context (like the primitive shape vertex buffers)", "\n",
+	"sizeofs", "Prints out some byte sized for various structures and arrays that we may want to monitor", "\n",
 	#if STEAM_BUILD
 	"steam_friends", "Exercises the steam friend list enumeration APIs", "\n",
 	"update_friend_status", "Manually requests a refresh on the status of all steam friends", "\n",
@@ -296,6 +297,10 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		else if (StrCompareIgnoreCase(arguments[0], "Main") == 0 || StrCompareIgnoreCase(arguments[0], "MainHeap") == 0)
 		{
 			DebugPrintArenaInfo(&pig->mainHeap, "MainHeap");
+		}
+		else if (StrCompareIgnoreCase(arguments[0], "LargeAlloc") == 0 || StrCompareIgnoreCase(arguments[0], "LargeAllocHeap") == 0)
+		{
+			DebugPrintArenaInfo(&pig->largeAllocHeap, "LargeAllocHeap");
 		}
 		else if (StrCompareIgnoreCase(arguments[0], "Std") == 0 || StrCompareIgnoreCase(arguments[0], "StdHeap") == 0)
 		{
@@ -1105,6 +1110,26 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		WriteLine_D("Reloading render context basic resources");
 		RcLoadBasicResources();
+	}
+	
+	// +==============================+
+	// |           sizeofs            |
+	// +==============================+
+	else if (StrCompareIgnoreCase(command, "sizeofs") == 0)
+	{
+		PrintLine_D("sizeof(PigState_t) = %s", FormatBytesNt(sizeof(PigState_t), TempArena));
+		PrintLine_D("sizeof(RenderContext_t) = %s", FormatBytesNt(sizeof(RenderContext_t), TempArena));
+		PrintLine_D("DBG_CONSOLE_BUFFER_SIZE = %s", FormatBytesNt(DBG_CONSOLE_BUFFER_SIZE, TempArena));
+		PrintLine_D("DBG_CONSOLE_BUILD_SPACE_SIZE = %s", FormatBytesNt(DBG_CONSOLE_BUILD_SPACE_SIZE, TempArena));
+		PrintLine_D("sizeof(DebugConsole_t) = %s", FormatBytesNt(sizeof(DebugConsole_t), TempArena));
+		PrintLine_D("sizeof(PigNotificationQueue_t) = %s", FormatBytesNt(sizeof(PigNotificationQueue_t), TempArena));
+		PrintLine_D("sizeof(SoundInstance_t) = %s (x%llu)", FormatBytesNt(sizeof(SoundInstance_t), TempArena), (u64)PIG_MAX_SOUND_INSTANCES);
+		PrintLine_D("sizeof(PigDebugOverlay_t) = %s", FormatBytesNt(sizeof(PigDebugOverlay_t), TempArena));
+		PrintLine_D("sizeof(PigPerfGraph_t) = %s", FormatBytesNt(sizeof(PigPerfGraph_t), TempArena));
+		PrintLine_D("sizeof(PigMemGraph_t) = %s", FormatBytesNt(sizeof(PigMemGraph_t), TempArena));
+		PrintLine_D("sizeof(PigAudioOutGraph_t) = %s", FormatBytesNt(sizeof(PigAudioOutGraph_t), TempArena));
+		PrintLine_D("sizeof(Vertex2D_t) = %s", FormatBytesNt(sizeof(Vertex2D_t), TempArena));
+		PrintLine_D("sizeof(Vertex3D_t) = %s", FormatBytesNt(sizeof(Vertex3D_t), TempArena));
 	}
 	
 	#if STEAM_BUILD

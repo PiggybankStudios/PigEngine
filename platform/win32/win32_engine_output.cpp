@@ -25,6 +25,8 @@ void Win32_ClearEngineOutput(EngineOutput_t* output)
 	output->moveWindowId = 0;
 	output->changeFullscreen = false;
 	output->changeFullscreenWindowId = 0;
+	output->changeWindowMinimized = false;
+	output->minimizeWindowId = 0;
 }
 
 void Win32_ProcessEngineOutput(EngineOutput_t* output)
@@ -173,5 +175,28 @@ void Win32_ProcessEngineOutput(EngineOutput_t* output)
 			Platform->movingWindowGlfwPntr = nullptr;
 		}
 	}
+	
+	// +==============================+
+	// |    changeWindowMinimized     |
+	// +==============================+
+	if (output->changeWindowMinimized)
+	{
+		PlatWindow_t* window = Win32_GetWindowById(output->minimizeWindowId);
+		NotNull(window);
+		
+		if (!window->activeInput.minimized && output->minizedWindow)
+		{
+			WriteLine_I("Minimizing window as per engine's request");
+			Platform->isChangingMinimization = true;
+			glfwIconifyWindow(window->handle);
+			Platform->isChangingMinimization = false;
+		}
+		if (window->activeInput.minimized && !output->minizedWindow)
+		{
+			WriteLine_I("Restoring window as per engine's request");
+			Platform->isChangingMinimization = true;
+			glfwRestoreWindow(window->handle);
+			Platform->isChangingMinimization = false;
+		}
+	}
 }
-

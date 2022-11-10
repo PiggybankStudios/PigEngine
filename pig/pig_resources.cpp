@@ -871,9 +871,8 @@ void Pig_LoadSoundResource(u64 soundIndex)
 		
 		if (StrEndsWith(soundPathStr, ".ogg"))
 		{
-			TempPushMark();
 			OggAudioData_t oggData = {};
-			if (TryDeserOggFile(soundFile.size, soundFile.data, &soundParseLog, &oggData, TempArena))
+			if (TryDeserOggFile(soundFile.size, soundFile.data, &soundParseLog, &oggData, &pig->largeAllocHeap))
 			{
 				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newSound, &pig->audioHeap);
 				parseSuccess = true;
@@ -884,13 +883,12 @@ void Pig_LoadSoundResource(u64 soundIndex)
 				DebugAssert(false);
 			}
 			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "OGG Parse Log"); }
-			TempPopMark();
+			FreeOggAudioData(&oggData);
 		}
 		else if (StrEndsWith(soundPathStr, ".wav"))
 		{
-			TempPushMark();
 			WavAudioData_t wavData = {};
-			if (TryDeserWavFile(soundFile.size, soundFile.data, &soundParseLog, &wavData, TempArena))
+			if (TryDeserWavFile(soundFile.size, soundFile.data, &soundParseLog, &wavData, &pig->largeAllocHeap))
 			{
 				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, &newSound, &pig->audioHeap);
 				parseSuccess = true;
@@ -901,7 +899,7 @@ void Pig_LoadSoundResource(u64 soundIndex)
 				DebugAssert(false);
 			}
 			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "WAV Parse Log"); }
-			TempPopMark();
+			FreeWavAudioData(&wavData);
 		}
 		else
 		{
@@ -972,7 +970,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 		if (StrEndsWith(musicPathStr, ".ogg"))
 		{
 			OggAudioData_t oggData = {};
-			if (TryDeserOggFile(musicFile.size, musicFile.data, &musicParseLog, &oggData, &pig->stdHeap))
+			if (TryDeserOggFile(musicFile.size, musicFile.data, &musicParseLog, &oggData, &pig->largeAllocHeap))
 			{
 				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newMusic, &pig->audioHeap);
 				parseSuccess = true;
@@ -987,9 +985,8 @@ void Pig_LoadMusicResource(u64 musicIndex)
 		}
 		else if (StrEndsWith(musicPathStr, ".wav"))
 		{
-			TempPushMark();
 			WavAudioData_t wavData = {};
-			if (TryDeserWavFile(musicFile.size, musicFile.data, &musicParseLog, &wavData, TempArena))
+			if (TryDeserWavFile(musicFile.size, musicFile.data, &musicParseLog, &wavData, &pig->largeAllocHeap))
 			{
 				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, &newMusic, &pig->audioHeap);
 				parseSuccess = true;
@@ -1000,7 +997,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "WAV Parse Log"); }
-			TempPopMark();
+			FreeWavAudioData(&wavData);
 		}
 		else
 		{

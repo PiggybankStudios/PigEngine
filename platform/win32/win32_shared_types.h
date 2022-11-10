@@ -149,6 +149,28 @@ struct PlatInterlockedInt_t
 };
 
 // +--------------------------------------------------------------+
+// |                          Processes                           |
+// +--------------------------------------------------------------+
+struct PlatRunningProcess_t
+{
+	u64 id;
+	MemArena_t* allocArena;
+	MyStr_t filePath;
+	MyStr_t workingDirectory;
+	MyStr_t argumentsString;
+	
+	bool isFinished;
+	u64 lastExitCodeCheckTime;
+	u64 exitCode;
+	bool readyForRemoval;
+	
+	HANDLE handle;
+	HANDLE threadHandle;
+	DWORD  processId;
+	DWORD  threadId;
+};
+
+// +--------------------------------------------------------------+
 // |                            Memory                            |
 // +--------------------------------------------------------------+
 struct PlatAllocation_t
