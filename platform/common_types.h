@@ -441,6 +441,27 @@ const char* GetPlatImageFormatStr(PlatImageFormat_t imageFormat)
 	}
 }
 
+enum SpecialFolder_t
+{
+	SpecialFolder_None = 0,
+	SpecialFolder_SavesAndSettings,
+	SpecialFolder_Screenshots,
+	SpecialFolder_Share,
+	SpecialFolder_NumTypes,
+};
+const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
+{
+	switch (specialFolder)
+	{
+		case SpecialFolder_None:             return "None";
+		case SpecialFolder_SavesAndSettings: return "SavesAndSettings";
+		case SpecialFolder_Screenshots:      return "Screenshots";
+		case SpecialFolder_Share:            return "Share";
+		case SpecialFolder_NumTypes:         return "NumTypes";
+		default: return "Unknown";
+	}
+}
+
 #if PROCMON_SUPPORTED
 
 // #define IRP_MJ_QUERY_EA                 0x07
