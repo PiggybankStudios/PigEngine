@@ -949,6 +949,7 @@ void RcDrawFoldedRectangleOutline(rec rectangle, r32 foldSize, u8 foldedCorners,
 	}
 }
 
+#if CONVEX_POLYGON2D_SHADER_SUPPORT
 //Polygon should be in clockwise order
 void RcDrawConvexPolygonWithShader(Color_t color, u64 numVertices, const v2* vertices, bool bindShader = true)
 {
@@ -1053,6 +1054,7 @@ void RcDrawConvexPolygonWithShader(Color_t color, v2 vert0, v2 vert1, v2 vert2, 
 	localVertsArray[7] = vert7;
 	RcDrawConvexPolygonWithShader(color, 8, &localVertsArray[0]);
 }
+#endif
 
 void RcDrawQuarterCircleFoldedRec(rec rectangle, r32 circleRadius, r32 circleMargin, r32 borderThickness, r32 circleBorderThickness, Color_t fillColor, Color_t circleFillColor, Color_t borderColor, Color_t circleBorderColor)
 {

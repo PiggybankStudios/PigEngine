@@ -10,9 +10,9 @@ Description:
 #define _GAME_RESOURCES_H
 
 #define RESOURCES_NUM_TEXTURES    14
-#define RESOURCES_NUM_VECTORS     2
-#define RESOURCES_NUM_SHEETS      4
-#define RESOURCES_NUM_SHADERS     12
+#define RESOURCES_NUM_VECTORS     1
+#define RESOURCES_NUM_SHEETS      3
+#define RESOURCES_NUM_SHADERS     11
 #define RESOURCES_NUM_FONTS       4
 #define RESOURCES_NUM_SOUNDS      3
 #define RESOURCES_NUM_MUSICS      2
@@ -63,7 +63,6 @@ union ATTR_PACKED ResourceVectors_t
 	struct
 	{
 		VectorImg_t test;
-		VectorImg_t pig;
 	};
 };
 union ATTR_PACKED ResourceSheets_t
@@ -74,7 +73,6 @@ union ATTR_PACKED ResourceSheets_t
 		SpriteSheet_t pigAnim;
 		SpriteSheet_t vectorIcons64;
 		SpriteSheet_t controllerBtns;
-		SpriteSheet_t parts;
 	};
 };
 union ATTR_PACKED ResourceShaders_t
@@ -92,8 +90,6 @@ union ATTR_PACKED ResourceShaders_t
 		Shader_t bezier3;
 		Shader_t bezier4;
 		Shader_t ellipseArc;
-		Shader_t convexPolygon2D;
-		
 		Shader_t testShader;
 	};
 };
@@ -113,9 +109,9 @@ union ATTR_PACKED ResourceSounds_t
 	Sound_t items[RESOURCES_NUM_SOUNDS];
 	struct
 	{
+		Sound_t notification;
 		Sound_t oink;
 		Sound_t click1;
-		Sound_t notification;
 	};
 };
 union ATTR_PACKED ResourceMusics_t
@@ -172,7 +168,6 @@ const char* Resources_GetPathForVectorImg(u64 vectorImgIndex)
 	switch (vectorImgIndex)
 	{
 		case 0: return RESOURCE_FOLDER_VECTOR  "/test.svg";             //| test           |
-		case 1: return RESOURCE_FOLDER_VECTOR  "/pig.svg";              //| pig            |
 		default: DebugAssert(false); return nullptr;
 	}
 }
@@ -216,16 +211,6 @@ const char* Resources_GetPathForSheet(u64 sheetIndex, ResourceSheetMetaInfo_t* m
 			metaInfo->numFrames = NewVec2i(2, 2);
 			metaInfo->pixelated = false;
 			return RESOURCE_FOLDER_SHEETS "/controller_btns.png";
-		} break;
-		// +==============================+
-		// |            parts             |
-		// +==============================+
-		case 3:
-		{
-			metaInfo->numFrames = NewVec2i(32, 32);
-			metaInfo->padding = NewVec2i(1, 1);
-			metaInfo->pixelated = true;
-			return RESOURCE_FOLDER_SHEETS "/parts.png";
 		} break;
 		default: Assert(false); return nullptr;
 	}
@@ -376,21 +361,9 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 			return RESOURCE_FOLDER_SHADERS "/ellipseArc.glsl"; 
 		} break;
 		// +==============================+
-		// |       convexPolygon2D        |
-		// +==============================+
-		case 10:
-		{
-			if (metaInfo != nullptr)
-			{
-				metaInfo->vertexType = VertexType_Default2D;
-				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
-			}
-			return RESOURCE_FOLDER_SHADERS "/convexPolygon2D.glsl"; 
-		} break;
-		// +==============================+
 		// |          testShader          |
 		// +==============================+
-		case 11:
+		case 10:
 		{
 			if (metaInfo != nullptr)
 			{
@@ -461,37 +434,24 @@ const char* Resources_GetPathOrNameForFont(u64 fontIndex, ResourceFontMetaInfo_t
 			metaInfo->faces[0].colored[0]       = false;
 			metaInfo->faces[0].sheetSizes[1]    = NewVec2i(16, 16);
 			metaInfo->faces[0].filePaths[1]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png");
-			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns.meta");
+			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.meta");
 			metaInfo->faces[0].paddings[1]      = Vec2i_Zero;
 			metaInfo->faces[0].isPixelated[1]   = true;
 			metaInfo->faces[0].scalables[1]     = false;
 			metaInfo->faces[0].colored[1]       = false;
 			
 			metaInfo->faces[1].isSpriteFont    = true;
-			metaInfo->faces[1].name             = NewStr("outline8");
-			metaInfo->faces[1].size             = 8;
-			metaInfo->faces[1].bold             = true;
+			metaInfo->faces[1].name             = NewStr("main16");
+			metaInfo->faces[1].size             = 12;
+			metaInfo->faces[1].bold             = false;
 			metaInfo->faces[1].italic           = false;
-			metaInfo->faces[1].sheetSizes[0]    = NewVec2i(16, 16);
-			metaInfo->faces[1].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_outline.png");
-			metaInfo->faces[1].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_outline.meta");
+			metaInfo->faces[1].sheetSizes[0]    = NewVec2i(16, 12);
+			metaInfo->faces[1].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.png");
+			metaInfo->faces[1].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.meta");
 			metaInfo->faces[1].paddings[0]      = Vec2i_Zero;
 			metaInfo->faces[1].isPixelated[0]   = true;
 			metaInfo->faces[1].scalables[0]     = false;
 			metaInfo->faces[1].colored[0]       = false;
-			
-			metaInfo->faces[2].isSpriteFont    = true;
-			metaInfo->faces[2].name             = NewStr("main16");
-			metaInfo->faces[2].size             = 12;
-			metaInfo->faces[2].bold             = false;
-			metaInfo->faces[2].italic           = false;
-			metaInfo->faces[2].sheetSizes[0]    = NewVec2i(16, 12);
-			metaInfo->faces[2].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.png");
-			metaInfo->faces[2].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.meta");
-			metaInfo->faces[2].paddings[0]      = Vec2i_Zero;
-			metaInfo->faces[2].isPixelated[0]   = true;
-			metaInfo->faces[2].scalables[0]     = false;
-			metaInfo->faces[2].colored[0]       = false;
 			
 			return "pixelFont";
 		} break;
@@ -533,9 +493,9 @@ const char* Resources_GetPathForSound(u64 soundIndex)
 {
 	switch (soundIndex)
 	{
-		case 0:  return RESOURCE_FOLDER_SOUNDS "/oink.ogg";         // | oink         |
-		case 1:  return RESOURCE_FOLDER_SOUNDS "/click1.ogg";       // | click1       |
-		case 2:  return RESOURCE_FOLDER_SOUNDS "/notification.ogg"; // | notification |
+		case 0:  return RESOURCE_FOLDER_SOUNDS "/notification.ogg"; // | notification |
+		case 1:  return RESOURCE_FOLDER_SOUNDS "/oink.ogg";         // | oink         |
+		case 2:  return RESOURCE_FOLDER_SOUNDS "/click1.ogg";       // | click1       |
 		default: DebugAssert(false); return nullptr;
 	}
 }

@@ -53,4 +53,6 @@ Description:
 
 #define PIG_WINDOW_MIN_SIZE   NewVec2i(400, 100)
 
+#define CONVEX_POLYGON2D_SHADER_SUPPORT false
+
 #endif //  _PIG_DEFINES_H
