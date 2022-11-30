@@ -7,22 +7,6 @@ Description:
 	** and various other consequences of being a hot-loaded DLL 
 */
 
-void* PlatAllocFunc(u64 size)
-{
-	AssertNormalEntry();
-	return plat->AllocateMemory(size, AllocAlignment_None);
-}
-void* PlatReallocFunc(void* allocPntr, u64 newSize, u64 oldSize = 0)
-{
-	AssertNormalEntry();
-	return plat->ReallocMemory(allocPntr, newSize, oldSize, AllocAlignment_None);
-}
-void PlatFreeFunc(void* allocPntr)
-{
-	AssertNormalEntry();
-	plat->FreeMemory(allocPntr, 0, nullptr);
-}
-
 void PigClearGlobals()
 {
 	pig = nullptr;
