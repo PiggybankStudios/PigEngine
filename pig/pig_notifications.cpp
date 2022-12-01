@@ -98,8 +98,8 @@ PigNotification_t* PigPushNotification(PigNotificationQueue_t* queue, const char
 	{
 		if (filePath != nullptr)
 		{
-			MyStr_t fileName = GetFileNamePart(NewStr(filePath));
-			notification->filePath = AllocString(notification->allocArena, &fileName);
+			// MyStr_t fileName = GetFileNamePart(NewStr(filePath));
+			notification->filePath = NewStringInArenaNt(notification->allocArena, filePath);
 		}
 		if (functionName != nullptr)
 		{
@@ -267,7 +267,14 @@ void PigUpdateNotifications(PigNotificationQueue_t* queue)
 			if (IsMouseOverPrint("Notification%llu", nIndex))
 			{
 				pigOut->cursorType = PlatCursor_Pointer;
-				//TODO: Should we do something on click?
+				if (MousePressedAndHandleExtended(MouseBtn_Left))
+				{
+					plat->ShowSourceFile(notification->filePath, notification->fileLineNumber);
+				}
+				if (MousePressedAndHandleExtended(MouseBtn_Right))
+				{
+					notification->showing = false;
+				}
 			}
 			
 			if (notification->showing && TimeSince(notification->appearTime) >= notification->lifespan && !IsMouseOverNamedPartial("Notification"))
