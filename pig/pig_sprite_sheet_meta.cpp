@@ -102,7 +102,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |             Name             |
 				// +==============================+
-				if (StrCompareIgnoreCase(token.key, "Name") == 0)
+				if (StrEqualsIgnoreCase(token.key, "Name"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -128,7 +128,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |            Point             |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "Point") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "Point"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -163,7 +163,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |          Codepoint           |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "Codepoint") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "Codepoint"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -193,7 +193,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |           AdvanceX           |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "AdvanceX") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "AdvanceX"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -223,7 +223,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |          CharBounds          |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "CharBounds") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "CharBounds"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -253,7 +253,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |        LogicalBounds         |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "LogicalBounds") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "LogicalBounds"))
 				{
 					if (!currentFrameFilled)
 					{
@@ -283,7 +283,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				// +==============================+
 				// |          CharOffset          |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "CharOffset") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "CharOffset"))
 				{
 					if (!currentFrameFilled)
 					{

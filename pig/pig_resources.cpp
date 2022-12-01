@@ -254,7 +254,7 @@ ResourceType_t FindResourceByPathOrName(MyStr_t searchStr, u64* resourceIndexOut
 					if (resourceIndexOut != nullptr) { *resourceIndexOut = rIndex; }
 					return type;
 				}
-				else if (!allowEndingPortionPartial && ignoreCase && StrCompareIgnoreCase(NewStr(pathOrName), searchStr) == 0)
+				else if (!allowEndingPortionPartial && ignoreCase && StrEqualsIgnoreCase(NewStr(pathOrName), searchStr))
 				{
 					if (resourceIndexOut != nullptr) { *resourceIndexOut = rIndex; }
 					return type;

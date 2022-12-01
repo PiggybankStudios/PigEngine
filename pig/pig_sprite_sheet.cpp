@@ -337,7 +337,7 @@ SpriteSheetFrame_t* TryGetSpriteSheetFrame(SpriteSheet_t* sheet, MyStr_t frameNa
 	VarArrayLoop(&sheet->frames, fIndex)
 	{
 		VarArrayLoopGet(SpriteSheetFrame_t, frame, &sheet->frames, fIndex);
-		if (StrCompareIgnoreCase(frame->name, frameName) == 0)
+		if (StrEqualsIgnoreCase(frame->name, frameName))
 		{
 			return frame;
 		}
@@ -359,7 +359,7 @@ v2i GetSpriteSheetFrame(const SpriteSheet_t* sheet, MyStr_t frameName, bool asse
 	VarArrayLoop(&sheet->frames, fIndex)
 	{
 		VarArrayLoopGet(SpriteSheetFrame_t, frame, &sheet->frames, fIndex);
-		if (StrCompareIgnoreCase(frame->name, frameName) == 0)
+		if (StrEqualsIgnoreCase(frame->name, frameName))
 		{
 			return frame->gridPos;
 		}

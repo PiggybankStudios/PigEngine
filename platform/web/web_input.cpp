@@ -171,7 +171,7 @@ void Web_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* newI
 	// localTimestamp = unixTimestamp + newInput->localTimezoneOffset;
 	// newInput->localTimezoneDoesDst = (timezoneInfo.DaylightBias != 0);
 	// MyStr_t timezoneName = ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]);
-	// if (StrCompareIgnoreCase(Platform->localTimezoneName, timezoneName) != 0)
+	// if (StrEqualsIgnoreCase(Platform->localTimezoneName, timezoneName))
 	// {
 	// 	if (!IsEmptyStr(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }
 	// 	Platform->localTimezoneName = AllocString(&Platform->mainHeap, &timezoneName);

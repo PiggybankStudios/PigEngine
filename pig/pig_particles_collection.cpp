@@ -82,7 +82,7 @@ PartsPrefab_t* FindPartsPrefab(PartsPrefabCollection_t* collection, MyStr_t name
 	VarArrayLoop(&collection->prefabs, pIndex)
 	{
 		VarArrayLoopGet(PartsPrefab_t, prefab, &collection->prefabs, pIndex);
-		if (StrCompareIgnoreCase(prefab->name, name) == 0)
+		if (StrEqualsIgnoreCase(prefab->name, name))
 		{
 			if (prefabIndexOut != nullptr) { *prefabIndexOut = pIndex; }
 			return prefab;

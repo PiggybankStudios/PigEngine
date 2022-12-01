@@ -1891,7 +1891,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 				gutterTextColor = ColorTransparent(MonokaiDarkGray, console->alphaAmount);
 				
 				bool fileNameChanged = false;
-				if (!fileNameBlockStarted || StrCompareIgnoreCase(fileName, fileNameBlockStr) != 0)
+				if (!fileNameBlockStarted || !StrEqualsIgnoreCase(fileName, fileNameBlockStr))
 				{
 					if (fileNameBlockStarted)
 					{
@@ -1913,7 +1913,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 					fileLineNumBlockStartY = mainRec.y + mainRec.height;
 					fileLineNumBlockValue = dbgLine->fileLineNumber;
 				}
-				if (!funcNameBlockStarted || StrCompareIgnoreCase(funcName, funcNameBlockStr) != 0 || fileNameChanged)
+				if (!funcNameBlockStarted || !StrEqualsIgnoreCase(funcName, funcNameBlockStr) || fileNameChanged)
 				{
 					if (funcNameBlockStarted)
 					{

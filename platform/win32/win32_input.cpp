@@ -198,7 +198,7 @@ void Win32_UpdateEngineInputTimeInfo(EngineInput_t* prevInput, EngineInput_t* ne
 	MyStr_t timezoneName = MyStr_Empty;
 	u64 localTimestamp = Win32_GetCurrentTimestamp(true, &newInput->localTimezoneOffset, &newInput->localTimezoneDoesDst, &timezoneName);
 	ConvertTimestampToRealTime(localTimestamp, &newInput->localTime, newInput->localTimezoneDoesDst);
-	if (StrCompareIgnoreCase(Platform->localTimezoneName, timezoneName) != 0)
+	if (!StrEqualsIgnoreCase(Platform->localTimezoneName, timezoneName))
 	{
 		if (!IsEmptyStr(Platform->localTimezoneName)) { FreeString(&Platform->mainHeap, &Platform->localTimezoneName); }
 		Platform->localTimezoneName = AllocString(&Platform->mainHeap, &timezoneName);

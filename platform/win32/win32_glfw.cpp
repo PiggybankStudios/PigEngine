@@ -861,21 +861,21 @@ ControllerType_t Win32_GetControllerTypeByGuidStr(MyStr_t guidStr)
 	if (IsEmptyStr(guidStr)) { return ControllerType_Unknown; }
 	for (u64 guidIndex = 0; guidIndex < ArrayCount(win32_PlaystationControllerGuids); guidIndex++)
 	{
-		if (StrCompareIgnoreCase(guidStr, win32_PlaystationControllerGuids[guidIndex]) == 0)
+		if (StrEqualsIgnoreCase(guidStr, win32_PlaystationControllerGuids[guidIndex]))
 		{
 			return ControllerType_Playstation;
 		}
 	}
 	for (u64 guidIndex = 0; guidIndex < ArrayCount(win32_NintendoControllerGuids); guidIndex++)
 	{
-		if (StrCompareIgnoreCase(guidStr, win32_NintendoControllerGuids[guidIndex]) == 0)
+		if (StrEqualsIgnoreCase(guidStr, win32_NintendoControllerGuids[guidIndex]))
 		{
 			return ControllerType_Nintendo;
 		}
 	}
 	for (u64 guidIndex = 0; guidIndex < ArrayCount(win32_XboxControllerGuids); guidIndex++)
 	{
-		if (StrCompareIgnoreCase(guidStr, win32_XboxControllerGuids[guidIndex]) == 0)
+		if (StrEqualsIgnoreCase(guidStr, win32_XboxControllerGuids[guidIndex]))
 		{
 			return ControllerType_Xbox;
 		}

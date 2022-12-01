@@ -30,7 +30,7 @@ bool Deser_WasKeySeen(const VarArray_t* previousKeysArray, MyStr_t key)
 	VarArrayLoop(previousKeysArray, pIndex)
 	{
 		const VarArrayLoopGet(MyStr_t, previousKey, previousKeysArray, pIndex);
-		if (StrCompareIgnoreCase(*previousKey, key) == 0)
+		if (StrEqualsIgnoreCase(*previousKey, key))
 		{
 			return true;
 		}
@@ -42,7 +42,7 @@ bool Deser_FindNamedColor(const VarArray_t* namedColorsArray, MyStr_t name, Colo
 	VarArrayLoop(namedColorsArray, cIndex)
 	{
 		VarArrayLoopGet(CollectionNamedColor_t, namedColor, namedColorsArray, cIndex);
-		if (StrCompareIgnoreCase(namedColor->name, name) == 0)
+		if (StrEqualsIgnoreCase(namedColor->name, name))
 		{
 			if (colorOut != nullptr) { *colorOut = namedColor->value; }
 			return true;
@@ -58,7 +58,7 @@ u64 Deser_FindPartsTypeByName(const VarArray_t* typesArray, MyStr_t name)
 	VarArrayLoop(typesArray, tIndex)
 	{
 		VarArrayLoopGet(PartsType_t, type, typesArray, tIndex);
-		if (StrCompareIgnoreCase(type->name, name) == 0) { return type->id; }
+		if (StrEqualsIgnoreCase(type->name, name)) { return type->id; }
 	}
 	return UINT64_MAX;
 }
@@ -69,7 +69,7 @@ u64 Deser_FindPartsBurstByName(const VarArray_t* burstsArray, MyStr_t name)
 	VarArrayLoop(burstsArray, bIndex)
 	{
 		VarArrayLoopGet(PartsBurst_t, burst, burstsArray, bIndex);
-		if (StrCompareIgnoreCase(burst->name, name) == 0) { return burst->id; }
+		if (StrEqualsIgnoreCase(burst->name, name)) { return burst->id; }
 	}
 	return UINT64_MAX;
 }
@@ -80,7 +80,7 @@ u64 Deser_FindPartsPrefabByName(const VarArray_t* prefabsArray, MyStr_t name)
 	VarArrayLoop(prefabsArray, pIndex)
 	{
 		VarArrayLoopGet(PartsPrefab_t, prefab, prefabsArray, pIndex);
-		if (StrCompareIgnoreCase(prefab->name, name) == 0) { return prefab->id; }
+		if (StrEqualsIgnoreCase(prefab->name, name)) { return prefab->id; }
 	}
 	return UINT64_MAX;
 }
@@ -167,7 +167,7 @@ bool Deser_ParseDistroFuncPart(MyStr_t* strPntr, PartsDistroFunc_t* valueOut, Tr
 			for (u64 fIndex = 0; fIndex < PartsDistroFunc_NumFuncs; fIndex++)
 			{
 				PartsDistroFunc_t func = (PartsDistroFunc_t)fIndex;
-				if (StrCompareIgnoreCase(givenFuncStr, GetPartsDistroFuncStr(func)) == 0)
+				if (StrEqualsIgnoreCase(givenFuncStr, GetPartsDistroFuncStr(func)))
 				{
 					strPntr->length = openParensIndex;
 					*valueOut = func;
@@ -189,7 +189,7 @@ bool TryParsePartsEmissionShape(MyStr_t str, PartsEmissionShape_t* valueOut, Try
 	{
 		PartsEmissionShape_t shape = (PartsEmissionShape_t)sIndex;
 		const char* shapeName = GetPartsEmissionShapeStr(shape);
-		if (StrCompareIgnoreCase(str, shapeName) == 0)
+		if (StrEqualsIgnoreCase(str, shapeName))
 		{
 			if (valueOut != nullptr) { *valueOut = shape; }
 			return true;
@@ -352,7 +352,7 @@ bool TryParseNamedColor(const VarArray_t* namedColorsArray, MyStr_t str, Color_t
 	VarArrayLoop(namedColorsArray, cIndex)
 	{
 		VarArrayLoopGet(CollectionNamedColor_t, namedColor, namedColorsArray, cIndex);
-		if (StrCompareIgnoreCase(namedColor->name, str) == 0)
+		if (StrEqualsIgnoreCase(namedColor->name, str))
 		{
 			if (valueOut != nullptr) { *valueOut = namedColor->value; }
 			return true;
@@ -572,7 +572,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				// +==============================+
 				// |             Type             |
 				// +==============================+
-				if (StrCompareIgnoreCase(token.key, "Type") == 0)
+				if (StrEqualsIgnoreCase(token.key, "Type"))
 				{
 					currentType = nullptr;
 					currentBurst = nullptr;
@@ -626,7 +626,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				// +==============================+
 				// |            Burst             |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "Burst") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "Burst"))
 				{
 					currentType = nullptr;
 					currentBurst = nullptr;
@@ -659,7 +659,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				// +==============================+
 				// |            Prefab            |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "Prefab") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "Prefab"))
 				{
 					currentType = nullptr;
 					currentBurst = nullptr;
@@ -691,7 +691,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				// +==============================+
 				// |          ColorName           |
 				// +==============================+
-				else if (StrCompareIgnoreCase(token.key, "ColorName") == 0)
+				else if (StrEqualsIgnoreCase(token.key, "ColorName"))
 				{
 					TempPushMark();
 					
@@ -751,7 +751,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |            Sheet             |
 					// +==============================+
-					if (StrCompareIgnoreCase(token.key, "Sheet") == 0)
+					if (StrEqualsIgnoreCase(token.key, "Sheet"))
 					{
 						u64 resourceIndex = 0;
 						ResourceType_t resourceType = FindResourceByPathOrName(token.value, &resourceIndex, true);
@@ -798,7 +798,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |           Texture            |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Texture") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Texture"))
 					{
 						u64 resourceIndex = 0;
 						ResourceType_t resourceType = FindResourceByPathOrName(token.value, &resourceIndex, true);
@@ -845,14 +845,14 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          SourceRec           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "SourceRec") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "SourceRec"))
 					{
 						//TODO: Implement me!
 					}
 					// +==============================+
 					// |            Frame             |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Frame") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Frame"))
 					{
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
@@ -887,7 +887,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          FrameTime           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "FrameTime") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "FrameTime"))
 					{
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
@@ -922,7 +922,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          FrameCount          |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "FrameCount") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "FrameCount"))
 					{
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
@@ -957,7 +957,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |         FrameOffset          |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "FrameOffset") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "FrameOffset"))
 					{
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
@@ -992,21 +992,21 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |           LifeSpan           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "LifeSpan") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "LifeSpan"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->lifeSpan, &token);
 					}
 					// +==============================+
 					// |            Depth             |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Depth") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Depth"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->depth, &token);
 					}
 					// +==============================+
 					// |          ColorStart          |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "ColorStart") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "ColorStart"))
 					{
 						MyStr_t failedColorStr = token.value;
 						if (Deser_WasKeySeen(&previousKeys, NewStr("ColorStart")))
@@ -1036,7 +1036,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |           ColorEnd           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "ColorEnd") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "ColorEnd"))
 					{
 						MyStr_t failedColorStr = token.value;
 						if (Deser_WasKeySeen(&previousKeys, NewStr("ColorEnd")))
@@ -1066,21 +1066,21 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          AlphaStart          |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "AlphaStart") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "AlphaStart"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->alphaStart, &token);
 					}
 					// +==============================+
 					// |           AlphaEnd           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "AlphaEnd") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "AlphaEnd"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->alphaEnd, &token);
 					}
 					// +==============================+
 					// |           Velocity           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Velocity") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Velocity"))
 					{
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Speed")))
 						{
@@ -1123,7 +1123,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          Direction           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Direction") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Direction"))
 					{
 						tempDirectionParam = {};
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Velocity")))
@@ -1150,7 +1150,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |            Speed             |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Speed") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Speed"))
 					{
 						tempSpeedParam = {};
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Velocity")))
@@ -1177,7 +1177,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |         Acceleration         |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Acceleration") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Acceleration"))
 					{
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Acceleration")))
 						{
@@ -1204,49 +1204,49 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |          ScaleStart          |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "ScaleStart") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "ScaleStart"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->scaleStart, &token);
 					}
 					// +==============================+
 					// |           ScaleEnd           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "ScaleEnd") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "ScaleEnd"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->scaleEnd, &token);
 					}
 					// +==============================+
 					// |           Rotation           |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Rotation") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Rotation"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->rotation, &token);
 					}
 					// +==============================+
 					// |       RotationVelocity       |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "RotationVelocity") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "RotationVelocity"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->rotationVelocity, &token);
 					}
 					// +==============================+
 					// |     RotationAcceleration     |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "RotationAcceleration") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "RotationAcceleration"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->rotationAcceleration, &token);
 					}
 					// +==============================+
 					// |       VelocityDamping        |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "VelocityDamping") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "VelocityDamping"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->velocityDamping, &token);
 					}
 					// +==============================+
 					// |      RotVelocityDamping      |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "RotVelocityDamping") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "RotVelocityDamping"))
 					{
 						Deser_ParseTypeParamR32(log, &parser, &previousKeys, currentType, &currentType->rotVelocityDamping, &token);
 					}
@@ -1260,7 +1260,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |            Using             |
 					// +==============================+
-					if (StrCompareIgnoreCase(token.key, "Using") == 0)
+					if (StrEqualsIgnoreCase(token.key, "Using"))
 					{
 						u64 typeId = Deser_FindPartsTypeByName(&types, token.value);
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Using")))
@@ -1290,7 +1290,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |            Count             |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Count") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Count"))
 					{
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Count")))
 						{
@@ -1317,7 +1317,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |            Shape             |
 					// +==============================+
-					else if (StrCompareIgnoreCase(token.key, "Shape") == 0)
+					else if (StrEqualsIgnoreCase(token.key, "Shape"))
 					{
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Shape")))
 						{
@@ -1355,7 +1355,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					// +==============================+
 					// |              Do              |
 					// +==============================+
-					if (StrCompareIgnoreCase(token.key, "Do") == 0)
+					if (StrEqualsIgnoreCase(token.key, "Do"))
 					{
 						u64 burstId = Deser_FindPartsBurstByName(&bursts, token.value);
 						if (burstId == UINT64_MAX)

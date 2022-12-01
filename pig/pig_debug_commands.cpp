@@ -216,7 +216,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |             help             |
 	// +==============================+
-	if (StrCompareIgnoreCase(command, "help") == 0)
+	if (StrEqualsIgnoreCase(command, "help"))
 	{
 		//TODO: Add support for an optional argument that specifies which command you want detailed info on
 		
@@ -245,7 +245,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |            break             |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "break") == 0)
+	else if (StrEqualsIgnoreCase(command, "break"))
 	{
 		WriteLine_I("Hitting manual breakpoint...");
 		MyDebugBreak();
@@ -254,7 +254,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |            assert            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "assert") == 0)
+	else if (StrEqualsIgnoreCase(command, "assert"))
 	{
 		WriteLine_I("Hitting manual assertion...");
 		AssertMsg(false, "Manual assertion triggered by debug command");
@@ -266,7 +266,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |         assert_exit          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "assert_exit") == 0)
+	else if (StrEqualsIgnoreCase(command, "assert_exit"))
 	{
 		bool newValue = !pig->dontExitOnAssert;
 		if (numArguments >= 1)
@@ -282,35 +282,35 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          arena_info          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "arena_info") == 0)
+	else if (StrEqualsIgnoreCase(command, "arena_info"))
 	{
 		if (numArguments != 1) { PrintLine_E("arena_info takes 1 argument, not %llu", numArguments); return validCommand; }
 		
-		if (StrCompareIgnoreCase(arguments[0], "Plat") == 0 || StrCompareIgnoreCase(arguments[0], "PlatHeap") == 0)
+		if (StrEqualsIgnoreCase(arguments[0], "Plat") || StrEqualsIgnoreCase(arguments[0], "PlatHeap"))
 		{
 			DebugPrintArenaInfo(&pig->platHeap, "PlatHeap");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "Fixed") == 0 || StrCompareIgnoreCase(arguments[0], "FixedHeap") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
 		{
 			DebugPrintArenaInfo(&pig->fixedHeap, "FixedHeap");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "Main") == 0 || StrCompareIgnoreCase(arguments[0], "MainHeap") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "Main") || StrEqualsIgnoreCase(arguments[0], "MainHeap"))
 		{
 			DebugPrintArenaInfo(&pig->mainHeap, "MainHeap");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "LargeAlloc") == 0 || StrCompareIgnoreCase(arguments[0], "LargeAllocHeap") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "LargeAlloc") || StrEqualsIgnoreCase(arguments[0], "LargeAllocHeap"))
 		{
 			DebugPrintArenaInfo(&pig->largeAllocHeap, "LargeAllocHeap");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "Std") == 0 || StrCompareIgnoreCase(arguments[0], "StdHeap") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "Std") || StrEqualsIgnoreCase(arguments[0], "StdHeap"))
 		{
 			DebugPrintArenaInfo(&pig->stdHeap, "stdHeap");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "Temp") == 0 || StrCompareIgnoreCase(arguments[0], "TempArena") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "Temp") || StrEqualsIgnoreCase(arguments[0], "TempArena"))
 		{
 			DebugPrintArenaInfo(&pig->tempArena, "TempArena");
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "Audio") == 0 || StrCompareIgnoreCase(arguments[0], "AudioHeap") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "Audio") || StrEqualsIgnoreCase(arguments[0], "AudioHeap"))
 		{
 			DebugPrintArenaInfo(&pig->audioHeap, "AudioHeap");
 		}
@@ -323,13 +323,13 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |            reload            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "reload") == 0)
+	else if (StrEqualsIgnoreCase(command, "reload"))
 	{
 		if (numArguments < 1 || numArguments > 2) { PrintLine_E("reload takes 1 or 2 arguments, not %llu", numArguments); return validCommand; }
 		
 		MyStr_t targetName = arguments[0];
 		
-		if (StrCompareIgnoreCase(targetName, "all") == 0)
+		if (StrEqualsIgnoreCase(targetName, "all"))
 		{
 			WriteLine_I("Reloading all resources...");
 			Pig_LoadAllResources();
@@ -341,7 +341,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
 			{
-				if (StrCompareIgnoreCase(arguments[1], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				if (StrEqualsIgnoreCase(arguments[1], GetResourceTypeStr((ResourceType_t)tIndex)))
 				{
 					targetType = (ResourceType_t)tIndex;
 					break;
@@ -365,7 +365,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				{
 					const char* resourcePath = GetPathOrNameForResource(type, rIndex);
 					MyStr_t resourceName = GetFileNamePart(NewStr(resourcePath));
-					if (StrCompareIgnoreCase(resourceName, targetName) == 0)
+					if (StrEqualsIgnoreCase(resourceName, targetName))
 					{
 						PrintLine_I("Reloading %s[%llu]...", GetResourceTypeStr(type), rIndex);
 						Pig_LoadResource(type, rIndex);
@@ -386,7 +386,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          resources           |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "resources") == 0)
+	else if (StrEqualsIgnoreCase(command, "resources"))
 	{
 		if (numArguments > 1) { PrintLine_E("resources takes 1 argument, not %llu", numArguments); return validCommand; }
 		
@@ -395,7 +395,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
 			{
-				if (StrCompareIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				if (StrEqualsIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)))
 				{
 					targetType = (ResourceType_t)tIndex;
 					break;
@@ -434,7 +434,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |           watches            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "watches") == 0)
+	else if (StrEqualsIgnoreCase(command, "watches"))
 	{
 		#if DEVELOPER_BUILD
 		if (numArguments > 1) { PrintLine_E("watches takes 1 argument, not %llu", numArguments); return validCommand; }
@@ -444,7 +444,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			for (u64 tIndex = 0; tIndex < ResourceType_NumTypes; tIndex++)
 			{
-				if (StrCompareIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)) == 0)
+				if (StrEqualsIgnoreCase(arguments[0], GetResourceTypeStr((ResourceType_t)tIndex)))
 				{
 					targetType = (ResourceType_t)tIndex;
 					break;
@@ -475,11 +475,11 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |             mute             |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "mute") == 0)
+	else if (StrEqualsIgnoreCase(command, "mute"))
 	{
 		if (numArguments > 1) { PrintLine_E("mute takes 0 or 1 argument, not %llu", numArguments); return validCommand; }
 		
-		if (numArguments >= 1 && StrCompareIgnoreCase(arguments[0], "music") == 0)
+		if (numArguments >= 1 && StrEqualsIgnoreCase(arguments[0], "music"))
 		{
 			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
 			{
@@ -488,7 +488,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				PrintLine_I("Music %s", pig->musicEnabled ? "Enabled" : "Disabled");
 			}
 		}
-		else if (numArguments >= 1 && (StrCompareIgnoreCase(arguments[0], "sounds") == 0 || StrCompareIgnoreCase(arguments[0], "sound") == 0))
+		else if (numArguments >= 1 && (StrEqualsIgnoreCase(arguments[0], "sounds") || StrEqualsIgnoreCase(arguments[0], "sound")))
 		{
 			if (plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE))
 			{
@@ -518,7 +518,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |           volumes            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "volumes") == 0)
+	else if (StrEqualsIgnoreCase(command, "volumes"))
 	{
 		PrintLine_I("Master Volume: %.0f", pig->masterVolume*100);
 		PrintLine_I("Music Volume: %.0f%s", pig->musicVolume*100, (pig->musicEnabled ? "" : " (Disabled)"));
@@ -528,7 +528,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          set_volume          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "set_volume") == 0)
+	else if (StrEqualsIgnoreCase(command, "set_volume"))
 	{
 		if (numArguments != 2) { PrintLine_E("set_volume takes 2 arguments, not %llu", numArguments); return validCommand; }
 		
@@ -545,17 +545,17 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			return validCommand;
 		}
 		
-		if (StrCompareIgnoreCase(arguments[0], "master") == 0)
+		if (StrEqualsIgnoreCase(arguments[0], "master"))
 		{
 			PrintLine_I("Master volume set to %g (was %.0f)", volumeValue, pig->masterVolume*100);
 			pig->masterVolume = volumeValue/100.0f;
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "music") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "music"))
 		{
 			PrintLine_I("Music volume set to %g (was %.0f)", volumeValue, pig->musicVolume*100);
 			pig->musicVolume = volumeValue/100.0f;
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "sounds") == 0 || StrCompareIgnoreCase(arguments[0], "sound") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "sounds") || StrEqualsIgnoreCase(arguments[0], "sound"))
 		{
 			PrintLine_I("Sounds volume set to %g (was %.0f)", volumeValue, pig->soundsVolume*100);
 			pig->soundsVolume = volumeValue/100.0f;
@@ -570,7 +570,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |         cyclic_funcs         |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "cyclic_funcs") == 0)
+	else if (StrEqualsIgnoreCase(command, "cyclic_funcs"))
 	{
 		pig->cyclicFuncsDebug = !pig->cyclicFuncsDebug;
 		pig->cyclicFunc = CyclicFunc_Default;
@@ -580,7 +580,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |           monitors           |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "monitors") == 0)
+	else if (StrEqualsIgnoreCase(command, "monitors"))
 	{
 		pig->monitorsDebug = !pig->monitorsDebug;
 		PrintLine_I("Monitors Debug Overlay %s", pig->monitorsDebug ? "Enabled" : "Disabled");
@@ -589,7 +589,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |         video_modes          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "video_modes") == 0)
+	else if (StrEqualsIgnoreCase(command, "video_modes"))
 	{
 		if (numArguments > 1) { PrintLine_E("video_modes only takes 1 optional argument. Not %llu", numArguments); return validCommand; }
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
@@ -651,7 +651,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |        set_resolution        |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "set_resolution") == 0)
+	else if (StrEqualsIgnoreCase(command, "set_resolution"))
 	{
 		if (numArguments != 2) { PrintLine_E("set_resolution takes 2 arguments, not %llu", numArguments); return validCommand; }
 		
@@ -691,7 +691,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          fullscreen          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "fullscreen") == 0)
+	else if (StrEqualsIgnoreCase(command, "fullscreen"))
 	{
 		if (numArguments != 1 && numArguments != 4 && numArguments != 5) { PrintLine_E("fullscreen takes 1, 4, or 5 arguments, not %llu", numArguments); return validCommand; }
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
@@ -699,7 +699,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		const PlatWindow_t* window = platInfo->mainWindow;
 		NotNull(window);
 		
-		if (StrCompareIgnoreCase(arguments[0], "toggle") == 0)
+		if (StrEqualsIgnoreCase(arguments[0], "toggle"))
 		{
 			ToggleFullscreen(true);
 		}
@@ -791,7 +791,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          thread_ids          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "thread_ids") == 0)
+	else if (StrEqualsIgnoreCase(command, "thread_ids"))
 	{
 		PrintLine_I("MainThread:         %llu (%lld or 0x%08X)", platInfo->mainThreadId.internalId, (i64)platInfo->mainThreadId.osId, (i64)platInfo->mainThreadId.osId);
 		PrintLine_I("FileWatchingThread: %llu (%lld or 0x%08X)", platInfo->fileWatchingThreadId.internalId, (i64)platInfo->fileWatchingThreadId.osId, (i64)platInfo->fileWatchingThreadId.osId);
@@ -805,14 +805,14 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          time_scale          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "time_scale") == 0)
+	else if (StrEqualsIgnoreCase(command, "time_scale"))
 	{
 		if (numArguments != 1) { PrintLine_E("time_scale takes 1 argument, not %llu", numArguments); return validCommand; }
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
 		r32 timeScaleOptions[] = { 0.01f, 0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f, 1.2f, 1.5f, 2.0f, 5.0f, 10.0f, 20.0f };
 		
 		r32 requestedScale = 1.0;
-		if (StrCompareIgnoreCase(arguments[0], "up") == 0)
+		if (StrEqualsIgnoreCase(arguments[0], "up"))
 		{
 			if (pigOut->fixedTimeScaleEnabled) { requestedScale = (r32)pigOut->fixedTimeScale; }
 			for (u64 oIndex = 0; oIndex < ArrayCount(timeScaleOptions); oIndex++)
@@ -825,7 +825,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			}
 			if (requestedScale == 1.0) { requestedScale = 0; }
 		}
-		else if (StrCompareIgnoreCase(arguments[0], "down") == 0)
+		else if (StrEqualsIgnoreCase(arguments[0], "down"))
 		{
 			if (pigOut->fixedTimeScaleEnabled) { requestedScale = (r32)pigOut->fixedTimeScale; }
 			for (u64 oIndex = ArrayCount(timeScaleOptions); oIndex > 0; oIndex--)
@@ -873,7 +873,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |             bind             |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "bind") == 0)
+	else if (StrEqualsIgnoreCase(command, "bind"))
 	{
 		if (numArguments < 2) { PrintLine_E("bind takes at least 2 arguments, not %llu", numArguments); return validCommand; }
 		
@@ -911,7 +911,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |            unbind            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "unbind") == 0)
+	else if (StrEqualsIgnoreCase(command, "unbind"))
 	{
 		if (numArguments != 1) { PrintLine_E("unbind takes at 1 argument, not %llu", numArguments); return validCommand; }
 		
@@ -939,7 +939,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |           bindings           |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "bindings") == 0)
+	else if (StrEqualsIgnoreCase(command, "bindings"))
 	{
 		PrintLine_N("%llu debug binding%s:", pig->debugBindings.entries.length, (pig->debugBindings.entries.length == 1 ? "" : "s"));
 		VarArrayLoop(&pig->debugBindings.entries, bIndex)
@@ -962,7 +962,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |       reload_bindings        |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "reload_bindings") == 0)
+	else if (StrEqualsIgnoreCase(command, "reload_bindings"))
 	{
 		PigClearDebugBindings(&pig->debugBindings);
 		GameLoadDebugBindings(&pig->debugBindings);
@@ -971,7 +971,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |          app_states          |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "app_states") == 0)
+	else if (StrEqualsIgnoreCase(command, "app_states"))
 	{
 		PrintLine_N("%llu active AppState%s:", pig->appStateStackSize, ((pig->appStateStackSize == 1) ? "" : "s"));
 		for (u64 sIndex = 0; sIndex < pig->appStateStackSize; sIndex++)
@@ -1018,7 +1018,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |        pop_app_state         |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "pop_app_state") == 0)
+	else if (StrEqualsIgnoreCase(command, "pop_app_state"))
 	{
 		if (pig->appStateStackSize > 1)
 		{
@@ -1034,7 +1034,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |        push_app_state        |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "push_app_state") == 0)
+	else if (StrEqualsIgnoreCase(command, "push_app_state"))
 	{
 		if (numArguments != 1) { PrintLine_E("push_app_state takes 1 argument, not %llu", numArguments); return validCommand; }
 		
@@ -1043,7 +1043,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			AppState_t appState = (AppState_t)aIndex;
 			const char* appStateStr = GetAppStateStr(appState);
-			if (StrCompareIgnoreCase(arguments[0], appStateStr) == 0)
+			if (StrEqualsIgnoreCase(arguments[0], appStateStr))
 			{
 				requestedAppState = appState;
 				break;
@@ -1070,7 +1070,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |       change_app_state       |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "change_app_state") == 0)
+	else if (StrEqualsIgnoreCase(command, "change_app_state"))
 	{
 		if (numArguments != 1) { PrintLine_E("change_app_state takes 1 argument, not %llu", numArguments); return validCommand; }
 		
@@ -1079,7 +1079,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			AppState_t appState = (AppState_t)aIndex;
 			const char* appStateStr = GetAppStateStr(appState);
-			if (StrCompareIgnoreCase(arguments[0], appStateStr) == 0)
+			if (StrEqualsIgnoreCase(arguments[0], appStateStr))
 			{
 				requestedAppState = appState;
 				break;
@@ -1106,7 +1106,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |    regen_basic_resources     |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "regen_basic_resources") == 0)
+	else if (StrEqualsIgnoreCase(command, "regen_basic_resources"))
 	{
 		WriteLine_D("Reloading render context basic resources");
 		RcLoadBasicResources();
@@ -1115,7 +1115,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |           sizeofs            |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "sizeofs") == 0)
+	else if (StrEqualsIgnoreCase(command, "sizeofs"))
 	{
 		PrintLine_D("sizeof(PigState_t) = %s", FormatBytesNt(sizeof(PigState_t), TempArena));
 		PrintLine_D("sizeof(RenderContext_t) = %s", FormatBytesNt(sizeof(RenderContext_t), TempArena));
@@ -1136,7 +1136,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |        steam_friends         |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "steam_friends") == 0)
+	else if (StrEqualsIgnoreCase(command, "steam_friends"))
 	{
 		plat->StartSteamFriendsQuery();
 		if (platInfo->steamFriendsList->lastQuerySuccessTime != 0)
@@ -1231,7 +1231,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |     update_friend_status     |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "update_friend_status") == 0)
+	else if (StrEqualsIgnoreCase(command, "update_friend_status"))
 	{
 		if (platInfo->steamFriendsList->lastQuerySuccessTime == 0) { WriteLine_E("We don't have the steam friends list right now!"); return validCommand; }
 		WriteLine_I("Refreshing steam friend statuses");
@@ -1240,7 +1240,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |      get_friend_avatar       |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "get_friend_avatar") == 0)
+	else if (StrEqualsIgnoreCase(command, "get_friend_avatar"))
 	{
 		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu", numArguments); return validCommand; }
 		if (platInfo->steamFriendsList->lastQuerySuccessTime == 0) { WriteLine_E("We don't have the steam friends list right now!"); return validCommand; }
@@ -1250,7 +1250,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		VarArrayLoop(&platInfo->steamFriendsList->friends, fIndex)
 		{
 			VarArrayLoopGet(PlatSteamFriendInfo_t, iterFriendInfo, &platInfo->steamFriendsList->friends, fIndex);
-			if (StrCompareIgnoreCase(iterFriendInfo->name, friendName) == 0)
+			if (StrEqualsIgnoreCase(iterFriendInfo->name, friendName))
 			{
 				friendInfo = iterFriendInfo;
 				break;
@@ -1274,7 +1274,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |     clear_friend_avatars     |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "clear_friend_avatars") == 0)
+	else if (StrEqualsIgnoreCase(command, "clear_friend_avatars"))
 	{
 		u64 numAvatars = pig->steamAvatars.length;
 		VarArrayLoop(&pig->steamAvatars, aIndex)
@@ -1288,7 +1288,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	// |      show_friends_list       |
 	// +==============================+
-	else if (StrCompareIgnoreCase(command, "show_friends_list") == 0)
+	else if (StrEqualsIgnoreCase(command, "show_friends_list"))
 	{
 		pig->debugRenderSteamFriendsList = !pig->debugRenderSteamFriendsList;
 		if (platInfo->steamFriendsList->lastQueryAttemptTime == 0)
