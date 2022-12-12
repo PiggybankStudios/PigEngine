@@ -14,7 +14,7 @@ Description:
 //      This setting is supposed to make sure that all deprecated functionality in version 3.0 of OpenGL
 //      are unsupported. Maybe we are using some deprecated features that we shouldn't be?
 #define OPENGL_FORCE_FORWARD_COMPAT  false
-#define OPENGL_DEBUG_CONTEXT         DEBUG_BUILD
+#define OPENGL_DEBUG_CONTEXT         (true && DEBUG_BUILD)
 #define OPENGL_REQUEST_PROFILE       GLFW_OPENGL_ANY_PROFILE //GLFW_OPENGL_CORE_PROFILE
 
 // +--------------------------------------------------------------+
