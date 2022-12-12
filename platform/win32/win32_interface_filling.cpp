@@ -174,4 +174,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->UpdateSteamFriendStatus   = Win32_UpdateSteamFriendStatus;
 	api->RequestSteamFriendAvatar  = Win32_RequestSteamFriendAvatar;
 	#endif
+	api->CheckRunningProcess       = Win32_CheckRunningProcess;
+	api->StartProcess              = Win32_StartProcess;
+	api->CloseRunningProcess       = Win32_CloseRunningProcess;
 }

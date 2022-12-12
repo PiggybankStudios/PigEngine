@@ -7,6 +7,9 @@ Date:   01\01\2022
 #ifndef _PIG_DEBUG_CONSOLE_H
 #define _PIG_DEBUG_CONSOLE_H
 
+#define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
+#define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
+
 struct DebugConsoleTextPos_t
 {
 	u64 lineIndex; //index from lastLine (most recent) going backwards. Get's incremented whenever a new line is added

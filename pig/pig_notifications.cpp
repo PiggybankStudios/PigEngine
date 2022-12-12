@@ -10,6 +10,7 @@ Description:
 #define PIG_NOTIFICATIONS_ALPHA             0.7f
 #define PIG_NOTIFICATIONS_SHOW_ANIM_TIME    300 //ms
 #define PIG_NOTIFICATIONS_VOLUME            0.1f
+#define PIG_NOTIFICATIONS_SND_DEDUP_TIME    100 //ms
 
 #define PIG_NOTIFICATIONS_MAX_WIDTH                 400 //px
 #define PIG_NOTIFICATIONS_MIN_HEIGHT                60 //px
@@ -39,6 +40,7 @@ void PigInitNotifications(PigNotificationQueue_t* queue)
 	ClearPointer(queue);
 	queue->nextId = 1;
 	queue->initialized = true;
+	queue->prevNotificationTime = 0;
 }
 
 // +--------------------------------------------------------------+
@@ -96,8 +98,8 @@ PigNotification_t* PigPushNotification(PigNotificationQueue_t* queue, const char
 	{
 		if (filePath != nullptr)
 		{
-			MyStr_t fileName = GetFileNamePart(NewStr(filePath));
-			notification->filePath = AllocString(notification->allocArena, &fileName);
+			// MyStr_t fileName = GetFileNamePart(NewStr(filePath));
+			notification->filePath = NewStringInArenaNt(notification->allocArena, filePath);
 		}
 		if (functionName != nullptr)
 		{
@@ -108,7 +110,11 @@ PigNotification_t* PigPushNotification(PigNotificationQueue_t* queue, const char
 		notification->lifespan = lifespan;
 	}
 	
-	PlaySound(&pig->resources.sounds->notification, 1.0f);
+	if (queue->prevNotificationTime == 0 || TimeSince(queue->prevNotificationTime) >= PIG_NOTIFICATIONS_SND_DEDUP_TIME)
+	{
+		PlaySound(&pig->resources.sounds->notification, 1.0f);
+		queue->prevNotificationTime = ProgramTime;
+	}
 	// PlaySawNote(PIG_NOTIFICATIONS_VOLUME*0.75f, FREQUENCY_C3, 200, 80, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
 	// PlaySawNote(PIG_NOTIFICATIONS_VOLUME, FREQUENCY_E4, 280, 160, EasingStyle_BackOut, 100, EasingStyle_QuadraticInOut);
 	
@@ -261,7 +267,14 @@ void PigUpdateNotifications(PigNotificationQueue_t* queue)
 			if (IsMouseOverPrint("Notification%llu", nIndex))
 			{
 				pigOut->cursorType = PlatCursor_Pointer;
-				//TODO: Should we do something on click?
+				if (MousePressedAndHandleExtended(MouseBtn_Left))
+				{
+					plat->ShowSourceFile(notification->filePath, notification->fileLineNumber);
+				}
+				if (MousePressedAndHandleExtended(MouseBtn_Right))
+				{
+					notification->showing = false;
+				}
 			}
 			
 			if (notification->showing && TimeSince(notification->appearTime) >= notification->lifespan && !IsMouseOverNamedPartial("Notification"))

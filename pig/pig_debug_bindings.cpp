@@ -181,7 +181,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		{
 			MouseBtn_t mouseBtn = (MouseBtn_t)bIndex;
 			const char* buttonName = GetMouseBtnStr(mouseBtn);
-			if (StrCompareIgnoreCase(bindingStr, buttonName) == 0)
+			if (StrEqualsIgnoreCase(bindingStr, buttonName))
 			{
 				bindingOut->mouseBtn = mouseBtn;
 				break;
@@ -213,7 +213,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		{
 			ControllerBtn_t controllerBtn = (ControllerBtn_t)bIndex;
 			const char* buttonName = GetControllerBtnStr(controllerBtn);
-			if (StrCompareIgnoreCase(bindingStr, buttonName) == 0)
+			if (StrEqualsIgnoreCase(bindingStr, buttonName))
 			{
 				bindingOut->controllerBtn = controllerBtn;
 				break;
@@ -281,7 +281,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 				{
 					Key_t testKey = (Key_t)keyIndex;
 					const char* keyName = GetKeyStr(testKey);
-					if (StrCompareIgnoreCase(bindingPiece, keyName) == 0)
+					if (StrEqualsIgnoreCase(bindingPiece, keyName))
 					{
 						key = testKey;
 						break;
@@ -290,7 +290,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 					{
 						ModifierKey_t testModifierKey = GetModifierKeyForKey(testKey);
 						const char* modifierKeyName = GetModifierKeyStr(testModifierKey);
-						if (StrCompareIgnoreCase(bindingPiece, modifierKeyName) == 0)
+						if (StrEqualsIgnoreCase(bindingPiece, modifierKeyName))
 						{
 							key = testKey;
 							break;

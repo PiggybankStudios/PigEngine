@@ -62,27 +62,6 @@ struct PlatOpenFile_t
 	HANDLE handle;
 };
 
-enum SpecialFolder_t
-{
-	SpecialFolder_None = 0,
-	SpecialFolder_SavesAndSettings,
-	SpecialFolder_Screenshots,
-	SpecialFolder_Share,
-	SpecialFolder_NumTypes,
-};
-const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
-{
-	switch (specialFolder)
-	{
-		case SpecialFolder_None:             return "None";
-		case SpecialFolder_SavesAndSettings: return "SavesAndSettings";
-		case SpecialFolder_Screenshots:      return "Screenshots";
-		case SpecialFolder_Share:            return "Share";
-		case SpecialFolder_NumTypes:         return "NumTypes";
-		default: return "Unknown";
-	}
-}
-
 // +--------------------------------------------------------------+
 // |                           Threads                            |
 // +--------------------------------------------------------------+
@@ -146,6 +125,28 @@ struct PlatInterlockedInt_t
 	u64 id;
 	
 	volatile LONG value;
+};
+
+// +--------------------------------------------------------------+
+// |                          Processes                           |
+// +--------------------------------------------------------------+
+struct PlatRunningProcess_t
+{
+	u64 id;
+	MemArena_t* allocArena;
+	MyStr_t filePath;
+	MyStr_t workingDirectory;
+	MyStr_t argumentsString;
+	
+	bool isFinished;
+	u64 lastExitCodeCheckTime;
+	u64 exitCode;
+	bool readyForRemoval;
+	
+	HANDLE handle;
+	HANDLE threadHandle;
+	DWORD  processId;
+	DWORD  threadId;
 };
 
 // +--------------------------------------------------------------+

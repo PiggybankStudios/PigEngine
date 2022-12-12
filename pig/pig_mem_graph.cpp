@@ -373,7 +373,8 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 					{
 						lastAllocationsChangeAmountStr = TempPrint(" (%s%llu)", (page->lastAllocationsChangeAmount >= 0) ? "+" : "-", (u64)AbsI64(page->lastAllocationsChangeAmount));
 					}
-					RcDrawTextPrint(textPos, MonokaiWhite, "%.*s\n%.1f%%%s\n%llu%s\n%s/%s",
+					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, ColorTransparent(Black, 0.5f), Vec2Fill(2),
+						"%.*s\n%.1f%%%s\n%llu%s\n%s/%s",
 						arena->name.length, arena->name.pntr,
 						page->usedPercent * 100, lastUsedChangeAmountStr,
 						page->numAllocations, lastAllocationsChangeAmountStr,

@@ -3,6 +3,7 @@
 
 # A dumping ground for any and all notes and TODO lists
 	{ } Rename game stuff to App
+	(!) If we run from a different directory than our exe and use the -exe command line option, all resources start reloading constantly
 	(!) The windowed framerate option doesn't do anything right now!
 	( ) If you fullscreen the window and then use win+left/right to move it to another monitor, we don't see the monitor change and our fullscreen state information becomes incorrect
 	( ) If you maximize the window, then fullscreen, then hit Win+Down, it will sort of unmaximize the window while still being in fullscreen

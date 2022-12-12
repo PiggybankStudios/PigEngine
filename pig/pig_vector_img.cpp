@@ -334,7 +334,7 @@ VectorImgPart_t* FindVectorImgPartByName(VectorImgPart_t* base, MyStr_t targetNa
 	while (VectorImgLoop(&loop))
 	{
 		NotNull(loop.part);
-		if (ignoreCase && StrCompareIgnoreCase(loop.part->name, targetName) == 0)
+		if (ignoreCase && StrEqualsIgnoreCase(loop.part->name, targetName))
 		{
 			return loop.part;
 		}

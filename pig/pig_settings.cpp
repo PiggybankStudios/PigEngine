@@ -321,7 +321,7 @@ PigSettingsEntry_t* PigGetSettingEntry(PigSettings_t* settings, MyStr_t key, boo
 	VarArrayLoop(&settings->entries, sIndex)
 	{
 		VarArrayLoopGet(PigSettingsEntry_t, setting, &settings->entries, sIndex);
-		if ((ignoreCase && StrCompareIgnoreCase(setting->key, key) == 0) || (!ignoreCase && StrEquals(setting->key, key)))
+		if ((ignoreCase && StrEqualsIgnoreCase(setting->key, key)) || (!ignoreCase && StrEquals(setting->key, key)))
 		{
 			if (indexOut != nullptr) { *indexOut = sIndex; }
 			return setting;
@@ -497,7 +497,7 @@ bool PigTryGetSettingStr(const PigSettings_t* settings, MyStr_t key, MyStr_t* va
 	VarArrayLoop(&settings->entries, sIndex)
 	{
 		VarArrayLoopGet(PigSettingsEntry_t, setting, &settings->entries, sIndex);
-		if ((ignoreCase && StrCompareIgnoreCase(setting->key, key) == 0) || (!ignoreCase && StrEquals(setting->key, key)))
+		if ((ignoreCase && StrEqualsIgnoreCase(setting->key, key)) || (!ignoreCase && StrEquals(setting->key, key)))
 		{
 			if (valueOut != nullptr) { *valueOut = setting->value; }
 			return true;

@@ -11,9 +11,6 @@ Description:
 //TODO: Add support for hovering over a line to see the timestamp and/or programTime comparison
 //TODO: Add pause and clear buttons
 
-#define DBG_CONSOLE_BUFFER_SIZE       Kilobytes(128)
-#define DBG_CONSOLE_BUILD_SPACE_SIZE  Kilobytes(4)
-
 #define DBG_CONSOLE_OPEN_KEY                Key_Tilde
 #define DBG_CONSOLE_INPUT_HISTORY_LENGTH    16 //items
 #define DBG_CONSOLE_OPEN_TIME               200 //ms
@@ -1894,7 +1891,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 				gutterTextColor = ColorTransparent(MonokaiDarkGray, console->alphaAmount);
 				
 				bool fileNameChanged = false;
-				if (!fileNameBlockStarted || StrCompareIgnoreCase(fileName, fileNameBlockStr) != 0)
+				if (!fileNameBlockStarted || !StrEqualsIgnoreCase(fileName, fileNameBlockStr))
 				{
 					if (fileNameBlockStarted)
 					{
@@ -1916,7 +1913,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 					fileLineNumBlockStartY = mainRec.y + mainRec.height;
 					fileLineNumBlockValue = dbgLine->fileLineNumber;
 				}
-				if (!funcNameBlockStarted || StrCompareIgnoreCase(funcName, funcNameBlockStr) != 0 || fileNameChanged)
+				if (!funcNameBlockStarted || !StrEqualsIgnoreCase(funcName, funcNameBlockStr) || fileNameChanged)
 				{
 					if (funcNameBlockStarted)
 					{

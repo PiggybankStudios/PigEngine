@@ -677,7 +677,7 @@ XmlProperty_t* GetXmlProperty(XmlToken_t* token, MyStr_t propertyKey, bool ignor
 	{
 		VarArrayLoopGet(XmlProperty_t, property, &token->properties, pIndex);
 		if ((!ignoreCase && StrEquals(property->key, propertyKey)) ||
-			(ignoreCase && StrCompareIgnoreCase(property->key, propertyKey) == 0))
+			(ignoreCase && StrEqualsIgnoreCase(property->key, propertyKey)))
 		{
 			return property;
 		}

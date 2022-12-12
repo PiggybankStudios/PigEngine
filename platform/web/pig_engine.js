@@ -32,7 +32,7 @@ var glUniformLocations = [];
 var pixelRatio = 0;
 
 const assembFilePath = "assembFuncs.wasm";
-const engineFilePath = "PigEngine.wasm";
+const engineFilePath = "MapEditor.wasm";
 
 // +--------------------------------------------------------------+
 // |                       Helper Functions                       |
@@ -419,7 +419,7 @@ async function initialize()
 	let assembWasm = await loadWasmModule(assembFilePath, assembEnvironment);
 	
 	// +==============================+
-	// |     Load PigEngine.wasm      |
+	// |     Load MapEditor.wasm      |
 	// +==============================+
 	let engineEnvironment =
 	{

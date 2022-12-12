@@ -1039,7 +1039,7 @@ MyStr_t ParseInputCharSyntax(MyStr_t input, MemArena_t* memArena, u64* numItemsP
 						if (inputDispCodepoint != 0)
 						{
 							const char* inputDispCodepointName = GetInputCharNameByCodepoint(inputDispCodepoint);
-							if (StrCompareIgnoreCase(foundText, inputDispCodepointName) == 0)
+							if (StrEqualsIgnoreCase(foundText, inputDispCodepointName))
 							{
 								parsedFoundText = true;
 								numItemsParsed++;

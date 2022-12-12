@@ -88,7 +88,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 	MyStr_t typePart = StrSubstring(&transformStr, 0, parensIndex);
 	parensPart = StrSubstring(&parensPart, 1, parensPart.length-1);
 	
-	if (StrCompareIgnoreCase(typePart, "scale") == 0)
+	if (StrEqualsIgnoreCase(typePart, "scale"))
 	{
 		r32 parsedValue = 0;
 		if (!TryParseR32(parensPart, &parsedValue, &log->parseFailureReason))
@@ -102,7 +102,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		transformOut->scale = parsedValue;
 		return true;
 	}
-	else if (StrCompareIgnoreCase(typePart, "rotate") == 0)
+	else if (StrEqualsIgnoreCase(typePart, "rotate"))
 	{
 		r32 parsedValue = 0;
 		if (!TryParseR32(parensPart, &parsedValue, &log->parseFailureReason))
@@ -116,7 +116,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		transformOut->rotation = ToRadians32(parsedValue);
 		return true;
 	}
-	else if (StrCompareIgnoreCase(typePart, "translate") == 0)
+	else if (StrEqualsIgnoreCase(typePart, "translate"))
 	{
 		v2 parsedValue = Vec2_Zero;
 		if (!TryParseV2(parensPart, &parsedValue, &log->parseFailureReason))
@@ -130,7 +130,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		transformOut->vector = parsedValue;
 		return true;
 	}
-	else if (StrCompareIgnoreCase(typePart, "matrix") == 0)
+	else if (StrEqualsIgnoreCase(typePart, "matrix"))
 	{
 		TempPushMark();
 		u64 numNumberParts = 0;

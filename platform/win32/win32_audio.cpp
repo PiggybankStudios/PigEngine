@@ -132,7 +132,7 @@ void Win32_EnumerateAudioDevices()
 			newDevice->isDefaultDevice = false;
 			newDevice->name = ConvertUcs2StrToUtf8Nt(newDevice->allocArena, deviceNameWide);
 			newDevice->deviceId = ConvertUcs2StrToUtf8Nt(newDevice->allocArena, deviceIdWide);
-			if (StrCompareIgnoreCase(defaultDeviceId, newDevice->deviceId) == 0)
+			if (StrEqualsIgnoreCase(defaultDeviceId, newDevice->deviceId))
 			{
 				Assert(!foundDefaultDeviceIndex);
 				Platform->defaultAudioDeviceIndex = dIndex;

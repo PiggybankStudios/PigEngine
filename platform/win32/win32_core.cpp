@@ -21,6 +21,7 @@ const char* Win32_GetErrorCodeStr(DWORD windowsErrorCode, bool printUnknownValue
 		case ERROR_SHARING_VIOLATION: return "ERROR_SHARING_VIOLATION"; //?
 		case ERROR_PIPE_BUSY:         return "ERROR_PIPE_BUSY";         //?
 		case ERROR_ACCESS_DENIED:     return "ERROR_ACCESS_DENIED";     //?
+		case ERROR_DIRECTORY:         return "ERROR_DIRECTORY";         //267
 		default: return (printUnknownValue ? TempPrint("(0x%08X)", windowsErrorCode) : "UNKNOWN");
 	}
 }

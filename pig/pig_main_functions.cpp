@@ -20,10 +20,13 @@ void PigInitialize(EngineMemory_t* memory)
 	
 	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
-	Assert(memory->persistentDataSize > sizeof(PigState_t) + totalConsoleSpaceSize);
+	u64 permanentMemoryNeeded = sizeof(PigState_t) + totalConsoleSpaceSize;
+	Assert_(memory->persistentDataSize > permanentMemoryNeeded);
+	UNUSED(permanentMemoryNeeded);
 	InitMemArena_FixedHeap(&pig->fixedHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_PagedHeapFuncs(&pig->mainHeap, PIG_MAIN_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	InitMemArena_PagedHeapFuncs(&pig->largeAllocHeap, PIG_LARGE_ALLOC_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	TempPushMark();
@@ -35,12 +38,13 @@ void PigInitialize(EngineMemory_t* memory)
 	GameLoadSettings(&pig->settings, mainHeap);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
-	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,  NewStr("platHeap"),  Grey10);
-	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap, NewStr("fixedHeap"), MonokaiGreen);
-	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,  NewStr("mainHeap"),  MonokaiOrange);
-	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena, NewStr("tempArena"), MonokaiBlue);
-	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,   NewStr("stdHeap"),   Grey10);
-	PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap, NewStr("audioHeap"), MonokaiPurple);
+	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,       NewStr("platHeap"),       Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap,      NewStr("fixedHeap"),      MonokaiGreen);
+	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
+	PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
+	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
+	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,        NewStr("stdHeap"),        Grey10);
+	PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap,      NewStr("audioHeap"),      MonokaiPurple);
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);
@@ -352,6 +356,7 @@ void PigPostReload(Version_t oldVersion)
 	Pig_HandleResourcesOnReload();
 	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
+	UpdateMemArenaFuncPntrs(&pig->largeAllocHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;

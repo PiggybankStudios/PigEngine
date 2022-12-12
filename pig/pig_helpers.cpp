@@ -26,6 +26,22 @@ Description:
 
 #define TIME_SCALED_ANIM(animTimeMs, timeScale) (((r32)PIG_DEFAULT_FRAME_TIME / (animTimeMs)) * (r32)(timeScale))
 
+void* PlatAllocFunc(u64 size)
+{
+	AssertNormalEntry();
+	return plat->AllocateMemory(size, AllocAlignment_None);
+}
+void* PlatReallocFunc(void* allocPntr, u64 newSize, u64 oldSize = 0)
+{
+	AssertNormalEntry();
+	return plat->ReallocMemory(allocPntr, newSize, oldSize, AllocAlignment_None);
+}
+void PlatFreeFunc(void* allocPntr)
+{
+	AssertNormalEntry();
+	plat->FreeMemory(allocPntr, 0, nullptr);
+}
+
 //returns true on 1 frame, when animTimerPntr reaches target
 bool UpdateAnimationUpTo(r32* animTimerPntr, r32 animationTimeMs, r32 target)
 {

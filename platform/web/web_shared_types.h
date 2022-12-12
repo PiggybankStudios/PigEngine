@@ -12,6 +12,20 @@ Date:   03\13\2022
 // +--------------------------------------------------------------+
 // |                            Files                             |
 // +--------------------------------------------------------------+
+struct PlatFileEnumerator_t
+{
+	MyStr_t folderPath;
+	MyStr_t folderPathWithWildcard;
+	bool enumerateFiles;
+	bool enumerateFolders;
+	
+	bool finished;
+	u64 index;
+	u64 nextIndex;
+	
+	//TODO: Implement me!
+};
+
 struct PlatFileContents_t
 {
 	u64 id;
@@ -51,6 +65,12 @@ typedef int ThreadId_t;
 
 #define THREAD_FUNCTION_DEF(functionName, userPntrVarName) int functionName(void* userPntrVarName)
 typedef THREAD_FUNCTION_DEF(PlatThreadFunction_f, userPntr);
+
+struct PlatThreadIdPair_t
+{
+	u64 internalId;
+	ThreadId_t osId;
+};
 
 struct PlatThread_t
 {
@@ -92,6 +112,25 @@ struct PlatSemaphore_t
 struct PlatInterlockedInt_t
 {
 	u64 id;
+};
+
+// +--------------------------------------------------------------+
+// |                          Processes                           |
+// +--------------------------------------------------------------+
+struct PlatRunningProcess_t
+{
+	u64 id;
+	MemArena_t* allocArena;
+	MyStr_t filePath;
+	MyStr_t workingDirectory;
+	MyStr_t argumentsString;
+	
+	bool isFinished;
+	u64 lastExitCodeCheckTime;
+	u64 exitCode;
+	bool readyForRemoval;
+	
+	//TODO: Implement me!
 };
 
 // +--------------------------------------------------------------+

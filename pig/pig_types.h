@@ -364,6 +364,7 @@ struct PigNotificationQueue_t
 	bool initialized;
 	u64 nextId;
 	PigNotification_t notifications[PIG_MAX_NUM_NOTIFICATIONS];
+	u64 prevNotificationTime;
 	
 	rec mainRec;
 	v2 notificationsSize;

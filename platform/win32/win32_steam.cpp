@@ -371,7 +371,7 @@ PLAT_API_GET_STEAM_FRIEND_PRESENCE_STR_DEFINITION(Win32_GetSteamFriendPresenceSt
 	VarArrayLoop(&friendInfo->presenceStrs, sIndex)
 	{
 		VarArrayLoopGet(PlatSteamFriendPresenceStr_t, presenceStr, &friendInfo->presenceStrs, sIndex);
-		if (StrCompareIgnoreCase(presenceStr->key, keyStr) == 0)
+		if (StrEqualsIgnoreCase(presenceStr->key, keyStr))
 		{
 			return presenceStr;
 		}

@@ -58,7 +58,7 @@ PLAT_API_IS_FILE_WATCHED_DEF(Win32_IsFileWatched)
 	for (u64 fIndex = 0; fIndex < context->watchedFiles.count; fIndex++)
 	{
 		NotNull(filePntr);
-		if (StrCompareIgnoreCase(filePntr->fullPath, fullFilePath) == 0)
+		if (StrEqualsIgnoreCase(filePntr->fullPath, fullFilePath))
 		{
 			if (watchedFileOut != nullptr) { *watchedFileOut = filePntr; }
 			return true;
