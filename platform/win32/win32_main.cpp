@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 	// +==============================+
 	// |   InitializingDebugOutput    |
 	// +==============================+
-	StartPerfSections(Win32InitPhase_NumPhases, "InitializingDebugOutput");
+	StartPerfSections(Win32InitPhase_NumPhases, "InitializingDebugOutput", true);
 	InitPhase = Win32InitPhase_CoreInitialized;
 	
 	Win32_DebugInit();

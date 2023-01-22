@@ -79,7 +79,6 @@ char** ParseJsonPath(MemArena_t* memArena, MyStr_t pathStr, u64* numPiecesOut = 
 	{
 		u64 pieceIndex = 0;
 		u64 charIndex = 0;
-		u64 numCharsNeeded = 0;
 		
 		u64 partStartIndex = 0;
 		for (u64 cIndex = 0; cIndex <= pathStr.length; cIndex++)
@@ -351,16 +350,22 @@ yajl_val LogJsonArray(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yaj
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found)
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		if (!allowMissing)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	if (!YAJL_IS_ARRAY(resultNode))
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not array at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		if (!allowInvalidType)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not array at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	return resultNode;
@@ -372,16 +377,22 @@ yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, ya
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found)
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		if (!allowMissing)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	if (!YAJL_IS_OBJECT(resultNode))
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not object at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		if (!allowInvalidType)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not object at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	return resultNode;
@@ -393,16 +404,22 @@ MyStr_t LogJsonValueStr(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, M
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found)
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		if (!allowMissing)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	if (!YAJL_IS_STRING(resultNode))
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not string at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		if (!allowInvalidType)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not string at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	return NewStr(YAJL_GET_STRING(resultNode));
@@ -414,16 +431,22 @@ i64 LogJsonValueI64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, i64 d
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found)
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		if (!allowMissing)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	if (!YAJL_IS_INTEGER(resultNode))
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not i64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		if (!allowInvalidType)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not i64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	return YAJL_GET_INTEGER(resultNode);
@@ -435,16 +458,22 @@ r64 LogJsonValueR64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, r64 d
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found)
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		if (!allowMissing)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	if (!YAJL_IS_DOUBLE(resultNode))
 	{
-		if (isError) { log->hadErrors = true; }
-		else { log->hadWarnings = true; }
-		LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not r64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		if (!allowInvalidType)
+		{
+			if (isError) { log->hadErrors = true; }
+			else { log->hadWarnings = true; }
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not r64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+		}
 		return defaultValue;
 	}
 	return YAJL_GET_DOUBLE(resultNode);

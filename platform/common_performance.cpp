@@ -20,15 +20,19 @@ Description:
 #error Unsupported layer in common_performance.h
 #endif
 
-#define PerfSection(sectionName) do                               \
-{                                                                 \
-	perfSections[perfSectionIndex].time = COMMON_GET_PERF_TIME(); \
-	perfSections[perfSectionIndex].name = sectionName;            \
-	perfSectionIndex++;                                           \
+#define PerfSection(sectionName) do                                   \
+{                                                                     \
+	if (perfSectionsEnabled)                                          \
+	{                                                                 \
+		perfSections[perfSectionIndex].time = COMMON_GET_PERF_TIME(); \
+		perfSections[perfSectionIndex].name = sectionName;            \
+		perfSectionIndex++;                                           \
+	}                                                                 \
 } while(0)
-#define StartPerfSections(maxNumSections, firstSectionName) PerfSection_t perfSections[(maxNumSections)+1]; u64 perfSectionIndex = 0; PerfSection(firstSectionName);
-#define EndPerfSections() PerfSection(nullptr);
-#define GetNumPerfSections() (perfSectionIndex-1)
+#define StartPerfSections(maxNumSections, firstSectionName, enabled) PerfSection_t perfSections[(maxNumSections)+1]; u64 perfSectionIndex = 0; bool perfSectionsEnabled = (enabled); PerfSection(firstSectionName)
+#define EndPerfSections() PerfSection(nullptr)
+#define ArePerfSectionsEnabled() (perfSectionsEnabled)
+#define GetNumPerfSections() (perfSectionsEnabled ? (perfSectionIndex-1) : 0)
 
 const char* GetPerfSectionName_(const PerfSection_t* sections, u64 numSections, u64 maxNumSections, u64 sectionIndex)
 {
@@ -67,6 +71,7 @@ r64 GetTotalPerfSectionsTime_(const PerfSection_t* sections, u64 numSections, u6
 {
 	NotNull_(sections);
 	Assert_(numSections <= maxNumSections);
+	if (numSections == 0) { return 0; }
 	r64 result = 0.0;
 	for (u64 sIndex = 0; sIndex < numSections-1; sIndex++)
 	{
@@ -104,4 +109,16 @@ void BundlePerfSections_(const PerfSection_t* sections, u64 numSections, u64 max
 #define GetPerfSectionTime(sectionName) GetPerfSectionTime_(&perfSections[0], perfSectionIndex, ArrayCount(perfSections), (sectionName))
 #define GetTotalPerfSectionsTime() GetTotalPerfSectionsTime_(&perfSections[0], perfSectionIndex, ArrayCount(perfSections))
 #define BundlePerfSections(memArena, bundleOut) BundlePerfSections_(&perfSections[0], perfSectionIndex, ArrayCount(perfSections), (memArena), (bundleOut))
+
+#define PrintPerfSections(printFunc, linePrefix) do                                                                              \
+{                                                                                                                                \
+	if (ArePerfSectionsEnabled())                                                                                                \
+	{                                                                                                                            \
+		for (u64 sectionIndex = 0; sectionIndex < GetNumPerfSections(); sectionIndex++)                                          \
+		{                                                                                                                        \
+			printFunc("%s%s: %.1lfms", (linePrefix), GetPerfSectionName(sectionIndex), GetPerfSectionTimeByIndex(sectionIndex)); \
+		}                                                                                                                        \
+		printFunc("%sTotal: %.1lfms", (linePrefix), GetTotalPerfSectionsTime());                                                 \
+	}                                                                                                                            \
+} while(0)
 
