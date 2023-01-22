@@ -434,7 +434,7 @@ const char* Resources_GetPathOrNameForFont(u64 fontIndex, ResourceFontMetaInfo_t
 			metaInfo->faces[0].colored[0]       = false;
 			metaInfo->faces[0].sheetSizes[1]    = NewVec2i(16, 16);
 			metaInfo->faces[0].filePaths[1]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png");
-			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.meta");
+			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns.meta");
 			metaInfo->faces[0].paddings[1]      = Vec2i_Zero;
 			metaInfo->faces[0].isPixelated[1]   = true;
 			metaInfo->faces[0].scalables[1]     = false;
