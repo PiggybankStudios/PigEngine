@@ -32,6 +32,10 @@ Description:
 #include "slug/TerathonCode/TSCompression.h"
 #endif
 
+#if JSON_SUPPORTED
+#include "yajl/yajl_tree.h"
+#endif
+
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
 #include "pig/pig_input_chars.h"
@@ -106,6 +110,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
 
+#include "pig/pig_json.cpp"
 #include "pig/pig_serialization.cpp"
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_wav.cpp"

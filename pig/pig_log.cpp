@@ -100,7 +100,7 @@ void SetProcessLogName(ProcessLog_t* log, MyStr_t processName)
 	{
 		if (!IsEmptyStr(log->processName))
 		{
-			FreeString(log->allocArena, &log->processName);
+			if (DoesMemArenaSupportFreeing(log->allocArena)) { FreeString(log->allocArena, &log->processName); }
 		}
 		log->processName = AllocString(log->allocArena, &processName);
 	}
@@ -301,6 +301,15 @@ void InsertProcessLogInOrder(const ProcessLog_t* log, const char* headerAndFoote
 // +--------------------------------------------------------------+
 // |                            Macros                            |
 // +--------------------------------------------------------------+
+
+#define LogWriteAt(log, level, message)                       LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), false, message)
+#define LogWriteLineAt(log, level, message)                   LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), true,  message)
+#define LogPrintAt(log, level, formatString, ...)             LogPrint_ ((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), false, formatString, ##__VA_ARGS__)
+#define LogPrintLineAt(log, level, formatString, ...)         LogPrint_ ((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), true,  formatString, ##__VA_ARGS__)
+#define LogWriteAtx(log, level, flags, message)               LogOutput_((log), (flags),       __FILE__, __LINE__, __func__, (level), false, message)
+#define LogWriteLineAtx(log, level, flags, message)           LogOutput_((log), (flags),       __FILE__, __LINE__, __func__, (level), true,  message)
+#define LogPrintAtx(log, level, flags, formatString, ...)     LogPrint_ ((log), (flags),       __FILE__, __LINE__, __func__, (level), false, formatString, ##__VA_ARGS__)
+#define LogPrintLineAtx(log, level, flags, formatString, ...) LogPrint_ ((log), (flags),       __FILE__, __LINE__, __func__, (level), true,  formatString, ##__VA_ARGS__)
 
 #define LogWrite_D(log, message)                       LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, DbgLevel_Debug, false, message)
 #define LogWriteLine_D(log, message)                   LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, DbgLevel_Debug, true,  message)

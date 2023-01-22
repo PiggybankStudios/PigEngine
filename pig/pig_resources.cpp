@@ -800,7 +800,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 				{
 					loadedSpriteSheet = TryLoadSpriteSheetAndMeta(
 						mainHeap,
-						NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png"), NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.meta"),
+						NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png"), NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns.meta"),
 						NewVec2i(16, 16), Vec2i_Zero, true,
 						&spriteSheet
 					);
