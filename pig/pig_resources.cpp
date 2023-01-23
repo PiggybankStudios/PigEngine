@@ -1588,3 +1588,23 @@ Sound_t* GetPointer(MusicHandle_t* handle)
 	handle->reloadIndex = pig->reloadIndex;
 	return handle->pntr;
 }
+
+// +--------------------------------------------------------------+
+// |                      Lookup by Filename                      |
+// +--------------------------------------------------------------+
+SpriteSheet_t* FindSpriteSheetResourceByFilename(MyStr_t filename)
+{
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHEETS; rIndex++)
+	{
+		const char* spriteSheetPath = GetPathOrNameForResource(ResourceType_Sheet, rIndex);
+		NotNull(spriteSheetPath);
+		const char* spriteSheetFileName = GetFileNamePartNt(spriteSheetPath);
+		if (StrEqualsIgnoreCase(filename, spriteSheetFileName))
+		{
+			return &pig->resources.sheets->items[rIndex];
+		}
+	}
+	return nullptr;
+}
+
+//TODO: Make functions for all other resource types

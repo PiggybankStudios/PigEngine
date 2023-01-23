@@ -253,7 +253,7 @@ GY_STRING_FIFO_PUSH_LINES_SORT_CALLBACK_DEF(ProcessLogInsertLinesSortCallback)
 	DebugConsoleLine_t* metaStruct = GetFifoLineMetaStruct(fifoLine, DebugConsoleLine_t);
 	return metaStruct->preciseProgramTime;
 }
-void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug)
+void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug, bool dumpToStdOut = true)
 {
 	NotNull(log);
 	Assert(minLevel < DbgLevel_NumLevels);
@@ -263,6 +263,7 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 	context.minLevel = minLevel;
 	context.console = &pig->debugConsole;
 	if (headerAndFooterStr != nullptr) { PrintLine_R("v========= %s =========v", headerAndFooterStr); }
+	
 	StringFifoPushLinesFromFifo(
 		&pig->debugConsole.fifo,
 		&log->fifo,
@@ -271,6 +272,23 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 		ProcessLogAddLinesAfterCallback,
 		&context
 	);
+	
+	//NOTE: So the above call properly pushes the lines into the target FIFO but we need to manually push all these lines through to the stdout (aka the platform layer)
+	//      In order to do that, we do our own loop over the lines here
+	if (dumpToStdOut && plat != nullptr && plat->DebugOutput != nullptr)
+	{
+		const StringFifoLine_t* srcLine = log->fifo.firstLine;
+		while (srcLine != nullptr)
+		{
+			if (ProcessLogAddLinesBeforeCallback(&pig->debugConsole.fifo, &log->fifo, srcLine, nullptr, &context))
+			{
+				MyStr_t text = GetFifoLineText(srcLine);
+				plat->DebugOutput(text, true);
+			}
+			srcLine = srcLine->next;
+		}
+	}
+	
 	if (headerAndFooterStr != nullptr) { PrintLine_R("^========= %s =========^", headerAndFooterStr); }
 }
 
