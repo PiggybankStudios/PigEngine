@@ -200,6 +200,7 @@ MyStr_t TryGetJsonValueStr(yajl_val rootNode, MyStr_t pathStr, MyStr_t defaultVa
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found) { return defaultValue; }
+	if (YAJL_IS_NULL(resultNode)) { return MyStr_Empty; }
 	if (!YAJL_IS_STRING(resultNode)) { return defaultValue; }
 	return NewStr(YAJL_GET_STRING(resultNode));
 }
@@ -223,7 +224,8 @@ MyStr_t GetJsonValueStr(yajl_val rootNode, MyStr_t pathStr)
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	AssertMsg(found, "Failed to find Json node by path");
-	//TODO: Should we handle YAJL_IS_NULL? Should we turn a number into a string?
+	//TODO: Should we turn a number or other type into a string?
+	if (YAJL_IS_NULL(resultNode)) { return MyStr_Empty; }
 	AssertMsg(YAJL_IS_STRING(resultNode), "Expected a string json node!");
 	return NewStr(YAJL_GET_STRING(resultNode));
 }
@@ -250,6 +252,7 @@ i64 TryGetJsonValueI64(yajl_val rootNode, MyStr_t pathStr, i64 defaultValue)
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found) { return defaultValue; }
+	if (YAJL_IS_NULL(resultNode)) { return 0; }
 	if (!YAJL_IS_INTEGER(resultNode)) { return defaultValue; }
 	return YAJL_GET_INTEGER(resultNode);
 }
@@ -273,6 +276,7 @@ i64 GetJsonValueI64(yajl_val rootNode, MyStr_t pathStr)
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	AssertMsg(found, "Failed to find Json node by path");
+	if (YAJL_IS_NULL(resultNode)) { return 0; }
 	AssertMsg(YAJL_IS_INTEGER(resultNode), "Expected an integer json node!");
 	return YAJL_GET_INTEGER(resultNode);
 }
@@ -299,6 +303,7 @@ r64 TryGetJsonValueR64(yajl_val rootNode, MyStr_t pathStr, r64 defaultValue)
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found) { return defaultValue; }
+	if (YAJL_IS_NULL(resultNode)) { return 0; }
 	if (!YAJL_IS_DOUBLE(resultNode)) { return defaultValue; }
 	return YAJL_GET_DOUBLE(resultNode);
 }
@@ -322,6 +327,7 @@ r64 GetJsonValueR64(yajl_val rootNode, MyStr_t pathStr)
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	AssertMsg(found, "Failed to find Json node by path");
+	if (YAJL_IS_NULL(resultNode)) { return 0; }
 	AssertMsg(YAJL_IS_DOUBLE(resultNode), "Expected a r64 json node!");
 	return YAJL_GET_DOUBLE(resultNode);
 }
@@ -412,6 +418,7 @@ MyStr_t LogJsonValueStr(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, M
 		}
 		return defaultValue;
 	}
+	if (YAJL_IS_NULL(resultNode)) { return MyStr_Empty; }
 	if (!YAJL_IS_STRING(resultNode))
 	{
 		if (!allowInvalidType)
@@ -439,6 +446,7 @@ i64 LogJsonValueI64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, i64 d
 		}
 		return defaultValue;
 	}
+	if (YAJL_IS_NULL(resultNode)) { return 0; }
 	if (!YAJL_IS_INTEGER(resultNode))
 	{
 		if (!allowInvalidType)

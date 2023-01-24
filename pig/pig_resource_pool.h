@@ -13,6 +13,7 @@ struct ResourcePoolEntry_t
 	ResourceType_t type;
 	u64 arrayIndex;
 	u64 refCount;
+	u64 lastRefCountChangeTime;
 	MyStr_t filePath;
 	union
 	{
@@ -29,6 +30,7 @@ struct ResourcePoolEntry_t
 struct ResourcePool_t
 {
 	MemArena_t* allocArena;
+	u64 resourceFreeDelay;
 	union
 	{
 		u64 nextId[ResourceType_NumTypes];

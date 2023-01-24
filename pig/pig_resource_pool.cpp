@@ -21,6 +21,8 @@ Description:
 	** This file relies on some types from pig_resources.h
 */
 
+#define DEFAULT_RESOURCE_POOL_FREE_DELAY 1000 //ms
+
 // +--------------------------------------------------------------+
 // |                             Free                             |
 // +--------------------------------------------------------------+
@@ -43,8 +45,9 @@ void FreeResourcePoolEntry(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 			case ResourceType_Music:       FreeSound(&entry->music);                break;
 			default: AssertMsg(false, "Unhandle ResourceType_t in FreeResourcePoolEntry"); break;
 		}
+		entry->id = 0;
 	}
-	ClearPointer(entry);
+	//NOTE: We DON'T ClearPointer here because we want to type and arrayIndex members to stay intact
 }
 void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, bool deallocate)
 {
@@ -81,10 +84,11 @@ void FreeResourcePool(ResourcePool_t* pool)
 // +--------------------------------------------------------------+
 //NOTE: Although you can define a memArena the pool itself to use, the resources
 // will get allocated mostly through the mainHeap (audio being the exception on the audioHeap)
-void CreateResourcePool(MemArena_t* memArena, ResourcePool_t* poolOut)
+void CreateResourcePool(MemArena_t* memArena, ResourcePool_t* poolOut, u64 resourceFreeDelay = DEFAULT_RESOURCE_POOL_FREE_DELAY)
 {
 	ClearPointer(poolOut);
 	poolOut->allocArena = memArena;
+	poolOut->resourceFreeDelay = resourceFreeDelay;
 	for (u64 typeIndex = 1; typeIndex < ResourceType_NumTypes; typeIndex++)
 	{
 		ResourceType_t resourceType = (ResourceType_t)typeIndex;
@@ -92,6 +96,25 @@ void CreateResourcePool(MemArena_t* memArena, ResourcePool_t* poolOut)
 		CreateBktArray(array, memArena, sizeof(ResourcePoolEntry_t));
 		poolOut->nextId[typeIndex] = 1;
 		poolOut->resourceCounts[typeIndex] = 0;
+	}
+}
+
+// +--------------------------------------------------------------+
+// |                            Update                            |
+// +--------------------------------------------------------------+
+void UpdateResourcePool(ResourcePool_t* pool)
+{
+	for (u64 typeIndex = 1; typeIndex < ResourceType_NumTypes; typeIndex++)
+	{
+		BktArray_t* array = &pool->arrays[typeIndex];
+		for (u64 eIndex = 0; eIndex < array->length; eIndex++)
+		{
+			ResourcePoolEntry_t* entry = BktArrayGet(array, ResourcePoolEntry_t, eIndex);
+			if (entry->id != 0 && entry->refCount == 0 && TimeSince(entry->lastRefCountChangeTime) > pool->resourceFreeDelay)
+			{
+				FreeResourcePoolEntry(pool, entry);
+			}
+		}
 	}
 }
 
@@ -145,7 +168,8 @@ TextureRef_t TakeRefTexture(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->texture;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 VectorImgRef_t TakeRefVectorImg(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -157,7 +181,8 @@ VectorImgRef_t TakeRefVectorImg(ResourcePool_t* pool, ResourcePoolEntry_t* entry
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->vectorImg;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 SpriteSheetRef_t TakeRefSpriteSheet(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -169,7 +194,8 @@ SpriteSheetRef_t TakeRefSpriteSheet(ResourcePool_t* pool, ResourcePoolEntry_t* e
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->spriteSheet;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 ShaderRef_t TakeRefShader(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -181,7 +207,8 @@ ShaderRef_t TakeRefShader(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->shader;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 FontRef_t TakeRefFont(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -193,7 +220,8 @@ FontRef_t TakeRefFont(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->font;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 SoundRef_t TakeRefSound(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -205,7 +233,8 @@ SoundRef_t TakeRefSound(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->sound;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 MusicRef_t TakeRefMusic(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
@@ -217,7 +246,8 @@ MusicRef_t TakeRefMusic(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->music;
-	entry->refCount++;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
 
@@ -287,8 +317,8 @@ void ReleaseRef(TextureRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->textures, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool texture was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(VectorImgRef_t* reference)
@@ -300,8 +330,8 @@ void ReleaseRef(VectorImgRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->vectorImages, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool vectorImg was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(SpriteSheetRef_t* reference)
@@ -313,8 +343,8 @@ void ReleaseRef(SpriteSheetRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->sheets, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool sheet was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(ShaderRef_t* reference)
@@ -326,8 +356,8 @@ void ReleaseRef(ShaderRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->shaders, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool shader was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(FontRef_t* reference)
@@ -339,8 +369,8 @@ void ReleaseRef(FontRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->fonts, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool font was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(SoundRef_t* reference)
@@ -352,8 +382,8 @@ void ReleaseRef(SoundRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->sounds, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool sound was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 void ReleaseRef(MusicRef_t* reference)
@@ -365,8 +395,8 @@ void ReleaseRef(MusicRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->musics, ResourcePoolEntry_t, reference->arrayIndex);
 	AssertMsg(entry->id != 0, "The resource pool music was already freed! This is a double release situation!");
 	Assert(entry->refCount > 0);
-	entry->refCount--;
-	if (entry->refCount == 0) { FreeResourcePoolEntry(reference->pool, entry); }
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
 
@@ -381,7 +411,7 @@ void SoftReleaseRef(MusicRef_t*       reference) { NotNull(reference); if (!IsVa
 // +--------------------------------------------------------------+
 // |                       Main Loading API                       |
 // +--------------------------------------------------------------+
-//NOTE: LoadTexture functions will not prevent you from adding multiple entries for the same file.
+//NOTE: Load functions will NOT prevent you from adding multiple entries for the same file.
 // Though if you try and look up the entry by filePath later you will get whichever entry was
 // added first until it has been fully released
 
@@ -405,6 +435,7 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	newEntry->type = ResourceType_Texture;
 	newEntry->arrayIndex = pool->textures.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->texture, &tempTexture, sizeof(Texture_t));
 	
@@ -429,6 +460,7 @@ VectorImgRef_t ResourcePoolLoadVectorImg(ResourcePool_t* pool, MyStr_t filePath)
 	newEntry->type = ResourceType_VectorImage;
 	newEntry->arrayIndex = pool->vectorImages.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->vectorImg, &tempVectorImg, sizeof(VectorImg_t));
 	
@@ -458,6 +490,7 @@ SpriteSheetRef_t ResourcePoolLoadSpriteSheet(ResourcePool_t* pool, MyStr_t fileP
 	newEntry->type = ResourceType_Sheet;
 	newEntry->arrayIndex = pool->sheets.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->spriteSheet, &tempSheet, sizeof(SpriteSheet_t));
 	
@@ -488,6 +521,7 @@ ShaderRef_t ResourcePoolLoadShader(ResourcePool_t* pool, MyStr_t filePath, Verte
 	newEntry->type = ResourceType_Shader;
 	newEntry->arrayIndex = pool->shaders.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->shader, &tempShader, sizeof(Shader_t));
 	
@@ -512,6 +546,7 @@ FontRef_t ResourcePoolLoadFont(ResourcePool_t* pool, MyStr_t filePath)
 	newEntry->type = ResourceType_Font;
 	newEntry->arrayIndex = pool->fonts.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->font, &tempFont, sizeof(Font_t));
 	
@@ -536,6 +571,7 @@ SoundRef_t ResourcePoolLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 	newEntry->type = ResourceType_Sound;
 	newEntry->arrayIndex = pool->sounds.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->sound, &tempSound, sizeof(Sound_t));
 	
@@ -560,6 +596,7 @@ MusicRef_t ResourcePoolLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	newEntry->type = ResourceType_Music;
 	newEntry->arrayIndex = pool->musics.length-1;
 	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
 	MyMemCopy(&newEntry->music, &tempMusic, sizeof(Sound_t));
 	
