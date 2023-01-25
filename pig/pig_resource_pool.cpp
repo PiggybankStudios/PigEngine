@@ -49,7 +49,7 @@ void FreeResourcePoolEntry(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	}
 	//NOTE: We DON'T ClearPointer here because we want to type and arrayIndex members to stay intact
 }
-void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, bool deallocate)
+void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, bool deallocate, bool printLeaks = false)
 {
 	NotNull(pool);
 	Assert(resourceType < ResourceType_NumTypes);
@@ -60,22 +60,26 @@ void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, b
 		ResourcePoolEntry_t* entry = BktArrayGet(array, ResourcePoolEntry_t, eIndex);
 		DebugAssert(entry->type == resourceType);
 		DebugAssert(entry->arrayIndex == eIndex);
+		if (printLeaks && entry->id != 0 && entry->refCount > 0)
+		{
+			PrintLine_E("Resource Pool %s[%llu] leaked! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->filePath.length, entry->filePath.chars);
+		}
 		FreeResourcePoolEntry(pool, entry);
 	}
 	if (deallocate) { FreeBktArray(array); }
 	else { BktArrayClear(array); }
 	pool->resourceCounts[resourceType] = 0;
 }
-void ClearResourcePool(ResourcePool_t* pool, bool deallocate = false)
+void ClearResourcePool(ResourcePool_t* pool, bool deallocate = false, bool printLeaks = false)
 {
 	for (u64 tIndex = 1; tIndex < ResourceType_NumTypes; tIndex++)
 	{
-		ClearResourcePoolArray(pool, (ResourceType_t)tIndex, deallocate);
+		ClearResourcePoolArray(pool, (ResourceType_t)tIndex, deallocate, printLeaks);
 	}
 }
-void FreeResourcePool(ResourcePool_t* pool)
+void FreeResourcePool(ResourcePool_t* pool, bool printLeaks = true)
 {
-	ClearResourcePool(pool, true);
+	ClearResourcePool(pool, true, printLeaks);
 	ClearPointer(pool);
 }
 
