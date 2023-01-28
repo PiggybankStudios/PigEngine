@@ -95,7 +95,6 @@ void CreateResourcePool(MemArena_t* memArena, ResourcePool_t* poolOut, u64 resou
 	poolOut->resourceFreeDelay = resourceFreeDelay;
 	for (u64 typeIndex = 1; typeIndex < ResourceType_NumTypes; typeIndex++)
 	{
-		ResourceType_t resourceType = (ResourceType_t)typeIndex;
 		BktArray_t* array = &poolOut->arrays[typeIndex];
 		CreateBktArray(array, memArena, sizeof(ResourcePoolEntry_t));
 		poolOut->nextId[typeIndex] = 1;

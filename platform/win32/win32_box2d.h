@@ -9,7 +9,19 @@ Date:   07\11\2022
 
 #if BOX2D_SUPPORTED
 
+#define B2_USER_SETTINGS
+#include <Box2D/box2d.h>
+#include "b2_user_settings.h"
 
+struct Box2dPhysicsState_t
+{
+	bool initialized;
+	b2World world;
+	u64 nextBodyId;
+	r32 scale;
+	v2 gravity;
+	BktArray_t bodies; //PlatPhysicsBody_t
+};
 
 #endif //BOX2D_SUPPORTED
 

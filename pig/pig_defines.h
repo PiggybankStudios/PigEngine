@@ -35,6 +35,7 @@ Description:
 
 #define PIG_DEFAULT_FRAMERATE   60 //frames per second //TODO: Make this dependent on the hardware (monitor) we are rendering on
 #define PIG_DEFAULT_FRAME_TIME  (1000.0 / PIG_DEFAULT_FRAMERATE) //ms
+#define PIG_MAX_ELAPSED_MS      100 //ms
 
 #define PIG_PHYS_FRAMERATE       120 //frames per second
 #define PIG_PHYS_FRAME_TIME_SEC  (1.0 / PIG_PHYS_FRAMERATE) //secs

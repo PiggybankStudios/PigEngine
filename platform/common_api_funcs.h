@@ -224,4 +224,29 @@ typedef PLAT_API_CHECK_RUNNING_PROCESS_DEFINITION(PlatApiCheckRunningProcess_f);
 #define PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(functionName) void functionName(PlatRunningProcess_t* runningProcess)
 typedef PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(PlatApiCloseRunningProcess_f);
 
+#if BOX2D_SUPPORTED
+
+#define PLAT_API_INIT_PHYSICS_ENGINE(functionName) void functionName(v2 gravity, r32 scale)
+typedef PLAT_API_INIT_PHYSICS_ENGINE(PlatApiInitPhysicsEngine_f);
+
+#define PLAT_API_DESTROY_PHYSICS_ENGINE(functionName) void functionName()
+typedef PLAT_API_DESTROY_PHYSICS_ENGINE(PlatApiDestroyPhysicsEngine_f);
+
+#define PLAT_API_PHYSICS_TICK(functionName) void functionName(r64 stepTimeMs, i32 numVelocityIterations, i32 numPositionIterations)
+typedef PLAT_API_PHYSICS_TICK(PlatApiPhysicsTick_f);
+
+#define PLAT_API_CREATE_PHYSICS_BODY(functionName) PlatPhysicsBody_t* functionName(const PlatPhysicsBodyDef_t* definition)
+typedef PLAT_API_CREATE_PHYSICS_BODY(PlatApiCreatePhysicsBody_f);
+
+#define PLAT_API_DESTROY_PHYSICS_BODY(functionName) void functionName(PlatPhysicsBody_t* body)
+typedef PLAT_API_DESTROY_PHYSICS_BODY(PlatApiDestroyPhysicsBody_f);
+
+#define PLAT_API_SET_PHYSICS_BODY_VELOCITY(functionName) void functionName(PlatPhysicsBody_t* body, v2 velocity, r32 angularVelocity)
+typedef PLAT_API_SET_PHYSICS_BODY_VELOCITY(PlatApiSetPhysicsBodyVelocity_f);
+
+#define PLAT_API_GET_PHYSICS_BODY_STATE(functionName) bool functionName(const PlatPhysicsBody_t* body, PlatPhysicsBodyState_t* stateOut)
+typedef PLAT_API_GET_PHYSICS_BODY_STATE(PlatApiGetPhysicsBodyState_f);
+
+#endif //BOX2D_SUPPORTED
+
 #endif //  _COMMON_API_FUNCS_H

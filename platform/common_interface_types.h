@@ -165,6 +165,15 @@ struct PlatformApi_t
 	PlatApiCheckRunningProcess_f*       CheckRunningProcess;
 	PlatApiStartProcess_f*              StartProcess;
 	PlatApiCloseRunningProcess_f*       CloseRunningProcess;
+	#if BOX2D_SUPPORTED
+	PlatApiInitPhysicsEngine_f*         InitPhysicsEngine;
+	PlatApiDestroyPhysicsEngine_f*      DestroyPhysicsEngine;
+	PlatApiPhysicsTick_f*               PhysicsTick;
+	PlatApiCreatePhysicsBody_f*         CreatePhysicsBody;
+	PlatApiDestroyPhysicsBody_f*        DestroyPhysicsBody;
+	PlatApiSetPhysicsBodyVelocity_f*    SetPhysicsBodyVelocity;
+	PlatApiGetPhysicsBodyState_f*       GetPhysicsBodyState;
+	#endif
 };
 
 struct EngineMemory_t

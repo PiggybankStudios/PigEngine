@@ -137,6 +137,11 @@ struct Win32PlatformState_t
 	AudioServiceInfo_t audioServiceInfo;
 	bool audioWaitForFirstUpdateAfterReload;
 	
+	//Physics
+	#if BOX2D_SUPPORTED
+	Box2dPhysicsState_t physics;
+	#endif
+	
 	//Processes
 	PlatMutex_t runningProcessesMutex;
 	u64 nextRunningProcessId;

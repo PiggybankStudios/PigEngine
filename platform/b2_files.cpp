@@ -9,11 +9,11 @@ Description:
 #if BOX2D_SUPPORTED
 
 #pragma warning(push)
+#pragma warning(disable:4099) //'b2TOIQueryWrapper': type name first seen using 'class' now seen using 'struct'
+#pragma warning(disable:4389) //'==': signed/unsigned mismatch
+#pragma warning(disable:4456) //declaration of 'i' hides previous local declaration
+#pragma warning(disable:4457) //declaration of 'distance' hides function parameter
 #pragma warning(disable:4701) //potentially uninitialized local variable 'normal' used
-
-#define B2_USER_SETTINGS
-
-#include <box2d/box2d.h>
 
 #include <Box2D/src/collision/b2_broad_phase.cpp>
 #include <Box2D/src/collision/b2_collide_circle.cpp>
@@ -67,6 +67,6 @@ Description:
 
 #include <Box2D/src/rope/b2_rope.cpp>
 
-#pragma warning(push)
+#pragma warning(pop)
 
 #endif //BOX2D_SUPPORTED

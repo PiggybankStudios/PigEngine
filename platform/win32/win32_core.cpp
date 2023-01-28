@@ -222,6 +222,10 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	#if PROCMON_SUPPORTED
 	InitMemArena_PagedHeapFuncs(&Platform->procmonHeap, Megabytes(1), ProcmonAllocate, ProcmonFree);
 	#endif
+	
+	#if BOX2D_SUPPORTED
+	InitMemArena_PagedHeapArena(&Platform->box2dHeap, Kilobytes(512), &Platform->stdHeap);
+	#endif
 }
 
 // +--------------------------------------------------------------+

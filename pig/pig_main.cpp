@@ -90,8 +90,9 @@ static       RenderContext_t* rc            = nullptr;
 static       u64              ProgramTime    = 0;
 static       u64              UnixTimestamp  = 0;
 static       u64              LocalTimestamp = 0;
-static       r64              TimeScale      = 1.0f;
-static       r64              ElapsedMs      = 1.0f;
+static       r64              TimeScale      = 1.0;
+static       r64              ElapsedMs      = 0.0;
+static       r64              UncappedElapsedMs = 0.0;
 static       v2               MousePos       = {};
 static       v2               ScreenSize     = {};
 
