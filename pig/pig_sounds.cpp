@@ -334,6 +334,18 @@ void StopSoundInstance(SoundInstanceHandle_t handle)
 	StopSoundInstance(GetSoundInstanceFromHandle(handle));
 }
 
+void StopAllSoundInstancesForSound(const Sound_t* sound)
+{
+	for (u64 sIndex = 0; sIndex < PIG_MAX_SOUND_INSTANCES; sIndex++)
+	{
+		SoundInstance_t* instance = &pig->soundInstances[sIndex];
+		if (instance->type == SoundInstanceType_Samples && instance->sound == sound)
+		{
+			StopSoundInstance(instance);
+		}
+	}
+}
+
 void StartSoundInstance(SoundInstance_t* instance)
 {
 	NotNull(instance);

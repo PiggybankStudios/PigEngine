@@ -64,6 +64,10 @@ void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, b
 		{
 			PrintLine_E("Resource Pool %s[%llu] leaked %llu reference%s! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->refCount, ((entry->refCount == 1) ? "" : "s"), entry->filePath.length, entry->filePath.chars);
 		}
+		if (resourceType == ResourceType_Sound || resourceType == ResourceType_Music)
+		{
+			StopAllSoundInstancesForSound(&entry->sound);
+		}
 		FreeResourcePoolEntry(pool, entry);
 	}
 	if (deallocate) { FreeBktArray(array); }
@@ -109,12 +113,17 @@ void UpdateResourcePool(ResourcePool_t* pool)
 {
 	for (u64 typeIndex = 1; typeIndex < ResourceType_NumTypes; typeIndex++)
 	{
+		ResourceType_t resourceType = (ResourceType_t)typeIndex;
 		BktArray_t* array = &pool->arrays[typeIndex];
 		for (u64 eIndex = 0; eIndex < array->length; eIndex++)
 		{
 			ResourcePoolEntry_t* entry = BktArrayGet(array, ResourcePoolEntry_t, eIndex);
 			if (entry->id != 0 && entry->refCount == 0 && TimeSince(entry->lastRefCountChangeTime) > pool->resourceFreeDelay)
 			{
+				if (resourceType == ResourceType_Sound || resourceType == ResourceType_Music)
+				{
+					StopAllSoundInstancesForSound(&entry->sound);
+				}
 				FreeResourcePoolEntry(pool, entry);
 				DebugAssert(pool->resourceCounts[typeIndex] > 0);
 				Decrement(pool->resourceCounts[typeIndex]);
@@ -137,6 +146,7 @@ ResourcePoolEntry_t* FindEmptyResourcePoolEntry(BktArray_t* array, bool addIfFul
 	{
 		ResourcePoolEntry_t* newEntry = BktArrayAdd(array, ResourcePoolEntry_t);
 		newEntry->id = 0; // will probably get overridden by caller, but let's make sure it's cleared to 0 to show empty
+		newEntry->arrayIndex = array->length-1;
 		return newEntry;
 	}
 	return nullptr;
@@ -147,7 +157,7 @@ ResourcePoolEntry_t* FindResourcePoolEntryByPath(BktArray_t* array, MyStr_t file
 	for (u64 eIndex = 0; eIndex < array->length; eIndex++)
 	{
 		ResourcePoolEntry_t* entry = BktArrayGet(array, ResourcePoolEntry_t, eIndex);
-		if (StrEqualsIgnoreCase(entry->filePath, filePath)) { return entry; }
+		if (entry->id != 0 && StrEqualsIgnoreCase(entry->filePath, filePath)) { return entry; }
 	}
 	return nullptr;
 }
@@ -439,7 +449,6 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	pool->nextTextureId++;
 	pool->numTextures++;
 	newEntry->type = ResourceType_Texture;
-	newEntry->arrayIndex = pool->textures.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -465,7 +474,6 @@ VectorImgRef_t ResourcePoolLoadVectorImg(ResourcePool_t* pool, MyStr_t filePath)
 	pool->nextVectorImageId++;
 	pool->numVectorImages++;
 	newEntry->type = ResourceType_VectorImage;
-	newEntry->arrayIndex = pool->vectorImages.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -496,7 +504,6 @@ SpriteSheetRef_t ResourcePoolLoadSpriteSheet(ResourcePool_t* pool, MyStr_t fileP
 	pool->nextSheetId++;
 	pool->numSheets++;
 	newEntry->type = ResourceType_Sheet;
-	newEntry->arrayIndex = pool->sheets.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -528,7 +535,6 @@ ShaderRef_t ResourcePoolLoadShader(ResourcePool_t* pool, MyStr_t filePath, Verte
 	pool->nextShaderId++;
 	pool->numShaders++;
 	newEntry->type = ResourceType_Shader;
-	newEntry->arrayIndex = pool->shaders.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -554,7 +560,6 @@ FontRef_t ResourcePoolLoadFont(ResourcePool_t* pool, MyStr_t filePath)
 	pool->nextFontId++;
 	pool->numFonts++;
 	newEntry->type = ResourceType_Font;
-	newEntry->arrayIndex = pool->fonts.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -588,7 +593,6 @@ SoundRef_t ResourcePoolLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 	pool->nextSoundId++;
 	pool->numSounds++;
 	newEntry->type = ResourceType_Sound;
-	newEntry->arrayIndex = pool->sounds.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
@@ -599,6 +603,7 @@ SoundRef_t ResourcePoolLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 SoundRef_t ResourcePoolGetOrLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 {
 	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->sounds, filePath);
+	AssertIf(existingEntry != nullptr, existingEntry->id != 0);
 	if (existingEntry != nullptr) { return TakeRefSound(pool, existingEntry); }
 	return ResourcePoolLoadSound(pool, filePath);
 }
@@ -622,7 +627,6 @@ MusicRef_t ResourcePoolLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	pool->nextMusicId++;
 	pool->numMusics++;
 	newEntry->type = ResourceType_Music;
-	newEntry->arrayIndex = pool->musics.length-1;
 	newEntry->refCount = 0;
 	newEntry->lastRefCountChangeTime = ProgramTime;
 	newEntry->filePath = AllocString(pool->allocArena, &filePath);
