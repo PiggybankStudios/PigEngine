@@ -860,78 +860,31 @@ void Pig_LoadSoundResource(u64 soundIndex)
 	const char* soundPath = Resources_GetPathForSound(soundIndex);
 	NotNull(soundPath);
 	MyStr_t soundPathStr = NewStr(soundPath);
-	Sound_t newSound = {};
 	
-	PlatFileContents_t soundFile = {};
-	if (plat->ReadFileContents(soundPathStr, &soundFile))
+	ProcessLog_t soundParseLog = {}; CreateDefaultProcessLog(&soundParseLog);
+	Sound_t newSound = {};
+	if (TryLoadSoundOggOrWav(&soundParseLog, soundPathStr, &pig->audioHeap, &newSound))
 	{
-		bool parseSuccess = false;
-		ProcessLog_t soundParseLog = {};
-		CreateProcessLog(&soundParseLog, Kilobytes(8), TempArena, fixedHeap);
+		if (sound->allocArena != nullptr) //TODO: Change this to something like isValid
+		{
+			soundStatus->state = ResourceState_Unloaded;
+			FreeSound(sound);
+		}
+		MyMemCopy(sound, &newSound, sizeof(Sound_t));
+		soundStatus->state = ResourceState_Loaded;
 		
-		if (StrEndsWith(soundPathStr, ".ogg"))
-		{
-			OggAudioData_t oggData = {};
-			if (TryDeserOggFile(soundFile.size, soundFile.data, &soundParseLog, &oggData, &pig->largeAllocHeap))
-			{
-				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, &newSound, &pig->audioHeap);
-				parseSuccess = true;
-			}
-			else
-			{
-				PrintLine_E("Failed to deserialize ogg sound[%llu] at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
-				DebugAssert(false);
-			}
-			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "OGG Parse Log"); }
-			FreeOggAudioData(&oggData);
-		}
-		else if (StrEndsWith(soundPathStr, ".wav"))
-		{
-			WavAudioData_t wavData = {};
-			if (TryDeserWavFile(soundFile.size, soundFile.data, &soundParseLog, &wavData, &pig->largeAllocHeap))
-			{
-				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, &newSound, &pig->audioHeap);
-				parseSuccess = true;
-			}
-			else
-			{
-				PrintLine_E("Failed to deserialize wav sound[%llu] at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
-				DebugAssert(false);
-			}
-			if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "WAV Parse Log"); }
-			FreeWavAudioData(&wavData);
-		}
-		else
-		{
-			AssertMsg(false, "Unknown file format extension found on sound resource path");
-		}
-		
-		FreeProcessLog(&soundParseLog);
-		plat->FreeFileContents(&soundFile);
-		if (!parseSuccess)
-		{
-			soundStatus->state = ResourceStateWarnOrError(soundStatus->state);
-			return;
-		}
+		StopWatchingFilesForResource(ResourceType_Sound, soundIndex);
+		WatchFileForResource(ResourceType_Sound, soundIndex, soundPathStr);
 	}
 	else
 	{
-		PrintLine_E("Missing sound[%llu] file at \"%.*s\"", soundIndex, soundPathStr.length, soundPathStr.pntr);
+		PrintLine_E("Failed to load sound[%llu] file at \"%s\"", soundIndex, soundPath);
 		DebugAssert(false);
 		soundStatus->state = ResourceStateWarnOrError(soundStatus->state);
 		return;
 	}
-	
-	if (sound->allocArena != nullptr) //TODO: Change this to something like isValid
-	{
-		soundStatus->state = ResourceState_Unloaded;
-		FreeSound(sound);
-	}
-	MyMemCopy(sound, &newSound, sizeof(Sound_t));
-	soundStatus->state = ResourceState_Loaded;
-	
-	StopWatchingFilesForResource(ResourceType_Sound, soundIndex);
-	WatchFileForResource(ResourceType_Sound, soundIndex, soundPathStr);
+	if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "Sound Parse Log"); }
+	FreeProcessLog(&soundParseLog);
 }
 void Pig_LoadAllSounds(bool onlyPinned = false)
 {

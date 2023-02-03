@@ -166,6 +166,58 @@ void CreateSoundFromOggAudioData(const OggAudioData_t* oggData, PlatAudioFormat_
 	}
 }
 
+bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memArena, Sound_t* soundOut)
+{
+	bool result = false;
+	PlatFileContents_t soundFile = {};
+	if (plat->ReadFileContents(filePath, &soundFile))
+	{
+		if (StrEndsWith(filePath, ".ogg"))
+		{
+			OggAudioData_t oggData = {};
+			if (TryDeserOggFile(soundFile.size, soundFile.data, log, &oggData, &pig->largeAllocHeap))
+			{
+				CreateSoundFromOggAudioData(&oggData, platInfo->audioFormat, soundOut, memArena);
+				result = true;
+			}
+			else
+			{
+				LogPrintLine_E(log, "Failed to deserialize ogg sound at \"%.*s\"", filePath.length, filePath.pntr);
+			}
+			FreeOggAudioData(&oggData);
+		}
+		else if (StrEndsWith(filePath, ".wav"))
+		{
+			WavAudioData_t wavData = {};
+			if (TryDeserWavFile(soundFile.size, soundFile.data, log, &wavData, &pig->largeAllocHeap))
+			{
+				CreateSoundFromWavAudioData(&wavData, platInfo->audioFormat, soundOut, memArena);
+				result = true;
+			}
+			else
+			{
+				LogPrintLine_E(log, "Failed to deserialize wav sound at \"%.*s\"", filePath.length, filePath.pntr);
+			}
+			FreeWavAudioData(&wavData);
+		}
+		else
+		{
+			LogPrintLine_E(log, "Unknown file format extension found on sound path: \"%.*s\"", filePath.length, filePath.pntr);
+			log->hadErrors = true;
+			log->errorCode = OggError_UnknownExtension;
+		}
+		
+		plat->FreeFileContents(&soundFile);
+	}
+	else
+	{
+		LogPrintLine_E(log, "Couldn't find/open sound file at \"%.*s\"", filePath.length, filePath.pntr);
+		log->hadErrors = true;
+		log->errorCode = OggError_MissingFile;
+	}
+	return result;
+}
+
 // +--------------------------------------------------------------+
 // |                        Initialization                        |
 // +--------------------------------------------------------------+

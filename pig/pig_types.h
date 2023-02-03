@@ -224,6 +224,18 @@ struct Sound_t
 	};
 };
 
+struct AudioStream_t
+{
+	u64 id;
+	
+	u64 frameIndex;
+	u64 fileByteIndex;
+	PlatOpenFile_t openFile;
+	
+	PlatAudioFormat_t format;
+	Fifo_t samplesFifo;
+};
+
 enum SoundInstanceType_t
 {
 	SoundInstanceType_None = 0,

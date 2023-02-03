@@ -188,7 +188,6 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	Platform->version.minor = WIN32_VERSION_MINOR;
 	Platform->version.build = WIN32_VERSION_BUILD;
 	Platform->consoleWindowIsOpen = !usedWinMainEntryPoint;
-	if (DEBUG_BUILD) { Win32_OpenConsoleWindow(); }
 	
 	printf("[Win32 Platform Core is Initializing...]\n");
 	

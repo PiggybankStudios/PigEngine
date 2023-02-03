@@ -6,6 +6,8 @@ Description:
 	** Holds the main entry point for the Win32 Platform Layer executable
 */
 
+#define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
+
 // +--------------------------------------------------------------+
 // |                           Includes                           |
 // +--------------------------------------------------------------+
@@ -39,7 +41,10 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #define STBI_REALLOC(pointer, newSize) ReallocMem(&Platform->stdHeap, (pointer), (newSize), 0, AllocAlignment_None, true) //ignoreNullptr: true
 #define STBI_FREE(pointer)             FreeMem   (&Platform->stdHeap, (pointer), 0, true) //ignoreNullper: true
 #define STBI_ASSERT(expression)        Assert    (expression)
+#pragma warning(push)
+#pragma warning(disable:4244)
 #include "stb/stb_image.h"
+#pragma warning(pop)
 
 #define STB_RECT_PACK_IMPLEMENTATION
 #define STBRP_SORT qsort
@@ -115,16 +120,21 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 // +--------------------------------------------------------------+
 // |                    Win32 Main Entry Point                    |
 // +--------------------------------------------------------------+
-#if 1
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-#define USED_WIN_MAIN_ENTRY_POINT 1
-#else
+#if WIN32_OPEN_CONSOLE_WINDOW_AT_START
 int main(int argc, char* argv[])
 #define USED_WIN_MAIN_ENTRY_POINT 0
+#else
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#define USED_WIN_MAIN_ENTRY_POINT 1
 #endif
 {
+	#if USED_WIN_MAIN_ENTRY_POINT
 	UNUSED(hInstance); //TODO: Remove me!
 	UNUSED(hPrevInstance); //TODO: Remove me!
+	#else
+	UNUSED(argc);
+	UNUSED(argv);
+	#endif
 	
 	Win32_CoreInit((USED_WIN_MAIN_ENTRY_POINT != 0));
 	Win32_PerformanceInit();

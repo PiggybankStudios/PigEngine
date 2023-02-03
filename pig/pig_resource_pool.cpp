@@ -62,7 +62,7 @@ void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, b
 		DebugAssert(entry->arrayIndex == eIndex);
 		if (printLeaks && entry->id != 0 && entry->refCount > 0)
 		{
-			PrintLine_E("Resource Pool %s[%llu] leaked! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->filePath.length, entry->filePath.chars);
+			PrintLine_E("Resource Pool %s[%llu] leaked %llu reference%s! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->refCount, ((entry->refCount == 1) ? "" : "s"), entry->filePath.length, entry->filePath.chars);
 		}
 		FreeResourcePoolEntry(pool, entry);
 	}
@@ -116,6 +116,8 @@ void UpdateResourcePool(ResourcePool_t* pool)
 			if (entry->id != 0 && entry->refCount == 0 && TimeSince(entry->lastRefCountChangeTime) > pool->resourceFreeDelay)
 			{
 				FreeResourcePoolEntry(pool, entry);
+				DebugAssert(pool->resourceCounts[typeIndex] > 0);
+				Decrement(pool->resourceCounts[typeIndex]);
 			}
 		}
 	}
@@ -435,6 +437,7 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextTextureId;
 	pool->nextTextureId++;
+	pool->numTextures++;
 	newEntry->type = ResourceType_Texture;
 	newEntry->arrayIndex = pool->textures.length-1;
 	newEntry->refCount = 0;
@@ -460,6 +463,7 @@ VectorImgRef_t ResourcePoolLoadVectorImg(ResourcePool_t* pool, MyStr_t filePath)
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextVectorImageId;
 	pool->nextVectorImageId++;
+	pool->numVectorImages++;
 	newEntry->type = ResourceType_VectorImage;
 	newEntry->arrayIndex = pool->vectorImages.length-1;
 	newEntry->refCount = 0;
@@ -490,6 +494,7 @@ SpriteSheetRef_t ResourcePoolLoadSpriteSheet(ResourcePool_t* pool, MyStr_t fileP
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextSheetId;
 	pool->nextSheetId++;
+	pool->numSheets++;
 	newEntry->type = ResourceType_Sheet;
 	newEntry->arrayIndex = pool->sheets.length-1;
 	newEntry->refCount = 0;
@@ -521,6 +526,7 @@ ShaderRef_t ResourcePoolLoadShader(ResourcePool_t* pool, MyStr_t filePath, Verte
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextShaderId;
 	pool->nextShaderId++;
+	pool->numShaders++;
 	newEntry->type = ResourceType_Shader;
 	newEntry->arrayIndex = pool->shaders.length-1;
 	newEntry->refCount = 0;
@@ -546,6 +552,7 @@ FontRef_t ResourcePoolLoadFont(ResourcePool_t* pool, MyStr_t filePath)
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextFontId;
 	pool->nextFontId++;
+	pool->numFonts++;
 	newEntry->type = ResourceType_Font;
 	newEntry->arrayIndex = pool->fonts.length-1;
 	newEntry->refCount = 0;
@@ -564,13 +571,22 @@ FontRef_t ResourcePoolGetOrLoadFont(ResourcePool_t* pool, MyStr_t filePath)
 
 SoundRef_t ResourcePoolLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 {
+	ProcessLog_t soundParseLog = {}; CreateDefaultProcessLog(&soundParseLog);
 	Sound_t tempSound = {};
-	Unimplemented(); //TODO: Implement me!
+	if (!TryLoadSoundOggOrWav(&soundParseLog, filePath, &pig->audioHeap, &tempSound))
+	{
+		PrintLine_E("Failed to load sound for pool from \"%.*s\"", filePath.length, filePath.chars);
+		DumpProcessLog(&soundParseLog, "Sound Parse Log");
+		return SoundRef_Invalid;
+	}
+	else if (soundParseLog.hadErrors || soundParseLog.hadWarnings) { DumpProcessLog(&soundParseLog, "Sound Parse Log"); }
+	FreeProcessLog(&soundParseLog);
 	
 	ResourcePoolEntry_t* newEntry = FindEmptyResourcePoolEntry(&pool->sounds, true);
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextSoundId;
 	pool->nextSoundId++;
+	pool->numSounds++;
 	newEntry->type = ResourceType_Sound;
 	newEntry->arrayIndex = pool->sounds.length-1;
 	newEntry->refCount = 0;
@@ -589,13 +605,22 @@ SoundRef_t ResourcePoolGetOrLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 
 MusicRef_t ResourcePoolLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 {
+	ProcessLog_t musicParseLog = {}; CreateDefaultProcessLog(&musicParseLog);
 	Sound_t tempMusic = {};
-	Unimplemented(); //TODO: Implement me!
+	if (!TryLoadSoundOggOrWav(&musicParseLog, filePath, &pig->audioHeap, &tempMusic))
+	{
+		PrintLine_E("Failed to load music for pool from \"%.*s\"", filePath.length, filePath.chars);
+		DumpProcessLog(&musicParseLog, "Music Parse Log");
+		return MusicRef_Invalid;
+	}
+	else if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "Music Parse Log"); }
+	FreeProcessLog(&musicParseLog);
 	
 	ResourcePoolEntry_t* newEntry = FindEmptyResourcePoolEntry(&pool->musics, true);
 	DebugAssert(newEntry != nullptr);
 	newEntry->id = pool->nextMusicId;
 	pool->nextMusicId++;
+	pool->numMusics++;
 	newEntry->type = ResourceType_Music;
 	newEntry->arrayIndex = pool->musics.length-1;
 	newEntry->refCount = 0;

@@ -99,6 +99,20 @@ void InitializeDebugConsole(DebugConsole_t* console, u64 fifoSize, u8* fifoSpace
 // +--------------------------------------------------------------+
 // |                           Helpers                            |
 // +--------------------------------------------------------------+
+void DebugConsoleClearRegisteredCommands(DebugConsole_t* console)
+{
+	VarArrayLoop(&console->registeredCommands, cIndex)
+	{
+		VarArrayLoopGet(DebugConsoleRegisteredCommand_t, registeredCommand, &console->registeredCommands, cIndex);
+		FreeString(fixedHeap, &registeredCommand->command);
+		FreeString(fixedHeap, &registeredCommand->description);
+		for (u64 aIndex = 0; aIndex < registeredCommand->numArguments; aIndex++)
+		{
+			FreeString(fixedHeap, &registeredCommand->arguments[aIndex]);
+		}
+	}
+	VarArrayClear(&console->registeredCommands);
+}
 void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr_t description, u64 numArguments, MyStr_t* arguments) //pre-declared in pig_func_defs.h
 {
 	NotNull(console);
@@ -115,7 +129,7 @@ void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr
 	for (u64 aIndex = 0; aIndex < numArguments; aIndex++)
 	{
 		NotNullStr(&arguments[aIndex]);
-		newCommand->arguments[aIndex] = AllocString(mainHeap, &arguments[aIndex]);
+		newCommand->arguments[aIndex] = AllocString(fixedHeap, &arguments[aIndex]);
 	}
 }
 

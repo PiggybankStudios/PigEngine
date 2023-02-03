@@ -169,27 +169,28 @@ yajl_val GetJsonArrayElement(yajl_val arrayNode, u64 index)
 // +==============================+
 // |            Object            |
 // +==============================+
-yajl_val TryGetJsonObject(yajl_val rootNode, MyStr_t pathStr, yajl_val defaultValue = nullptr)
+yajl_val TryGetJsonObject(yajl_val rootNode, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowNull = true)
 {
 	yajl_val resultNode;
 	bool found = TryFindJsonNodeByPathStr(rootNode, pathStr, &resultNode);
 	if (!found) { return defaultValue; }
+	if (YAJL_IS_NULL(resultNode) && allowNull) { return nullptr; }
 	if (!YAJL_IS_OBJECT(resultNode)) { return defaultValue; }
 	return resultNode;
 }
-yajl_val TryGetJsonObject(yajl_val rootNode, const char* nullTermPathStr, yajl_val defaultValue = nullptr)
+yajl_val TryGetJsonObject(yajl_val rootNode, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowNull = true)
 {
-	return TryGetJsonObject(rootNode, NewStr(nullTermPathStr), defaultValue);
+	return TryGetJsonObject(rootNode, NewStr(nullTermPathStr), defaultValue, allowNull);
 }
-yajl_val TryGetJsonObject(ParsedJson_t* parsedJson, MyStr_t pathStr, yajl_val defaultValue = nullptr)
+yajl_val TryGetJsonObject(ParsedJson_t* parsedJson, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowNull = true)
 {
 	NotNull(parsedJson);
-	return TryGetJsonObject(parsedJson->rootNode, pathStr, defaultValue);
+	return TryGetJsonObject(parsedJson->rootNode, pathStr, defaultValue, allowNull);
 }
-yajl_val TryGetJsonObject(ParsedJson_t* parsedJson, const char* nullTermPathStr, yajl_val defaultValue = nullptr)
+yajl_val TryGetJsonObject(ParsedJson_t* parsedJson, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowNull = true)
 {
 	NotNull(parsedJson);
-	return TryGetJsonObject(parsedJson->rootNode, NewStr(nullTermPathStr), defaultValue);
+	return TryGetJsonObject(parsedJson->rootNode, NewStr(nullTermPathStr), defaultValue, allowNull);
 }
 
 // +==============================+
@@ -376,7 +377,7 @@ yajl_val LogJsonArray(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yaj
 	}
 	return resultNode;
 }
-yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
+yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowNull = true, bool allowInvalidType = false, bool isError = true)
 {
 	if (rootNode == nullptr) { return defaultValue; }
 	yajl_val resultNode;
@@ -391,6 +392,7 @@ yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, ya
 		}
 		return defaultValue;
 	}
+	if (YAJL_IS_NULL(resultNode) && allowNull) { return nullptr; }
 	if (!YAJL_IS_OBJECT(resultNode))
 	{
 		if (!allowInvalidType)
@@ -492,9 +494,9 @@ yajl_val LogJsonArray(ProcessLog_t* log, yajl_val rootNode, const char* nullTerm
 {
 	return LogJsonArray(log, rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowInvalidType, isError);
 }
-yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
+yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowNull = true, bool allowInvalidType = false, bool isError = true)
 {
-	return LogJsonObject(log, rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowInvalidType, isError);
+	return LogJsonObject(log, rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowNull, allowInvalidType, isError);
 }
 MyStr_t LogJsonValueStr(ProcessLog_t* log, yajl_val rootNode, const char* nullTermPathStr, MyStr_t defaultValue, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
 {
@@ -515,10 +517,10 @@ yajl_val LogJsonArray(ProcessLog_t* log, ParsedJson_t* parsedJson, MyStr_t pathS
 	Assert(parsedJson != nullptr);
 	return LogJsonArray(log, parsedJson->rootNode, pathStr, defaultValue, allowMissing, allowInvalidType, isError);
 }
-yajl_val LogJsonObject(ProcessLog_t* log, ParsedJson_t* parsedJson, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
+yajl_val LogJsonObject(ProcessLog_t* log, ParsedJson_t* parsedJson, MyStr_t pathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowNull = true, bool allowInvalidType = false, bool isError = true)
 {
 	Assert(parsedJson != nullptr);
-	return LogJsonObject(log, parsedJson->rootNode, pathStr, defaultValue, allowMissing, allowInvalidType, isError);
+	return LogJsonObject(log, parsedJson->rootNode, pathStr, defaultValue, allowMissing, allowNull, allowInvalidType, isError);
 }
 MyStr_t LogJsonValueStr(ProcessLog_t* log, ParsedJson_t* parsedJson, MyStr_t pathStr, MyStr_t defaultValue, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
 {
@@ -542,10 +544,10 @@ yajl_val LogJsonArray(ProcessLog_t* log, ParsedJson_t* parsedJson, const char* n
 	Assert(parsedJson != nullptr);
 	return LogJsonArray(log, parsedJson->rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowInvalidType, isError);
 }
-yajl_val LogJsonObject(ProcessLog_t* log, ParsedJson_t* parsedJson, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
+yajl_val LogJsonObject(ProcessLog_t* log, ParsedJson_t* parsedJson, const char* nullTermPathStr, yajl_val defaultValue = nullptr, bool allowMissing = false, bool allowNull = true, bool allowInvalidType = false, bool isError = true)
 {
 	Assert(parsedJson != nullptr);
-	return LogJsonObject(log, parsedJson->rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowInvalidType, isError);
+	return LogJsonObject(log, parsedJson->rootNode, NewStr(nullTermPathStr), defaultValue, allowMissing, allowNull, allowInvalidType, isError);
 }
 MyStr_t LogJsonValueStr(ProcessLog_t* log, ParsedJson_t* parsedJson, const char* nullTermPathStr, MyStr_t defaultValue, bool allowMissing = false, bool allowInvalidType = false, bool isError = true)
 {
