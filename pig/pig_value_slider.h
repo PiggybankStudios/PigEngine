@@ -33,6 +33,9 @@ struct ValueSlider_t
 	r32 maxValue;
 	r32 notchSize;
 	SpriteSheet_t* spriteSheet;
+	Color_t backColor;
+	Color_t barColor;
+	Color_t borderColor;
 	
 	rec targetRec;
 	r32 sliderWidth;
