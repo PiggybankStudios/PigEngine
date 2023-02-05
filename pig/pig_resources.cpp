@@ -715,7 +715,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 		ResourceFontFaceMetaInfo_t* faceMetaInfo = &metaInfo.faces[faceIndex];
 		if (faceMetaInfo->isSpriteFont)
 		{
-			FontFace_t* face = FontStartFace(font, faceMetaInfo->name, faceMetaInfo->size, faceMetaInfo->bold, faceMetaInfo->italic, 1);
+			FontFace_t* face = FontStartFace(font, MyStr_Empty, false, faceMetaInfo->size, faceMetaInfo->bold, faceMetaInfo->italic, 1);
 			NotNull(face);
 			
 			u64 numBakesFound = 0;
@@ -761,7 +761,7 @@ void Pig_LoadFontResource(u64 fontIndex)
 		}
 		else if (faceMetaInfo->size > 0)
 		{
-			FontFace_t* face = FontStartFace(font, NewStr(fontName), faceMetaInfo->size, faceMetaInfo->bold, faceMetaInfo->italic, 2);
+			FontFace_t* face = FontStartFace(font, NewStr(fontName), metaInfo.requestFromPlatform, faceMetaInfo->size, faceMetaInfo->bold, faceMetaInfo->italic, 2);
 			NotNull(face);
 			
 			PlatFontRange_t ranges[2] = {};
