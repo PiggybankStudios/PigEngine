@@ -1697,7 +1697,7 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	rc->currentWindow = window;
 	
 	RcBindFrameBuffer(frameBuffer, true);
-	RcClearColor(clearColor);
+	if (clearColor.a > 0) { RcClearColor(clearColor); }
 	RcClearDepth(clearDepth);
 	//TODO: Should we check if the current window actually has a stencil buffer?
 	RcClearStencil(clearStencil);
