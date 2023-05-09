@@ -32,6 +32,10 @@ Description:
 #include "slug/TerathonCode/TSCompression.h"
 #endif
 
+#if JSON_SUPPORTED
+#include "yajl/yajl_tree.h"
+#endif
+
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
 #include "pig/pig_input_chars.h"
@@ -44,6 +48,7 @@ Description:
 #include "pig/pig_slug.h"
 #include "pig/pig_render_context.h"
 #include "pig/pig_resources.h"
+#include "pig/pig_resource_pool.h"
 #include "pig/pig_particles.h"
 #include "pig/pig_input.h"
 #include "pig/pig_button.h"
@@ -85,8 +90,9 @@ static       RenderContext_t* rc            = nullptr;
 static       u64              ProgramTime    = 0;
 static       u64              UnixTimestamp  = 0;
 static       u64              LocalTimestamp = 0;
-static       r64              TimeScale      = 1.0f;
-static       r64              ElapsedMs      = 1.0f;
+static       r64              TimeScale      = 1.0;
+static       r64              ElapsedMs      = 0.0;
+static       r64              UncappedElapsedMs = 0.0;
 static       v2               MousePos       = {};
 static       v2               ScreenSize     = {};
 
@@ -106,6 +112,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
 
+#include "pig/pig_json.cpp"
 #include "pig/pig_serialization.cpp"
 #include "pig/pig_deserialization.cpp"
 #include "pig/pig_wav.cpp"
@@ -126,6 +133,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_sounds.cpp"
 #include "pig/pig_music.cpp"
 #include "pig/pig_resources.cpp"
+#include "pig/pig_resource_pool.cpp"
 #include "pig/pig_settings.cpp"
 #include "pig/pig_debug_bindings.cpp"
 #include "pig/pig_steam.cpp"

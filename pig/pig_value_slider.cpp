@@ -36,6 +36,9 @@ void CreateValueSlider(ValueSlider_t* slider, MemArena_t* memArena, ValueSliderS
 	slider->notchSize = notchSize;
 	slider->currentValue = initialValue;
 	slider->sliderPos = (initialValue - minValue) / (maxValue - minValue);
+	slider->backColor   = MonokaiBack;
+	slider->barColor    = MonokaiBlue;
+	slider->borderColor = MonokaiWhite;
 	
 	slider->id = pig->nextUiId;
 	pig->nextUiId++;
@@ -174,26 +177,26 @@ void RenderValueSlider(ValueSlider_t* slider)
 	
 	if (slider->style == ValueSliderStyle_Default)
 	{
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.00f), slider->usableRec.y - notchSize*2, 1, notchSize*2), MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.25f), slider->usableRec.y - notchSize,   1, notchSize),   MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.50f), slider->usableRec.y - notchSize*2, 1, notchSize*2), MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.75f), slider->usableRec.y - notchSize,   1, notchSize),   MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*1.00f), slider->usableRec.y - notchSize*2, 1, notchSize*2), MonokaiWhite);
-		RcDrawRectangle(slider->usableRec, MonokaiWhite);
-		RcDrawRoundedRectangle(slider->sliderRec, cornerRadius, MonokaiBlue);
-		RcDrawRectangle(RecOverlap(slider->usableRec, slider->sliderRec), ColorDarken(MonokaiBlue, 30));
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.00f), slider->usableRec.y - notchSize*2, 1, notchSize*2), slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.25f), slider->usableRec.y - notchSize,   1, notchSize),   slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.50f), slider->usableRec.y - notchSize*2, 1, notchSize*2), slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*0.75f), slider->usableRec.y - notchSize,   1, notchSize),   slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + (slider->usableRec.width-1)*1.00f), slider->usableRec.y - notchSize*2, 1, notchSize*2), slider->borderColor);
+		RcDrawRectangle(slider->usableRec, slider->borderColor);
+		RcDrawRoundedRectangle(slider->sliderRec, cornerRadius, slider->barColor);
+		RcDrawRectangle(RecOverlap(slider->usableRec, slider->sliderRec), ColorDarken(slider->barColor, 30));
 	}
 	else if (slider->style == ValueSliderStyle_Bar)
 	{
 		r32 outlineSize = 1;
-		RcDrawRectangle(NewRec(slider->usableRec.x - outlineSize,                             slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2 + cornerRadius)), MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.25f), slider->usableRec.y - (outlineSize + notchSize),   1, (outlineSize + notchSize)),   MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.50f), slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2)), MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.75f), slider->usableRec.y - (outlineSize + notchSize),   1, (outlineSize + notchSize)),   MonokaiWhite);
-		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*1.00f), slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2 + cornerRadius)), MonokaiWhite);
-		RcDrawRoundedRectangle(RecInflate(slider->mainRec, outlineSize, outlineSize), cornerRadius, MonokaiWhite);
-		RcDrawRoundedRectangle(slider->mainRec, cornerRadius, MonokaiBack);
-		RcDrawRoundedRectangle(slider->fillRec, cornerRadius, MonokaiBlue);
+		RcDrawRectangle(NewRec(slider->usableRec.x - outlineSize,                             slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2 + cornerRadius)), slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.25f), slider->usableRec.y - (outlineSize + notchSize),   1, (outlineSize + notchSize)),   slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.50f), slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2)), slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*0.75f), slider->usableRec.y - (outlineSize + notchSize),   1, (outlineSize + notchSize)),   slider->borderColor);
+		RcDrawRectangle(NewRec(RoundR32(slider->usableRec.x + slider->usableRec.width*1.00f), slider->usableRec.y - (outlineSize + notchSize*2), 1, (outlineSize + notchSize*2 + cornerRadius)), slider->borderColor);
+		RcDrawRoundedRectangle(RecInflate(slider->mainRec, outlineSize, outlineSize), cornerRadius, slider->borderColor);
+		RcDrawRoundedRectangle(slider->mainRec, cornerRadius, slider->backColor);
+		RcDrawRoundedRectangle(slider->fillRec, cornerRadius, slider->barColor);
 	}
 	else { Unimplemented(); }
 }

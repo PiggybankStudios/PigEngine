@@ -797,4 +797,100 @@ struct PlatSteamFriendsList_t
 
 #endif //STEAM_BUILD
 
+#if BOX2D_SUPPORTED
+
+enum PlatPhysicsBodyShape_t
+{
+	PlatPhysicsBodyShape_None = 0,
+	PlatPhysicsBodyShape_Circle,
+	PlatPhysicsBodyShape_Rectangle,
+	// PlatPhysicsBodyShape_Edge,
+	// PlatPhysicsBodyShape_Chain,
+	PlatPhysicsBodyShape_Polygon,
+	PlatPhysicsBodyShape_NumShapes,
+};
+const char* GetPlatPhysicsBodyShapeStr(PlatPhysicsBodyShape_t enumValue)
+{
+	switch (enumValue)
+	{
+		case PlatPhysicsBodyShape_None:      return "None";
+		case PlatPhysicsBodyShape_Circle:    return "Circle";
+		case PlatPhysicsBodyShape_Rectangle: return "Rectangle";
+		// case PlatPhysicsBodyShape_Edge:      return "Edge";
+		// case PlatPhysicsBodyShape_Chain:     return "Chain";
+		case PlatPhysicsBodyShape_Polygon:   return "Polygon";
+		default: return "Unknown";
+	}
+}
+
+enum PlatPhysicsBodyType_t
+{
+	PlatPhysicsBodyType_None = 0,
+	PlatPhysicsBodyType_Static,
+	PlatPhysicsBodyType_Kinematic,
+	PlatPhysicsBodyType_Dynamic,
+	PlatPhysicsBodyType_Sensor,
+	PlatPhysicsBodyType_NumTypes,
+};
+const char* GetPlatPhysicsBodyTypeStr(PlatPhysicsBodyType_t enumValue)
+{
+	switch (enumValue)
+	{
+		case PlatPhysicsBodyType_None:      return "None";
+		case PlatPhysicsBodyType_Static:    return "Static";
+		case PlatPhysicsBodyType_Kinematic: return "Kinematic";
+		case PlatPhysicsBodyType_Dynamic:   return "Dynamic";
+		case PlatPhysicsBodyType_Sensor:    return "Sensor";
+		default: return "Unknown";
+	}
+}
+
+#define MAX_NUM_SHAPES_PER_PHYSICS_BODY 8
+
+//TODO: Can we have multiple shapes in a single body?? We should support that?
+struct PlatPhysicsBodyDef_t
+{
+	PlatPhysicsBodyType_t type;
+	PlatPhysicsBodyShape_t shape;
+	union
+	{
+		Circle_t circle;
+		rec rectangle;
+		struct
+		{
+			u64 numPolygonVerts;
+			v2* polygonVerts;
+		};
+	};
+	r32 friction;
+	r32 restitution;
+	r32 density;
+	u16 colCategoryBits;
+	u16 colMaskBits;
+	i16 groupIndex;
+	Color_t debugColor;
+};
+
+struct PlatPhysicsBody_t
+{
+	u64 id; //doubles as empty indicator, if id == 0 then it's empty
+	PlatPhysicsBodyDef_t bodyDef;
+	
+	#if PLATFORM_LAYER
+	class b2Body* bodyPntr;
+	#else
+	void* bodyPntr; //b2Body*
+	#endif
+};
+
+struct PlatPhysicsBodyState_t
+{
+	v2 position;
+	v2 velocity;
+	r32 rotation;
+	r32 angularVelocity;
+};
+
+#endif
+
 #endif //  _COMMON_TYPES_H

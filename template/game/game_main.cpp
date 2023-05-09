@@ -80,6 +80,8 @@ void GameGeneralInit() //pre-declared in pig_func_defs.h
 {
 	WriteLine_N("=====GameGeneralInit Start=====");
 	
+	GameParseSettings();
+	
 	AppState_t firstAppState = GAME_INITIAL_APP_STATE;
 	PrintLine_N("First AppState is %s", GetAppStateStr(firstAppState));
 	PushAppState(firstAppState);

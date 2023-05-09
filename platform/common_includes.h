@@ -25,6 +25,9 @@ Date:   09\14\2021
 #if !defined(SLUG_SUPPORTED)
 #error You must define SLUG_SUPPORTED in the build options
 #endif
+#if !defined(JSON_SUPPORTED)
+#error You must define JSON_SUPPORTED in the build options
+#endif
 #if !defined(BOX2D_SUPPORTED)
 #error You must define BOX2D_SUPPORTED in the build options
 #endif
@@ -183,6 +186,7 @@ Date:   09\14\2021
 #include "win32/win32_glfw.h"
 #include "win32/win32_dll_loading.h"
 #include "win32/win32_file_watching.h"
+#include "win32/win32_box2d.h"
 #elif OSX_COMPILATION
 // TODO: Include any other files that need to declare functions or types
 #elif LINUX_COMPILATION

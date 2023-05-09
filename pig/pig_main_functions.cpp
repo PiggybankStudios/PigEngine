@@ -34,7 +34,7 @@ void PigInitialize(EngineMemory_t* memory)
 	PerfTime_t initStartTime = plat->GetPerfTime();
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
-	PigRegisterDebugCommands();
+	PigRegisterDebugCommands(&pig->debugConsole);
 	GameLoadSettings(&pig->settings, mainHeap);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
@@ -360,6 +360,9 @@ void PigPostReload(Version_t oldVersion)
 	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
+	
+	DebugConsoleClearRegisteredCommands(&pig->debugConsole);
+	PigRegisterDebugCommands(&pig->debugConsole);
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
 	GameHandleReload();

@@ -1141,6 +1141,50 @@ void RcDrawQuarterCircleFoldedRec(rec rectangle, r32 circleRadius, r32 circleMar
 	RcSetViewport(oldViewport);
 }
 
+void RcDrawTiledUiRec(v2i baseFrame, rec drawRec, Color_t color, r32 scale = 1.0f)
+{
+	NotNull(rc->state.boundSpriteSheet);
+	
+	v2 tileSize = ToVec2(rc->state.boundSpriteSheet->frameSize) * scale;
+	if (tileSize.width <= 0) { tileSize.width = 1; }
+	if (tileSize.height <= 0) { tileSize.height = 1; }
+	v2 centerSize = NewVec2(drawRec.width - tileSize.width*2, drawRec.height - tileSize.height*2);
+	
+	for (r32 yOffset = 0; yOffset < centerSize.height; yOffset += tileSize.height)
+	{
+		for (r32 xOffset = 0; xOffset < centerSize.width; xOffset += tileSize.width)
+		{
+			rec tileRec = NewRec(drawRec.x + tileSize.width + xOffset, drawRec.y + tileSize.height + yOffset, tileSize.width, tileSize.height);
+			RcDrawSheetFrame(baseFrame + NewVec2i(1, 1), tileRec, color);
+		}
+	}
+	
+	for (r32 xOffset = 0; xOffset < centerSize.width; xOffset += tileSize.width)
+	{
+		rec topRec = NewRec(drawRec.x + tileSize.width + xOffset, drawRec.y, tileSize.width, tileSize.height);
+		rec bottomRec = NewRec(drawRec.x + tileSize.width + xOffset, drawRec.y + (drawRec.height - tileSize.height), tileSize.width, tileSize.height);
+		RcDrawSheetFrame(baseFrame + NewVec2i(1, 0), topRec, color);
+		RcDrawSheetFrame(baseFrame + NewVec2i(1, 2), bottomRec, color);
+	}
+	
+	for (r32 yOffset = 0; yOffset < centerSize.height; yOffset += tileSize.height)
+	{
+		rec leftRec = NewRec(drawRec.x, drawRec.y + tileSize.height + yOffset, tileSize.width, tileSize.height);
+		rec rightRec = NewRec(drawRec.x + (drawRec.width - tileSize.width), drawRec.y + tileSize.height + yOffset, tileSize.width, tileSize.height);
+		RcDrawSheetFrame(baseFrame + NewVec2i(0, 1), leftRec, color);
+		RcDrawSheetFrame(baseFrame + NewVec2i(2, 1), rightRec, color);
+	}
+	
+	rec topLeftRec = NewRec(drawRec.x, drawRec.y, tileSize.width, tileSize.height);
+	rec topRightRec = NewRec(drawRec.x + (drawRec.width - tileSize.width), drawRec.y, tileSize.width, tileSize.height);
+	rec bottomLeftRec = NewRec(drawRec.x, drawRec.y + (drawRec.height - tileSize.height), tileSize.width, tileSize.height);
+	rec bottomRightRec = NewRec(drawRec.x + (drawRec.width - tileSize.width), drawRec.y + (drawRec.height - tileSize.height), tileSize.width, tileSize.height);
+	RcDrawSheetFrame(baseFrame + NewVec2i(0, 0), topLeftRec,     color);
+	RcDrawSheetFrame(baseFrame + NewVec2i(2, 0), topRightRec,    color);
+	RcDrawSheetFrame(baseFrame + NewVec2i(0, 2), bottomLeftRec,  color);
+	RcDrawSheetFrame(baseFrame + NewVec2i(2, 2), bottomRightRec, color);
+}
+
 // +--------------------------------------------------------------+
 // |                    Post Processing Chain                     |
 // +--------------------------------------------------------------+

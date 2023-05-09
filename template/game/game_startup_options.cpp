@@ -10,7 +10,7 @@ Description:
 #define GAME_WINDOW_TITLE                    PROJECT_NAME //comes from build.bat
 #define GAME_WINDOW_ALWAYS_ON_TOP            false
 #define GAME_WINDOW_DEFAULT_RESOLUTION       NewVec2i(1600, 900)
-#define GAME_FOLLOW_SAVED_SETTING_RESOLUTION false
+#define GAME_FOLLOW_SAVED_SETTING_RESOLUTION true
 #define GAME_ANTI_ALIASING_SAMPLES           4
 #define GAME_THREAD_POOL_SIZE                4 //threads
 #define GAME_PERMANANT_MEM_SIZE              Kilobytes(1024)

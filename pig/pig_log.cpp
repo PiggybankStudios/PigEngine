@@ -100,7 +100,7 @@ void SetProcessLogName(ProcessLog_t* log, MyStr_t processName)
 	{
 		if (!IsEmptyStr(log->processName))
 		{
-			FreeString(log->allocArena, &log->processName);
+			if (DoesMemArenaSupportFreeing(log->allocArena)) { FreeString(log->allocArena, &log->processName); }
 		}
 		log->processName = AllocString(log->allocArena, &processName);
 	}
@@ -253,7 +253,7 @@ GY_STRING_FIFO_PUSH_LINES_SORT_CALLBACK_DEF(ProcessLogInsertLinesSortCallback)
 	DebugConsoleLine_t* metaStruct = GetFifoLineMetaStruct(fifoLine, DebugConsoleLine_t);
 	return metaStruct->preciseProgramTime;
 }
-void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug)
+void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug, bool dumpToStdOut = true)
 {
 	NotNull(log);
 	Assert(minLevel < DbgLevel_NumLevels);
@@ -263,6 +263,7 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 	context.minLevel = minLevel;
 	context.console = &pig->debugConsole;
 	if (headerAndFooterStr != nullptr) { PrintLine_R("v========= %s =========v", headerAndFooterStr); }
+	
 	StringFifoPushLinesFromFifo(
 		&pig->debugConsole.fifo,
 		&log->fifo,
@@ -271,6 +272,23 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 		ProcessLogAddLinesAfterCallback,
 		&context
 	);
+	
+	//NOTE: So the above call properly pushes the lines into the target FIFO but we need to manually push all these lines through to the stdout (aka the platform layer)
+	//      In order to do that, we do our own loop over the lines here
+	if (dumpToStdOut && plat != nullptr && plat->DebugOutput != nullptr)
+	{
+		const StringFifoLine_t* srcLine = log->fifo.firstLine;
+		while (srcLine != nullptr)
+		{
+			if (ProcessLogAddLinesBeforeCallback(&pig->debugConsole.fifo, &log->fifo, srcLine, nullptr, &context))
+			{
+				MyStr_t text = GetFifoLineText(srcLine);
+				plat->DebugOutput(text, true);
+			}
+			srcLine = srcLine->next;
+		}
+	}
+	
 	if (headerAndFooterStr != nullptr) { PrintLine_R("^========= %s =========^", headerAndFooterStr); }
 }
 
@@ -301,6 +319,15 @@ void InsertProcessLogInOrder(const ProcessLog_t* log, const char* headerAndFoote
 // +--------------------------------------------------------------+
 // |                            Macros                            |
 // +--------------------------------------------------------------+
+
+#define LogWriteAt(log, level, message)                       LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), false, message)
+#define LogWriteLineAt(log, level, message)                   LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), true,  message)
+#define LogPrintAt(log, level, formatString, ...)             LogPrint_ ((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), false, formatString, ##__VA_ARGS__)
+#define LogPrintLineAt(log, level, formatString, ...)         LogPrint_ ((log), DbgFlags_None, __FILE__, __LINE__, __func__, (level), true,  formatString, ##__VA_ARGS__)
+#define LogWriteAtx(log, level, flags, message)               LogOutput_((log), (flags),       __FILE__, __LINE__, __func__, (level), false, message)
+#define LogWriteLineAtx(log, level, flags, message)           LogOutput_((log), (flags),       __FILE__, __LINE__, __func__, (level), true,  message)
+#define LogPrintAtx(log, level, flags, formatString, ...)     LogPrint_ ((log), (flags),       __FILE__, __LINE__, __func__, (level), false, formatString, ##__VA_ARGS__)
+#define LogPrintLineAtx(log, level, flags, formatString, ...) LogPrint_ ((log), (flags),       __FILE__, __LINE__, __func__, (level), true,  formatString, ##__VA_ARGS__)
 
 #define LogWrite_D(log, message)                       LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, DbgLevel_Debug, false, message)
 #define LogWriteLine_D(log, message)                   LogOutput_((log), DbgFlags_None, __FILE__, __LINE__, __func__, DbgLevel_Debug, true,  message)

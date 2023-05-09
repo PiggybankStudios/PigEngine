@@ -193,7 +193,8 @@ void Win32_AudioInit()
 	HRESULT registerCallbackResult = Platform->audioDeviceEnumerator->RegisterEndpointNotificationCallback(&Platform->audioDeviceCallback);
 	if (registerCallbackResult != S_OK)
 	{
-		Win32_InitError("RegisterEndpointNotificationCallback failed!");
+		const char* errorMsg = TempPrint("RegisterEndpointNotificationCallback failed!: %d (0x%X)", registerCallbackResult, registerCallbackResult);
+		Win32_InitError(errorMsg);
 	}
 }
 

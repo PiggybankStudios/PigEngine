@@ -27,6 +27,8 @@ Description:
 enum OggError_t
 {
 	OggError_None = 0,
+	OggError_MissingFile,
+	OggError_UnknownExtension,
 	OggError_EmptyFile,
 	OggError_DecodeError,
 	OggError_NoSamples,
@@ -36,11 +38,13 @@ enum OggError_t
 	OggError_NotEnoughMemory,
 	OggError_NumCodes,
 };
-const char* GetOggErrorStr(OggError_t wavError)
+const char* GetOggErrorStr(OggError_t oggError)
 {
-	switch (wavError)
+	switch (oggError)
 	{
 		case OggError_None:                return "None";
+		case OggError_MissingFile:         return "MissingFile";
+		case OggError_UnknownExtension:    return "UnknownExtension";
 		case OggError_EmptyFile:           return "EmptyFile";
 		case OggError_DecodeError:         return "DecodeError";
 		case OggError_NoSamples:           return "NoSamples";
@@ -48,6 +52,35 @@ const char* GetOggErrorStr(OggError_t wavError)
 		case OggError_InvalidChannelCount: return "InvalidChannelCount";
 		case OggError_InvalidSampleRate:   return "InvalidSampleRate";
 		case OggError_NotEnoughMemory:     return "NotEnoughMemory";
+		default: return "Unknown";
+	}
+}
+
+const char* GetOggVorbisErrorStr(int errorCode)
+{
+	switch (errorCode)
+	{
+		case VORBIS__no_error:                        return "_no_error";
+		case VORBIS_need_more_data:                   return "need_more_data";
+		case VORBIS_invalid_api_mixing:               return "invalid_api_mixing";
+		case VORBIS_outofmem:                         return "outofmem";
+		case VORBIS_feature_not_supported:            return "feature_not_supported";
+		case VORBIS_too_many_channels:                return "too_many_channels";
+		case VORBIS_file_open_failure:                return "file_open_failure";
+		case VORBIS_seek_without_length:              return "seek_without_length";
+		case VORBIS_unexpected_eof:                   return "unexpected_eof";
+		case VORBIS_seek_invalid:                     return "seek_invalid";
+		case VORBIS_invalid_setup:                    return "invalid_setup";
+		case VORBIS_invalid_stream:                   return "invalid_stream";
+		case VORBIS_missing_capture_pattern:          return "missing_capture_pattern";
+		case VORBIS_invalid_stream_structure_version: return "invalid_stream_structure_version";
+		case VORBIS_continued_packet_flag_invalid:    return "continued_packet_flag_invalid";
+		case VORBIS_incorrect_stream_serial_number:   return "incorrect_stream_serial_number";
+		case VORBIS_invalid_first_page:               return "invalid_first_page";
+		case VORBIS_bad_packet_type:                  return "bad_packet_type";
+		case VORBIS_cant_find_last_page:              return "cant_find_last_page";
+		case VORBIS_seek_failed:                      return "seek_failed";
+		case VORBIS_ogg_skeleton_not_supported:       return "ogg_skeleton_not_supported";
 		default: return "Unknown";
 	}
 }
@@ -68,7 +101,7 @@ void FreeOggAudioData(OggAudioData_t* oggData)
 {
 	NotNull(oggData);
 	AssertIf(oggData->samples != nullptr, oggData->allocArena != nullptr);
-	FreeMem(oggData->allocArena, oggData->samples, oggData->samplesSize);
+	if (oggData->samplesSize > 0) { FreeMem(oggData->allocArena, oggData->samples, oggData->samplesSize); }
 	ClearPointer(oggData);
 }
 
@@ -171,3 +204,60 @@ bool TryDeserOggFile(u64 oggFileSize, const void* oggFilePntr, ProcessLog_t* log
 	return true;
 }
 
+#if 0
+//If this returns true, then ownership of the openFile and fifo contents are passed to the AudioStream_t
+bool CreateOggAudioStream(ProcessLog_t* log, PlatOpenFile_t* openFile, Fifo_t* fifo, AudioStream_t* streamOut)
+{
+	AssertSingleThreaded(); //TODO: This doesn't have to be single threaded if we make the nextWavOggAudioDataId thread safe
+	NotNull4(log, openFile, fifo, streamOut);
+	Assert(openFile->isOpen);
+	Assert(openFile->cursorIndex == 0);
+	Assert(fifo->allocArena == nullptr || fifo->allocArena != TempArena);
+	int stbError = 0;
+	
+	SetProcessLogName(log, NewStr("DeserOggFileForStream"));
+	LogWriteLine_N(log, "Entering CreateOggAudioStream...");
+	LogPrintLine_N(log, "We expect the ogg file to be %s", FormatBytesNt(openFile->fileSize, TempArena));
+	
+	ClearPointer(streamOut);
+	if (pig->nextWavOggAudioDataId == 0) { pig->nextWavOggAudioDataId = 1; }
+	streamOut->id = pig->nextWavOggAudioDataId;
+	pig->nextWavOggAudioDataId++;
+	
+	u64 numBytesRead = 0;
+	u64 numBytesConsumed = 0;
+	u8 readBuffer[4096];
+	
+	numBytesRead = plat->ReadFromFile(openFile, ArrayCount(readBuffer), &readBuffer[0], false);
+	LogPrintLine_D(log, "Tried to read %s, actually read %s", FormatBytesNt(ArrayCount(readBuffer), TempArena), FormatBytesNt(numBytesRead, TempArena));
+	
+	int numInitialBytesConsumed = 0;
+	stb_vorbis* stbHandle = stb_vorbis_open_pushdata(
+         &readBuffer[0],
+         (int)numBytesRead,
+         &numInitialBytesConsumed,
+         &stbError,
+         nullptr);
+	
+	if (stbHandle == nullptr)
+	{
+		LogPrintLine_E(log, "Failed to start parsing the ogg file! Maybe this isn't a valid ogg file? Maybe our initial read buffer isn't large enough? Stb Error: %s", GetOggVorbisErrorStr(stbError));
+		LogExitFailure(log, OggError_DecodeError);
+		return false;
+	}
+	
+	stb_vorbis_info vorbisInfo = stb_vorbis_get_info(stbHandle);
+	LogPrintLine_I(log, "SampleRate: %u", vorbisInfo.sample_rate);
+	LogPrintLine_I(log, "NumChannels: %d", vorbisInfo.channels);
+	LogPrintLine_I(log, "MemRequired: %u", vorbisInfo.setup_memory_required);
+	LogPrintLine_I(log, "TempMemRequired: %u", vorbisInfo.temp_memory_required);
+	LogPrintLine_I(log, "MaxFrameSize: %d", vorbisInfo.max_frame_size);
+	log->hadWarnings = true; //TODO: Remove me!
+	
+	stb_vorbis_close(stbHandle);
+	
+	MyMemCopy(&streamOut->openFile, openFile, sizeof(PlatOpenFile_t));
+	MyMemCopy(&streamOut->samplesFifo, fifo, sizeof(Fifo_t));
+	return false; //TODO: Change me to true!
+}
+#endif

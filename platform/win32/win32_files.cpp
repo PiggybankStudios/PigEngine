@@ -86,6 +86,7 @@ PLAT_API_GET_FULL_PATH_DEF(Win32_GetFullPath)
 // +==============================+
 // |     Win32_DoesFileExist      |
 // +==============================+
+//NOTE: This returns FALSE when the path is a folder and outputs true to the isFolderOut!
 // bool DoesFileExist(MyStr_t filePath, bool* isFolderOut)
 PLAT_API_DOES_FILE_EXIST_DEF(Win32_DoesFileExist)
 {

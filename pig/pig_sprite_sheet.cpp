@@ -433,3 +433,23 @@ rec GetSpriteSheetFrameArrayEncodedSourceRec(const SpriteSheet_t* sheet, MyStr_t
 	AssertIfMsg(assertOnFailure, false, "Failed to find sprite frame by name");
 	return Rec_Zero;
 }
+
+SpriteSheetFramePoint_t* FindSpriteSheetPoint(SpriteSheet_t* sheet, SpriteSheetFrame_t* framePntr, MyStr_t pointName)
+{
+	NotNull2(sheet, framePntr);
+	VarArrayLoop(&framePntr->points, pIndex)
+	{
+		VarArrayLoopGet(SpriteSheetFramePoint_t, point, &framePntr->points, pIndex);
+		if (StrEqualsIgnoreCase(point->name, pointName)) { return point; }
+	}
+	return nullptr;
+}
+SpriteSheetFramePoint_t* FindSpriteSheetPoint(SpriteSheet_t* sheet, v2i frame, MyStr_t pointName)
+{
+	VarArrayLoop(&sheet->frames, fIndex)
+	{
+		VarArrayLoopGet(SpriteSheetFrame_t, framePntr, &sheet->frames, fIndex);
+		if (framePntr->gridPos == frame) { return FindSpriteSheetPoint(sheet, framePntr, pointName); }
+	}
+	return nullptr;
+}

@@ -58,6 +58,7 @@ void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* 
 		if (bIndex < messageLength)
 		{
 			charByteSize = GetCodepointForUtf8(messageLength - bIndex, &message[bIndex], &codepoint);
+			if (charByteSize == 0) { codepoint = CharToU32(message[bIndex]); charByteSize = 1; } //invalid codepoint! TODO: Can we do something about it?
 			if (codepoint == '\n')
 			{
 				AppDebugOutput_Internal(flags, filePath, lineNumber, funcName, dbgLevel, true, NewStr(bIndex - lineStart, &message[lineStart]));

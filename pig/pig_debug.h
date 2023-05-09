@@ -18,7 +18,7 @@ enum DbgFlags_t
 	DbgFlag_UserInput     = 0x10,
 	DbgFlag_PlatformLayer = 0x20,
 	DbgFlag_TaskThread    = 0x40,
-	// DbgFlag_Unused     = 0x80,
+	// DbgFlag_Unused        = 0x80,
 };
 
 void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, const char* message);

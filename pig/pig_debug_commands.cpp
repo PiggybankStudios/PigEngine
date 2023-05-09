@@ -44,6 +44,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"clear_friend_avatars", "Clears the steam friend avatar texture cache", "\n",
 	"show_friends_list", "Toggles showing of a debug overlay of all your steam friends", "\n",
 	#endif
+	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -191,7 +192,7 @@ void DebugPrintDebugBindingEntry(const char* indentation, const PigDebugBindings
 // +--------------------------------------------------------------+
 // |                     Command Registration                     |
 // +--------------------------------------------------------------+
-void PigRegisterDebugCommands()
+void PigRegisterDebugCommands(DebugConsole_t* console)
 {
 	DebugCommandInfoList_t engineCommands = PigGetDebugCommandInfoList();
 	DebugCommandInfoList_t gameCommands = GameGetDebugCommandInfoList();
@@ -201,7 +202,7 @@ void PigRegisterDebugCommands()
 	for (u64 cIndex = 0; cIndex < totalCommandCount; cIndex++)
 	{
 		DebugCommandInfo_t* commandInfo = (cIndex >= engineCommands.numCommands) ? &gameCommands.commands[cIndex - engineCommands.numCommands] : &engineCommands.commands[cIndex];
-		DebugConsoleRegisterCommand(&pig->debugConsole, commandInfo->name, commandInfo->description, commandInfo->numArguments, commandInfo->arguments);
+		DebugConsoleRegisterCommand(console, commandInfo->name, commandInfo->description, commandInfo->numArguments, commandInfo->arguments);
 	}
 }
 
@@ -1299,6 +1300,49 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		PrintLine_I("Friends List %s", pig->debugRenderSteamFriendsList ? "Shown" : "Hidden");
 	}
 	#endif
+	
+	// +==============================+
+	// |  list_resource_pool {type}   |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "list_resource_pool"))
+	{
+		if (numArguments > 1) { PrintLine_E("This command takes 1 optional argument, not %llu: list_resource_pool {type}", numArguments); return validCommand; }
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		
+		ResourcePool_t* resourcePool = GameGetCurrentResourcePool();
+		if (resourcePool == nullptr)
+		{
+			WriteLine_E("There is no currently active resourcePool to list!");
+			return validCommand;
+		}
+		
+		ResourceType_t targetResourceType = ResourceType_None;
+		if (numArguments >= 1)
+		{
+			if (!TryParseEnum(arguments[0], &targetResourceType, ResourceType_NumTypes, GetResourceTypeStr, &parseFailureReason)) { PrintLine_E("Unknown resource type \"%.*s\"", arguments[0].length, arguments[0].chars); return validCommand; }
+		}
+		
+		for (u64 tIndex = 1; tIndex < ResourceType_NumTypes; tIndex++)
+		{
+			ResourceType_t resourceType = (ResourceType_t)tIndex;
+			if (targetResourceType == ResourceType_None || resourceType == targetResourceType)
+			{
+				BktArray_t* resourceArray = &resourcePool->arrays[tIndex];
+				u64 resourceCount = resourcePool->resourceCounts[tIndex];
+				PrintLine_N("%llu %s Resource%s", resourceCount, GetResourceTypeStr(resourceType), ((resourceCount == 1) ? "" : "s"));
+				u64 loadedResourceIndex = 0;
+				for (u64 rIndex = 0; rIndex < resourceArray->length; rIndex++)
+				{
+					ResourcePoolEntry_t* entry = BktArrayGet(resourceArray, ResourcePoolEntry_t, rIndex);
+					if (entry->id != 0)
+					{
+						PrintLine_I("  %s[%llu]: \"%.*s\" (referenced %llu time%s)", GetResourceTypeStr(resourceType), loadedResourceIndex, entry->filePath.length, entry->filePath.chars, entry->refCount, ((entry->refCount == 1) ? "" : "s"));
+						loadedResourceIndex++;
+					}
+				}
+			}
+		}
+	}
 	
 	// +==============================+
 	// |       Unknown Command        |

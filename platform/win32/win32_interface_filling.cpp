@@ -177,4 +177,13 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->CheckRunningProcess       = Win32_CheckRunningProcess;
 	api->StartProcess              = Win32_StartProcess;
 	api->CloseRunningProcess       = Win32_CloseRunningProcess;
+	#if BOX2D_SUPPORTED
+	api->InitPhysicsEngine         = Win32_InitPhysicsEngine;
+	api->DestroyPhysicsEngine      = Win32_DestroyPhysicsEngine;
+	api->PhysicsTick               = Win32_PhysicsTick;
+	api->CreatePhysicsBody         = Win32_CreatePhysicsBody;
+	api->DestroyPhysicsBody        = Win32_DestroyPhysicsBody;
+	api->SetPhysicsBodyVelocity    = Win32_SetPhysicsBodyVelocity;
+	api->GetPhysicsBodyState       = Win32_GetPhysicsBodyState;
+	#endif
 }

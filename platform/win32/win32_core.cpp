@@ -188,7 +188,6 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	Platform->version.minor = WIN32_VERSION_MINOR;
 	Platform->version.build = WIN32_VERSION_BUILD;
 	Platform->consoleWindowIsOpen = !usedWinMainEntryPoint;
-	if (DEBUG_BUILD) { Win32_OpenConsoleWindow(); }
 	
 	printf("[Win32 Platform Core is Initializing...]\n");
 	
@@ -221,6 +220,10 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	
 	#if PROCMON_SUPPORTED
 	InitMemArena_PagedHeapFuncs(&Platform->procmonHeap, Megabytes(1), ProcmonAllocate, ProcmonFree);
+	#endif
+	
+	#if BOX2D_SUPPORTED
+	InitMemArena_PagedHeapArena(&Platform->box2dHeap, Kilobytes(512), &Platform->stdHeap);
 	#endif
 }
 

@@ -66,11 +66,11 @@ void EndFont(Font_t* font)
 	}
 }
 
-FontFace_t* FontStartFace(Font_t* font, MyStr_t fontName, i32 fontSize, bool bold, bool italic, u64 numBakesExpected = 0)
+FontFace_t* FontStartFace(Font_t* font, MyStr_t fontNameOrPath, bool requestFromPlatform, i32 fontSize, bool bold, bool italic, u64 numBakesExpected = 0)
 {
 	NotNull(font);
 	NotNull(font->allocArena);
-	NotNullStr(&fontName);
+	NotNullStr(&fontNameOrPath);
 	Assert(fontSize > 0);
 	
 	if (font->defaultFaceIndex >= font->faces.length)
@@ -91,17 +91,33 @@ FontFace_t* FontStartFace(Font_t* font, MyStr_t fontName, i32 fontSize, bool bol
 	result->maxCodepoint = UINT32_MAX;
 	result->numCharacters = 0;
 	CreateVarArray(&result->bakes, font->allocArena, sizeof(FontBake_t), numBakesExpected);
-	
-	if (!plat->ReadPlatformFont(fontName, fontSize, bold, italic, &result->fontFile))
+	if (!IsEmptyStr(fontNameOrPath))
 	{
-		PrintLine_E("Failed to open platform font file by name \"%.*s\" for new face in font", fontName.length, fontName.pntr);
-		FreeVarArray(&result->bakes);
-		VarArrayPop(&font->faces, FontFace_t);
-		return nullptr;
+		if (requestFromPlatform)
+		{
+			if (!plat->ReadPlatformFont(fontNameOrPath, fontSize, bold, italic, &result->fontFile))
+			{
+				PrintLine_E("Failed to open platform font file by name \"%.*s\" for new face in font", fontNameOrPath.length, fontNameOrPath.pntr);
+				FreeVarArray(&result->bakes);
+				VarArrayPop(&font->faces, FontFace_t);
+				return nullptr;
+			}
+		}
+		else
+		{
+			if (!plat->ReadFileContents(fontNameOrPath, &result->fontFile))
+			{
+				PrintLine_E("Failed to open font file at \"%.*s\" for new face in font", fontNameOrPath.length, fontNameOrPath.pntr);
+				FreeVarArray(&result->bakes);
+				VarArrayPop(&font->faces, FontFace_t);
+				return nullptr;
+			}
+		}
 	}
+	
 	FlagSet(result->flags, FontFaceFlag_IsActive);
 	
-	// PrintLine_D("Font file \"%s\" at %d is %u bytes", fontName.pntr, fontSize, result->fontFile.size);
+	// PrintLine_D("Font file \"%s\" at %d is %u bytes", fontNameOrPath.pntr, fontSize, result->fontFile.size);
 	
 	FlagSet(result->flags, FontFaceFlag_IsValid);
 	return result;
