@@ -11,7 +11,7 @@ void Win32_DebugOutputInternal(MyStr_t messageStr, bool newLine)
 	MyStr_t tempMessage;
 	tempMessage.length = messageStr.length;
 	tempMessage.pntr = (char*)malloc(messageStr.length+1);
-	MyMemCopy(tempMessage.pntr, messageStr.pntr, messageStr.length);
+	if (messageStr.length > 0) { MyMemCopy(tempMessage.pntr, messageStr.pntr, messageStr.length); }
 	tempMessage.pntr[messageStr.length] = '\0';
 	//NOTE: we use these special characters for easy encoding of style info when rendering text using our font flowing stuff.
 	//      But windows will interpret them specially so we replace them with normal characters
@@ -22,8 +22,7 @@ void Win32_DebugOutputInternal(MyStr_t messageStr, bool newLine)
 	OutputDebugStringA(tempMessage.pntr);
 	if (newLine) { OutputDebugStringA("\n"); }
 	
-	printf("%s", tempMessage.pntr);
-	if (newLine) { printf("\n"); }
+	printf("%s%s", tempMessage.pntr, (newLine ? "\n" : ""));
 	
 	free(tempMessage.pntr);
 }
@@ -241,7 +240,7 @@ PLAT_API_DEBUG_OUTPUT_DEF(Win32_DebugOutput)
 #define Print_I(formatString, ...)               Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, DbgLevel_Info, false, formatString, ##__VA_ARGS__)
 #define PrintLine_I(formatString, ...)           Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, DbgLevel_Info, true,  formatString, ##__VA_ARGS__)
 
-#define Write_N(message)                         Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, DbgLevel_Fify, false, message)
+#define Write_N(message)                         Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify, false, message)
 #define WriteLine_N(message)                     Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify, true,  message)
 #define Print_N(formatString, ...)               Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify, false, formatString, ##__VA_ARGS__)
 #define PrintLine_N(formatString, ...)           Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify, true,  formatString, ##__VA_ARGS__)

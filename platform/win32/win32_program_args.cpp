@@ -28,6 +28,7 @@ void Win32_ProcessProgramArguments(int argc, char* argv[])
 }
 void Win32_ProcessProgramArguments(LPSTR lpCmdLine, int nCmdShow)
 {
+	NotNull(Platform);
 	UNUSED(nCmdShow);
 	u64 numPieces = 0;
 	MyStr_t* pieces = SplitString(&Platform->mainHeap, lpCmdLine, " ", &numPieces); //TODO: Switch this out for SplitStringQuoted? TODO: Move this to TempArena
