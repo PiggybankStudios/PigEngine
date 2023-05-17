@@ -6,6 +6,21 @@ Description:
 	** Holds functions that help us manipulate files in the OS file system
 */
 
+const char* GetWin32ErrorCodeStr(DWORD windowsErrorCode, bool printUnknownValue = false)
+{
+	switch (windowsErrorCode)
+	{
+		case ERROR_FILE_NOT_FOUND:    return "ERROR_FILE_NOT_FOUND";    //2
+		case ERROR_FILE_EXISTS:       return "ERROR_FILE_EXISTS";       //80
+		case ERROR_ALREADY_EXISTS:    return "ERROR_ALREADY_EXISTS";    //183
+		case ERROR_SHARING_VIOLATION: return "ERROR_SHARING_VIOLATION"; //?
+		case ERROR_PIPE_BUSY:         return "ERROR_PIPE_BUSY";         //?
+		case ERROR_ACCESS_DENIED:     return "ERROR_ACCESS_DENIED";     //?
+		case ERROR_DIRECTORY:         return "ERROR_DIRECTORY";         //267
+		default: return (printUnknownValue ? TempPrint("(0x%08X)", windowsErrorCode) : "UNKNOWN");
+	}
+}
+
 MyStr_t GetFullPath(MemArena_t* memArena, MyStr_t relativePath, bool giveBackslashes)
 {
 	NotNull(memArena);
@@ -177,5 +192,138 @@ bool EnumerateFiles(FileEnumerator_t* enumerator, MyStr_t* pathOut, MemArena_t* 
 	}
 	Assert(false); //Shouldn't be possible to get here
 	return false;
+}
+
+// This function will automatically add a null-term char at the end of the file in case you want to read it as a string
+bool ReadFileContents(MyStr_t filePath, FileContents_t* contentsOut)
+{
+	//NOTE: This function should be multi-thread safe!
+	NotEmptyStr(&filePath);
+	NotNull(contentsOut);
+	ClearPointer(contentsOut);
+	
+	TempPushMark();
+	MyStr_t fullPath = GetFullPath(GetTempArena(), filePath, true);
+	
+	//TODO: This check maybe takes a lot of time? Should we just attempt to open the file and be done with it?
+	#if 0
+	if (!Win32_DoesFileExist(fullPath, nullptr))
+	{
+		//The file doesn't exist
+		contentsOut->readSuccess = false;
+		contentsOut->errorCode = ERROR_FILE_NOT_FOUND;
+		TempPopMark();
+		return false;
+	}
+	#endif
+	
+	HANDLE fileHandle = CreateFileA(
+		fullPath.pntr,         //lpFileName
+		GENERIC_READ,          //dwDesiredAccess
+		FILE_SHARE_READ,       //dwShareMode
+		NULL,                  //lpSecurityAttributes (NULL: no sub process access)
+		OPEN_EXISTING,         //dwCreationDisposition
+		FILE_ATTRIBUTE_NORMAL, //dwFlagsAndAttributes
+		NULL                   //hTemplateFile
+	);
+	if (fileHandle == INVALID_HANDLE_VALUE)
+	{
+		contentsOut->readSuccess = false;
+		contentsOut->errorCode = GetLastError();
+		if (contentsOut->errorCode == ERROR_FILE_NOT_FOUND)
+		{
+			PrintLine_E("File not found at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, GetWin32ErrorCodeStr(contentsOut->errorCode, true));
+		}
+		else
+		{
+			//The file might have permissions that prevent us from reading it
+			PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, GetWin32ErrorCodeStr(contentsOut->errorCode, true));
+		}
+		TempPopMark();
+		CloseHandle(fileHandle);
+		return false;
+	}
+	
+	LARGE_INTEGER fileSize;
+	BOOL getFileSizeResult = GetFileSizeEx(
+		fileHandle, //hFile
+		&fileSize   //lpFileSize
+	);
+	if (getFileSizeResult == 0)
+	{
+		contentsOut->readSuccess = false;
+		contentsOut->errorCode = GetLastError();
+		PrintLine_E("Failed to size of file at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, GetWin32ErrorCodeStr(contentsOut->errorCode, true));
+		TempPopMark();
+		CloseHandle(fileHandle);
+		return false;
+	}
+	
+	contentsOut->size = fileSize.QuadPart;
+	void* resultData = AllocArray(&pig->stdHeap, u8, contentsOut->size+1); //+1 for null-term
+	NotNullMsg(resultData, "Failed to allocate space to hold file contents. The application probably tried to open a massive file");
+	
+	if (contentsOut->size > 0)
+	{
+		//TODO: What about files that are larger than DWORD_MAX? Will we just fail to read these?
+		DWORD bytesRead = 0;
+		BOOL readFileResult = ReadFile(
+			fileHandle,               //hFile
+			resultData, //lpBuffer
+			(DWORD)contentsOut->size, //nNumberOfBytesToRead
+			&bytesRead,               //lpNumberOfBytesRead
+			NULL                      //lpOverlapped
+		);
+		if (readFileResult == 0)
+		{
+			contentsOut->readSuccess = false;
+			contentsOut->errorCode = GetLastError();
+			PrintLine_E("Failed to ReadFile contents at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, GetWin32ErrorCodeStr(contentsOut->errorCode, true));
+			FreeMem(&pig->stdHeap, resultData);
+			TempPopMark();
+			CloseHandle(fileHandle);
+			return false;
+		}
+		if (bytesRead < contentsOut->size)
+		{
+			contentsOut->readSuccess = false;
+			contentsOut->errorCode = GetLastError();
+			PrintLine_E("Failed to all of the file at \"%.*s\". Error code: %s. Read %u/%llu bytes", fullPath.length, fullPath.pntr, GetWin32ErrorCodeStr(contentsOut->errorCode, true), bytesRead, contentsOut->size);
+			FreeMem(&pig->stdHeap, resultData);
+			TempPopMark();
+			CloseHandle(fileHandle);
+			return false;
+		}
+	}
+	
+	TempPopMark();
+	CloseHandle(fileHandle);
+	
+	contentsOut->data = (u8*)resultData;
+	contentsOut->data[contentsOut->size] = '\0'; //add null-term
+	contentsOut->path = AllocString(&pig->stdHeap, &filePath);
+	NotNullStr(&contentsOut->path);
+	
+	contentsOut->id = pig->nextFileContentsId;
+	pig->nextFileContentsId++;
+	
+	contentsOut->readSuccess = true;
+	return true;
+}
+
+void FreeFileContents(FileContents_t* fileContents)
+{
+	//NOTE: This function should be multi-thread safe!
+	NotNull(fileContents);
+	if (fileContents->data != nullptr)
+	{
+		AssertMsg(fileContents->size > 0, "FileContents_t.size was 0 when calling FreeFileContents");
+		FreeMem(&pig->stdHeap, fileContents->data, fileContents->size+1);
+	}
+	if (fileContents->path.pntr != nullptr)
+	{
+		FreeString(&pig->stdHeap, &fileContents->path);
+	}
+	ClearPointer(fileContents);
 }
 

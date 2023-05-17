@@ -423,7 +423,7 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 	u64 fixedHeapUsageBefore = fixedHeap->used; //TODO: Remove me!
 	TempPushMark();
 	ProcessLog_t svgParseLog = {};
-	CreateProcessLog(&svgParseLog, Kilobytes(8), TempArena, fixedHeap);
+	CreateProcessLog(&svgParseLog, Kilobytes(8), TempArena, fixedHeap, TempArena);
 	
 	SvgData_t svgData = {};
 	if (!TryDeserSvgFile(NewStr(svgFile.size, svgFile.chars), &svgParseLog, &svgData, mainHeap))
@@ -533,7 +533,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 		if (plat->ReadFileContents(metaInfo.metaFilePath, &metaFile))
 		{
 			ProcessLog_t metaParseLog = {};
-			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap);
+			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap, TempArena);
 			SetProcessLogFilePath(&metaParseLog, metaInfo.metaFilePath);
 			
 			if (TryDeserSpriteSheetMeta(NewStr(metaFile.length, metaFile.chars), sheet, &metaParseLog))
@@ -664,7 +664,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 		if (plat->ReadFileContents(metaFilePath, &metaFile))
 		{
 			ProcessLog_t metaParseLog = {};
-			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap);
+			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap, TempArena);
 			SetProcessLogFilePath(&metaParseLog, metaFilePath);
 			if (TryDeserSpriteSheetMeta(NewStr(metaFile.length, metaFile.chars), spriteSheetOut, &metaParseLog))
 			{
@@ -918,7 +918,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 	{
 		bool parseSuccess = false;
 		ProcessLog_t musicParseLog = {};
-		CreateProcessLog(&musicParseLog, Kilobytes(8), TempArena, fixedHeap);
+		CreateProcessLog(&musicParseLog, Kilobytes(8), TempArena, fixedHeap, TempArena);
 		
 		if (StrEndsWith(musicPathStr, ".ogg"))
 		{

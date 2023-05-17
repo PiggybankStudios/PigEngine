@@ -143,12 +143,12 @@ void Win32_DebugPrintLocalFromPlat(void* bufferPntr, u32 bufferSize, u8 flags, c
 // |                        GyLib Handlers                        |
 // +--------------------------------------------------------------+
 //TODO: Should we add any flags that indicate this message comes from mylib?
-//void Win32_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* message)
+//void Win32_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 GYLIB_DEBUG_OUTPUT_HANDLER_DEF(Win32_GyLibDebugOutputHandler)
 {
-	Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, message);
+	Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, message);
 }
-// void Win32_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* formatString, ...);
+// void Win32_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...);
 GYLIB_DEBUG_PRINT_HANDLER_DEF(Win32_GyLibDebugPrintHandler)
 {
 	//TODO: Print into the thread's temporary memory
@@ -158,23 +158,23 @@ GYLIB_DEBUG_PRINT_HANDLER_DEF(Win32_GyLibDebugPrintHandler)
 	int printLength = MyVaListPrintf(resultStr, 0, formatString, args); //Measure first
 	if (printLength < 0)
 	{
-		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), false, "[Failed Print]: ");
-		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, false, "[Failed Print]: ");
+		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, formatString);
 		return;
 	}
 	va_end(args);
 	resultStr = (char*)malloc(printLength+1); //Allocate
 	if (resultStr == nullptr)
 	{
-		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), false, "[Failed Print Allocation]: ");
-		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, false, "[Failed Print Allocation]: ");
+		Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, formatString);
 		return;
 	}
 	va_start(args, formatString);
 	MyVaListPrintf(resultStr, printLength+1, formatString, args); //Real printf
 	va_end(args);
 	resultStr[printLength] = '\0';
-	Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, resultStr);
+	Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, resultStr);
 	free(resultStr);
 }
 
@@ -217,13 +217,13 @@ PLAT_API_DEBUG_OUTPUT_DEF(Win32_DebugOutput)
 // +--------------------------------------------------------------+
 // |             WriteLine Macros for Platform Layer              |
 // +--------------------------------------------------------------+
-#define LocalPrintAt(buffer, dbgLevel, formatString, ...)     Win32_DebugPrintLocalFromPlat(buffer, sizeof(buffer), 0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug, false, formatString, ##__VA_ARGS__)
-#define LocalPrintLineAt(buffer, dbgLevel, formatString, ...) Win32_DebugPrintLocalFromPlat(buffer, sizeof(buffer), 0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug, true, formatString, ##__VA_ARGS__)
+#define LocalPrintAt(buffer, dbgLevel, formatString, ...)     Win32_DebugPrintLocalFromPlat(buffer, sizeof(buffer), 0x00, __FILE__, __LINE__, __func__, (dbgLevel), false, formatString, ##__VA_ARGS__)
+#define LocalPrintLineAt(buffer, dbgLevel, formatString, ...) Win32_DebugPrintLocalFromPlat(buffer, sizeof(buffer), 0x00, __FILE__, __LINE__, __func__, (dbgLevel), true, formatString, ##__VA_ARGS__)
 
-#define WriteAt(dbgLevel, message)               Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, dbgLevel, false, message)
-#define WriteLineAt(dbgLevel, message)           Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, dbgLevel, true,  message)
-#define PrintAt(dbgLevel, formatString, ...)     Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, dbgLevel, false, formatString, ##__VA_ARGS__)
-#define PrintLineAt(dbgLevel, formatString, ...) Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, dbgLevel, true,  formatString, ##__VA_ARGS__)
+#define WriteAt(dbgLevel, message)               Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, (dbgLevel), false, message)
+#define WriteLineAt(dbgLevel, message)           Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, (dbgLevel), true,  message)
+#define PrintAt(dbgLevel, formatString, ...)     Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, (dbgLevel), false, formatString, ##__VA_ARGS__)
+#define PrintLineAt(dbgLevel, formatString, ...) Win32_DebugPrintFromPlat (0x00, __FILE__, __LINE__, __func__, (dbgLevel), true,  formatString, ##__VA_ARGS__)
 
 #define Write_D(message)                         Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug, false, message)
 #define WriteLine_D(message)                     Win32_DebugOutputFromPlat(0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug, true,  message)

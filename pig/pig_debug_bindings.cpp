@@ -530,7 +530,7 @@ void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t fi
 	{
 		u64 numBindingsBefore = bindingsOut->entries.length;
 		ProcessLog_t deserProcessLog = {};
-		CreateProcessLog(&deserProcessLog, Kilobytes(8), mainHeap, mainHeap);
+		CreateProcessLog(&deserProcessLog, Kilobytes(8), mainHeap, mainHeap, TempArena);
 		if (PigTryLoadDebugBindings(filePath, &deserProcessLog, bindingsOut))
 		{
 			u64 numNewBindings = bindingsOut->entries.length - numBindingsBefore;

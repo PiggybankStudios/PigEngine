@@ -116,12 +116,12 @@ bool DoesPathMatchExclusionPatterns(MyStr_t path, VarArray_t* exclusionPatterns)
 	Assert(exclusionPatterns->itemSize == sizeof(ExclusionPattern_t));
 	VarArrayLoop(exclusionPatterns, pIndex)
 	{
-		VarArrayLoopGet(ExclusionPattern_t, pattern, exclusionPatterns, pIndex);
-		pattern->pattern = re_compile(pattern->patternStr.chars); //TODO: It seems the regex library does not allow multiple compiled regexes to sit around
+		VarArrayLoopGet(ExclusionPattern_t, exclusionPattern, exclusionPatterns, pIndex);
+		re_t pattern = re_compile(exclusionPattern->patternStr.chars); //TODO: It seems the regex library does not allow multiple compiled regexes to sit around
 		int reMatchLength = 0; //unused, but required by re_matchp
-		if (re_matchp(pattern->pattern, path.chars, &reMatchLength) >= 0)
+		if (re_matchp(pattern, path.chars, &reMatchLength) >= 0)
 		{
-			PrintLine_W("Excluding \"%.*s\" due to regex \"%.*s\"", path.length, path.chars, pattern->patternStr.length, pattern->patternStr.chars);
+			if (pig->verboseEnabled) { PrintLine_W("Excluding \"%.*s\" due to regex \"%.*s\"", path.length, path.chars, exclusionPattern->patternStr.length, exclusionPattern->patternStr.chars); }
 			return true;
 		}
 	}
@@ -171,4 +171,21 @@ i32 CompareFuncFileToProcess(const void* left, const void* right, void* contextP
 	FileToProcess_t* leftFileToProcess = (FileToProcess_t*)left;
 	FileToProcess_t* rightFileToProcess = (FileToProcess_t*)right;
 	return CompareFuncMyStr(&leftFileToProcess->path, &rightFileToProcess->path, contextPntr);
+}
+
+void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug)
+{
+	NotNull(log);
+	Assert(minLevel < DbgLevel_NumLevels);
+	if (headerAndFooterStr != nullptr) { PrintLine_R("v========= %s =========v", headerAndFooterStr); }
+	const StringFifoLine_t* logLine = log->fifo.firstLine;
+	while (logLine != nullptr)
+	{
+		u64 newMetaStructSize = 0;
+		MyStr_t text = GetFifoLineText(logLine);
+		const ProcessLogLine_t* logLineMeta = GetFifoLineMetaStruct(logLine, ProcessLogLine_t);
+		if (logLineMeta->dbgLevel >= minLevel) { PrintLineAt(logLineMeta->dbgLevel, "%.*s", text.length, text.chars); }
+		logLine = logLine->next;
+	}
+	if (headerAndFooterStr != nullptr) { PrintLine_R("^========= %s =========^", headerAndFooterStr); }
 }

@@ -33,11 +33,28 @@ struct FileEnumerator_t
 	WIN32_FIND_DATAA findData;
 	HANDLE handle;
 };
+struct FileContents_t
+{
+	u64 id;
+	bool readSuccess;
+	MyStr_t path;
+	union
+	{
+		u64 size;
+		u64 length;
+	};
+	union
+	{
+		u8* data;
+		char* chars;
+	};
+	
+	DWORD errorCode;
+};
 
 struct ExclusionPattern_t
 {
 	MyStr_t patternStr;
-	re_t pattern;
 };
 
 struct FileToProcess_t
@@ -50,6 +67,10 @@ struct PigGenState_t
 	MemArena_t stdHeap;
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
+	
+	bool verboseEnabled;
+	
+	u64 nextFileContentsId;
 	
 	ProgramArguments_t programArgs;
 	VarArray_t exclusionPatterns; //ExclusionPattern_t

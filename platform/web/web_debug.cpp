@@ -47,12 +47,12 @@ void Web_DebugPrintFromPlat(u8 flags, const char* filePath, u32 lineNumber, cons
 // |                        GyLib Handlers                        |
 // +--------------------------------------------------------------+
 //TODO: Should we add any flags that indicate this message comes from mylib?
-//void Web_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* message)
+//void Web_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 GYLIB_DEBUG_OUTPUT_HANDLER_DEF(Web_GyLibDebugOutputHandler)
 {
 	// TODO: Unimplemented
 }
-// void Web_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* formatString, ...);
+// void Web_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...);
 GYLIB_DEBUG_PRINT_HANDLER_DEF(Web_GyLibDebugPrintHandler)
 {
 	// TODO: Unimplemented

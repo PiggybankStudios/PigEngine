@@ -6,8 +6,6 @@ Description:
 	** Holds the implementation for debug AppDebugOutput and AppDebugPrint (pre-declared in pig_debug.h)
 */
 
-#define DBG_FILEPATH_AND_FUNCNAME_SEP_CHAR '|'
-
 void AppDebugOutput_Internal(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool addNewLine, MyStr_t messageStr)
 {
 	if (plat != nullptr && plat->DebugOutput != nullptr)
@@ -118,15 +116,15 @@ void AppDebugPrint(u8 flags, const char* filePath, u32 lineNumber, const char* f
 // +==============================+
 // | Pig_GyLibDebugOutputHandler  |
 // +==============================+
-//void Pig_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* message)
+//void Pig_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 GYLIB_DEBUG_OUTPUT_HANDLER_DEF(Pig_GyLibDebugOutputHandler)
 {
-	AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, message);
+	AppDebugOutput(0x00, filePath, lineNumber, funcName, level, newLine, message);
 }
 // +==============================+
 // |  Pig_GyLibDebugPrintHandler  |
 // +==============================+
-// void Pig_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t level, bool newLine, const char* formatString, ...);
+// void Pig_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...);
 GYLIB_DEBUG_PRINT_HANDLER_DEF(Pig_GyLibDebugPrintHandler)
 {
 	if (GetTempArena() != nullptr)
@@ -146,24 +144,24 @@ GYLIB_DEBUG_PRINT_HANDLER_DEF(Pig_GyLibDebugPrintHandler)
 				va_end(args);
 				formattedStr[formattedStrLength] = '\0';
 				
-				AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formattedStr);
+				AppDebugOutput(0x00, filePath, lineNumber, funcName, level, newLine, formattedStr);
 			}
 			else
 			{
 				//failed print, just send out the formatString
-				AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+				AppDebugOutput(0x00, filePath, lineNumber, funcName, level, newLine, formatString);
 			}
 		}
 		else
 		{
 			//failed print, just send out the formatString
-			AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, formatString);
+			AppDebugOutput(0x00, filePath, lineNumber, funcName, level, newLine, formatString);
 		}
 		TempPopMark();
 	}
 	else
 	{
-		AppDebugOutput(0x00, filePath, lineNumber, funcName, GetDbgLevelForGyDbgLevel(level), newLine, "[No TempMem For Print]");
+		AppDebugOutput(0x00, filePath, lineNumber, funcName, level, newLine, "[No TempMem For Print]");
 	}
 }
 

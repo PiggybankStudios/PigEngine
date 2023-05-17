@@ -91,61 +91,6 @@ struct GlfwVersion_t
 	i32 revision;
 };
 
-enum DbgLevel_t
-{
-	DbgLevel_None = 0,
-	DbgLevel_Debug,
-	DbgLevel_Regular,
-	DbgLevel_Info,
-	DbgLevel_Notify,
-	DbgLevel_Other,
-	DbgLevel_Warning,
-	DbgLevel_Error,
-	DbgLevel_NumLevels,
-};
-const char* GetDbgLevelStr(DbgLevel_t dbgLevel)
-{
-	switch (dbgLevel)
-	{
-		case DbgLevel_None:    return "None";
-		case DbgLevel_Debug:   return "Debug";
-		case DbgLevel_Regular: return "Regular";
-		case DbgLevel_Info:    return "Info";
-		case DbgLevel_Notify:  return "Notify";
-		case DbgLevel_Other:   return "Other";
-		case DbgLevel_Warning: return "Warning";
-		case DbgLevel_Error:   return "Error";
-		default: return "Unknown";
-	}
-}
-
-DbgLevel_t GetDbgLevelForGyDbgLevel(GyDbgLevel_t gyDbgLevel)
-{
-	switch (gyDbgLevel)
-	{
-		case GyDbgLevel_Debug:   return DbgLevel_Debug;
-		case GyDbgLevel_Info:    return DbgLevel_Info;
-		case GyDbgLevel_Warning: return DbgLevel_Warning;
-		case GyDbgLevel_Error:   return DbgLevel_Error;
-		default: return DbgLevel_None;
-	}
-}
-
-Color_t GetDbgLevelTextColor(DbgLevel_t dbgLevel)
-{
-	switch (dbgLevel)
-	{
-		case DbgLevel_Debug:   return MonokaiGray1;     break;
-		case DbgLevel_Regular: return MonokaiWhite;     break;
-		case DbgLevel_Info:    return MonokaiGreen;     break;
-		case DbgLevel_Notify:  return MonokaiPurple;    break;
-		case DbgLevel_Other:   return MonokaiLightBlue; break;
-		case DbgLevel_Warning: return MonokaiOrange;    break;
-		case DbgLevel_Error:   return MonokaiMagenta;   break;
-		default: return MonokaiWhite; break;
-	}
-}
-
 struct ProgramArguments_t
 {
 	u64 count;

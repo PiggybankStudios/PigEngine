@@ -145,6 +145,8 @@ v2 RcDrawSteamFriendCard(u64 friendId, v2 position, v2 minSize, v2 maxSize, r32 
 
 #endif //STEAM_BUILD
 
+//TODO: Move me somewhere project specific or add a define to enable this conditionally for that project
+#if 0
 // +--------------------------------------------------------------+
 // |                   LDtk Level Debug Render                    |
 // +--------------------------------------------------------------+
@@ -238,6 +240,7 @@ void RcDrawLdtkLevel(LdtkProject_t* project, LdtkLevel_t* level, v2 position, r3
 		}
 	}
 }
+#endif
 
 // +--------------------------------------------------------------+
 // |                       Box2D Rendering                        |

@@ -153,59 +153,6 @@ struct PigDebugOverlay_t
 	};
 };
 
-enum XmlParsingError_t
-{
-	XmlParsingError_None = 0,
-	XmlParsingError_UnexpectedEol,
-	XmlParsingError_ExpectedClosingAngleBracket,
-	XmlParsingError_UnexpectedClosingToken,
-	XmlParsingError_ClosingTokenMismatch,
-	XmlParsingError_InvalidCharacterOutsideToken,
-	XmlParsingError_InvalidUtf8,
-	XmlParsingError_NoTypeFoundForToken,
-	XmlParsingError_InvalidCharInIdentifier,
-	XmlParsingError_NoEqualsForProperty,
-	XmlParsingError_InvalidPropertyFirstChar,
-	XmlParsingError_MissingPropertyValue,
-	XmlParsingError_MissingClosingTokens,
-	XmlParsingError_NumErrors,
-};
-const char* GetXmlParsingErrorStr(XmlParsingError_t error)
-{
-	switch (error)
-	{
-		case XmlParsingError_None:                         return "None";
-		case XmlParsingError_UnexpectedEol:                return "UnexpectedEol";
-		case XmlParsingError_ExpectedClosingAngleBracket:  return "ExpectedClosingAngleBracket";
-		case XmlParsingError_UnexpectedClosingToken:       return "UnexpectedClosingToken";
-		case XmlParsingError_ClosingTokenMismatch:         return "ClosingTokenMismatch";
-		case XmlParsingError_InvalidCharacterOutsideToken: return "InvalidCharacterOutsideToken";
-		case XmlParsingError_InvalidUtf8:                  return "InvalidUtf8";
-		case XmlParsingError_NoTypeFoundForToken:          return "NoTypeFoundForToken";
-		case XmlParsingError_InvalidCharInIdentifier:      return "InvalidCharInIdentifier";
-		case XmlParsingError_NoEqualsForProperty:          return "NoEqualsForProperty";
-		case XmlParsingError_InvalidPropertyFirstChar:     return "InvalidPropertyFirstChar";
-		case XmlParsingError_MissingPropertyValue:         return "MissingPropertyValue";
-		case XmlParsingError_MissingClosingTokens:         return "MissingClosingTokens";
-		default: return "Unknown";
-	}
-}
-
-struct ProcessLog_t
-{
-	bool hadErrors;
-	bool hadWarnings;
-	bool debugBreakOnWarningsAndErrors;
-	u32 errorCode;
-	TryParseFailureReason_t parseFailureReason;
-	XmlParsingError_t xmlParsingError;
-	
-	MemArena_t* allocArena;
-	MyStr_t processName;
-	MyStr_t filePath;
-	StringFifo_t fifo;
-};
-
 struct Sound_t
 {
 	MemArena_t* allocArena;

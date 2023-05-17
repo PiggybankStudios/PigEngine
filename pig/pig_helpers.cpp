@@ -159,51 +159,6 @@ bool CreateFoldersForPath(MyStr_t folderOrFilePath)
 }
 
 // +--------------------------------------------------------------+
-// |                       Two Pass Helpers                       |
-// +--------------------------------------------------------------+
-void TwoPassPrint(char* resultPntr, u64 resultLength, u64* currentByteIndex, const char* formatString, ...)
-{
-	Assert_(resultPntr == nullptr || resultLength > 0);
-	NotNull_(currentByteIndex);
-	NotNull_(formatString);
-	
-	u64 printSize = 0;
-	va_list args;
-	
-	va_start(args, formatString);
-	int printResult = PrintVa_Measure(formatString, args);
-	va_end(args);
-	
-	if (printResult >= 0)
-	{
-		printSize = (u64)printResult;
-		if (resultPntr != nullptr)
-		{
-			Assert_(*currentByteIndex <= resultLength);
-			u64 spaceLeft = resultLength - *currentByteIndex;
-			Assert_(printSize <= spaceLeft);
-			va_start(args, formatString);
-			PrintVa_Print(formatString, args, &resultPntr[*currentByteIndex], printResult);
-			va_end(args);
-		}
-	}
-	else
-	{
-		//Print error. Use the formatString as a stand-in to indicate an error has occurred in the print formatting
-		printSize = MyStrLength64(formatString);
-		if (resultPntr != nullptr)
-		{
-			Assert_(*currentByteIndex <= resultLength);
-			u64 spaceLeft = resultLength - *currentByteIndex;
-			Assert_(printSize <= spaceLeft);
-			MyMemCopy(&resultPntr[*currentByteIndex], formatString, printSize);
-		}
-	}
-	
-	*currentByteIndex += printSize;
-}
-
-// +--------------------------------------------------------------+
 // |                      Bool Array Helpers                      |
 // +--------------------------------------------------------------+
 bool GetBoolArrayValue(bool* boolArray, v2i index, v2i size)

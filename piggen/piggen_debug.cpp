@@ -9,7 +9,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                        Real Functions                        |
 // +--------------------------------------------------------------+
-void DebugOutputFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t dbgLevel, bool newLine, const char* message)
+void DebugOutputFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool newLine, const char* message)
 {
 	//NOTE: we use these special characters for easy encoding of style info when rendering text using our font flowing stuff.
 	//      But windows will interpret them specially so we replace them with normal characters
@@ -25,7 +25,7 @@ void DebugOutputFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const
 	
 	FreeString(&pig->stdHeap, &tempMessage);
 }
-void DebugPrintFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, GyDbgLevel_t dbgLevel, bool newLine, const char* formatString, ...)
+void DebugPrintFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool newLine, const char* formatString, ...)
 {
 	char* resultStr = nullptr;
 	va_list args;
@@ -61,23 +61,38 @@ void DebugPrintFromPigGen(u8 flags, const char* filePath, u32 lineNumber, const 
 #define PrintAt(dbgLevel, formatString, ...)     DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, dbgLevel, false, formatString, ##__VA_ARGS__)
 #define PrintLineAt(dbgLevel, formatString, ...) DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, dbgLevel, true,  formatString, ##__VA_ARGS__)
 
-#define Write_D(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Debug, false, message)
-#define WriteLine_D(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Debug, true,  message)
-#define Print_D(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Debug, false, formatString, ##__VA_ARGS__)
-#define PrintLine_D(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Debug, true,  formatString, ##__VA_ARGS__)
+#define Write_D(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug,   false, message)
+#define WriteLine_D(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug,   true,  message)
+#define Print_D(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug,   false, formatString, ##__VA_ARGS__)
+#define PrintLine_D(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Debug,   true,  formatString, ##__VA_ARGS__)
 
-#define Write_I(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Info, false, message)
-#define WriteLine_I(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Info, true,  message)
-#define Print_I(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Info, false, formatString, ##__VA_ARGS__)
-#define PrintLine_I(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Info, true,  formatString, ##__VA_ARGS__)
+#define Write_R(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Regular, false, message)
+#define WriteLine_R(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Regular, true,  message)
+#define Print_R(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Regular, false, formatString, ##__VA_ARGS__)
+#define PrintLine_R(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Regular, true,  formatString, ##__VA_ARGS__)
 
-#define Write_W(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Warning, false, message)
-#define WriteLine_W(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Warning, true,  message)
-#define Print_W(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Warning, false, formatString, ##__VA_ARGS__)
-#define PrintLine_W(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Warning, true,  formatString, ##__VA_ARGS__)
+#define Write_I(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Info,    false, message)
+#define WriteLine_I(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Info,    true,  message)
+#define Print_I(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Info,    false, formatString, ##__VA_ARGS__)
+#define PrintLine_I(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Info,    true,  formatString, ##__VA_ARGS__)
 
-#define Write_E(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Error, false, message)
-#define WriteLine_E(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Error, true,  message)
-#define Print_E(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Error, false, formatString, ##__VA_ARGS__)
-#define PrintLine_E(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, GyDbgLevel_Error, true,  formatString, ##__VA_ARGS__)
+#define Write_N(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify,  false, message)
+#define WriteLine_N(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify,  true,  message)
+#define Print_N(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify,  false, formatString, ##__VA_ARGS__)
+#define PrintLine_N(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Notify,  true,  formatString, ##__VA_ARGS__)
+
+#define Write_O(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Other,   false, message)
+#define WriteLine_O(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Other,   true,  message)
+#define Print_O(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Other,   false, formatString, ##__VA_ARGS__)
+#define PrintLine_O(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Other,   true,  formatString, ##__VA_ARGS__)
+
+#define Write_W(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Warning, false, message)
+#define WriteLine_W(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Warning, true,  message)
+#define Print_W(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Warning, false, formatString, ##__VA_ARGS__)
+#define PrintLine_W(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Warning, true,  formatString, ##__VA_ARGS__)
+
+#define Write_E(message)                         DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Error,   false, message)
+#define WriteLine_E(message)                     DebugOutputFromPigGen(0x00, __FILE__, __LINE__, __func__, DbgLevel_Error,   true,  message)
+#define Print_E(formatString, ...)               DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Error,   false, formatString, ##__VA_ARGS__)
+#define PrintLine_E(formatString, ...)           DebugPrintFromPigGen (0x00, __FILE__, __LINE__, __func__, DbgLevel_Error,   true,  formatString, ##__VA_ARGS__)
 
