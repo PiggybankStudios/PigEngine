@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 			WriteLine_I("Successfully grew 256 byte section to 500 bytes!");
 		}
 		
-		if (true)
+		if (false)
 		{
 			u64 stackArenaSize = Kilobytes(2);
 			void* stackArenaPntr = malloc(stackArenaSize);
@@ -175,6 +175,61 @@ int main(int argc, char* argv[])
 			GrowMem(&stackArena, alloc3, 256, 500, &growthToken);
 			MemArenaVerify(&stackArena, true);
 			WriteLine_I("Successfully grew 256 byte section to 500 bytes!");
+		}
+		
+		if (true)
+		{
+			u64 stackArenaSize = Kilobytes(2);
+			void* stackArenaPntr = malloc(stackArenaSize);
+			MemArena_t stackArena = {};
+			InitMemArena_MarkedStack(&stackArena, stackArenaSize, stackArenaPntr, 4);
+			
+			u64 testArenaSize = Kilobytes(2);
+			void* testArenaPntr = malloc(testArenaSize);
+			MemArena_t testArena = {};
+			InitMemArena_FixedHeap(&testArena, testArenaSize, testArenaPntr);
+			
+			StringBuilder_t builder;
+			// NewStringBuilder(&builder, &stackArena);
+			NewStringBuilder(&builder, &testArena);
+			
+			PrintLine_D("arena: %llu/%llu used", builder.allocArena->used, builder.allocArena->size);
+			// StringBuilderAppend(&builder, NewStr("Build me a string!"));
+			// MemArenaVerify(builder.allocArena, true);
+			// StringBuilderAppend(&builder, NewStr("Build me a string!"));
+			// MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppend(&builder, NewStr("Build me a string!"));
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			char* charArray = AllocArray(builder.allocArena, char, 4);
+			charArray[0] = 'A';
+			charArray[1] = 'B';
+			charArray[2] = 'C';
+			charArray[3] = 'D';
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppend(&builder, NewStr("Build me a string!"));
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			StringBuilderAppendPrint(&builder, "Print me a %s! %llu", "string", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			
+			StringBuilderPrint(&builder, "This is the final print %llu", builder.allocArena->used);
+			MemArenaVerify(builder.allocArena, true);
+			
+			PrintLine_D("arena: %llu/%llu used", builder.allocArena->used, builder.allocArena->size);
+			PrintLine_D("String: \"%s\"", ToStr(&builder));
+			// for (u64 bIndex = 0; bIndex < builder.allocArena->used; bIndex++)
+			// {
+			// 	char c = ((char*)builder.allocArena->mainPntr)[bIndex];
+			// 	PrintLine_D("[%llu]: (0x%02X) %c", bIndex, c, c);
+			// }
 		}
 		
 		exit(0);

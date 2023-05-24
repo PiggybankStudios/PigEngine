@@ -20,6 +20,8 @@ Serializable: ItemStack_t
 	uiRec:     rec
 	position:  v3?
 }
+#else
+#include "codegen/piggen_examples_0.h"
 #endif
 
 #endif //  _PIGGEN_EXAMPLES_H

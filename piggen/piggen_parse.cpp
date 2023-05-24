@@ -12,45 +12,29 @@ Description:
 MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable, MemArena_t* memArena, u64* numBytesOut = nullptr)
 {
 	NotNull(serializable);
-	MyStr_t result = MyStr_Empty;
-	for (u8 pass = 0; pass < 2; pass++)
+	StringBuilder_t builder;
+	NewStringBuilder(&builder, memArena);
+	
+	StringBuilderAppendPrint(&builder, "struct %.*s\n", serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "{\n");
+	VarArrayLoop(&serializable->members, mIndex)
 	{
-		u64 byteIndex = 0;
-		
-		TwoPassPrint(result.chars, result.length, &byteIndex, "struct %.*s\n", serializable->name.length, serializable->name.chars);
-		TwoPassPrint(result.chars, result.length, &byteIndex, "{\n");
-		VarArrayLoop(&serializable->members, mIndex)
-		{
-			VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-			TwoPassPrint(result.chars, result.length, &byteIndex, "\t%.*s %.*s\n", member->type.length, member->type.chars, member->name.length, member->name.chars);
-		}
-		TwoPassPrint(result.chars, result.length, &byteIndex, "};\n");
-		TwoPassPrint(result.chars, result.length, &byteIndex, "\n");
-		TwoPassPrint(result.chars, result.length, &byteIndex, "SerializableStructMemberType_t GetSerializableMemberType_%.*s(u64 memberIndex)\n", serializable->name.length, serializable->name.chars);
-		TwoPassPrint(result.chars, result.length, &byteIndex, "{\n");
-		VarArrayLoop(&serializable->members, mIndex)
-		{
-			VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-			MyStr_t alternateTypeOrType = IsEmptyStr(member->alternateType) ? member->type : member->alternateType;
-			TwoPassPrint(result.chars, result.length, &byteIndex, "\tcase %llu: return SerializableStructMemberType_%.*s; //%.*s\n", mIndex, alternateTypeOrType.length, alternateTypeOrType.chars, member->name.length, member->name.chars);
-		}
-		TwoPassPrint(result.chars, result.length, &byteIndex, "}\n");
-		
-		if (pass == 0)
-		{
-			result.length = byteIndex;
-			SetOptionalOutPntr(numBytesOut, result.length);
-			if (memArena == nullptr) { return MyStr_Empty; }
-			result.chars = AllocArray(memArena, char, result.length);
-			if (result.chars == nullptr) { return MyStr_Empty; }
-		}
-		else
-		{
-			Assert(byteIndex == result.length);
-			result.chars[result.length] = '\0';
-		}
+		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
+		StringBuilderAppendPrint(&builder, "\t%.*s %.*s\n", member->type.length, member->type.chars, member->name.length, member->name.chars);
 	}
-	return result;
+	StringBuilderAppend(&builder, "};\n");
+	StringBuilderAppend(&builder, "\n");
+	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType_%.*s(u64 memberIndex)\n", serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "{\n");
+	VarArrayLoop(&serializable->members, mIndex)
+	{
+		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
+		MyStr_t alternateTypeOrType = IsEmptyStr(member->alternateType) ? member->type : member->alternateType;
+		StringBuilderAppendPrint(&builder, "\tcase %llu: return SerializableStructMemberType_%.*s; //%.*s\n", mIndex, alternateTypeOrType.length, alternateTypeOrType.chars, member->name.length, member->name.chars);
+	}
+	StringBuilderAppend(&builder, "}\n");
+	
+	return TakeString(&builder);
 }
 
 // +--------------------------------------------------------------+
@@ -71,7 +55,8 @@ bool TryPigGenerate(MyStr_t regionContents, ProcessLog_t* log, u64 baseLineIndex
 	while (TextParserGetToken(&textParser, &token))
 	{
 		Assert(!IsEmptyStr(token.str)); //assumption was made that we don't get empty tokens
-		u64 lineNum = baseLineIndex + textParser.lineParser.lineIndex;
+		Assert(textParser.lineParser.lineIndex > 0);
+		u64 lineNum = baseLineIndex + textParser.lineParser.lineIndex-1;
 		
 		if (insideStruct && expectingOpenCurly && token.type != ParsingTokenType_Comment && !StrEquals(token.str, "{"))
 		{
