@@ -197,7 +197,6 @@ bool EnumerateFiles(FileEnumerator_t* enumerator, MyStr_t* pathOut, MemArena_t* 
 // This function will automatically add a null-term char at the end of the file in case you want to read it as a string
 bool ReadFileContents(MyStr_t filePath, FileContents_t* contentsOut)
 {
-	//NOTE: This function should be multi-thread safe!
 	NotEmptyStr(&filePath);
 	NotNull(contentsOut);
 	ClearPointer(contentsOut);
@@ -327,3 +326,131 @@ void FreeFileContents(FileContents_t* fileContents)
 	ClearPointer(fileContents);
 }
 
+//TODO: We should probably convert \n to \r\n on windows so the file can be opened by all widows programs
+bool WriteEntireFile(MyStr_t filePath, const void* memory, u64 memorySize)
+{
+	NotNullStr(&filePath);
+	Assert(memorySize > 0);
+	NotNull(memory);
+	bool result = false;
+	
+	TempPushMark();
+	MyStr_t fullPath = GetFullPath(TempArena, filePath, true);
+	HANDLE fileHandle = CreateFileA(
+		fullPath.pntr,         //Name of the file
+		GENERIC_WRITE,         //Open for writing
+		0,                     //Do not share
+		NULL,                  //Default security
+		CREATE_ALWAYS,         //Always overwrite
+		FILE_ATTRIBUTE_NORMAL, //Default file attributes
+		0                      //No Template File
+	);
+	if (fileHandle != INVALID_HANDLE_VALUE)
+	{
+		//TODO: Should we assert if memorySize > max value of DWORD?
+		DWORD bytesWritten;
+		if (WriteFile(fileHandle, memory, (DWORD)memorySize, &bytesWritten, 0))
+		{
+			if ((u64)bytesWritten == memorySize)
+			{
+				result = true;
+			}
+			else
+			{
+				PrintLine_W("Only wrote %u/%llu bytes to file at \"%.*s\"", bytesWritten, memorySize, fullPath.length, fullPath.pntr);
+			}
+		}
+		else
+		{
+			PrintLine_E("Failed to write %u bytes to file at \"%.*s\"", memorySize, fullPath.length, fullPath.pntr);
+		}
+		CloseHandle(fileHandle);
+	}
+	else
+	{
+		PrintLine_E("Failed to open file for writing at \"%.*s\"", fullPath.length, fullPath.pntr);
+	}
+	TempPopMark();
+	
+	return result;
+}
+
+void CloseFile(OpenFile_t* openFile)
+{
+	NotNull(openFile);
+	if (openFile->handle != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(openFile->handle);
+	}
+	if (openFile->path.chars != nullptr) { FreeString(mainHeap, &openFile->path); }
+	ClearPointer(openFile);
+	openFile->handle = INVALID_HANDLE_VALUE;
+}
+
+bool OpenFile(MyStr_t filePath, OpenFile_t* openFileOut)
+{
+	NotNullStr(&filePath);
+	NotNull(openFileOut);
+	
+	MyStr_t fullPath = GetFullPath(mainHeap, filePath, true);
+	NotNull(fullPath.chars);
+	
+	HANDLE fileHandle = CreateFileA(
+		fullPath.pntr,         //lpFileName
+		GENERIC_WRITE,         //dwDesiredAccess
+		0,                     //dwShareMode
+		NULL,                  //lpSecurityAttributes
+		CREATE_ALWAYS,         //dwCreationDisposition
+		FILE_ATTRIBUTE_NORMAL, //dwFlagsAndAttributes
+		NULL                   //hTemplateFile
+	);
+	if (fileHandle == INVALID_HANDLE_VALUE)
+	{
+		PrintLine_E("Failed to Create file at \"%.*s\"", fullPath.length, fullPath.pntr);
+		FreeString(mainHeap, &fullPath);
+		return false;
+	}
+	
+	ClearPointer(openFileOut);
+	openFileOut->isOpen = true;
+	openFileOut->handle = fileHandle;
+	openFileOut->id = pig->nextOpenFileId; //TODO: Make this thread safe!
+	pig->nextOpenFileId++;
+	openFileOut->path = fullPath;
+	return true;
+}
+
+bool WriteToFile(OpenFile_t* openFile, u64 numBytes, const void* bytesPntr)
+{
+	NotNull(openFile);
+	if (!openFile->isOpen) { return false; }
+	Assert(openFile->handle != INVALID_HANDLE_VALUE);
+	AssertIf(numBytes > 0, bytesPntr != nullptr);
+	if (numBytes == 0) { return true; } //no bytes to write always succeeds
+	Assert(numBytes <= UINT32_MAX);
+	
+	DWORD numBytesToWrite = (DWORD)numBytes;
+	DWORD numBytesWritten = 0;
+	BOOL writeResult = WriteFile(
+		openFile->handle, //hFile
+		bytesPntr,        //lpBuffer
+		numBytesToWrite,  //nNumberOfBytesToWrite
+		&numBytesWritten, //lpNumberOfnumBytesWritten
+		NULL              //lpOverlapped
+	);
+	if (writeResult == 0)
+	{
+		DWORD errorCode = GetLastError();
+		PrintLine_E("WriteFile failed: 0x%08X (%u)", errorCode, errorCode);
+		return false;
+	}
+	
+	Assert(numBytesWritten <= numBytesToWrite);
+	if (numBytesWritten < numBytesToWrite)
+	{
+		PrintLine_E("Partial write occurred: %u/%llu", numBytesWritten, numBytesToWrite);
+		return false;
+	}
+	
+	return true;
+}

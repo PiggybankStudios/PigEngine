@@ -15,24 +15,34 @@ MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable,
 	StringBuilder_t builder;
 	NewStringBuilder(&builder, memArena);
 	
-	StringBuilderAppendPrint(&builder, "struct %.*s\n", serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "{\n");
+	StringBuilderAppendPrint(&builder, "struct %.*s" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
 	VarArrayLoop(&serializable->members, mIndex)
 	{
 		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-		StringBuilderAppendPrint(&builder, "\t%.*s %.*s\n", member->type.length, member->type.chars, member->name.length, member->name.chars);
+		StringBuilderAppendPrint(&builder, "\t%.*s %.*s" PIGGEN_NEW_LINE, member->type.length, member->type.chars, member->name.length, member->name.chars);
 	}
-	StringBuilderAppend(&builder, "};\n");
-	StringBuilderAppend(&builder, "\n");
-	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType_%.*s(u64 memberIndex)\n", serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "{\n");
+	StringBuilderAppend(&builder, "};" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
+	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType_%.*s(u64 memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, "\tswitch (memberIndex)" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, "\t{" PIGGEN_NEW_LINE);
 	VarArrayLoop(&serializable->members, mIndex)
 	{
 		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
 		MyStr_t alternateTypeOrType = IsEmptyStr(member->alternateType) ? member->type : member->alternateType;
-		StringBuilderAppendPrint(&builder, "\tcase %llu: return SerializableStructMemberType_%.*s; //%.*s\n", mIndex, alternateTypeOrType.length, alternateTypeOrType.chars, member->name.length, member->name.chars);
+		StringBuilderAppendPrint(&builder, "\t\tcase %llu: return SerializableStructMemberType_%.*s; //%.*s" PIGGEN_NEW_LINE, mIndex, alternateTypeOrType.length, alternateTypeOrType.chars, member->name.length, member->name.chars);
 	}
-	StringBuilderAppend(&builder, "}\n");
+	StringBuilderAppend(&builder, "\t\tdefault: Assert(false); return SerializableStructMemberType_None;" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, "\t}" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, "}" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
+	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType(const %.*s* structPntr, u64 memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
+	StringBuilderAppendPrint(&builder, "\treturn GetSerializableMemberType_%.*s(memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
+	StringBuilderAppend(&builder, "}" PIGGEN_NEW_LINE);
+	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
 	
 	return TakeString(&builder);
 }
@@ -41,7 +51,7 @@ MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable,
 // |                            Parse                             |
 // +--------------------------------------------------------------+
 //Returns MyStr_Empty on failure
-bool TryPigGenerate(MyStr_t regionContents, ProcessLog_t* log, u64 baseLineIndex)
+bool TryPigGenerate(MyStr_t regionContents, OpenFile_t* outputFile, ProcessLog_t* log, u64 baseLineIndex)
 {
 	NotNullStr(&regionContents);
 	
@@ -181,7 +191,8 @@ bool TryPigGenerate(MyStr_t regionContents, ProcessLog_t* log, u64 baseLineIndex
 				return false;
 			}
 			
-			LogPrintLine_D(log, "Serialized Struct Code:\n%.*s", structCode.length, structCode.chars);
+			// LogPrintLine_D(log, "Serialized Struct Code:\n%.*s", structCode.length, structCode.chars);
+			WriteToFile(outputFile, structCode.length, structCode.chars);
 			
 			insideStruct = false;
 		}
@@ -203,5 +214,6 @@ bool TryPigGenerate(MyStr_t regionContents, ProcessLog_t* log, u64 baseLineIndex
 		return false;
 	}
 	
-	return false; //TODO: Change me to true!
+	LogExitSuccess(log);
+	return true;
 }

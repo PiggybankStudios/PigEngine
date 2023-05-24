@@ -108,6 +108,7 @@ int main(int argc, char* argv[])
 	TempArena = &pig->tempArena;
 	
 	pig->nextFileContentsId = 1;
+	pig->nextOpenFileId = 1;
 	
 	TempPushMark();
 	
@@ -314,46 +315,104 @@ int main(int argc, char* argv[])
 		{
 			if (pig->verboseEnabled) { PrintLine_D("Processing %llu/%llu \"%.*s\" (%llu bytes)", fIndex+1, allSourceCodePaths.length, fileToProcess->path.length, fileToProcess->path.chars, fileContents.size); }
 			
+			u64 outputFileCount = 0;
+			
+			MyStr_t newFileContents = NewStringInArena(mainHeap, fileContents.length, fileContents.chars);
+			
 			bool insidePigGenRegion = false;
+			bool foundElseLine = false;
+			u64 elseLineStartIndex = 0;
+			u64 elseLineEndIndex = 0;
 			u64 pigGenRegionStartIndex = 0;
 			u64 pigGenRegionStartLineIndex = 0;
 			
-			MyStr_t fileString = NewStr(fileContents.size, fileContents.chars);
-			LineParser_t lineParser = NewLineParser(fileString);
-			u64 lineIndex = 0;
+			MyStr_t originalFileContentsStr = NewStr(fileContents.size, fileContents.chars);
+			LineParser_t lineParser = NewLineParser(originalFileContentsStr);
 			MyStr_t line;
 			while (LineParserGetLine(&lineParser, &line))
 			{
+				u64 startOfLineIndex = lineParser.lineBeginByteIndex;
+				u64 endOfLineIndex = lineParser.byteIndex;
 				TrimWhitespace(&line);
 				if (!insidePigGenRegion)
 				{
 					if (StrStartsWith(line, "#if PIGGEN"))
 					{
-						if (pig->verboseEnabled) { PrintLine_D("Found #if PIGGEN on line %llu", lineIndex+1); }
+						if (pig->verboseEnabled) { PrintLine_D("Found #if PIGGEN on line %llu", lineParser.lineIndex); }
 						insidePigGenRegion = true;
-						pigGenRegionStartIndex = lineParser.byteIndex;
-						pigGenRegionStartLineIndex = lineIndex+1;
+						foundElseLine = false;
+						pigGenRegionStartIndex = endOfLineIndex;
+						pigGenRegionStartLineIndex = lineParser.lineIndex;
 					}
 				}
 				else
 				{
-					if (StrStartsWith(line, "#endif"))
+					if (StrStartsWith(line, "#else"))
 					{
-						MyStr_t regionContents = StrSubstring(&fileString, pigGenRegionStartIndex, lineParser.byteIndex);
-						if (pig->verboseEnabled) { PrintLine_D("Found #endif on line %llu (%llu bytes)", lineIndex+1, regionContents.length); }
+						Assert(!foundElseLine);
+						foundElseLine = true;
+						elseLineStartIndex = startOfLineIndex;
+						elseLineEndIndex = endOfLineIndex;
+					}
+					else if (StrStartsWith(line, "#endif"))
+					{
+						MyStr_t pigGenInput = StrSubstring(&originalFileContentsStr, pigGenRegionStartIndex, startOfLineIndex);
+						if (foundElseLine)
+						{
+							Assert(elseLineStartIndex >= pigGenRegionStartIndex);
+							Assert(elseLineStartIndex < startOfLineIndex);
+							pigGenInput.length = elseLineStartIndex - pigGenRegionStartIndex;
+						}
+						if (pig->verboseEnabled) { PrintLine_D("Found #endif on line %llu (%llu bytes)", lineParser.lineIndex, pigGenInput.length); }
 						insidePigGenRegion = false;
 						
-						ProcessLog_t parseLog;
-						CreateProcessLog(&parseLog, Kilobytes(32), mainHeap, mainHeap, TempArena);
-						bool parseSuccess = TryPigGenerate(regionContents, &parseLog, pigGenRegionStartLineIndex+1);
-						PrintLineAt(parseSuccess ? DbgLevel_Info : DbgLevel_Error, "Region parse%s!", parseSuccess ? "d Successfully" : " Failure");
-						DumpProcessLog(&parseLog, "PigGen Parse Log", DbgLevel_Debug);
-						FreeProcessLog(&parseLog);
+						// if (pig->verboseEnabled) { PrintLine_D("Parsing:\n%.*s", pigGenInput.length, pigGenInput.chars); }
+						
+						TempPushMark();
+						
+						MyStr_t outputFilePath = GetOutputFileName(fileToProcess->path, outputFileCount, TempArena);
+						outputFileCount++;
+						
+						OpenFile_t outputFile = {};
+						bool openSuccess = OpenFile(outputFilePath, &outputFile);
+						if (!openSuccess)
+						{
+							PrintLine_E("Failed to create file to hold generated code at \"%.*s\"", outputFilePath.length, outputFilePath.chars);
+						}
+						else
+						{
+							ProcessLog_t parseLog;
+							CreateProcessLog(&parseLog, Kilobytes(32), mainHeap, mainHeap, TempArena);
+							bool parseSuccess = TryPigGenerate(pigGenInput, &outputFile, &parseLog, pigGenRegionStartLineIndex+1);
+							PrintLineAt(parseSuccess ? DbgLevel_Info : DbgLevel_Error, "Region parse%s!", parseSuccess ? "d Successfully" : " Failure");
+							if (parseLog.hadErrors || parseLog.hadWarnings) { DumpProcessLog(&parseLog, "PigGen Parse Log", DbgLevel_Warning); }
+							FreeProcessLog(&parseLog);
+							
+							//TODO: Use proper line endings!
+							MyStr_t includeCode = TempPrintStr("%s#include \"%.*s\"" PIGGEN_NEW_LINE, (foundElseLine ? "" : PIGGEN_NEW_LINE "#else"), outputFilePath.length, outputFilePath.chars);
+							
+							u64 replaceRegionStart = (foundElseLine ? elseLineEndIndex : startOfLineIndex);
+							u64 replaceRegionSize = (foundElseLine ? (startOfLineIndex - elseLineEndIndex) : 0);
+							MyStr_t splicedFileContents = StrSplice(newFileContents, replaceRegionStart, replaceRegionStart + replaceRegionSize, includeCode, mainHeap);
+							FreeString(mainHeap, &newFileContents);
+							newFileContents = splicedFileContents;
+							
+							CloseFile(&outputFile);
+						}
+						
+						TempPopMark();
 					}
 				}
-				lineIndex++;
 			}
 			
+			if (!StrEquals(originalFileContentsStr, newFileContents))
+			{
+				if (pig->verboseEnabled) { PrintLine_D("Updating \"%.*s\" because we spliced in %llu #include%s", fileToProcess->path.length, fileToProcess->path.chars, outputFileCount, (outputFileCount == 1) ? "" : "s"); }
+				bool writeSuccess = WriteEntireFile(fileToProcess->path, newFileContents.chars, newFileContents.length);
+				Assert(writeSuccess);
+			}
+			
+			FreeString(mainHeap, &newFileContents);
 			FreeFileContents(&fileContents);
 		}
 	}

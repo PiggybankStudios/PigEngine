@@ -10,6 +10,8 @@ Date:   05\09\2023
 #define PIGGEN_TEMP_ARENA_SIZE       Kilobytes(512)
 #define PIGGEN_TEMP_ARENA_MAX_MARKS  256
 
+#define PIGGEN_NEW_LINE  "\r\n"
+
 #define EXIT_CODE_STARTUP_FAILURE  1
 #define EXIT_CODE_ASSERTION_FAILED 2
 
@@ -52,6 +54,15 @@ struct FileContents_t
 	DWORD errorCode;
 };
 
+struct OpenFile_t
+{
+	u64 id;
+	bool isOpen;
+	MyStr_t path;
+	
+	HANDLE handle;
+};
+
 struct ExclusionPattern_t
 {
 	MyStr_t patternStr;
@@ -71,6 +82,7 @@ struct PigGenState_t
 	bool verboseEnabled;
 	
 	u64 nextFileContentsId;
+	u64 nextOpenFileId;
 	
 	ProgramArguments_t programArgs;
 	VarArray_t exclusionPatterns; //ExclusionPattern_t

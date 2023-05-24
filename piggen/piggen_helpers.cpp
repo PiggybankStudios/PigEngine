@@ -189,3 +189,9 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 	}
 	if (headerAndFooterStr != nullptr) { PrintLine_R("^========= %s =========^", headerAndFooterStr); }
 }
+
+MyStr_t GetOutputFileName(MyStr_t sourceCodePath, u64 outputFileCount, MemArena_t* memArena)
+{
+	MyStr_t sourceCodeFileNameNoExt = GetFileNamePart(sourceCodePath, false);
+	return PrintInArenaStr(memArena, "%.*s_%llu.h", sourceCodeFileNameNoExt.length, sourceCodeFileNameNoExt.chars, outputFileCount);
+}

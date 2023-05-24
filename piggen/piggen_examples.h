@@ -20,8 +20,12 @@ Serializable: ItemStack_t
 	uiRec:     rec
 	position:  v3?
 }
+Serializable: AnotherStruct_t
+{
+	id:        u64
+}
 #else
-#include "codegen/piggen_examples_0.h"
+#include "piggen_examples_0.h"
 #endif
 
 #endif //  _PIGGEN_EXAMPLES_H
