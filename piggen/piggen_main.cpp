@@ -258,6 +258,35 @@ int main(int argc, char* argv[])
 	// Determine our defaultPath and workingDirectory
 	pig->defaultDirectory = NewStr(""); //TODO: Implement this!
 	
+	//Determine our outputPath
+	pig->outputDirectory = MyStr_Empty;
+	if (GetProgramArg(mainHeap, NewStr("output"), &pig->outputDirectory))
+	{
+		if (!IsRelativePath(pig->outputDirectory) && !IsEmptyStr(pig->defaultDirectory))
+		{
+			//TODO: It's about time we make a path join function...
+			MyStr_t fullPath = PrintInArenaStr(mainHeap, "%.*s%s%.*s%s",
+				pig->defaultDirectory.length, pig->defaultDirectory.chars,
+				(StrEndsWithSlash(pig->defaultDirectory) ? "" : "/"),
+				pig->outputDirectory.length, pig->outputDirectory.chars
+			);
+			FreeString(mainHeap, &pig->outputDirectory);
+			pig->outputDirectory = fullPath;
+		}
+		else if (!IsEmptyStr(pig->outputDirectory))
+		{
+			MyStr_t pathWithEndingSlash = PrintInArenaStr(mainHeap, "%.*s", pig->outputDirectory.length, pig->outputDirectory.chars);
+			FreeString(mainHeap, &pig->outputDirectory);
+			pig->outputDirectory = pathWithEndingSlash;
+		}
+	}
+	else if (!IsEmptyStr(pig->defaultDirectory))
+	{
+		pig->outputDirectory = AllocString(mainHeap, &pig->defaultDirectory);
+	}
+	if (!IsEmptyStr(pig->outputDirectory) && !StrEndsWithSlash(pig->outputDirectory)) { StrReallocAppend(&pig->outputDirectory, "/", mainHeap); }
+	if (pig->verboseEnabled) { PrintLine_I("Outputting to \"%.*s\"", pig->outputDirectory.length, pig->outputDirectory.chars); }
+	
 	// Check the target path that was given to us
 	bool targetPathGiven = GetProgramArg(mainHeap, MyStr_Empty, &pig->targetPath);
 	if (!targetPathGiven || pig->targetPath.length == 0)
@@ -370,7 +399,8 @@ int main(int argc, char* argv[])
 						
 						TempPushMark();
 						
-						MyStr_t outputFilePath = GetOutputFileName(fileToProcess->path, outputFileCount, TempArena);
+						MyStr_t outputFileName = GetOutputFileName(fileToProcess->path, outputFileCount, TempArena);
+						MyStr_t outputFilePath = GetOutputFilePath(outputFileName, TempArena);
 						outputFileCount++;
 						
 						OpenFile_t outputFile = {};
@@ -381,6 +411,8 @@ int main(int argc, char* argv[])
 						}
 						else
 						{
+							if (pig->verboseEnabled) { PrintLine_I("Generating code file: \"%.*s\"", outputFilePath.length, outputFilePath.chars); }
+							
 							ProcessLog_t parseLog;
 							CreateProcessLog(&parseLog, Kilobytes(32), mainHeap, mainHeap, TempArena);
 							bool parseSuccess = TryPigGenerate(pigGenInput, &outputFile, &parseLog, pigGenRegionStartLineIndex+1);
@@ -388,8 +420,7 @@ int main(int argc, char* argv[])
 							if (parseLog.hadErrors || parseLog.hadWarnings) { DumpProcessLog(&parseLog, "PigGen Parse Log", DbgLevel_Warning); }
 							FreeProcessLog(&parseLog);
 							
-							//TODO: Use proper line endings!
-							MyStr_t includeCode = TempPrintStr("%s#include \"%.*s\"" PIGGEN_NEW_LINE, (foundElseLine ? "" : PIGGEN_NEW_LINE "#else"), outputFilePath.length, outputFilePath.chars);
+							MyStr_t includeCode = TempPrintStr("%s#include \"%.*s\"" PIGGEN_NEW_LINE, (foundElseLine ? "" : PIGGEN_NEW_LINE "#else"), outputFileName.length, outputFileName.chars);
 							
 							u64 replaceRegionStart = (foundElseLine ? elseLineEndIndex : startOfLineIndex);
 							u64 replaceRegionSize = (foundElseLine ? (startOfLineIndex - elseLineEndIndex) : 0);
@@ -410,6 +441,10 @@ int main(int argc, char* argv[])
 				if (pig->verboseEnabled) { PrintLine_D("Updating \"%.*s\" because we spliced in %llu #include%s", fileToProcess->path.length, fileToProcess->path.chars, outputFileCount, (outputFileCount == 1) ? "" : "s"); }
 				bool writeSuccess = WriteEntireFile(fileToProcess->path, newFileContents.chars, newFileContents.length);
 				Assert(writeSuccess);
+			}
+			else if (outputFileCount > 0)
+			{
+				if (pig->verboseEnabled) { PrintLine_D("No need to update \"%.*s\" because for %llu region%s", fileToProcess->path.length, fileToProcess->path.chars, outputFileCount, (outputFileCount == 1) ? "" : "s"); }
 			}
 			
 			FreeString(mainHeap, &newFileContents);

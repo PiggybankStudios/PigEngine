@@ -20,7 +20,7 @@ MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable,
 	VarArrayLoop(&serializable->members, mIndex)
 	{
 		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-		StringBuilderAppendPrint(&builder, "\t%.*s %.*s" PIGGEN_NEW_LINE, member->type.length, member->type.chars, member->name.length, member->name.chars);
+		StringBuilderAppendPrint(&builder, "\t%.*s %.*s;" PIGGEN_NEW_LINE, member->type.length, member->type.chars, member->name.length, member->name.chars);
 	}
 	StringBuilderAppend(&builder, "};" PIGGEN_NEW_LINE);
 	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
@@ -40,7 +40,7 @@ MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable,
 	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
 	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType(const %.*s* structPntr, u64 memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
 	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
-	StringBuilderAppendPrint(&builder, "\treturn GetSerializableMemberType_%.*s(memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
+	StringBuilderAppendPrint(&builder, "\treturn GetSerializableMemberType_%.*s(memberIndex);" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
 	StringBuilderAppend(&builder, "}" PIGGEN_NEW_LINE);
 	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
 	

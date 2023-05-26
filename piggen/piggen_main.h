@@ -89,6 +89,7 @@ struct PigGenState_t
 	
 	MyStr_t defaultDirectory;
 	MyStr_t targetPath;
+	MyStr_t outputDirectory;
 };
 
 #endif //  _PIGGEN_MAIN_H

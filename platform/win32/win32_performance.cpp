@@ -70,7 +70,7 @@ PLAT_API_GET_PROGRAM_TIME_DEFINITION(Win32_GetProgramTime) //pre-declared in win
 		return result;
 	}
 	else
-	{1
+	{
 		SetOptionalOutPntr(programTimeR64Out, 0.0);
 		return 0;
 	}

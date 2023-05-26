@@ -25,7 +25,7 @@ Serializable: AnotherStruct_t
 	id:        u64
 }
 #else
-#include "piggen_examples_0.h"
+#include "piggen_examples_h_0.h"
 #endif
 
 #endif //  _PIGGEN_EXAMPLES_H

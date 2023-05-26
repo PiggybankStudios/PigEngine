@@ -454,3 +454,15 @@ bool WriteToFile(OpenFile_t* openFile, u64 numBytes, const void* bytesPntr)
 	
 	return true;
 }
+
+bool IsRelativePath(MyStr_t path)
+{
+	if (path.length >= 2 && path.chars[1] == ':' && IsCharAlphabetic(path.chars[0]))
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}

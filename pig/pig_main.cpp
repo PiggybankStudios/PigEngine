@@ -38,6 +38,7 @@ Description:
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
+#include "pig/pig_serialization.h"
 #include "pig/pig_input_chars.h"
 #include "pig/pig_render.h"
 #include "pig/pig_types.h"

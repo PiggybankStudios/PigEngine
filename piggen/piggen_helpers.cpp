@@ -192,6 +192,27 @@ void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nu
 
 MyStr_t GetOutputFileName(MyStr_t sourceCodePath, u64 outputFileCount, MemArena_t* memArena)
 {
-	MyStr_t sourceCodeFileNameNoExt = GetFileNamePart(sourceCodePath, false);
-	return PrintInArenaStr(memArena, "%.*s_%llu.h", sourceCodeFileNameNoExt.length, sourceCodeFileNameNoExt.chars, outputFileCount);
+	MyStr_t sourceCodeDirectory = MyStr_Empty;
+	MyStr_t sourceCodeFileName = MyStr_Empty;
+	MyStr_t sourceCodeExtension = MyStr_Empty;
+	SplitFilePath(sourceCodePath, &sourceCodeDirectory, &sourceCodeFileName, &sourceCodeExtension);
+	if (StrStartsWith(sourceCodeExtension, ".")) { sourceCodeExtension = StrSubstring(&sourceCodeExtension, 1); }
+	return PrintInArenaStr(memArena, "%.*s%s%.*s_%llu.h",
+		sourceCodeFileName.length, sourceCodeFileName.chars,
+		(IsEmptyStr(sourceCodeExtension) ? "" : "_"),
+		sourceCodeExtension.length, sourceCodeExtension.chars,
+		outputFileCount
+	);
+}
+
+MyStr_t GetOutputFilePath(MyStr_t fileName, MemArena_t* memArena)
+{
+	NotNullStr(&fileName);
+	NotNull(memArena);
+	Assert(!StrStartsWithSlash(fileName));
+	return PrintInArenaStr(memArena, "%.*s%s%.*s",
+		pig->outputDirectory.length, pig->outputDirectory.chars,
+		(StrEndsWithSlash(pig->outputDirectory) ? "" : "/"),
+		fileName.length, fileName.chars
+	);
 }
