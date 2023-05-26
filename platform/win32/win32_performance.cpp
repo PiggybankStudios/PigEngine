@@ -66,12 +66,12 @@ PLAT_API_GET_PROGRAM_TIME_DEFINITION(Win32_GetProgramTime) //pre-declared in win
 				result += Platform->absProgramTimeDiff;
 			}
 		}
-		if (programTimeR64Out != nullptr) { *programTimeR64Out = resultR64; }
+		SetOptionalOutPntr(programTimeR64Out, resultR64);
 		return result;
 	}
 	else
-	{
-		if (programTimeR64Out != nullptr) { *programTimeR64Out = 0.0; }
+	{1
+		SetOptionalOutPntr(programTimeR64Out, 0.0);
 		return 0;
 	}
 }

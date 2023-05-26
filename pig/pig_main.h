@@ -114,6 +114,7 @@ struct PigState_t
 	DebugConsole_t debugConsole;
 	PigNotificationQueue_t notificationsQueue;
 	PigDebugOverlay_t debugOverlay;
+	LogGlobals_t logGlobals;
 	PigPerfGraph_t perfGraph;
 	PigMemGraph_t memGraph;
 	PigAudioOutGraph_t audioOutGraph;

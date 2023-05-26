@@ -12,6 +12,7 @@ void PigClearGlobals()
 	pig = nullptr;
 	mainHeap = nullptr;
 	platHeap = nullptr;
+	logGlobals = nullptr;
 }
 
 void PigInitGlad()
@@ -50,6 +51,15 @@ GYLIB_GET_TEMP_ARENA_DEF(Pig_GetTempArena)
 	}
 }
 
+u64 LogGlobals_GetPreciseProgramTime()
+{
+	return ((plat != nullptr) ? plat->GetProgramTime(nullptr, true) : 0);
+}
+u64 LogGlobals_GetThreadNumber()
+{
+	return (u64)((plat != nullptr) ? plat->GetThisThreadId() : 0);
+}
+
 void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)
 {
 	pigEntryPoint = entryPoint;
@@ -73,6 +83,9 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 		TempArena = &pig->tempArena;
 		GetTempArena = Pig_GetTempArena;
 		if (entryPoint != PigEntryPoint_Initialize) { TempPushMark(); }
+		logGlobals = &pig->logGlobals;
+		pig->logGlobals.getPreciseProgramTime = LogGlobals_GetPreciseProgramTime;
+		pig->logGlobals.getThreadNumber = LogGlobals_GetThreadNumber;
 	}
 	else
 	{
@@ -95,6 +108,8 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const
 		UncappedElapsedMs = pigIn->elapsedMs;
 		UnixTimestamp = pigIn->unixTime.timestamp;
 		LocalTimestamp = pigIn->localTime.timestamp;
+		pig->logGlobals.timestamp = LocalTimestamp;
+		pig->logGlobals.programTime = ProgramTime;
 	}
 }
 
