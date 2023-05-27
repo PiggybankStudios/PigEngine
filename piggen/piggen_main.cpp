@@ -55,6 +55,7 @@ MemArena_t* mainHeap = nullptr;
 // +--------------------------------------------------------------+
 #include "piggen_debug.cpp"
 #include "piggen_files.cpp"
+#include "piggen_generate.cpp"
 #include "piggen_parse.cpp"
 #include "piggen_helpers.cpp"
 
@@ -98,6 +99,11 @@ int main(int argc, char* argv[])
 	ClearStruct(pigGenState);
 	pig = &pigGenState;
 	
+	LARGE_INTEGER perfCountFrequencyLarge;
+	QueryPerformanceFrequency(&perfCountFrequencyLarge);
+	pig->perfCountFrequency = (i64)perfCountFrequencyLarge.QuadPart;
+	PerfTime_t pigGenStartTime = GetPerfTime();
+	
 	// Initialize memory arenas
 	InitMemArena_StdHeap(&pig->stdHeap);
 	InitMemArena_PagedHeapArena(&pig->mainHeap, Megabytes(1), &pig->stdHeap);
@@ -111,6 +117,11 @@ int main(int argc, char* argv[])
 	pig->nextOpenFileId = 1;
 	
 	TempPushMark();
+	
+	//Calculate the time
+	bool doesTimezoneDoDst = false;
+	pig->timestamp = GetCurrentTimestamp(true, nullptr, &doesTimezoneDoDst);
+	ConvertTimestampToRealTime(pig->timestamp, &pig->realTime, doesTimezoneDoDst);
 	
 	// Process command line arguments
 	#if USED_WIN_MAIN_ENTRY_POINT
@@ -236,8 +247,6 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 	
-	
-	
 	pig->verboseEnabled = GetProgramArg(nullptr, NewStr("verbose"), nullptr);
 	if (pig->verboseEnabled)
 	{
@@ -319,30 +328,36 @@ int main(int argc, char* argv[])
 	}
 	
 	// Find all files in the target directory that are .cpp or .h files
-	VarArray_t allSourceCodePaths;
-	CreateVarArray(&allSourceCodePaths, mainHeap, sizeof(FileToProcess_t));
-	FindAllCodeFilesInFolder(&allSourceCodePaths, pig->targetPath, &pig->exclusionPatterns, true);
-	VarArraySort(&allSourceCodePaths, CompareFuncFileToProcess, nullptr);
+	VarArray_t allSourceCodeFiles;
+	CreateVarArray(&allSourceCodeFiles, mainHeap, sizeof(FileToProcess_t));
+	FindAllCodeFilesInFolder(&allSourceCodeFiles, pig->targetPath, &pig->exclusionPatterns, true);
+	VarArraySort(&allSourceCodeFiles, CompareFuncFileToProcess, nullptr);
 	if (pig->verboseEnabled)
 	{
-		PrintLine_I("Found %llu files to process:", allSourceCodePaths.length);
+		PrintLine_I("Found %llu files to process:", allSourceCodeFiles.length);
 		#if 0
-		VarArrayLoop(&allSourceCodePaths, fIndex)
+		VarArrayLoop(&allSourceCodeFiles, fIndex)
 		{
-			VarArrayLoopGet(FileToProcess_t, file, &allSourceCodePaths, fIndex);
+			VarArrayLoopGet(FileToProcess_t, file, &allSourceCodeFiles, fIndex);
 			PrintLine_D("    [%llu]: \"%.*s\"", fIndex, file->path.length, file->path.chars);
 		}
 		#endif
 	}
 	
+	VarArray_t genFilesWithPlaceholders;
+	CreateVarArray(&genFilesWithPlaceholders, mainHeap, sizeof(FileToProcess_t));
+	VarArray_t allSerializableStructs;
+	CreateVarArray(&allSerializableStructs, mainHeap, sizeof(SerializableStruct_t));
+	
 	// Loop over and process each file
-	VarArrayLoop(&allSourceCodePaths, fIndex)
+	u64 numPigGenRegions = 0;
+	VarArrayLoop(&allSourceCodeFiles, fIndex)
 	{
-		VarArrayLoopGet(FileToProcess_t, fileToProcess, &allSourceCodePaths, fIndex);
+		VarArrayLoopGet(FileToProcess_t, fileToProcess, &allSourceCodeFiles, fIndex);
 		FileContents_t fileContents;
 		if (ReadFileContents(fileToProcess->path, &fileContents))
 		{
-			if (pig->verboseEnabled) { PrintLine_D("Processing %llu/%llu \"%.*s\" (%llu bytes)", fIndex+1, allSourceCodePaths.length, fileToProcess->path.length, fileToProcess->path.chars, fileContents.size); }
+			if (pig->verboseEnabled) { PrintLine_D("Processing %llu/%llu \"%.*s\" (%llu bytes)", fIndex+1, allSourceCodeFiles.length, fileToProcess->path.length, fileToProcess->path.chars, fileContents.size); }
 			
 			u64 outputFileCount = 0;
 			
@@ -415,8 +430,11 @@ int main(int argc, char* argv[])
 							
 							ProcessLog_t parseLog;
 							CreateProcessLog(&parseLog, Kilobytes(32), mainHeap, mainHeap, TempArena);
-							bool parseSuccess = TryPigGenerate(pigGenInput, &outputFile, &parseLog, pigGenRegionStartLineIndex+1);
-							PrintLineAt(parseSuccess ? DbgLevel_Info : DbgLevel_Error, "Region parse%s!", parseSuccess ? "d Successfully" : " Failure");
+							SetProcessLogFilePath(&parseLog, fileToProcess->path);
+							
+							bool hadPlaceholders = false;
+							bool parseSuccess = TryPigGenerate(pigGenInput, &outputFile, &allSerializableStructs, &hadPlaceholders, &parseLog, pigGenRegionStartLineIndex+1);
+							if (pig->verboseEnabled) { PrintLineAt(parseSuccess ? DbgLevel_Info : DbgLevel_Error, "Region parse%s!", parseSuccess ? "d Successfully" : " Failure"); }
 							if (parseLog.hadErrors || parseLog.hadWarnings) { DumpProcessLog(&parseLog, "PigGen Parse Log", DbgLevel_Warning); }
 							FreeProcessLog(&parseLog);
 							
@@ -428,10 +446,20 @@ int main(int argc, char* argv[])
 							FreeString(mainHeap, &newFileContents);
 							newFileContents = splicedFileContents;
 							
+							if (hadPlaceholders)
+							{
+								if (pig->verboseEnabled) { WriteLine_D("This file will need to be revisited to fill in placeholders..."); }
+								FileToProcess_t* placeholderFileToProcess = VarArrayAdd(&genFilesWithPlaceholders, FileToProcess_t);
+								ClearPointer(placeholderFileToProcess);
+								placeholderFileToProcess->path = AllocString(mainHeap, &outputFilePath);
+							}
+							
 							CloseFile(&outputFile);
 						}
 						
 						TempPopMark();
+						
+						numPigGenRegions++;
 					}
 				}
 			}
@@ -452,10 +480,56 @@ int main(int argc, char* argv[])
 		}
 	}
 	
+	//TODO: Re-enable me once we fix the problems!
+	#if 0
+	if (genFilesWithPlaceholders.length > 0)
+	{
+		MyStr_t allSerializableStructsCode = PigGenGenerateAllSerializableStructsCode(mainHeap, &allSerializableStructs);
+		
+		VarArrayLoop(&genFilesWithPlaceholders, fIndex)
+		{
+			VarArrayLoopGet(FileToProcess_t, genFile, &genFilesWithPlaceholders, fIndex);
+			FileContents_t fileContents;
+			if (ReadFileContents(genFile->path, &fileContents))
+			{
+				MyStr_t fileContentsStr = NewStr(fileContents.length, fileContents.chars);
+				MyStr_t newFileContents = StrReplace(fileContentsStr, NewStr(ALL_SERIALIZABLE_STRUCTS_PLACEHOLDER_STRING), allSerializableStructsCode, mainHeap);
+				bool writeSuccess = WriteEntireFile(genFile->path, newFileContents.chars, newFileContents.length);
+				Assert(writeSuccess);
+				FreeString(mainHeap, &newFileContents);
+				FreeFileContents(&fileContents);
+			}
+		}
+		
+		FreeString(mainHeap, &allSerializableStructsCode);
+	}
+	#endif
+	
+	// Free
+	#if 0 //This isn't super necassary since we're shutting down. Maybe we want to do this work for some reason though? Might help us catch memory leaks?
+	VarArrayLoop(&allSerializableStructs, sIndex)
+	{
+		VarArrayLoopGet(SerializableStruct_t, serializableStruct, &allSerializableStructs, sIndex);
+		FreeSerializableStruct(serializableStruct);
+	}
+	FreeVarArray(&allSerializableStructs);
+	#endif
+	
 	// Shutdown
+	
 	TempPopMark();
 	AssertMsg(GetNumMarks(&pig->tempArena) == 0, "TempArena had missing Pop somewhere during PigGen execution!");
-	WriteLine_I("\nPigGen succeeded!\n");
+	PerfTime_t pigGenEndTime = GetPerfTime();
+	r64 pigGenRunTime = GetPerfTimeDiff(&pigGenStartTime, &pigGenEndTime);
+	if (pig->verboseEnabled) { WriteLine_I(""); }
+	PrintLine_I("PigGen processed %llu file%s (%llu region%s) in %s",
+		allSourceCodeFiles.length,
+		((allSourceCodeFiles.length == 1) ? "" : "s"),
+		numPigGenRegions,
+		((numPigGenRegions == 1) ? "" : "s"),
+		FormatMillisecondsNt((u64)pigGenRunTime, TempArena)
+	);
+	if (pig->verboseEnabled) { WriteLine_I(""); }
 	return 0;
 }
 

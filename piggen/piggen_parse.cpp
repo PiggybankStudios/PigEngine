@@ -6,59 +6,29 @@ Description:
 	** Holds the ParsePigGenRegionContents function
 */
 
-// +--------------------------------------------------------------+
-// |                           Generate                           |
-// +--------------------------------------------------------------+
-MyStr_t PigGenGenerateSerializableStructCode(SerializableStruct_t* serializable, MemArena_t* memArena, u64* numBytesOut = nullptr)
-{
-	NotNull(serializable);
-	StringBuilder_t builder;
-	NewStringBuilder(&builder, memArena);
-	
-	StringBuilderAppendPrint(&builder, "struct %.*s" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
-	VarArrayLoop(&serializable->members, mIndex)
-	{
-		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-		StringBuilderAppendPrint(&builder, "\t%.*s %.*s;" PIGGEN_NEW_LINE, member->type.length, member->type.chars, member->name.length, member->name.chars);
-	}
-	StringBuilderAppend(&builder, "};" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
-	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType_%.*s(u64 memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, "\tswitch (memberIndex)" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, "\t{" PIGGEN_NEW_LINE);
-	VarArrayLoop(&serializable->members, mIndex)
-	{
-		VarArrayLoopGet(SerializableStructMember_t, member, &serializable->members, mIndex);
-		MyStr_t alternateTypeOrType = IsEmptyStr(member->alternateType) ? member->type : member->alternateType;
-		StringBuilderAppendPrint(&builder, "\t\tcase %llu: return SerializableStructMemberType_%.*s; //%.*s" PIGGEN_NEW_LINE, mIndex, alternateTypeOrType.length, alternateTypeOrType.chars, member->name.length, member->name.chars);
-	}
-	StringBuilderAppend(&builder, "\t\tdefault: Assert(false); return SerializableStructMemberType_None;" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, "\t}" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, "}" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
-	StringBuilderAppendPrint(&builder, "SerializableStructMemberType_t GetSerializableMemberType(const %.*s* structPntr, u64 memberIndex)" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "{" PIGGEN_NEW_LINE);
-	StringBuilderAppendPrint(&builder, "\treturn GetSerializableMemberType_%.*s(memberIndex);" PIGGEN_NEW_LINE, serializable->name.length, serializable->name.chars);
-	StringBuilderAppend(&builder, "}" PIGGEN_NEW_LINE);
-	StringBuilderAppend(&builder, PIGGEN_NEW_LINE);
-	
-	return TakeString(&builder);
-}
+#define ALL_SERIALIZABLE_STRUCTS_PLACEHOLDER_STRING "// {{{{AllSerializableStructs}}}}"
 
 // +--------------------------------------------------------------+
 // |                            Parse                             |
 // +--------------------------------------------------------------+
 //Returns MyStr_Empty on failure
-bool TryPigGenerate(MyStr_t regionContents, OpenFile_t* outputFile, ProcessLog_t* log, u64 baseLineIndex)
+bool TryPigGenerate(MyStr_t regionContents, OpenFile_t* outputFile, VarArray_t* allSerializableStructs, bool* hasPlaceholdersOut, ProcessLog_t* log, u64 baseLineIndex)
 {
 	NotNullStr(&regionContents);
+	NotNull(outputFile);
+	NotNull(allSerializableStructs);
+	NotNull(hasPlaceholdersOut);
+	NotNull(log);
 	
 	bool insideStruct = false;
 	u64 structStartLine = 0;
 	bool expectingOpenCurly = false;
 	SerializableStruct_t currentStruct = {};
+	
+	MyStr_t fileComment = PigGenGenerateFileComment(TempArena, log->filePath);
+	WriteToFile(outputFile, fileComment.length, fileComment.chars);
+	
+	*hasPlaceholdersOut = false;
 	
 	TextParser_t textParser = NewTextParser(regionContents);
 	ParsingToken_t token;
@@ -182,7 +152,9 @@ bool TryPigGenerate(MyStr_t regionContents, OpenFile_t* outputFile, ProcessLog_t
 				return false;
 			}
 			
-			MyStr_t structCode = PigGenGenerateSerializableStructCode(&currentStruct, TempArena); //TODO: Change the arena here!
+			TempPushMark();
+			
+			MyStr_t structCode = PigGenGenerateSerializableStructCode(TempArena, &currentStruct);
 			if (IsEmptyStr(structCode))
 			{
 				LogPrintLine_E(log, "Failed to generate code for serializable struct \"%.*s\" on line %llu", currentStruct.name.length, currentStruct.name.chars, baseLineIndex + structStartLine);
@@ -190,11 +162,25 @@ bool TryPigGenerate(MyStr_t regionContents, OpenFile_t* outputFile, ProcessLog_t
 				FreeSerializableStruct(&currentStruct);
 				return false;
 			}
-			
 			// LogPrintLine_D(log, "Serialized Struct Code:\n%.*s", structCode.length, structCode.chars);
 			WriteToFile(outputFile, structCode.length, structCode.chars);
+			TempPopMark();
+			
+			SerializableStruct_t* addedStruct = VarArrayAdd(allSerializableStructs, SerializableStruct_t);
+			NotNull(addedStruct);
+			MyMemCopy(addedStruct, &currentStruct, sizeof(SerializableStruct_t));
+			ClearStruct(currentStruct);
 			
 			insideStruct = false;
+		}
+		else if (token.type == ParsingTokenType_Directive)
+		{
+			if (StrEqualsIgnoreCase(token.value, "AllSerializableStructs"))
+			{
+				MyStr_t placeholderString = TempPrintStr(PIGGEN_NEW_LINE PIGGEN_NEW_LINE "%s" PIGGEN_NEW_LINE PIGGEN_NEW_LINE, ALL_SERIALIZABLE_STRUCTS_PLACEHOLDER_STRING);
+				WriteToFile(outputFile, placeholderString.length, placeholderString.chars);
+				*hasPlaceholdersOut = true;
+			}
 		}
 		else if (token.type == ParsingTokenType_Comment)
 		{

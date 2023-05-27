@@ -216,3 +216,55 @@ MyStr_t GetOutputFilePath(MyStr_t fileName, MemArena_t* memArena)
 		fileName.length, fileName.chars
 	);
 }
+
+PerfTime_t GetPerfTime()
+{
+	PerfTime_t result = {};
+	BOOL queryResult = QueryPerformanceCounter(&result.perfCount);
+	Assert_(queryResult != 0);
+	result.cycleCount = __rdtsc();
+	return result;
+}
+
+// NOTE: Returns value in r64 milliseconds
+r64 GetPerfTimeDiff(const PerfTime_t* tStart, const PerfTime_t* tEnd)
+{
+	NotNull_(tStart);
+	NotNull_(tEnd);
+	r64 resultSecs = ((r64)(tEnd->perfCount.QuadPart - tStart->perfCount.QuadPart) / (r64)pig->perfCountFrequency);
+	return resultSecs * 1000.0;
+}
+
+#define FILETIME_SEC_OFFSET  11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
+
+u64 GetCurrentTimestamp(bool local, i64* timezoneOffsetOut = nullptr, bool* timezoneDoesDstOut = nullptr, MyStr_t* timezoneNameOut = nullptr)
+{
+	u64 result = 0;
+	if (local)
+	{
+		u64 unixTimestamp = GetCurrentTimestamp(false);
+		TIME_ZONE_INFORMATION timezoneInfo = {};
+		DWORD timezoneResult = GetTimeZoneInformation(&timezoneInfo);
+		DebugAssertAndUnusedMsg(timezoneResult != TIME_ZONE_ID_INVALID, timezoneResult, "GetTimeZoneInformation failed and gave TIME_ZONE_ID_INVALID");
+		i64 localTimezoneOffset = -((i64)timezoneInfo.Bias * NUM_SEC_PER_MINUTE);
+		SetOptionalOutPntr(timezoneOffsetOut, localTimezoneOffset);
+		result = unixTimestamp + localTimezoneOffset;
+		bool localTimezoneDoesDst = (timezoneInfo.DaylightBias != 0); //TODO: It's possible that DaylightBias isn't -60 minutes. Should we handle that?
+		SetOptionalOutPntr(timezoneDoesDstOut, localTimezoneDoesDst);
+		SetOptionalOutPntr(timezoneNameOut, ConvertUcs2StrToUtf8Nt(TempArena, &timezoneInfo.StandardName[0]));
+	}
+	else
+	{
+		//TODO: We could use the higher accuracy from this file time to determine sub-second timestamp values
+		FILETIME systemFileTime = {};
+		GetSystemTimeAsFileTime(&systemFileTime);
+		ULARGE_INTEGER systemLargeIntegerTime = {};
+		systemLargeIntegerTime.HighPart = systemFileTime.dwHighDateTime;
+		systemLargeIntegerTime.LowPart = systemFileTime.dwLowDateTime;
+		//NOTE: FILETIME value is number of 100-nanosecond intervals since Jan 1st 1601 UTC
+		//      We want number of seconds since Jan 1st 1970 UTC so divide by 10,000,000 and subtract off 369 years
+		result = (u64)(systemLargeIntegerTime.QuadPart/10000000ULL);
+		if (result >= FILETIME_SEC_OFFSET) { result -= FILETIME_SEC_OFFSET; }
+	}
+	return result;
+}

@@ -21,6 +21,12 @@ struct ProgramArguments_t
 	MyStr_t* args;
 };
 
+struct PerfTime_t
+{
+	LARGE_INTEGER perfCount;
+	u64 cycleCount;
+};
+
 struct FileEnumerator_t
 {
 	MyStr_t folderPath;
@@ -80,6 +86,9 @@ struct PigGenState_t
 	MemArena_t tempArena;
 	
 	bool verboseEnabled;
+	i64 perfCountFrequency;
+	u64 timestamp;
+	RealTime_t realTime;
 	
 	u64 nextFileContentsId;
 	u64 nextOpenFileId;
