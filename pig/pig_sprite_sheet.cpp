@@ -367,6 +367,10 @@ v2i GetSpriteSheetFrame(const SpriteSheet_t* sheet, MyStr_t frameName, bool asse
 	AssertIfMsg(assertOnFailure, false, "Failed to find sprite frame by name");
 	return Vec2i_Zero;
 }
+v2i GetSpriteSheetFrame(const SpriteSheet_t* sheet, const char* frameNameNullTerm, bool assertOnFailure = false)
+{
+	return GetSpriteSheetFrame(sheet, NewStr(frameNameNullTerm), assertOnFailure);
+}
 
 rec GetSpriteSheetFrameSourceRec(const SpriteSheet_t* sheet, v2i gridPos)
 {

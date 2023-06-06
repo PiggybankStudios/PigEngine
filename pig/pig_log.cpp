@@ -36,9 +36,9 @@ GY_STRING_FIFO_PUSH_LINES_BEFORE_CALLBACK_DEF(ProcessLogAddLinesBeforeCallback)
 	NotNull(userPntr);
 	UNUSED(fifo);
 	UNUSED(srcFifo);
-	UNUSED(metaStructSize);
 	DumpProcessLogContext_t* context = (DumpProcessLogContext_t*)userPntr;
 	ProcessLogLine_t* srcMetaStruct = GetFifoLineMetaStruct(srcLine, ProcessLogLine_t);
+	SetOptionalOutPntr(metaStructSize, sizeof(DebugConsoleLine_t));
 	return (srcMetaStruct->dbgLevel >= context->minLevel);
 }
 // +==================================+
@@ -53,8 +53,16 @@ GY_STRING_FIFO_PUSH_LINES_AFTER_CALLBACK_DEF(ProcessLogAddLinesAfterCallback)
 	UNUSED(srcLine);
 	DumpProcessLogContext_t* context = (DumpProcessLogContext_t*)userPntr;
 	UNUSED(context);
-	ProcessLogLine_t* newMetaStruct = GetFifoLineMetaStruct(newLine, ProcessLogLine_t);
-	FlagSet(newMetaStruct->flags, DbgFlag_New);
+	ProcessLogLine_t* srcMetaStruct = GetFifoLineMetaStruct(srcLine, ProcessLogLine_t);
+	DebugConsoleLine_t* newMetaStruct = GetFifoLineMetaStruct(newLine, DebugConsoleLine_t);
+	ClearPointer(newMetaStruct);
+	newMetaStruct->flags = (srcMetaStruct->flags | DbgFlag_New);
+	newMetaStruct->programTime = srcMetaStruct->programTime;
+	newMetaStruct->preciseProgramTime = srcMetaStruct->preciseProgramTime;
+	newMetaStruct->timestamp = srcMetaStruct->timestamp;
+	newMetaStruct->thread = (ThreadId_t)srcMetaStruct->threadNumber;
+	newMetaStruct->fileLineNumber = srcMetaStruct->fileLineNumber;
+	newMetaStruct->dbgLevel = srcMetaStruct->dbgLevel;
 }
 // +====================================+
 // | ProcessLogInsertLinesSortCallback  |
