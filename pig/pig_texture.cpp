@@ -194,7 +194,6 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	NotNull(textureOut);
 	NotEmptyStr(&filePath);
 	ClearPointer(textureOut);
-	AssertIf(imageDataOut != nullptr, imageDataOut->allocArena != nullptr);
 	
 	PlatFileContents_t textureFile;
 	if (!plat->ReadFileContents(filePath, &textureFile))
@@ -222,6 +221,8 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	
 	if (imageDataOut != nullptr && result)
 	{
+		NotNull(imageDataOut->allocArena);
+		Assert(imageDataOut->allocArena->type != MemArenaType_None || imageDataOut->allocArena->type < MemArenaType_NumTypes);
 		imageDataOut->size      = imageData.size;
 		imageDataOut->pixelSize = imageData.pixelSize;
 		imageDataOut->rowSize   = imageData.rowSize;

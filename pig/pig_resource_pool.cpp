@@ -433,10 +433,10 @@ void SoftReleaseRef(MusicRef_t*       reference) { NotNull(reference); if (!IsVa
 //NOTE: In GetOrLoad functions, if your loading options do not match a previously loaded version of this file,
 // you will silently get a resource that was loaded with different options than you asked for
 
-TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, bool pixelated, bool repeating)
+TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, bool pixelated, bool repeating, PlatImageData_t* imageDataOut = nullptr)
 {
 	Texture_t tempTexture;
-	bool loadSuccess = LoadTexture(mainHeap, &tempTexture, filePath, pixelated, repeating);
+	bool loadSuccess = LoadTexture(mainHeap, &tempTexture, filePath, pixelated, repeating, imageDataOut);
 	if (!loadSuccess)
 	{
 		PrintLine_E("Failed to load Texture for pool from \"%.*s\": Error %s", filePath.length, filePath.pntr, GetTextureErrorStr(tempTexture.error));
@@ -456,11 +456,14 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	
 	return TakeRefTexture(pool, newEntry);
 }
-TextureRef_t ResourcePoolGetOrLoadTexture(ResourcePool_t* pool, MyStr_t filePath, bool pixelated, bool repeating)
+TextureRef_t ResourcePoolGetOrLoadTexture(ResourcePool_t* pool, MyStr_t filePath, bool pixelated, bool repeating, PlatImageData_t* imageDataOut = nullptr)
 {
-	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->textures, filePath);
-	if (existingEntry != nullptr) { return TakeRefTexture(pool, existingEntry); }
-	return ResourcePoolLoadTexture(pool, filePath, pixelated, repeating);
+	if (imageDataOut == nullptr)
+	{
+		ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->textures, filePath);
+		if (existingEntry != nullptr) { return TakeRefTexture(pool, existingEntry); }
+	}
+	return ResourcePoolLoadTexture(pool, filePath, pixelated, repeating, imageDataOut);
 }
 
 VectorImgRef_t ResourcePoolLoadVectorImg(ResourcePool_t* pool, MyStr_t filePath)
