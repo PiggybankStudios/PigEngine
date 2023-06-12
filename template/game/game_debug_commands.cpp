@@ -17,6 +17,12 @@ DebugCommandInfoList_t GameGetDebugCommandInfoList() //pre-declared in game_main
 	return CreateDebugCommandInfoList(GameDebugCommandInfoStrs, ArrayCount(GameDebugCommandInfoStrs));
 }
 
+ResourcePool_t* GameGetCurrentResourcePool() //pre-declared in game_main.h
+{
+	//TODO: Implement me!
+	return nullptr;
+}
+
 //Pre-declared in game_main.h
 bool GameHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr)
 {

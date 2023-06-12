@@ -36,5 +36,6 @@ static MainMenuAppState_t*    mmenu     = nullptr;
 
 DebugCommandInfoList_t GameGetDebugCommandInfoList();
 bool GameHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr);
+ResourcePool_t* GameGetCurrentResourcePool();
 
 #endif //  _GAME_MAIN_H

@@ -15,7 +15,7 @@ Description:
 #define RESOURCES_NUM_SHADERS     11
 #define RESOURCES_NUM_FONTS       4
 #define RESOURCES_NUM_SOUNDS      3
-#define RESOURCES_NUM_MUSICS      2
+#define RESOURCES_NUM_MUSICS      1
 #define TOTAL_NUM_RESOURCES       (RESOURCES_NUM_TEXTURES + RESOURCES_NUM_VECTORS + RESOURCES_NUM_SHEETS + RESOURCES_NUM_SHADERS + RESOURCES_NUM_FONTS + RESOURCES_NUM_SOUNDS + RESOURCES_NUM_MUSICS)
 
 #define RESOURCE_FOLDER_FONTS          "Resources/Fonts"
@@ -119,7 +119,6 @@ union ATTR_PACKED ResourceMusics_t
 	Sound_t items[RESOURCES_NUM_MUSICS];
 	struct
 	{
-		Sound_t test;
 		Sound_t mainMenu;
 	};
 };
@@ -139,21 +138,21 @@ const char* Resources_GetPathForTexture(u64 textureIndex, ResourceTextureMetaInf
 	switch (textureIndex)
 	{
 		//                            pixelated repeating     folder               filename
-		case 0:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "piggybank.png");             //| piggybank        |
-		case 1:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "loading_image.png");         //| piggyLoading     |
-		case 2:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "piggyblob.png");             //| piggyBlob        |
-		case 3:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "gif_recording.png");         //| gifRecording     |
-		case 4:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "made_in_pig_engine.png");    //| madeInPigEngine  |
-		case 5:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "alpha.png");                 //| alpha            |
-		case 6:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid.png");               //| defaultPink      |
-		case 7:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_blue.png");          //| defaultBlue      |
-		case 8:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_green.png");         //| defaultGreen     |
-		case 9:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_purple.png");        //| defaultPurple    |
-		case 10: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_red.png");           //| defaultRed       |
-		case 11: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "invalid_yellow.png");        //| defaultYellow    |
-		case 12: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "blue_gradient.png");        //| blueGradientBack |
+		case 0:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "pig_piggybank.png");             //| piggybank        |
+		case 1:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "pig_loading_image.png");         //| piggyLoading     |
+		case 2:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "pig_piggyblob.png");             //| piggyBlob        |
+		case 3:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "pig_gif_recording.png");         //| gifRecording     |
+		case 4:  NORMAL_TEXTURE_META_INFO(true,  false, SPRITES,  "pig_made_in_pig_engine.png");    //| madeInPigEngine  |
+		case 5:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_alpha.png");                 //| alpha            |
+		case 6:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid.png");               //| defaultPink      |
+		case 7:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_blue.png");          //| defaultBlue      |
+		case 8:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_green.png");         //| defaultGreen     |
+		case 9:  NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_purple.png");        //| defaultPurple    |
+		case 10: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_red.png");           //| defaultRed       |
+		case 11: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_yellow.png");        //| defaultYellow    |
+		case 12: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_blue_gradient.png");         //| blueGradientBack |
 		
-		case 13: NORMAL_TEXTURE_META_INFO(false, false, SPRITES,  "main_menu.png");             //| mainMenuBackground    |
+		case 13: NORMAL_TEXTURE_META_INFO(false, false, SPRITES,  "main_menu.png");                 //| mainMenuBackground    |
 		
 		default: DebugAssert(false); return nullptr;
 	}
@@ -199,9 +198,9 @@ const char* Resources_GetPathForSheet(u64 sheetIndex, ResourceSheetMetaInfo_t* m
 		case 1:
 		{
 			metaInfo->numFrames = NewVec2i(4, 4);
-			metaInfo->metaFilePath = NewStr(RESOURCE_FOLDER_SHEETS "/vector_icons64.meta");
+			metaInfo->metaFilePath = NewStr(RESOURCE_FOLDER_SHEETS "/pig_vector_icons64.meta");
 			metaInfo->pixelated = false;
-			return RESOURCE_FOLDER_SHEETS "/vector_icons64.png";
+			return RESOURCE_FOLDER_SHEETS "/pig_vector_icons64.png";
 		} break;
 		// +==============================+
 		// |        controllerBtns        |
@@ -210,7 +209,7 @@ const char* Resources_GetPathForSheet(u64 sheetIndex, ResourceSheetMetaInfo_t* m
 		{
 			metaInfo->numFrames = NewVec2i(2, 2);
 			metaInfo->pixelated = false;
-			return RESOURCE_FOLDER_SHEETS "/controller_btns.png";
+			return RESOURCE_FOLDER_SHEETS "/pig_controller_btns.png";
 		} break;
 		default: Assert(false); return nullptr;
 	}
@@ -250,7 +249,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/main2D.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_main_2d.glsl"; 
 		} break;
 		// +==============================+
 		// |         main2DArray          |
@@ -262,7 +261,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/main2DArray.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_main_2d_array.glsl"; 
 		} break;
 		// +==============================+
 		// |            main3D            |
@@ -274,7 +273,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default3D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/main3D.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_main_3d.glsl"; 
 		} break;
 		// +==============================+
 		// |         main3DArray          |
@@ -286,7 +285,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1);
 				metaInfo->vertexType = VertexType_Default3D;
 			}
-			return RESOURCE_FOLDER_SHADERS "/main3DArray.glsl";
+			return RESOURCE_FOLDER_SHADERS "/pig_main_3d_array.glsl";
 		} break;
 		// +==============================+
 		// |          gradient2D          |
@@ -298,7 +297,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1|ShaderUniform_Color2);
 			}
-			return RESOURCE_FOLDER_SHADERS "/gradient2D.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_gradient_2d.glsl"; 
 		} break;
 		// +==============================+
 		// |        roundedCorners        |
@@ -310,7 +309,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_RequireTexture|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/roundedCorners.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_rounded_corners.glsl"; 
 		} break;
 		// +==============================+
 		// |           pieChart           |
@@ -322,7 +321,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices);
 			}
-			return RESOURCE_FOLDER_SHADERS "/pieChart.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_pie_chart.glsl"; 
 		} break;
 		// +==============================+
 		// |           bezier3            |
@@ -334,7 +333,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/bezier3.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_bezier3.glsl"; 
 		} break;
 		// +==============================+
 		// |           bezier4            |
@@ -346,7 +345,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/bezier4.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_bezier4.glsl"; 
 		} break;
 		// +==============================+
 		// |          ellipseArc          |
@@ -358,7 +357,7 @@ const char* Resources_GetPathForShader(u64 shaderIndex, ResourceShaderMetaInfo_t
 				metaInfo->vertexType = VertexType_Default2D;
 				metaInfo->requiredUniforms = (ShaderUniform_RequireMatrices|ShaderUniform_Color1);
 			}
-			return RESOURCE_FOLDER_SHADERS "/ellipseArc.glsl"; 
+			return RESOURCE_FOLDER_SHADERS "/pig_ellipse_arc.glsl"; 
 		} break;
 		// +==============================+
 		// |          testShader          |
@@ -426,15 +425,15 @@ const char* Resources_GetPathOrNameForFont(u64 fontIndex, ResourceFontMetaInfo_t
 			metaInfo->faces[0].bold             = false;
 			metaInfo->faces[0].italic           = false;
 			metaInfo->faces[0].sheetSizes[0]    = NewVec2i(16, 16);
-			metaInfo->faces[0].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel8.png");
-			metaInfo->faces[0].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8.meta");
+			metaInfo->faces[0].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel8.png");
+			metaInfo->faces[0].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel8.meta");
 			metaInfo->faces[0].paddings[0]      = Vec2i_Zero;
 			metaInfo->faces[0].isPixelated[0]   = true;
 			metaInfo->faces[0].scalables[0]     = false;
 			metaInfo->faces[0].colored[0]       = false;
 			metaInfo->faces[0].sheetSizes[1]    = NewVec2i(16, 16);
-			metaInfo->faces[0].filePaths[1]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns_white.png");
-			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pixel8_btns.meta");
+			metaInfo->faces[0].filePaths[1]     = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel8_btns.png");
+			metaInfo->faces[0].metaFilePaths[1] = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel8_btns.meta");
 			metaInfo->faces[0].paddings[1]      = Vec2i_Zero;
 			metaInfo->faces[0].isPixelated[1]   = true;
 			metaInfo->faces[0].scalables[1]     = false;
@@ -446,8 +445,8 @@ const char* Resources_GetPathOrNameForFont(u64 fontIndex, ResourceFontMetaInfo_t
 			metaInfo->faces[1].bold             = false;
 			metaInfo->faces[1].italic           = false;
 			metaInfo->faces[1].sheetSizes[0]    = NewVec2i(16, 12);
-			metaInfo->faces[1].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.png");
-			metaInfo->faces[1].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pixel16.meta");
+			metaInfo->faces[1].filePaths[0]     = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel16.png");
+			metaInfo->faces[1].metaFilePaths[0] = NewStr(RESOURCE_FOLDER_FONTS "/pig_pixel16.meta");
 			metaInfo->faces[1].paddings[0]      = Vec2i_Zero;
 			metaInfo->faces[1].isPixelated[0]   = true;
 			metaInfo->faces[1].scalables[0]     = false;
@@ -493,9 +492,9 @@ const char* Resources_GetPathForSound(u64 soundIndex)
 {
 	switch (soundIndex)
 	{
-		case 0:  return RESOURCE_FOLDER_SOUNDS "/notification.ogg"; // | notification |
-		case 1:  return RESOURCE_FOLDER_SOUNDS "/oink.ogg";         // | oink         |
-		case 2:  return RESOURCE_FOLDER_SOUNDS "/click1.ogg";       // | click1       |
+		case 0:  return RESOURCE_FOLDER_SOUNDS "/pig_notification.ogg"; // | notification |
+		case 1:  return RESOURCE_FOLDER_SOUNDS "/pig_oink.ogg";         // | oink         |
+		case 2:  return RESOURCE_FOLDER_SOUNDS "/pig_click1.ogg";       // | click1       |
 		default: DebugAssert(false); return nullptr;
 	}
 }
@@ -507,8 +506,7 @@ const char* Resources_GetPathForMusic(u64 musicIndex)
 {
 	switch (musicIndex)
 	{
-		case 0: return RESOURCE_FOLDER_MUSIC "/test.ogg";      // | test     |
-		case 1: return RESOURCE_FOLDER_MUSIC "/main_menu.ogg"; // | mainMenu |
+		case 0: return RESOURCE_FOLDER_MUSIC "/main_menu.ogg"; // | mainMenu |
 		default: DebugAssert(false); return nullptr;
 	}
 }

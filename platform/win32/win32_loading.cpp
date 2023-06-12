@@ -31,7 +31,7 @@ void Win32_LoadBasicResources(const StartupOptions_t* options)
 		Platform->loadingBackground = Win32_LoadTexture(options->loadingBackPath, true, true);
 	}
 	
-	Platform->loadingShader = Win32_LoadShader(NewStr("Resources/Shaders/loading.glsl"));
+	Platform->loadingShader = Win32_LoadShader(NewStr("Resources/Shaders/pig_loading.glsl"));
 	//TODO: Check if the initShader isValid
 	
 	Win32_Vertex_t squareVerts[] =

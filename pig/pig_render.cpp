@@ -1967,7 +1967,7 @@ void RcLoadBasicResources()
 		DebugAssert(false);
 	}
 	
-	if (!LoadTexture(fixedHeap, &rc->invalidTexture, NewStr("Resources/Textures/invalid.png"), true, true))
+	if (!LoadTexture(fixedHeap, &rc->invalidTexture, NewStr(RESOURCE_FOLDER_TEXTURES "/pig_invalid.png"), true, true))
 	{
 		PrintLine_E("Failed to load invalid texture! Error %s%s%s", GetTextureErrorStr(rc->invalidTexture.error), (rc->invalidTexture.error == TextureError_ApiError) ? ": " : "", (rc->invalidTexture.error == TextureError_ApiError) ? rc->invalidTexture.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->invalidTexture);

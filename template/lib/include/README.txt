@@ -3,12 +3,19 @@ This folder should contain copies of all the include folders from libraries that
 The list of libraries is given below:
 
 # gylib
-https://www.bitbucket.org/stampede247/gylib
+https://www.github.com/PiggybankStudios/gylib
 gylib folder
 
-# STB Libraries
-https://www.github.com/nothings/stb
-stb folder
+# my_glfw
+https://www.github.com/PiggybankStudios/my_glfw
+my_glfw folder
+Basically just GLFW 3.2.1 with a few custom changes and using our own build.bat script
+Run build.bat twice. Once with DebugBuild=1 and once with DebugBuild=0 (edit the .bat file directly)
+There should now be two folders, debug and release, with glfw3.lib in them
+
+# PigGen
+https://www.github.com/PiggybankStudios/piggen
+piggen folder
 
 # GLAD
 https://glad.dav1d.de/
@@ -25,12 +32,9 @@ Options:
 	glsc2: None
 	All Extensions
 
-# my_glfw
-https://bitbucket.org/stampede247/my_glfw
-my_glfw folder
-Basically just GLFW 3.2.1 with a few custom changes and using our own build.bat script
-Run build.bat twice. Once with DebugBuild=1 and once with DebugBuild=0 (edit the .bat file directly)
-There should now be two folders, debug and release, with glfw3.lib in them
+# STB Libraries
+https://www.github.com/nothings/stb
+stb folder
 
 #Steam SDK v1.43
 steam folder
@@ -39,3 +43,8 @@ steam folder
 https://github.com/notnullnotvoid/msf_gif
 msf_gif folder
 Modifications are required to get it compiling with /W4
+
+# Tiny Regex C
+https://github.com/kokke/tiny-regex-c
+regex folder
+This is needed to compile PigGen.exe

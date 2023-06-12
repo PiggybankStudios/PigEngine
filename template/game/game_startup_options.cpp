@@ -265,8 +265,8 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	
 	options->loadingBackgroundColor = NewColor(0xFF361935);
 	options->loadingBarColor = NewColor(0xFFA25B95);
-	options->loadingImagePath = NewStringInArenaNt(info->platTempArena, "Resources/Sprites/loading_image.png");
-	options->loadingBackPath = NewStringInArenaNt(info->platTempArena, "Resources/Sprites/loading_back.png");
+	options->loadingImagePath = NewStringInArenaNt(info->platTempArena, RESOURCE_FOLDER_SPRITES "/pig_loading_image.png");
+	options->loadingBackPath = NewStringInArenaNt(info->platTempArena, RESOURCE_FOLDER_SPRITES "/pig_loading_back.png");
 	options->loadingBackScale = 0.0f;
 	options->loadingBackTiling = false;
 }

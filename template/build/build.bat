@@ -19,6 +19,7 @@ set DirectXSupport=0
 set Box2DSupport=0
 set ProcmonSupport=0
 set AssertionsEnabled=1
+set RunPigGen=1
 
 set CopyToDataDirectory=1
 
@@ -52,7 +53,7 @@ rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" 
 rem call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 -no_logo
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
 
-set CompilerFlags=-DWINDOWS_COMPILATION -DPROJECT_NAME="\"%ProjectName%\"" -DPROJECT_NAME_SAFE=\"%ProjectNameSafe%\" -DDEBUG_BUILD=%DebugBuild% -DDEVELOPER_BUILD=%DeveloperBuild% -DDEMO_BUILD=%DemoBuild% -DSTEAM_BUILD=%SteamBuild% -DPROCMON_SUPPORTED=%ProcmonSupport% -DBOX2D_SUPPORTED=%Box2DSupport% -DOPENGL_SUPPORTED=%OpenGlSupport% -DVULKAN_SUPPORTED=%VulkanSupport% -DDIRECTX_SUPPORTED=%DirectXSupport% -DSLUG_SUPPORTED=0 -DASSERTIONS_ENABLED=%AssertionsEnabled%
+set CompilerFlags=-DWINDOWS_COMPILATION -DPROJECT_NAME="\"%ProjectName%\"" -DPROJECT_NAME_SAFE=\"%ProjectNameSafe%\" -DDEBUG_BUILD=%DebugBuild% -DDEVELOPER_BUILD=%DeveloperBuild% -DDEMO_BUILD=%DemoBuild% -DSTEAM_BUILD=%SteamBuild% -DPROCMON_SUPPORTED=%ProcmonSupport% -DBOX2D_SUPPORTED=%Box2DSupport% -DOPENGL_SUPPORTED=%OpenGlSupport% -DVULKAN_SUPPORTED=%VulkanSupport% -DDIRECTX_SUPPORTED=%DirectXSupport% -DSLUG_SUPPORTED=0 -DJSON_SUPPORTED=0 -DASSERTIONS_ENABLED=%AssertionsEnabled%
 rem /FC = Full path for error messages
 rem /EHsc = Exception Handling Model: Standard C++ Stack Unwinding. Functions declared as extern "C" can't throw exceptions
 rem /EHa- = TODO: Do we really need this?? It seems like this option should be off if we specify s and c earlier
@@ -147,6 +148,10 @@ if "%CompilePlatform%"=="1" (
 		python %IncVersNumScriptPath% %PlatformVersionFilePath%
 	)
 	
+	if "%RunPigGen%"=="1" (
+		PigGen.exe ../engine -output="gen"
+	)
+	
 	cl /Fe%ProjectNameSafe%.exe %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
 	
 	if "%CopyToDataDirectory%"=="1" (
@@ -163,6 +168,10 @@ if "%CompileEngine%"=="1" (
 	if "%PythonInstalled%"=="1" (
 		python %IncVersNumScriptPath% %EngineVersionFilePath%
 		python %IncVersNumScriptPath% %GameVersionFilePath%
+	)
+	
+	if "%RunPigGen%"=="1" (
+		PigGen.exe ../game -output="gen"
 	)
 	
 	cl /Fe%ProjectNameSafe%.dll %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
