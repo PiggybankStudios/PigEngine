@@ -141,7 +141,7 @@ void Win32_EnumerateAudioDevices()
 			}
 			newDevice->devicePntr = devicePntr;
 			
-			PrintLine_D("Device[%llu]: \"%.*s\"%s \"%.*s\"", dIndex, newDevice->name.length, newDevice->name.pntr, newDevice->isDefaultDevice ? " (Default)" : "", newDevice->deviceId.length, newDevice->deviceId.pntr);
+			// PrintLine_D("Device[%llu]: \"%.*s\"%s \"%.*s\"", dIndex, newDevice->name.length, newDevice->name.pntr, newDevice->isDefaultDevice ? " (Default)" : "", newDevice->deviceId.length, newDevice->deviceId.pntr);
 			
 			CoTaskMemFree(deviceIdWide);
 			PropVariantClear(&deviceNameProperty);
@@ -155,7 +155,7 @@ void Win32_EnumerateAudioDevices()
 	Assert(foundDefaultDeviceIndex);
 	defaultDevicePntr->Release();
 	
-	PrintLine_D("Found %llu device(s)", Platform->audioDevices.length);
+	// PrintLine_D("Found %llu device(s)", Platform->audioDevices.length);
 	
 	deviceCollection->Release();
 }
@@ -280,14 +280,15 @@ void Win32_StartAudioOutput(u64 deviceIndex, const PlatAudioFormat_t* format)
 	HRESULT getFormatResult = Platform->audioClient->GetMixFormat(&deviceAudioFormat);
 	Assert(getFormatResult == S_OK);
 	
-	WriteLine_D("Audio device format:");
-	PrintLine_D("  wFormatTag:      %u", deviceAudioFormat->wFormatTag);
-	PrintLine_D("  nChannels:       %u", deviceAudioFormat->nChannels);
-	PrintLine_D("  nSamplesPerSec:  %u", deviceAudioFormat->nSamplesPerSec);
-	PrintLine_D("  nAvgBytesPerSec: %u", deviceAudioFormat->nAvgBytesPerSec);
-	PrintLine_D("  nBlockAlign:     %u", deviceAudioFormat->nBlockAlign);
-	PrintLine_D("  wBitsPerSample:  %u", deviceAudioFormat->wBitsPerSample);
-	PrintLine_D("  cbSize:          %u", deviceAudioFormat->cbSize);
+	// WriteLine_D("Audio device format:");
+	// PrintLine_D("  wFormatTag:      %u", deviceAudioFormat->wFormatTag);
+	// PrintLine_D("  nChannels:       %u", deviceAudioFormat->nChannels);
+	// PrintLine_D("  nSamplesPerSec:  %u", deviceAudioFormat->nSamplesPerSec);
+	// PrintLine_D("  nAvgBytesPerSec: %u", deviceAudioFormat->nAvgBytesPerSec);
+	// PrintLine_D("  nBlockAlign:     %u", deviceAudioFormat->nBlockAlign);
+	// PrintLine_D("  wBitsPerSample:  %u", deviceAudioFormat->wBitsPerSample);
+	// PrintLine_D("  cbSize:          %u", deviceAudioFormat->cbSize);
+	PrintLine_D("Audio device format: %uHz %u-bit %u channel%s", deviceAudioFormat->nSamplesPerSec, deviceAudioFormat->wBitsPerSample, deviceAudioFormat->nChannels, ((deviceAudioFormat->nChannels == 1) ? "" : "s"));
 	
 	WAVEFORMATEX requestFormat;
 	Win32_FillWaveFormatEx(format, &requestFormat);
