@@ -441,6 +441,16 @@ bool IsMouseOverNamedPartial(const char* expectedName, bool mustBeIndex0 = false
 	if (MyStrCompare(pig->mouseHit.name.pntr, expectedName, expectedNameLength) != 0) { return false; }
 	return true;
 }
+bool IsMouseOverPrintPartial(const char* formatString, ...)
+{
+	TempPushMark();
+	TempPrintVa(nameStr, nameLength, formatString);
+	DebugAssert(nameStr != nullptr);
+	if (nameStr == nullptr) { TempPopMark(); return false; }
+	bool result = IsMouseOverNamedPartial(nameStr);
+	TempPopMark();
+	return result;
+}
 
 // +--------------------------------------------------------------+
 // |                      Keyboard Handling                       |
