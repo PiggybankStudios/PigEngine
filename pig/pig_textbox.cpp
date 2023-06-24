@@ -952,8 +952,9 @@ void RenderTextbox(Textbox_t* tb)
 	// +==============================+
 	Color_t outlineColor = IsFocused(tb) ? MonokaiWhite : MonokaiDarkGray;
 	Color_t backColor = MonokaiDarkGray;
-	RcDrawRoundedRectangle(RecInflate(tb->mainRec, 1, 1), tb->innerMargin.y, outlineColor);
-	RcDrawRoundedRectangle(tb->mainRec, tb->innerMargin.y, backColor);
+	RcDrawRoundedRectangleWithBorder(tb->mainRec, tb->innerMargin.y, 1, backColor, outlineColor);
+	// RcDrawRoundedRectangle(RecInflate(tb->mainRec, 1, 1), tb->innerMargin.y, outlineColor);
+	// RcDrawRoundedRectangle(tb->mainRec, tb->innerMargin.y, backColor);
 	
 	// +==============================+
 	// |         Render Text          |

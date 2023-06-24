@@ -133,23 +133,33 @@ void RcDrawGradientRectangle(rec rectangle, bool horizontal, Color_t colorLeftOr
 	if (bindShader) { RcBindShader(oldShader); }
 }
 
-void RcDrawRoundedRectangle(rec rectangle, r32 cornerRadius, Color_t color, bool bindShader = true)
+void RcDrawRoundedRectangleWithBorder(rec rectangle, r32 cornerRadius, r32 borderThickness, Color_t fillColor, Color_t borderColor, bool bindShader = true)
 {
 	NotNull(rc);
 	
 	Shader_t* oldShader = rc->state.boundShader;
+	Color_t oldColor2 = rc->state.color2;
 	v2 oldShiftVec = rc->state.shiftVec;
 	r32 oldCircleRadius = rc->state.circleRadius;
+	r32 oldValue0 = rc->state.values[0];
 	
 	if (bindShader) { RcBindShader(&pig->resources.shaders->roundedCorners); }
+	RcSetColor2(borderColor);
 	RcSetShiftVec(rectangle.size);
 	RcSetCircleRadius(cornerRadius);
+	RcSetValue(0, borderThickness + 0.5f);
 	
-	RcDrawRectangle(rectangle, color);
+	RcDrawRectangle(rectangle, fillColor);
 	
+	RcSetColor2(oldColor2);
 	RcSetShiftVec(oldShiftVec);
 	RcSetCircleRadius(oldCircleRadius);
+	RcSetValue(0, oldValue0);
 	if (bindShader) { RcBindShader(oldShader); }
+}
+void RcDrawRoundedRectangle(rec rectangle, r32 cornerRadius, Color_t color, bool bindShader = true)
+{
+	RcDrawRoundedRectangleWithBorder(rectangle, cornerRadius, 0, color, Transparent, bindShader);
 }
 
 void RcDrawVoxelOrthoFace2D(rec rectangle, rec sourceRec, Color_t color, Dir3_t side)
