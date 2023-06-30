@@ -661,8 +661,9 @@ void RcBegin_OpenGL()
 	#endif
 	RcSetDepthTestEnabled_OpenGL(true);
 	RcSetFillMode_OpenGL(PolygonFillMode_Default);
-	glAlphaFunc(GL_GEQUAL, 0.01f); AssertNoOpenGlError();
-	glEnable(GL_ALPHA_TEST); AssertNoOpenGlError();
+	//NOTE: GL_APHA_TEST and glAlphaFunc have been deprecated. We should use discard; in shaders instead
+	// glAlphaFunc(GL_GEQUAL, 0.01f); AssertNoOpenGlError();
+	// glEnable(GL_ALPHA_TEST); AssertNoOpenGlError();
 	RcSetFaceCulling_OpenGL(true);
 	
 	

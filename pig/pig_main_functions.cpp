@@ -55,7 +55,6 @@ void PigInitialize(EngineMemory_t* memory)
 	WriteLine_N("+==============================+");
 	PrintLine_N("|    Pig engine v%u.%02u(%03u)     |", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	WriteLine_N("+==============================+");
-	PrintLine_D("Running on %s", GetRenderApiStr(pig->renderApi));
 	
 	#if !DEBUG_BUILD && GYLIB_ASSERTIONS_ENABLED
 	bool isFolder = false;
@@ -63,10 +62,14 @@ void PigInitialize(EngineMemory_t* memory)
 	AssertMsg(isFolder, "Failed to find Resources directory. Please make sure that the executable is next to the Resources folder!");
 	#endif
 	
+	PigInitGlad();
+	const GLubyte* vendor = glGetString(GL_VENDOR); // Returns the vendor
+	const GLubyte* renderer = glGetString(GL_RENDERER); // Returns a hint to the model
+	PrintLine_D("Using %s API on %s %s", GetRenderApiStr(pig->renderApi), vendor, renderer);
+	
 	SeedRand((u32)LocalTimestamp);
 	CreateRandomSeries(&pig->random);
 	SeedRandomSeriesU64(&pig->random, LocalTimestamp);
-	PigInitGlad();
 	InitRenderContext();
 	PigInitAudioOutput();
 	PigInitSounds();

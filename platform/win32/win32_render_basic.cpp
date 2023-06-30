@@ -222,6 +222,20 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	if (compiled != GL_TRUE)
 	{
 		PrintLine_E("Vertex shader failed to compile in \"%.*s\"", fullPath.length, fullPath.pntr);
+		
+		GLint vertInfoLogLength = 0;
+		glGetShaderiv(result.vertId, GL_INFO_LOG_LENGTH, &vertInfoLogLength);
+		if (vertInfoLogLength > 3)
+		{
+			char* logStr = AllocArray(TempArena, char, (u64)vertInfoLogLength+1);
+			NotNull(logStr);
+			glGetShaderInfoLog(result.vertId, vertInfoLogLength, NULL, logStr);
+			logStr[vertInfoLogLength] = '\0';
+			PrintLine_E("Vertex Shader Log:\n%s", logStr);
+		}
+		
+		// PrintLine_E("Vertex Shader Source:\n%s\n", vertexShaderCodePntr);
+		
 		glDeleteShader(result.vertId); Win32_AssertNoOpenGlError(glDeleteShader);
 		Win32_FreeFileContents(&shaderFile);
 		TempPopMark();
@@ -243,6 +257,20 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	if (compiled != GL_TRUE)
 	{
 		PrintLine_E("Fragment shader failed to compile in \"%.*s\"", fullPath.length, fullPath.pntr);
+		
+		GLint fragInfoLogLength = 0;
+		glGetShaderiv(result.fragId, GL_INFO_LOG_LENGTH, &fragInfoLogLength);
+		if (fragInfoLogLength > 3)
+		{
+			char* logStr = AllocArray(TempArena, char, (u64)fragInfoLogLength+1);
+			NotNull(logStr);
+			glGetShaderInfoLog(result.fragId, fragInfoLogLength, NULL, logStr);
+			logStr[fragInfoLogLength] = '\0';
+			PrintLine_E("Fragment Shader Log:\n%s\n", logStr);
+		}
+		
+		// PrintLine_E("Fragment Shader Source:\n%s\n", fragmentShaderCodePntr);
+		
 		glDeleteShader(result.vertId); Win32_AssertNoOpenGlError(glDeleteShader);
 		glDeleteShader(result.fragId); Win32_AssertNoOpenGlError(glDeleteShader);
 		Win32_FreeFileContents(&shaderFile);
@@ -427,8 +455,9 @@ void Win32_InitBasicRendering_OpenGL()
 	glEnable(GL_BLEND); Win32_AssertNoOpenGlError(glEnable);
 	glEnable(GL_DEPTH_TEST); Win32_AssertNoOpenGlError(glEnable);
 	glDepthFunc(GL_LEQUAL); Win32_AssertNoOpenGlError(glDepthFunc);
-	glEnable(GL_ALPHA_TEST); Win32_AssertNoOpenGlError(glEnable);
-	glAlphaFunc(GL_GEQUAL, 0.01f); Win32_AssertNoOpenGlError(glAlphaFunc);
+	//NOTE: GL_APHA_TEST and glAlphaFunc have been deprecated. We should use discard; in shaders instead
+	// glEnable(GL_ALPHA_TEST); Win32_AssertNoOpenGlError(glEnable);
+	// glAlphaFunc(GL_GEQUAL, 0.01f); Win32_AssertNoOpenGlError(glAlphaFunc);
 	glDisable(GL_CULL_FACE); Win32_AssertNoOpenGlError(glAlphaFunc);
 	glFrontFace(GL_CW); Win32_AssertNoOpenGlError(glAlphaFunc);
 }

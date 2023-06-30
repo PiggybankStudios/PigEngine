@@ -6,16 +6,17 @@ Description:
 	** Holds the initilization and interop code for GLFW
 */
 
-#define MIN_OPENGL_VERSION_MAJOR  3
-#define MIN_OPENGL_VERSION_MINOR  0
-#define OPENGL_REQUEST_VERSION_MAJOR 1
-#define OPENGL_REQUEST_VERSION_MINOR 0
+//NOTE: Requesting OpenGL 3.2 or earlier requires us to change the profile type to COMPAT (or ANY)
+#define OPENGL_REQUEST_VERSION_MAJOR   3
+#define OPENGL_REQUEST_VERSION_MINOR   3
+#define OPENGL_REQUEST_PROFILE         GLFW_OPENGL_CORE_PROFILE //GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_COMPAT_PROFILE
 //NOTE: Setting this to true causes weird texture problems when we run with the Steam Overlay on top.
 //      This setting is supposed to make sure that all deprecated functionality in version 3.0 of OpenGL
 //      are unsupported. Maybe we are using some deprecated features that we shouldn't be?
-#define OPENGL_FORCE_FORWARD_COMPAT  false
-#define OPENGL_DEBUG_CONTEXT         (true && DEBUG_BUILD)
-#define OPENGL_REQUEST_PROFILE       GLFW_OPENGL_ANY_PROFILE //GLFW_OPENGL_CORE_PROFILE
+#define OPENGL_FORCE_FORWARD_COMPAT    true
+#define OPENGL_DEBUG_CONTEXT           (true && DEBUG_BUILD)
+#define MIN_OPENGL_VERSION_MAJOR       3
+#define MIN_OPENGL_VERSION_MINOR       3
 
 // +--------------------------------------------------------------+
 // |                          Callbacks                           |
@@ -661,6 +662,15 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	
 	if (Platform->renderApi == RenderApi_OpenGL)
 	{
+		PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
+			OPENGL_REQUEST_VERSION_MAJOR,
+			OPENGL_REQUEST_VERSION_MINOR,
+			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_ANY_PROFILE) ? "ANY" :
+			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_CORE_PROFILE) ? "CORE" :
+			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_COMPAT_PROFILE) ? "COMPAT" : "UNKNOWN",
+			OPENGL_FORCE_FORWARD_COMPAT ? "true" : "false",
+			OPENGL_DEBUG_CONTEXT ? "true" : "false"
+		);
 		glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_API);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_REQUEST_VERSION_MAJOR);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_REQUEST_VERSION_MINOR);
