@@ -47,11 +47,14 @@ void RcSetFillMode_OpenGL(PolygonFillMode_t fillMode)
 	AssertNoOpenGlError();
 }
 
+#if 0
+//NOTE: glLineWidth is deprecated in OpenGL 3.3+
 void RcSetLineThickness_OpenGL(r32 thickness)
 {
 	glLineWidth(thickness);
 	AssertNoOpenGlError();
 }
+#endif
 
 void RcCreateVertexArrayObject_OpenGL(u64 windowId, VertexType_t vertexType, VertexArrayObject_t* vaoOut)
 {
@@ -734,6 +737,8 @@ void RcSetFillMode(PolygonFillMode_t fillMode)
 	}
 }
 
+#if 0
+//NOTE: glLineWidth is deprecated in OpenGL 3.3+
 void RcSetLineThickness(r32 thickness)
 {
 	NotNull(rc);
@@ -751,6 +756,7 @@ void RcSetLineThickness(r32 thickness)
 		default: DebugAssertMsg(false, "Unsupported render API in RcSetFaceCulling!"); break;
 	}
 }
+#endif
 
 VertexArrayObject_t* RcGetVertexArrayObj(u64 windowId, VertexType_t vertexType)
 {

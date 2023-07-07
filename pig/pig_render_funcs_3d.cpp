@@ -278,8 +278,22 @@ void RcDrawLine3DBox(v3 point1, v3 point2, r32 thickness, Color_t color)
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
+void RcDrawLine3DBoxWithCameraInfo(v3 point1, v3 point2, r32 thickness, Color_t color, v3 cameraPosition, v3 cameraNormal, r32 cameraFovX) //, r32 cameraNearDist, r32 cameraFarDist
+{
+	v3 relativePosition = ClosestPointOnLine(point1, point2, cameraPosition) - cameraPosition;
+	r32 planarDistance = Vec3Dot(relativePosition, cameraNormal);
+	// r32 nearToFarLerp = (planarDistance - cameraNearDist) / (cameraFarDist - cameraNearDist);
+	// r32 nearClipWidth = cameraNearDist * 2 * TanR32(cameraFovX/2);
+	// r32 farClipWidth = cameraFarDist * 2 * TanR32(cameraFovX/2);
+	// r32 planeWidthAtDistance = LerpR32(nearClipWidth, farClipWidth, nearToFarLerp);
+	r32 planeWidthAtDistance = planarDistance * 2 * TanR32(cameraFovX/2);
+	r32 pixelSizeAtDistance = planeWidthAtDistance / ScreenSize.width;
+	RcDrawLine3DBox(point1, point2, thickness * pixelSizeAtDistance, color);
+}
 
-void RcDrawLine3D(v3 point1, v3 point2, r32 thickness, Color_t color)
+//NOTE: We can't support drawing lines with >1 thickness because glLineWidth is deprecated in OpenGL 3.3+
+//      If you want to draw thick lines, use RcDrawLine3DBox instead
+void RcDrawLine3D(v3 point1, v3 point2, Color_t color)
 {
 	if (Vec3BasicallyEqual(point1, point2, 0.0001f)) { return; }
 	v2 horizontalVec = Vec3_xz(point2) - Vec3_xz(point1);
@@ -294,8 +308,6 @@ void RcDrawLine3D(v3 point1, v3 point2, r32 thickness, Color_t color)
 	Mat4Transform(worldMatrix, Mat4RotateY(facingRotation));
 	Mat4Transform(worldMatrix, Mat4Translate3(point1));
 	RcSetWorldMatrix(worldMatrix);
-	
-	RcSetLineThickness(thickness);
 	
 	RcBindTexture1(&rc->dotTexture);
 	RcSetSourceRec1(Rec_Default);
@@ -316,25 +328,25 @@ void RcDrawPoint3D(v3 point, r32 radius, Color_t color, bool useBox = false, Sph
 	}
 }
 
-void RcDrawBoxWireframe(box boundingBox, Color_t color, r32 thickness)
+void RcDrawBoxWireframe(box boundingBox, Color_t color)
 {
 	v3 min = boundingBox.bottomLeft;
 	v3 max = boundingBox.bottomLeft + boundingBox.size;
 	// Vertical lines
-	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(min.x, max.y, min.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, max.y, min.z), thickness, color);
-	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, max.y, max.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(max.x, max.y, max.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(min.x, max.y, min.z), color);
+	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, max.y, min.z), color);
+	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, max.y, max.z), color);
+	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(max.x, max.y, max.z), color);
 	// Bottom Loop
-	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(max.x, min.y, min.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, min.y, max.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(min.x, min.y, max.z), thickness, color);
-	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, min.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, min.y, min.z), NewVec3(max.x, min.y, min.z), color);
+	RcDrawLine3D(NewVec3(max.x, min.y, min.z), NewVec3(max.x, min.y, max.z), color);
+	RcDrawLine3D(NewVec3(max.x, min.y, max.z), NewVec3(min.x, min.y, max.z), color);
+	RcDrawLine3D(NewVec3(min.x, min.y, max.z), NewVec3(min.x, min.y, min.z), color);
 	// Top Loop
-	RcDrawLine3D(NewVec3(min.x, max.y, min.z), NewVec3(max.x, max.y, min.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, max.y, min.z), NewVec3(max.x, max.y, max.z), thickness, color);
-	RcDrawLine3D(NewVec3(max.x, max.y, max.z), NewVec3(min.x, max.y, max.z), thickness, color);
-	RcDrawLine3D(NewVec3(min.x, max.y, max.z), NewVec3(min.x, max.y, min.z), thickness, color);
+	RcDrawLine3D(NewVec3(min.x, max.y, min.z), NewVec3(max.x, max.y, min.z), color);
+	RcDrawLine3D(NewVec3(max.x, max.y, min.z), NewVec3(max.x, max.y, max.z), color);
+	RcDrawLine3D(NewVec3(max.x, max.y, max.z), NewVec3(min.x, max.y, max.z), color);
+	RcDrawLine3D(NewVec3(min.x, max.y, max.z), NewVec3(min.x, max.y, min.z), color);
 }
 
 void RcApplyModelMaterial(ModelMaterial_t* material, bool changeTexture = true)
