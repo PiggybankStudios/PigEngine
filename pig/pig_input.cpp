@@ -204,6 +204,7 @@ bool IsKeyTypingRelated(Key_t key)
 {
 	if (key >= Key_A && key <= Key_Z) { return true; }
 	if (key >= Key_0 && key <= Key_9) { return true; }
+	if (key >= Key_Num0 && key <= Key_Num9) { return true; }
 	if (key >= Key_Plus && key <= Key_Space) { return true; }
 	if (key == Key_Enter)     { return true; }
 	if (key == Key_Backspace) { return true; }

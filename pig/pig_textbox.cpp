@@ -980,6 +980,7 @@ void RenderTextbox(Textbox_t* tb)
 	}
 	else if (!IsEmptyStr(tb->hintText))
 	{
+		RcBindFont(GetPointer(&tb->font), tb->fontFaceSelector, tb->fontScale);
 		Color_t hintTextColor = MonokaiGray2;
 		RcDrawText(tb->hintText, tb->textPos, hintTextColor);
 	}
