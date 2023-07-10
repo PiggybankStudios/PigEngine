@@ -276,11 +276,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	AssertMsg(Platform->startupOptions.threadPoolSize <= PLAT_MAX_NUM_THREADS, "Engine wanted too many threads in it's thread pool!");
 	AssertIfMsg(Platform->startupOptions.threadPoolTempArenasSize > 0, Platform->startupOptions.threadPoolTempArenasNumMarks > 0, "TempArenas for thread pools cannot have 0 marks");
 	
+	// +===============================+
+	// | Initializing Sockets and HTTP |
+	// +===============================+
+	PerfSection("InitializingSocketsAndHttp");
+	InitPhase = Win32InitPhase_StartupOptionsObtained;
+	
+	#if SOCKETS_SUPPORTED
+	if (!InitializeSockets())
+	{
+		Win32_InitError("Failed to initialize sockets!");
+	}
+	#endif
+	
 	// +==============================+
 	// |      ThreadPoolCreation      |
 	// +==============================+
 	PerfSection("ThreadPoolCreation");
-	InitPhase = Win32InitPhase_StartupOptionsObtained;
+	InitPhase = Win32InitPhase_SocketsInitialized;
 	
 	Win32_InitThreadPool(Platform->startupOptions.threadPoolSize, Platform->startupOptions.threadPoolTempArenasSize, Platform->startupOptions.threadPoolTempArenasNumMarks);
 	

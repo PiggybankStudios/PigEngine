@@ -24,6 +24,7 @@ enum Win32InitPhase_t
 	Win32InitPhase_EngineDllLoaded,
 	Win32InitPhase_GlfwInitialized,
 	Win32InitPhase_StartupOptionsObtained,
+	Win32InitPhase_SocketsInitialized,
 	Win32InitPhase_ThreadPoolsCreated,
 	Win32InitPhase_WindowOpened,
 	Win32InitPhase_AudioOutputStarted,

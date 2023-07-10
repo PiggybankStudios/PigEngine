@@ -34,6 +34,9 @@ Date:   09\14\2021
 #if !defined(PROCMON_SUPPORTED)
 #error You must define PROCMON_SUPPORTED in the build options
 #endif
+#if !defined(SOCKETS_SUPPORTED)
+#error You must define SOCKETS_SUPPORTED in the build options
+#endif
 #if !defined(ASSERTIONS_ENABLED)
 #error You must define ASSERTIONS_ENABLED in the build options
 #endif
@@ -82,8 +85,12 @@ Date:   09\14\2021
 // |                   Platform Layer Includes                    |
 // +--------------------------------------------------------------+
 #if WINDOWS_COMPILATION
+	#if SOCKETS_SUPPORTED
+		#include <winsock2.h> //NOTE: Has to precede <windows.h> (I guess)
+		#include <Ws2ipdef.h>
+		// #include <Winhttp.h>
+	#endif
 	#include <windows.h>
-	// #include <Winhttp.h>
 	// #include <dsound.h>
 	// #include <Dbt.h> //DBT_CONFIGCHANGED and other wParam values for WM_DEVICECHANGE
 	#include <mmdeviceapi.h>
