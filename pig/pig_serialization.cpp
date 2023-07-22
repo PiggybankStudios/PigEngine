@@ -31,10 +31,10 @@ void BinSer_WriteValue_(void* result, u64 resultSize, u64* byteIndexPntr, u64 va
 	}
 	*byteIndexPntr = (*byteIndexPntr) + valueSize;
 }
-#define BinSer_WriteValue(result, resultSize, byteIndexPntr, type, value) do                      \
-{                                                                                                 \
-	type localVariableForValue = (value);                                                         \
-	BinSer_WriteValue_((result), (resultSize), (byteIndex), sizeof(type), &localVariableForValue) \
+#define BinSer_WriteValue(result, resultSize, byteIndexPntr, type, value) do                           \
+{                                                                                                      \
+	type localVariableForValue = (value);                                                              \
+	BinSer_WriteValue_((result), (resultSize), (byteIndexPntr), sizeof(type), &localVariableForValue); \
 } while(0)
 
 #define BinSer_WriteU8(result, resultSize, byteIndexPntr, value)  BinSer_WriteValue((result), (resultSize), (byteIndexPntr), u8,  (value))
