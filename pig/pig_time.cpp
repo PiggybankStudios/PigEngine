@@ -91,17 +91,6 @@ r32 OscillateSaw(r32 min, r32 max, u64 periodMs, u64 offset = 0)
 	return OscillateSawBy(ProgramTime, min, max, periodMs, offset);
 }
 
-u64 TimeSinceBy(u64 timeSource, u64 programTimeSnapshot)
-{
-	if (programTimeSnapshot <= timeSource)
-	{
-		return timeSource - programTimeSnapshot;
-	}
-	else 
-	{
-		return 0;
-	}
-}
 u64 TimeSince(u64 programTimeSnapshot)
 {
 	if (programTimeSnapshot <= ProgramTime)
