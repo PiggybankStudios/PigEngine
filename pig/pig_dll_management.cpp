@@ -51,6 +51,38 @@ GYLIB_GET_TEMP_ARENA_DEF(Pig_GetTempArena)
 	}
 }
 
+// +--------------------------------------------------------------+
+// |               Custom Scratch Arenas Interface                |
+// +--------------------------------------------------------------+
+inline MemArena_t* GetScratchArena(MemArena_t* avoidConflictWith1, MemArena_t* avoidConflictWith2) //pre-declared in gy_scratch_arenas.h
+{
+	DebugAssert(plat != nullptr || startup != nullptr);
+	if (startup != nullptr)
+	{
+		DebugAssert(startup->GetScratchArena != nullptr);
+		return startup->GetScratchArena(avoidConflictWith1, avoidConflictWith2);
+	}
+	else
+	{
+		DebugAssert(plat->GetScratchArena != nullptr);
+		return plat->GetScratchArena(avoidConflictWith1, avoidConflictWith2);
+	}
+}
+inline void FreeScratchArena(MemArena_t* scratchArena) //pre-declared in gy_scratch_arenas.h
+{
+	DebugAssert(plat != nullptr || startup != nullptr);
+	if (startup != nullptr)
+	{
+		DebugAssert(startup->FreeScratchArena != nullptr);
+		startup->FreeScratchArena(scratchArena);
+	}
+	else
+	{
+		DebugAssert(plat->FreeScratchArena != nullptr);
+		plat->FreeScratchArena(scratchArena);
+	}
+}
+
 u64 LogGlobals_GetPreciseProgramTime()
 {
 	return ((plat != nullptr) ? plat->GetProgramTime(nullptr, true) : 0);
@@ -60,8 +92,9 @@ u64 LogGlobals_GetThreadNumber()
 	return (u64)((plat != nullptr) ? plat->GetThisThreadId() : 0);
 }
 
-void PigEntryPoint(PigEntryPoint_t entryPoint, const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)
+void PigEntryPoint(PigEntryPoint_t entryPoint, const StartupInfo_t* startupInfo, const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)
 {
+	startup = startupInfo;
 	pigEntryPoint = entryPoint;
 	platInfo = info;
 	plat = api;
@@ -125,6 +158,7 @@ void PigExitPoint(PigEntryPoint_t entryPoint)
 	pigEntryPoint = PigEntryPoint_None;
 	pigIn    = nullptr;
 	pigOut   = nullptr;
+	startup  = nullptr;
 	//NOTE: We don't clear these because the task threads and audio thread actually want access to them.
 	//      This is fine because the platform layer will make sure those aren't running in the DLL during a DLL reload
 	// PigClearGlobals();

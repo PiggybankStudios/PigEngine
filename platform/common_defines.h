@@ -33,5 +33,4 @@ Date:   01\14\2022
 #define FILE_WATCHING_SLEEP_TIME   50 //ms
 #define FILE_WATCHING_NOTIFY_DELAY 300 //ms
 
-
 #endif //  _COMMON_DEFINES_H

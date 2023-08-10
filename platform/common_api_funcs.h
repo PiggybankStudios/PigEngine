@@ -9,6 +9,12 @@ Description:
 #ifndef _COMMON_API_FUNCS_H
 #define _COMMON_API_FUNCS_H
 
+#define PLAT_API_GET_SCRATCH_ARENA_DEFINITION(functionName) MemArena_t* functionName(MemArena_t* avoidConflictWith1, MemArena_t* avoidConflictWith2)
+typedef PLAT_API_GET_SCRATCH_ARENA_DEFINITION(PlatApiGetScratchArena_f);
+
+#define PLAT_API_FREE_SCRATCH_ARENA_DEFINITION(functionName) void functionName(MemArena_t* scratchArena)
+typedef PLAT_API_FREE_SCRATCH_ARENA_DEFINITION(PlatApiFreeScratchArena_f);
+
 #define PLAT_API_SHOW_MESSAGE_BOX_DEFINITION(functionName) void functionName(const char* title, const char* message)
 typedef PLAT_API_SHOW_MESSAGE_BOX_DEFINITION(PlatApiShowMessageBox_f);
 

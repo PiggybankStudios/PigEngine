@@ -24,6 +24,8 @@ void Win32_FillStartupInfo(StartupInfo_t* info)
 	
 	info->monitors = &Platform->monitors;
 	
+	info->GetScratchArena      = Win32_GetScratchArena;
+	info->FreeScratchArena     = Win32_FreeScratchArena;
 	info->ShowMessageBox       = Win32_ShowMessageBox;
 	info->HandleAssertion      = Win32_HandleAssertion;
 	info->DebugOutput          = Win32_DebugOutput;
@@ -107,6 +109,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 {
 	NotNull(api);
 	ClearPointer(api);
+	api->GetScratchArena           = Win32_GetScratchArena;
+	api->FreeScratchArena          = Win32_FreeScratchArena;
 	api->ShowMessageBox            = Win32_ShowMessageBox;
 	api->HandleAssertion           = Win32_HandleAssertion;
 	api->DebugOutput               = Win32_DebugOutput;

@@ -13,6 +13,7 @@ Description:
 // +--------------------------------------------------------------+
 #define PLATFORM_LAYER
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
+#define GYLIB_SCRATCH_ARENA_AVAILABLE
 #include "common_includes.h"
 
 #include "win32/win32_version.h"
@@ -88,6 +89,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 // |                    Platform Source Files                     |
 // +--------------------------------------------------------------+
 #include "gylib/gy_temp_memory.cpp"
+#include "gylib/gy_scratch_arenas.cpp"
 
 #include "win32/win32_func_defs.h"
 #include "win32/win32_debug.cpp"

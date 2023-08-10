@@ -11,6 +11,7 @@ Description:
 // +--------------------------------------------------------------+
 #define ENGINE_LAYER
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
+#define GYLIB_SCRATCH_ARENA_AVAILABLE
 #if WASM_COMPILATION
 #define GY_CUSTOM_STD_LIB
 #define GY_WASM_STD_LIB
@@ -76,6 +77,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                           Globals                            |
 // +--------------------------------------------------------------+
+static const StartupInfo_t*   startup       = nullptr;
 static const PlatformInfo_t*  platInfo      = nullptr;
 static const PlatformApi_t*   plat          = nullptr;
 static       EngineInput_t*   pigIn         = nullptr;
@@ -195,7 +197,7 @@ static       v2               ScreenSize     = {};
 // Version_t Pig_GetVersion()
 PIG_GET_VERSION_DEF(Pig_GetVersion)
 {
-	PigEntryPoint(PigEntryPoint_GetVersion, nullptr, nullptr, nullptr, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_GetVersion, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 	Version_t result;
 	result.major = ENGINE_VERSION_MAJOR;
 	result.minor = ENGINE_VERSION_MINOR;
@@ -210,8 +212,8 @@ PIG_GET_VERSION_DEF(Pig_GetVersion)
 // void Pig_GetStartupOptions(const StartupInfo_t* info, StartupOptions_t* optionsOut)
 PIG_GET_STARTUP_OPTIONS_DEF(Pig_GetStartupOptions)
 {
-	PigEntryPoint(PigEntryPoint_GetStartupOptions, nullptr, nullptr, nullptr, nullptr, nullptr);
-	GameGetStartupOptions(info, optionsOut);
+	PigEntryPoint(PigEntryPoint_GetStartupOptions, info, nullptr, nullptr, nullptr, nullptr, nullptr);
+	GameGetStartupOptions(optionsOut);
 	PigExitPoint(PigEntryPoint_GetStartupOptions);
 }
 
@@ -221,7 +223,7 @@ PIG_GET_STARTUP_OPTIONS_DEF(Pig_GetStartupOptions)
 // void Pig_Initialize(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 PIG_INITIALIZE_DEF(Pig_Initialize)
 {
-	PigEntryPoint(PigEntryPoint_Initialize, info, api, memory, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_Initialize, nullptr, info, api, memory, nullptr, nullptr);
 	ProgramTime = programTime;
 	UnixTimestamp = unixTimestamp;
 	LocalTimestamp = localTimestamp;
@@ -235,7 +237,7 @@ PIG_INITIALIZE_DEF(Pig_Initialize)
 // void Pig_Update(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, EngineInput_t* input, EngineOutput_t* output)
 PIG_UPDATE_DEF(Pig_Update)
 {
-	PigEntryPoint(PigEntryPoint_Update, info, api, memory, input, output);
+	PigEntryPoint(PigEntryPoint_Update, nullptr, info, api, memory, input, output);
 	PigUpdate();
 	PigExitPoint(PigEntryPoint_Update);
 }
@@ -256,7 +258,7 @@ PIG_AUDIO_SERVICE_DEF(Pig_AudioService)
 // bool Pig_ShouldWindowClose(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, const PlatWindow_t* window)
 PIG_SHOULD_WINDOW_CLOSE_DEF(Pig_ShouldWindowClose)
 {
-	PigEntryPoint(PigEntryPoint_ShouldWindowClose, info, api, memory, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_ShouldWindowClose, nullptr, info, api, memory, nullptr, nullptr);
 	bool result = PigShouldWindowClose(window);
 	PigExitPoint(PigEntryPoint_ShouldWindowClose);
 	return result;
@@ -286,7 +288,7 @@ PIG_PERFORM_TASK_DEF(Pig_PerformTask)
 // void Pig_PreReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t newVersion)
 PIG_PRE_RELOAD_DEF(Pig_PreReload)
 {
-	PigEntryPoint(PigEntryPoint_PreReload, info, api, memory, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_PreReload, nullptr, info, api, memory, nullptr, nullptr);
 	PigPreReload(newVersion);
 	PigExitPoint(PigEntryPoint_PreReload);
 }
@@ -297,7 +299,7 @@ PIG_PRE_RELOAD_DEF(Pig_PreReload)
 // void Pig_PostReload(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, Version_t oldVersion, u64 programTime, u64 unixTimestamp, u64 localTimestamp)
 PIG_POST_RELOAD_DEF(Pig_PostReload)
 {
-	PigEntryPoint(PigEntryPoint_PostReload, info, api, memory, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_PostReload, nullptr, info, api, memory, nullptr, nullptr);
 	ProgramTime = programTime;
 	UnixTimestamp = unixTimestamp;
 	LocalTimestamp = localTimestamp;
@@ -311,7 +313,7 @@ PIG_POST_RELOAD_DEF(Pig_PostReload)
 // void Pig_Closing(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory)
 PIG_CLOSING_DEF(Pig_Closing)
 {
-	PigEntryPoint(PigEntryPoint_Closing, info, api, memory, nullptr, nullptr);
+	PigEntryPoint(PigEntryPoint_Closing, nullptr, info, api, memory, nullptr, nullptr);
 	PigClosing();
 	PigExitPoint(PigEntryPoint_Closing);
 }

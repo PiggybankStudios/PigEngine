@@ -8,6 +8,9 @@ Description:
 
 #define WIN32_FILETIME_SEC_OFFSET           11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
 
+#define MAIN_SCRATCH_ARENA_SIZE            Kilobytes(256)
+#define MAIN_SCRATCH_ARENA_MAX_NUM_MARKS   32
+
 // +--------------------------------------------------------------+
 // |                       Helper Functions                       |
 // +--------------------------------------------------------------+
@@ -51,49 +54,6 @@ void Win32_FatalError(const char* errorMessage, const char* messageBoxTitle)
 void Win32_InitError(const char* errorMessage) //pre-declared in win32_func_defs.cpp
 {
 	Win32_FatalError(errorMessage, "Initialization Error Encountered!");
-}
-
-MyStr_t Win32_GetExecutablePath(MemArena_t* memArena)
-{
-	NotNull(memArena);
-	AssertSingleThreaded(); //TODO: Make this thread safe?
-	
-	// TempPushMark(); //TODO: Move this back to the temporary memory arena
-	u32 tempBufferSize = 1024;
-	char* tempBuffer = AllocArray(&Platform->mainHeap, char, tempBufferSize);
-	NotNull(tempBuffer);
-	DWORD pathLength = GetModuleFileNameA(0, tempBuffer, tempBufferSize);
-	FreeMem(&Platform->mainHeap, tempBuffer);
-	// TempPopMark();
-	if (pathLength <= 0) { return MyStr_Empty; }
-	if (pathLength >= tempBufferSize-1)
-	{
-		PrintLine_W("Our executable path is %u characters or more. Please put the game in a shorter directory", tempBufferSize-1);
-		return MyStr_Empty;
-	}
-	
-	char* resultBuffer = AllocArray(memArena, char, pathLength+1);
-	NotNull(resultBuffer);
-	DWORD resultLength = GetModuleFileNameA(0, resultBuffer, pathLength+1);
-	Assert(resultLength == pathLength);
-	resultBuffer[resultLength] = '\0';
-	
-	return NewStr(resultLength, resultBuffer);
-}
-MyStr_t Win32_GetWorkingDirectory(MemArena_t* memArena)
-{
-	NotNull(memArena);
-	
-	DWORD pathLength = GetCurrentDirectory(0, nullptr);
-	if (pathLength <= 0) { return MyStr_Empty; }
-	
-	char* resultBuffer = AllocArray(memArena, char, pathLength+2);
-	NotNull(resultBuffer);
-	DWORD resultLength = GetCurrentDirectoryA(pathLength+1, resultBuffer);
-	Assert(resultLength <= pathLength); //TODO: Should this just be == ?
-	if (resultBuffer[resultLength] != '\\' && resultBuffer[resultLength] != '/') { resultBuffer[resultLength] = '\\'; resultLength++; }
-	resultBuffer[resultLength] = '\0';
-	return NewStr(resultLength, resultBuffer);
 }
 
 #if PROCMON_SUPPORTED
@@ -192,6 +152,7 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	printf("[Win32 Platform Core is Initializing...]\n");
 	
 	InitMemArena_StdHeap(&Platform->stdHeap);
+	InitThreadLocalScratchArenas(&Platform->stdHeap, MAIN_SCRATCH_ARENA_SIZE, MAIN_SCRATCH_ARENA_MAX_NUM_MARKS);
 	
 	void* mainHeapMem = malloc(PLAT_MAIN_HEAP_SIZE);
 	if (mainHeapMem == nullptr)
@@ -234,9 +195,11 @@ void Win32_FindExePathAndWorkingDir()
 {
 	NotNull(Platform);
 	AssertSingleThreaded();
-	TempPushMark();
-	MyStr_t tempExePath = Win32_GetExecutablePath(GetTempArena());
-	if (IsEmptyStr(tempExePath))
+	OsError_t osError = OsError_None;
+	MemArena_t* scratch = GetScratchArena();
+	
+	MyStr_t tempExePath = OsGetExecutablePath(scratch, &osError);
+	if (osError != OsError_None || IsEmptyStr(tempExePath))
 	{
 		Win32_InitError("Failed to get executable directory. This could be due to the exe being in a location with too long of a path.");
 	}
@@ -245,19 +208,16 @@ void Win32_FindExePathAndWorkingDir()
 	SplitFilePath(tempExePath, &Platform->exeDirectory, &Platform->exeFileName);
 	Platform->exeDirectory = AllocString(&Platform->mainHeap, &Platform->exeDirectory);
 	Platform->exeFileName = AllocString(&Platform->mainHeap, &Platform->exeFileName);
-	StrReplaceInPlace(Platform->exeDirectory, "\\", "/");
-	StrReplaceInPlace(Platform->exeFileName, "\\", "/");
 	PrintLine_I("Our exe is in folder \"%s\" named \"%s\"", Platform->exeDirectory.pntr, Platform->exeFileName.pntr);
-	TempPopMark();
 	
-	Platform->workingDirectory = Win32_GetWorkingDirectory(&Platform->mainHeap);
-	if (IsEmptyStr(Platform->workingDirectory))
+	Platform->workingDirectory = OsGetWorkingDirectory(&Platform->mainHeap, &osError);
+	if (osError != OsError_None || IsEmptyStr(Platform->workingDirectory))
 	{
 		Win32_InitError("Failed to get working directory");
 	}
-	StrReplaceInPlace(Platform->workingDirectory, "\\", "/");
 	PrintLine_I("Our working directory is \"%s\"", Platform->workingDirectory.pntr);
 	
+	FreeScratchArena(scratch);
 }
 
 void Win32_ChooseDefaultDirectory()

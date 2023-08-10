@@ -24,6 +24,8 @@ struct StartupInfo_t
 	
 	const PlatMonitorList_t* monitors;
 	
+	PlatApiGetScratchArena_f*      GetScratchArena;
+	PlatApiFreeScratchArena_f*     FreeScratchArena;
 	PlatApiShowMessageBox_f*       ShowMessageBox;
 	PlatApiHandleAssertion_f*      HandleAssertion;
 	PlatApiDebugOutput_f*          DebugOutput;
@@ -95,6 +97,8 @@ struct PlatformInfo_t
 
 struct PlatformApi_t
 {
+	PlatApiGetScratchArena_f*           GetScratchArena;
+	PlatApiFreeScratchArena_f*          FreeScratchArena;
 	PlatApiShowMessageBox_f*            ShowMessageBox;
 	PlatApiHandleAssertion_f*           HandleAssertion;
 	PlatApiDebugOutput_f*               DebugOutput;

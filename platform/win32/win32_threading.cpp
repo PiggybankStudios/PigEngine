@@ -9,7 +9,11 @@ Description:
 	**       This includes creation+deletion of Semaphores and Mutexes.
 */
 
-THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr);
+//TODO: The scratch memory arena size and max mark count should be configurable by the engine dll
+#define WIN32_WORKER_THREAD_SCRATCH_ARENA_SIZE            Kilobytes(128)
+#define WIN32_WORKER_THREAD_SCRATCH_ARENA_MAX_NUM_MARKS   32
+
+THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr);
 GYLIB_GET_TEMP_ARENA_DEF(Win32_GetTempArena);
 
 // +--------------------------------------------------------------+
@@ -304,7 +308,7 @@ void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenaMarkC
 		void* tempArenaSpace = malloc(tempArenasSize); //TODO: Should we allocate this using a windows specific call?
 		NotNull(tempArenaSpace);
 		InitMemArena_MarkedStack(&newPoolEntry->tempArena, tempArenasSize, tempArenaSpace, tempArenaMarkCount);
-		Win32_CreateThread(Win32_ThreadPoolFunc, newPoolEntry, &newPoolEntry->threadPntr);
+		Win32_CreateThread(Win32_WorkerThreadInit, newPoolEntry, &newPoolEntry->threadPntr);
 		NotNull(newPoolEntry->threadPntr);
 	}
 	Platform->numQueuedTasks = 0;
@@ -413,7 +417,7 @@ PLAT_API_QUEUE_TASK_DEFINITION(Win32_QueueTask)
 }
 
 // +--------------------------------------------------------------+
-// |                   Gylib TempArena Function                   |
+// |          Gylib TempArena and ScratchArena Functions          |
 // +--------------------------------------------------------------+
 // +==============================+
 // |      Win32_GetTempArena      |
@@ -440,13 +444,31 @@ GYLIB_GET_TEMP_ARENA_DEF(Win32_GetTempArena) //pre-declared at top of file
 	}
 }
 
+// +==============================+
+// |    Win32_GetScratchArena     |
+// +==============================+
+// MemArena_t* GetScratchArena(MemArena_t* avoidConflictWith1 = nullptr, MemArena_t* avoidConflictWith2 = nullptr)
+PLAT_API_GET_SCRATCH_ARENA_DEFINITION(Win32_GetScratchArena)
+{
+	return GetScratchArena(avoidConflictWith1, avoidConflictWith2);
+}
+
+// +==============================+
+// |    Win32_FreeScratchArena    |
+// +==============================+
+// void FreeScratchArena(MemArena_t* scratchArena)
+PLAT_API_FREE_SCRATCH_ARENA_DEFINITION(Win32_FreeScratchArena)
+{
+	return FreeScratchArena(scratchArena);
+}
+
 // +--------------------------------------------------------------+
 // |                     Thread Pool Function                     |
 // +--------------------------------------------------------------+
 // +==============================+
-// |     Win32_ThreadPoolFunc     |
+// |    Win32_WorkerThreadRun     |
 // +==============================+
-THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr) //pre-declared at top of file
+THREAD_FUNCTION_DEF(Win32_WorkerThreadRun, userPntr)
 {
 	NotNull_(userPntr);
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
@@ -496,4 +518,22 @@ THREAD_FUNCTION_DEF(Win32_ThreadPoolFunc, userPntr) //pre-declared at top of fil
 	PrintLine_E("Thread Pool Thread[%llu] is closing! (Thread %llu 0x%08X)", context->id, context->threadPntr->id, context->threadPntr->win32_id);
 	context->isClosed = true;
 	return 0;
+}
+// +==============================+
+// |    Win32_WorkerThreadInit    |
+// +==============================+
+THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr) //pre-declared at top of file
+{
+	NotNull_(userPntr);
+	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
+	
+	//TODO: We should probably find a way to allocate the memory for the scratch arenas from somewhere besides std malloc
+	MemArena_t stdHeapArena;
+	InitMemArena_StdHeap(&stdHeapArena);
+	
+	InitThreadLocalScratchArenas(&stdHeapArena, WIN32_WORKER_THREAD_SCRATCH_ARENA_SIZE, WIN32_WORKER_THREAD_SCRATCH_ARENA_MAX_NUM_MARKS);
+	int result = Win32_WorkerThreadRun(userPntr);
+	FreeThreadLocalScratchArenas(&stdHeapArena);
+	
+	return result;
 }
