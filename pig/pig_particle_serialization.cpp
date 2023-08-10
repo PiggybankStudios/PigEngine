@@ -491,7 +491,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 {
 	NotNullStr(&fileContents);
 	NotNull3(memArena, log, collectionOut);
-	Assert(memArena->type != MemArenaType_MarkedStack);
+	Assert(DoesMemArenaSupportFreeing(memArena));
 	
 	VarArray_t types;
 	VarArray_t bursts;
