@@ -532,7 +532,7 @@ THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr) //pre-declared at top of f
 	
 	InitThreadLocalScratchArenas(context->scratchArenasSource, context->scratchArenasSize, context->scratchArenasMarkCount);
 	int result = Win32_WorkerThreadRun(userPntr);
-	FreeThreadLocalScratchArenas(context->scratchArenasSource);
+	FreeThreadLocalScratchArenas();
 	
 	return result;
 }
