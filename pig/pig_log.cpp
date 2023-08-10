@@ -14,7 +14,7 @@ Description:
 void CreateDefaultProcessLog(ProcessLog_t* logOut)
 {
 	NotNull2(TempArena, mainHeap);
-	CreateProcessLog(logOut, DEFAULT_PROCESS_LOG_FIFO_SIZE, TempArena, mainHeap, TempArena);
+	CreateProcessLog(logOut, DEFAULT_PROCESS_LOG_FIFO_SIZE, TempArena, mainHeap);
 }
 
 // +--------------------------------------------------------------+
@@ -131,7 +131,6 @@ void InsertProcessLogInOrder(const ProcessLog_t* log, const char* headerAndFoote
 		&pig->debugConsole.fifo,
 		&log->fifo,
 		ProcessLogInsertLinesSortCallback,
-		TempArena,
 		true, true,
 		nullptr,
 		ProcessLogAddLinesAfterCallback,

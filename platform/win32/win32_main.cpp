@@ -297,7 +297,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PerfSection("ThreadPoolCreation");
 	InitPhase = Win32InitPhase_SocketsInitialized;
 	
-	Win32_InitThreadPool(Platform->startupOptions.threadPoolSize, Platform->startupOptions.threadPoolTempArenasSize, Platform->startupOptions.threadPoolTempArenasNumMarks);
+	Win32_InitThreadPool(
+		Platform->startupOptions.threadPoolSize,
+		Platform->startupOptions.threadPoolTempArenasSize,
+		Platform->startupOptions.threadPoolTempArenasNumMarks,
+		Platform->startupOptions.threadPoolScratchArenasSize,
+		Platform->startupOptions.threadPoolScratchArenasNumMarks
+	);
 	
 	// +==============================+
 	// |        WindowOpening         |

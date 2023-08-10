@@ -247,7 +247,6 @@ void PigHandlePlatformDebugLines(const StringFifo_t* platDebugLines)
 			&pig->debugConsole.fifo,
 			platDebugLines,
 			PigPlatDebugLinesSortCallback,
-			TempArena,
 			true, true,
 			PigPlatDebugLinesBeforeCallback,
 			PigPlatDebugLinesAfterCallback,

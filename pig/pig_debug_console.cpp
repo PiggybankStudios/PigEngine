@@ -417,7 +417,9 @@ void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, bool forceShow
 				if (formattedCommandStrLengthBeforeTabs <  28) { formattedCommandStrLength++; }
 				if (formattedCommandStrLengthBeforeTabs <  32) { formattedCommandStrLength++; }
 				if (formattedCommandStrLengthBeforeTabs >= 32) { formattedCommandStrLength++; }
-				char* formattedCommandStr = TempArray(char, formattedCommandStrLength+1);
+				
+				MemArena_t* scratch = GetScratchArena();
+				char* formattedCommandStr = AllocArray(scratch, char, formattedCommandStrLength+1);
 				NotNull(formattedCommandStr);
 				u64 formattedCommandStrIndex = 0;
 				formattedCommandStr[formattedCommandStrIndex] = '\b'; formattedCommandStrIndex++;
@@ -455,6 +457,8 @@ void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, bool forceShow
 				{
 					newItem->displayText = PrintInArenaStr(mainHeap, "%s", formattedCommandStr);
 				}
+				
+				FreeScratchArena(scratch);
 			}
 		}
 		
@@ -836,18 +840,19 @@ void DebugConsoleLayout(DebugConsole_t* console)
 
 void DebugConsoleLineLayout(DebugConsole_t* console, StringFifoLine_t* fifoLine, DebugConsoleLine_t* dbgLine)
 {
-	TempPushMark();
 	NotNull(console);
 	NotNull(fifoLine);
 	NotNull(dbgLine);
+	MemArena_t* scratch = GetScratchArena();
+	
 	MyStr_t text = GetFifoLineText(fifoLine);
 	MyStr_t filePathAndFuncName = GetFifoLineMetaString(fifoLine);
 	MyStr_t fileName = MyStr_Empty;
 	MyStr_t funcName = MyStr_Empty;
 	bool splitSuccess = SplitDebugLineFileAndFuncStr(filePathAndFuncName, false, &fileName, &funcName);
 	DebugAssertAndUnused_(splitSuccess, splitSuccess);
-	MyStr_t fileLineNumberStr = TempPrintStr("%llu", dbgLine->fileLineNumber);
-	MyStr_t gutterNumberStr = TempPrintStr("%u", fifoLine->lineNumber);
+	MyStr_t fileLineNumberStr = PrintInArenaStr(scratch, "%llu", dbgLine->fileLineNumber);
+	MyStr_t gutterNumberStr = PrintInArenaStr(scratch, "%u", fifoLine->lineNumber);
 	
 	FontFace_t* fontFace = GetFontFace(&pig->resources.fonts->debug, SelectDefaultFontFace());
 	NotNull_(fontFace);
@@ -868,7 +873,7 @@ void DebugConsoleLineLayout(DebugConsole_t* console, StringFifoLine_t* fifoLine,
 	dbgLine->textPos = NewVec2(0, textMeasure.offset.y);
 	dbgLine->mainRec.size = dbgLine->textSize;
 	
-	TempPopMark();
+	FreeScratchArena(scratch);
 }
 
 void DebugConsoleCaptureMouse(DebugConsole_t* console)
@@ -1314,11 +1319,11 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				DebugConsoleTextPos_t lastPos;
 				lastPos.lineIndex = 0;
 				lastPos.byteIndex = (console->fifo.lastLine != nullptr) ? console->fifo.lastLine->textLength : 0;
-				TempPushMark();
-				MyStr_t selectedText = GetDebugConsoleLinesAsCopyText(console, firstPos, lastPos, TempArena, true);
+				MemArena_t* scratch = GetScratchArena();
+				MyStr_t selectedText = GetDebugConsoleLinesAsCopyText(console, firstPos, lastPos, scratch, true);
 				if (selectedText.length > 0)
 				{
-					MyStr_t outputFilePath = TempPrintStr("%llu.txt", ProgramTime); //TODO: Change this to an actual date time format
+					MyStr_t outputFilePath = PrintInArenaStr(scratch, "%llu.txt", ProgramTime); //TODO: Change this to an actual date time format
 					if (plat->WriteEntireFile(outputFilePath, selectedText.pntr, selectedText.length))
 					{
 						if (!plat->ShowFile(outputFilePath))
@@ -1331,7 +1336,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 						PrintLine_E("Failed to write %llu chars to file \"%.*s\"", selectedText.length, outputFilePath.length, outputFilePath.pntr);
 					}
 				}
-				TempPopMark();
+				FreeScratchArena(scratch);
 			}
 		}
 	}
@@ -1740,9 +1745,9 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	if (console->state != DbgConsoleState_Closed && KeyPressed(Key_C) && KeyDownRaw(Key_Control) && console->selectionActive && !console->overlayMode)
 	{
 		HandleKeyExtended(Key_C);
-		TempPushMark();
+		MemArena_t* scratch = GetScratchArena();
 		bool moreThanOneLineSelected = (console->selectionStart.lineIndex != console->selectionEnd.lineIndex);
-		MyStr_t selectedText = GetDebugConsoleLinesAsCopyText(console, console->selectionStart, console->selectionEnd, TempArena, moreThanOneLineSelected);
+		MyStr_t selectedText = GetDebugConsoleLinesAsCopyText(console, console->selectionStart, console->selectionEnd, scratch, moreThanOneLineSelected);
 		if (selectedText.length > 0)
 		{
 			if (!plat->CopyTextToClipboard(selectedText))
@@ -1750,7 +1755,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				PrintLine_E("Failed to copy selection of %llu chars to clipboard", selectedText.length);
 			}
 		}
-		TempPopMark();
+		FreeScratchArena(scratch);
 	}
 }
 
@@ -1857,6 +1862,8 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// | Render Lines and Gutter Blocks |
 		// +================================+
 		{
+			MemArena_t* scratch = GetScratchArena();
+			
 			bool selectionIsBackwards = false;
 			DebugConsoleTextPos_t selectionMin = console->selectionStart;
 			DebugConsoleTextPos_t selectionMax = console->selectionEnd;
@@ -1914,14 +1921,14 @@ void RenderDebugConsole(DebugConsole_t* console)
 					}
 					fileNameBlockStarted = true;
 					fileNameBlockStartY = mainRec.y + mainRec.height;
-					fileNameBlockStr = AllocString(TempArena, &fileName);
+					fileNameBlockStr = AllocString(scratch, &fileName);
 					fileNameChanged = true;
 				}
 				if (!fileLineNumBlockStarted || dbgLine->fileLineNumber != fileLineNumBlockValue || fileNameChanged)
 				{
 					if (fileLineNumBlockStarted)
 					{
-						DebugConsoleRenderGutterBlock(console->fileLineNumGutterRec, TempPrintStr(":%llu", fileLineNumBlockValue), mainRec, fileLineNumBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
+						DebugConsoleRenderGutterBlock(console->fileLineNumGutterRec, PrintInArenaStr(scratch, ":%llu", fileLineNumBlockValue), mainRec, fileLineNumBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
 					}
 					fileLineNumBlockStarted = true;
 					fileLineNumBlockStartY = mainRec.y + mainRec.height;
@@ -1935,13 +1942,13 @@ void RenderDebugConsole(DebugConsole_t* console)
 					}
 					funcNameBlockStarted = true;
 					funcNameBlockStartY = mainRec.y + mainRec.height;
-					funcNameBlockStr = AllocString(TempArena, &funcName);
+					funcNameBlockStr = AllocString(scratch, &funcName);
 				}
 				if (!timeBlockStarted || timeBlockValue != dbgLine->timestamp)
 				{
 					RealTime_t lineRealTime = {};
 					ConvertTimestampToRealTime(timeBlockValue, &lineRealTime, pigIn->localTimezoneDoesDst);
-					MyStr_t timeBlockStr = FormatRealTime(&lineRealTime, TempArena, false, true, false);
+					MyStr_t timeBlockStr = FormatRealTime(&lineRealTime, scratch, false, true, false);
 					if (timeBlockStarted)
 					{
 						DebugConsoleRenderGutterBlock(console->timeGutterRec, timeBlockStr, mainRec, timeBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
@@ -1953,7 +1960,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 				
 				if (!IsFlagSet(dbgLine->flags, DbgFlag_New) && RecsIntersect(mainRec, console->viewRec))
 				{
-					TempPushMark();
+					MemArena_t* scratch2 = GetScratchArena(scratch);
 					MyStr_t text = GetFifoLineText(fifoLine);
 					Color_t textColor = GetDbgLevelTextColor(dbgLine->dbgLevel);
 					textColor = ColorTransparent(textColor, console->fullAlphaText ? 1.0f : console->alphaAmount);
@@ -1989,10 +1996,10 @@ void RenderDebugConsole(DebugConsole_t* console)
 					RcClearFontFlowCallbacks();
 					
 					RcSetViewport(console->gutterRec);
-					RcDrawText(TempPrint("%u", fifoLine->lineNumber), gutterDrawPos, ColorTransparent(MonokaiWhite, console->alphaAmount), TextAlignment_Right);
+					RcDrawText(PrintInArenaStr(scratch2, "%u", fifoLine->lineNumber), gutterDrawPos, ColorTransparent(MonokaiWhite, console->alphaAmount), TextAlignment_Right);
 					RcSetViewport(console->viewRec);
 					
-					TempPopMark();
+					FreeScratchArena(scratch2);
 				}
 				fifoLine = fifoLine->prev;
 				lineIndex++;
@@ -2007,7 +2014,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 			if (fileLineNumBlockStarted)
 			{
 				rec pretendNextRec = NewRec(0, lineBasePos.y - console->totalLinesSize.height, 0, 0);
-				DebugConsoleRenderGutterBlock(console->fileLineNumGutterRec, TempPrintStr(":%llu", fileLineNumBlockValue), pretendNextRec, fileLineNumBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
+				DebugConsoleRenderGutterBlock(console->fileLineNumGutterRec, PrintInArenaStr(scratch, ":%llu", fileLineNumBlockValue), pretendNextRec, fileLineNumBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
 				fileLineNumBlockStarted = false;
 			}
 			if (funcNameBlockStarted)
@@ -2020,11 +2027,13 @@ void RenderDebugConsole(DebugConsole_t* console)
 			{
 				RealTime_t lineRealTime = {};
 				ConvertTimestampToRealTime(timeBlockValue, &lineRealTime, pigIn->localTimezoneDoesDst);
-				MyStr_t timeBlockStr = FormatRealTime(&lineRealTime, TempArena, false, true, false);
+				MyStr_t timeBlockStr = FormatRealTime(&lineRealTime, scratch, false, true, false);
 				rec pretendNextRec = NewRec(0, lineBasePos.y - console->totalLinesSize.height, 0, 0);
 				DebugConsoleRenderGutterBlock(console->timeGutterRec, timeBlockStr, pretendNextRec, timeBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
 				timeBlockStarted = false;
 			}
+			
+			FreeScratchArena(scratch);
 		}
 		
 		// +==============================+

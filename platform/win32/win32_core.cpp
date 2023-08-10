@@ -8,8 +8,8 @@ Description:
 
 #define WIN32_FILETIME_SEC_OFFSET           11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
 
-#define MAIN_SCRATCH_ARENA_SIZE            Kilobytes(256)
-#define MAIN_SCRATCH_ARENA_MAX_NUM_MARKS   32
+#define MAIN_SCRATCH_ARENA_SIZE            Megabytes(1)
+#define MAIN_SCRATCH_ARENA_MAX_NUM_MARKS   256
 
 // +--------------------------------------------------------------+
 // |                       Helper Functions                       |

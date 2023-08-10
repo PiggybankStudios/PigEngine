@@ -100,6 +100,9 @@ struct PlatThreadPoolThread_t
 	u64 id;
 	PlatThread_t* threadPntr;
 	MemArena_t tempArena;
+	MemArena_t* scratchArenasSource;
+	u64 scratchArenasSize;
+	u64 scratchArenasMarkCount;
 	
 	bool shouldClose;
 	bool isClosed;

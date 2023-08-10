@@ -290,7 +290,7 @@ void Win32_InitThreading()
 	GetTempArena = Win32_GetTempArena;
 }
 
-void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenaMarkCount)
+void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenasMarkCount, u64 scratchArenasSize, u64 scratchArenasMarkCount)
 {
 	AssertSingleThreaded();
 	Win32_CreateSemaphore(&Platform->threadPoolSemaphore, 0, PLAT_MAX_NUM_TASKS);
@@ -305,9 +305,12 @@ void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenaMarkC
 		newPoolEntry->shouldClose = false;
 		newPoolEntry->isClosed = false;
 		newPoolEntry->isAwake = false;
+		newPoolEntry->scratchArenasSource = &Platform->stdHeap; //TODO: Should we allocate this on the main thread before the worker thread starts up?
+		newPoolEntry->scratchArenasSize = scratchArenasSize;
+		newPoolEntry->scratchArenasMarkCount = scratchArenasMarkCount;
 		void* tempArenaSpace = malloc(tempArenasSize); //TODO: Should we allocate this using a windows specific call?
 		NotNull(tempArenaSpace);
-		InitMemArena_MarkedStack(&newPoolEntry->tempArena, tempArenasSize, tempArenaSpace, tempArenaMarkCount);
+		InitMemArena_MarkedStack(&newPoolEntry->tempArena, tempArenasSize, tempArenaSpace, tempArenasMarkCount);
 		Win32_CreateThread(Win32_WorkerThreadInit, newPoolEntry, &newPoolEntry->threadPntr);
 		NotNull(newPoolEntry->threadPntr);
 	}
@@ -527,13 +530,9 @@ THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr) //pre-declared at top of f
 	NotNull_(userPntr);
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
 	
-	//TODO: We should probably find a way to allocate the memory for the scratch arenas from somewhere besides std malloc
-	MemArena_t stdHeapArena;
-	InitMemArena_StdHeap(&stdHeapArena);
-	
-	InitThreadLocalScratchArenas(&stdHeapArena, WIN32_WORKER_THREAD_SCRATCH_ARENA_SIZE, WIN32_WORKER_THREAD_SCRATCH_ARENA_MAX_NUM_MARKS);
+	InitThreadLocalScratchArenas(context->scratchArenasSource, context->scratchArenasSize, context->scratchArenasMarkCount);
 	int result = Win32_WorkerThreadRun(userPntr);
-	FreeThreadLocalScratchArenas(&stdHeapArena);
+	FreeThreadLocalScratchArenas(context->scratchArenasSource);
 	
 	return result;
 }

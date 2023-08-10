@@ -102,6 +102,10 @@ static       v2               ScreenSize     = {};
 #include "common_performance.cpp"
 #include "gylib/gy_temp_memory.cpp"
 
+//NOTE: We don't actually use the normal interface! We reroute things to the platform layer's scratch arenas. See pig_dll_management.cpp for actual function implementations
+// #include "gylib/gy_scratch_arenas.cpp"
+
+
 // +--------------------------------------------------------------+
 // |                         Source Files                         |
 // +--------------------------------------------------------------+

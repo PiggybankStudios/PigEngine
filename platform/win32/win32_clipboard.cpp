@@ -14,14 +14,14 @@ Description:
 COPY_TEXT_TO_CLIPBOARD_DEFINITION(Win32_CopyTextToClipboard)
 {
 	NotNullStr(&text);
+	MemArena_t* scratch = GetScratchArena();
 	
 	u64 dataSize = text.length+1;
 	void* dataPntr = text.chars;
 	bool isDataWide = false;
 	if (DoesStrContainMultibyteUtf8Characters(text))
 	{
-		PushMemMark(GetTempArena());
-		MyWideStr_t wideStr = ConvertUtf8StrToUcs2(GetTempArena(), text);
+		MyWideStr_t wideStr = ConvertUtf8StrToUcs2(scratch, text);
 		dataPntr = wideStr.chars;
 		dataSize = wideStr.length * sizeof(wchar_t);
 		isDataWide = true;
@@ -31,7 +31,7 @@ COPY_TEXT_TO_CLIPBOARD_DEFINITION(Win32_CopyTextToClipboard)
 	if (globalCopy == nullptr)
 	{
 		WriteLine_E("Couldn't allocate space for clipboard data!");
-		if (isDataWide) { PopMemMark(GetTempArena()); }
+		FreeScratchArena(scratch);
 		return false;
 	}
 	
@@ -39,7 +39,7 @@ COPY_TEXT_TO_CLIPBOARD_DEFINITION(Win32_CopyTextToClipboard)
 	MyMemCopy(lockPntr, dataPntr, dataSize);
 	MyMemSet(&lockPntr[dataSize], 0x00, (isDataWide ? sizeof(wchar_t) : sizeof(char)));
 	GlobalUnlock(globalCopy);
-	if (isDataWide) { PopMemMark(GetTempArena()); }
+	FreeScratchArena(scratch);
 	
 	if (OpenClipboard(Platform->windowHandle) == false)
 	{
