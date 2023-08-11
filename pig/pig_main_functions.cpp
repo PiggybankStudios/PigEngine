@@ -6,6 +6,8 @@ Description:
 	** Holds the PigInitialize, PigUpdate, PigPreReload, PigPostReload, and PigClosing functions
 */
 
+#define LOWER_SCRATCH_HIGH_WATERMARK_SPEED 4096
+
 // +--------------------------------------------------------------+
 // |                          Initialize                          |
 // +--------------------------------------------------------------+
@@ -38,13 +40,24 @@ void PigInitialize(EngineMemory_t* memory)
 	GameLoadSettings(&pig->settings, mainHeap);
 	InitializePigPerfGraph(&pig->perfGraph);
 	InitializePigMemGraph(&pig->memGraph);
-	PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,       NewStr("platHeap"),       Grey10);
-	PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap,      NewStr("fixedHeap"),      MonokaiGreen);
-	PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
-	PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
-	PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
-	PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,        NewStr("stdHeap"),        Grey10);
-	PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap,      NewStr("audioHeap"),      MonokaiPurple);
+	{
+		MemArena_t* scratch1 = GetScratchArena();
+		MemArena_t* scratch2 = GetScratchArena(scratch1);
+		MemArena_t* scratch3 = GetScratchArena(scratch1, scratch2);
+		PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,       NewStr("platHeap"),       Grey10);
+		PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap,      NewStr("fixedHeap"),      MonokaiGreen);
+		PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
+		PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
+		PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
+		PigMemGraphAddArena(&pig->memGraph, scratch1,             NewStr("scratch1"),       MonokaiBlue, LOWER_SCRATCH_HIGH_WATERMARK_SPEED);
+		PigMemGraphAddArena(&pig->memGraph, scratch2,             NewStr("scratch2"),       MonokaiBlue, LOWER_SCRATCH_HIGH_WATERMARK_SPEED);
+		PigMemGraphAddArena(&pig->memGraph, scratch3,             NewStr("scratch3"),       MonokaiBlue, LOWER_SCRATCH_HIGH_WATERMARK_SPEED);
+		PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,        NewStr("stdHeap"),        Grey10);
+		PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap,      NewStr("audioHeap"),      MonokaiPurple);
+		FreeScratchArena(scratch1);
+		FreeScratchArena(scratch2);
+		FreeScratchArena(scratch3);
+	}
 	InitializePigDebugOverlay(&pig->debugOverlay);
 	InitPigAudioOutGraph(&pig->audioOutGraph);
 	PigInitNotifications(&pig->notificationsQueue);

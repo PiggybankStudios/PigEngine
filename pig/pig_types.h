@@ -76,6 +76,7 @@ struct PigMemGraphArena_t
 	MemArena_t* pntr;
 	MyStr_t name;
 	Color_t fillColor;
+	u64 lowerHighWatermarkOverTimeAmount;
 	
 	VarArray_t pages; //PigMemGraphArenaPage_t
 	

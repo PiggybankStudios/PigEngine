@@ -16,6 +16,7 @@ struct Win32PlatformState_t
 	Version_t version;
 	
 	MemArena_t stdHeap;
+	MemArena_t stdHeapRedirect; //this is safe to be passed to the game dll, it's hard-tied to platform layer functions that direct to the exe's malloc and free calls
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
 	#if BOX2D_SUPPORTED

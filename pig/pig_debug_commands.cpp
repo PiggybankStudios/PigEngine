@@ -45,6 +45,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"show_friends_list", "Toggles showing of a debug overlay of all your steam friends", "\n",
 	#endif
 	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
+	"test_scratch", "Allocates a specified number of bytes from one of the scratch arenas", "[num_bytes]", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1342,6 +1343,34 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				}
 			}
 		}
+	}
+	
+	// +==============================+
+	// |   test_scratch [num_bytes]   |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "test_scratch"))
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: test_scratch [num_bytes]", numArguments); return validCommand; }
+		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
+		
+		TrimWhitespace(&arguments[0]);
+		u64 unitMultiplier = 1;
+		if (StrEndsWith(arguments[0], "kb", true)) { arguments[0].length -= 2; unitMultiplier = Kilobytes(1); }
+		if (StrEndsWith(arguments[0], "mb", true)) { arguments[0].length -= 2; unitMultiplier = Megabytes(1); }
+		
+		u64 numBytesToAlloc = 0;
+		if (!TryParseU64(arguments[0], &numBytesToAlloc, &parseFailureReason))
+		{
+			PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			return validCommand;
+		}
+		numBytesToAlloc *= unitMultiplier;
+		
+		MemArena_t* scratch = GetScratchArena();
+		PrintLine_D("Allocating %s... (%llu/%llu, %llu pages)", FormatBytesNt(numBytesToAlloc, scratch), scratch->used, scratch->size, scratch->numPages);
+		void* allocResult = AllocMem(scratch, numBytesToAlloc);
+		PrintLine_D("Success %p! (%llu/%llu, %llu pages)", allocResult, scratch->used, scratch->size, scratch->numPages);
+		FreeScratchArena(scratch);
 	}
 	
 	// +==============================+

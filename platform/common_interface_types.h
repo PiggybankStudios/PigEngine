@@ -66,7 +66,7 @@ struct StartupOptions_t
 	u64 threadPoolSize;
 	u64 threadPoolTempArenasSize;
 	u64 threadPoolTempArenasNumMarks;
-	u64 threadPoolScratchArenasSize;
+	u64 threadPoolScratchArenasPageSize;
 	u64 threadPoolScratchArenasNumMarks;
 };
 

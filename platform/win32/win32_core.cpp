@@ -8,7 +8,7 @@ Description:
 
 #define WIN32_FILETIME_SEC_OFFSET           11644473600ULL //11,644,473,600 seconds between Jan 1st 1601 and Jan 1st 1970
 
-#define MAIN_SCRATCH_ARENA_SIZE            Megabytes(1)
+#define MAIN_SCRATCH_ARENA_PAGE_SIZE       Kilobytes(512)
 #define MAIN_SCRATCH_ARENA_MAX_NUM_MARKS   256
 
 // +--------------------------------------------------------------+
@@ -67,6 +67,15 @@ void ProcmonFree(void* memPntr)
 	return free(memPntr);
 }
 #endif
+
+void* Win32_StdAllocate(u64 numBytes)
+{
+	return malloc(numBytes);
+}
+void Win32_StdFree(void* alloc)
+{
+	return free(alloc);
+}
 
 // +--------------------------------------------------------------+
 // |                          Functions                           |
@@ -152,7 +161,8 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	printf("[Win32 Platform Core is Initializing...]\n");
 	
 	InitMemArena_StdHeap(&Platform->stdHeap);
-	InitThreadLocalScratchArenas(&Platform->stdHeap, MAIN_SCRATCH_ARENA_SIZE, MAIN_SCRATCH_ARENA_MAX_NUM_MARKS);
+	InitMemArena_Redirect(&Platform->stdHeapRedirect, Win32_StdAllocate, Win32_StdFree);
+	InitThreadLocalScratchArenas(&Platform->stdHeapRedirect, MAIN_SCRATCH_ARENA_PAGE_SIZE, MAIN_SCRATCH_ARENA_MAX_NUM_MARKS);
 	
 	void* mainHeapMem = malloc(PLAT_MAIN_HEAP_SIZE);
 	if (mainHeapMem == nullptr)

@@ -28,6 +28,7 @@ u64 PigMemGraphGetNumPagesForArena(MemArena_t* arenaPntr)
 			return PigMemGraphGetNumPagesForArena(arenaPntr->sourceArena);
 		} break;
 		case MemArenaType_PagedHeap: return arenaPntr->numPages;
+		case MemArenaType_PagedStack: return arenaPntr->numPages;
 		default: return 1;
 	}
 }
@@ -92,6 +93,27 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 			page->numAllocations = arenaPntr->numAllocations;
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
 		} break;
+		case MemArenaType_PagedStack:
+		{
+			Assert(pageIndex < arenaPntr->numPages);
+			MarkedStackArenaHeader_t* pageHeader = (MarkedStackArenaHeader_t*)arenaPntr->headerPntr;
+			u64 pageSize = pageHeader->thisPageSize - sizeof(MarkedStackArenaHeader_t) - (pageHeader->maxNumMarks * sizeof(u64));
+			u64 pageByteOffset = 0;
+			for (u64 pIndex = 0; pIndex < pageIndex; pIndex++)
+			{
+				NotNull(pageHeader);
+				pageSize = pageHeader->thisPageSize - sizeof(MarkedStackArenaHeader_t) - (pageHeader->maxNumMarks * sizeof(u64));
+				pageByteOffset += pageSize;
+				pageHeader = pageHeader->next;
+			}
+			NotNull(pageHeader);
+			
+			page->size = pageSize;
+			page->used = (arenaPntr->highUsedMark >= pageByteOffset) ? (arenaPntr->highUsedMark - pageByteOffset) : 0;
+			page->usedPercent = ClampR32((r32)page->used / (r32)page->size, 0.0f, 1.0f);
+			page->numAllocations = 0;
+			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
+		} break;
 		default:
 		{
 			Unimplemented(); //TODO: Implement me!
@@ -113,7 +135,7 @@ void InitializePigMemGraph(PigMemGraph_t* graph)
 	CreateVarArray(&graph->arenas, fixedHeap, sizeof(PigMemGraphArena_t));
 }
 
-void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor)
+void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor, u64 lowerHighWatermarkOverTimeAmount = 0)
 {
 	AssertSingleThreaded();
 	NotNull(graph);
@@ -128,6 +150,7 @@ void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t na
 	newArena->name = AllocString(fixedHeap, &name);
 	NotNullStr(&newArena->name);
 	newArena->fillColor = fillColor;
+	newArena->lowerHighWatermarkOverTimeAmount = lowerHighWatermarkOverTimeAmount;
 	CreateVarArray(&newArena->pages, fixedHeap, sizeof(PigMemGraphArenaPage_t), PigMemGraphGetNumPagesForArena(arenaPntr));
 }
 
@@ -270,6 +293,12 @@ void UpdatePigMemGraph(PigMemGraph_t* graph)
 			{
 				page->usedPercentDisplay = page->usedPercent;
 			}
+		}
+		
+		if (arena->lowerHighWatermarkOverTimeAmount > 0)
+		{
+			if (arena->pntr->highUsedMark >= arena->lowerHighWatermarkOverTimeAmount) { arena->pntr->highUsedMark -= arena->lowerHighWatermarkOverTimeAmount; }
+			else { arena->pntr->highUsedMark = 0; }
 		}
 	}
 	
