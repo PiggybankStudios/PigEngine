@@ -301,7 +301,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Platform->startupOptions.threadPoolSize,
 		Platform->startupOptions.threadPoolTempArenasSize,
 		Platform->startupOptions.threadPoolTempArenasNumMarks,
-		Platform->startupOptions.threadPoolScratchArenasPageSize,
+		Platform->startupOptions.threadPoolScratchArenasMaxSize,
 		Platform->startupOptions.threadPoolScratchArenasNumMarks
 	);
 	

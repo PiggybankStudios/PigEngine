@@ -290,7 +290,7 @@ void Win32_InitThreading()
 	GetTempArena = Win32_GetTempArena;
 }
 
-void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenasMarkCount, u64 scratchArenasPageSize, u64 scratchArenasMarkCount)
+void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenasMarkCount, u64 scratchArenasMaxSize, u64 scratchArenasMarkCount)
 {
 	AssertSingleThreaded();
 	Win32_CreateSemaphore(&Platform->threadPoolSemaphore, 0, PLAT_MAX_NUM_TASKS);
@@ -305,8 +305,7 @@ void Win32_InitThreadPool(u64 numThreads, u64 tempArenasSize, u64 tempArenasMark
 		newPoolEntry->shouldClose = false;
 		newPoolEntry->isClosed = false;
 		newPoolEntry->isAwake = false;
-		newPoolEntry->scratchArenasSource = &Platform->stdHeapRedirect; //TODO: Should we allocate this on the main thread before the worker thread starts up?
-		newPoolEntry->scratchArenasPageSize = scratchArenasPageSize;
+		newPoolEntry->scratchArenasMaxSize = scratchArenasMaxSize;
 		newPoolEntry->scratchArenasMarkCount = scratchArenasMarkCount;
 		void* tempArenaSpace = malloc(tempArenasSize); //TODO: Should we allocate this using a windows specific call?
 		NotNull(tempArenaSpace);
@@ -530,7 +529,7 @@ THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr) //pre-declared at top of f
 	NotNull_(userPntr);
 	PlatThreadPoolThread_t* context = (PlatThreadPoolThread_t*)userPntr;
 	
-	InitThreadLocalScratchArenas(context->scratchArenasSource, context->scratchArenasPageSize, context->scratchArenasMarkCount);
+	InitThreadLocalScratchArenasVirtual(context->scratchArenasMaxSize, context->scratchArenasMarkCount);
 	int result = Win32_WorkerThreadRun(userPntr);
 	FreeThreadLocalScratchArenas();
 	

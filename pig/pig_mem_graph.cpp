@@ -48,14 +48,7 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 		{
 			page->size = arenaPntr->size;
 			page->used = arenaPntr->used;
-			page->numAllocations = arenaPntr->numAllocations;
-			page->usedPercent = ((r32)page->used / (r32)page->size);
-			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
-		} break;
-		case MemArenaType_MarkedStack:
-		{
-			page->size = arenaPntr->size;
-			page->used = arenaPntr->highUsedMark;
+			page->highWatermark = arenaPntr->highUsedMark;
 			page->numAllocations = arenaPntr->numAllocations;
 			page->usedPercent = ((r32)page->used / (r32)page->size);
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
@@ -64,6 +57,7 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 		{
 			page->size = arenaPntr->highUsedMark;
 			page->used = arenaPntr->used;
+			page->highWatermark = arenaPntr->highUsedMark;
 			page->usedPercent = ((r32)page->used / (r32)page->size);
 			page->numAllocations = arenaPntr->numAllocations;
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
@@ -72,6 +66,7 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 		{
 			page->size = arenaPntr->highUsedMark;
 			page->used = arenaPntr->used;
+			page->highWatermark = arenaPntr->highUsedMark;
 			page->usedPercent = ((r32)page->used / (r32)page->size);
 			page->numAllocations = arenaPntr->numAllocations;
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
@@ -89,8 +84,20 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 			
 			page->size = pageHeader->size;
 			page->used = pageHeader->used;
+			page->highWatermark = arenaPntr->highUsedMark;
 			page->usedPercent = ((r32)page->used / (r32)page->size);
 			page->numAllocations = arenaPntr->numAllocations;
+			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
+		} break;
+		case MemArenaType_VirtualStack:
+		case MemArenaType_MarkedStack:
+		{
+			page->size = arenaPntr->size;
+			page->used = arenaPntr->resettableHighUsedMark;
+			arenaPntr->resettableHighUsedMark = 0;
+			page->highWatermark = arenaPntr->highUsedMark;
+			page->numAllocations = arenaPntr->numAllocations;
+			page->usedPercent = ((r32)page->used / (r32)page->size);
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
 		} break;
 		case MemArenaType_PagedStack:
@@ -109,8 +116,11 @@ void PigMemGraphGetPageInfo(MemArena_t* arenaPntr, u64 pageIndex, PigMemGraphAre
 			NotNull(pageHeader);
 			
 			page->size = pageSize;
-			page->used = (arenaPntr->highUsedMark >= pageByteOffset) ? (arenaPntr->highUsedMark - pageByteOffset) : 0;
+			u64 highWatermark = arenaPntr->resettableHighUsedMark;
+			arenaPntr->resettableHighUsedMark = 0;
+			page->used = (highWatermark >= pageByteOffset) ? (highWatermark - pageByteOffset) : 0;
 			page->usedPercent = ClampR32((r32)page->used / (r32)page->size, 0.0f, 1.0f);
+			page->highWatermark = arenaPntr->highUsedMark;
 			page->numAllocations = 0;
 			if (IsInfiniteR32(page->usedPercent)) { page->usedPercent = 1.0f; }
 		} break;
@@ -135,7 +145,7 @@ void InitializePigMemGraph(PigMemGraph_t* graph)
 	CreateVarArray(&graph->arenas, fixedHeap, sizeof(PigMemGraphArena_t));
 }
 
-void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor, u64 lowerHighWatermarkOverTimeAmount = 0)
+void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor)
 {
 	AssertSingleThreaded();
 	NotNull(graph);
@@ -150,7 +160,6 @@ void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t na
 	newArena->name = AllocString(fixedHeap, &name);
 	NotNullStr(&newArena->name);
 	newArena->fillColor = fillColor;
-	newArena->lowerHighWatermarkOverTimeAmount = lowerHighWatermarkOverTimeAmount;
 	CreateVarArray(&newArena->pages, fixedHeap, sizeof(PigMemGraphArenaPage_t), PigMemGraphGetNumPagesForArena(arenaPntr));
 }
 
@@ -294,12 +303,6 @@ void UpdatePigMemGraph(PigMemGraph_t* graph)
 				page->usedPercentDisplay = page->usedPercent;
 			}
 		}
-		
-		if (arena->lowerHighWatermarkOverTimeAmount > 0)
-		{
-			if (arena->pntr->highUsedMark >= arena->lowerHighWatermarkOverTimeAmount) { arena->pntr->highUsedMark -= arena->lowerHighWatermarkOverTimeAmount; }
-			else { arena->pntr->highUsedMark = 0; }
-		}
 	}
 	
 	// +==============================+
@@ -351,6 +354,7 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 			{
 				VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
 				Color_t backColor = ColorTransparent(Black, 0.5f);
+				Color_t highWatermarkColor = ColorTransparent(White, 0.5f);
 				Color_t fillColor = arena->fillColor;
 				Color_t outlineColor = Black;
 				bool isMouseOver = IsMouseOverPrint("PigMemGraphArena%lluPage%llu", aIndex, pIndex);
@@ -368,8 +372,11 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 				fillRec.height *= page->usedPercent;
 				rec fillDisplayRec = page->mainRec;
 				fillDisplayRec.height *= page->usedPercentDisplay;
+				rec highWatermarkRec = page->mainRec;
+				highWatermarkRec.height *= ClampR32((r32)page->highWatermark / (r32)page->size, 0, 1);
 				
 				RcDrawRectangle(page->mainRec, backColor);
+				RcDrawRectangle(highWatermarkRec, highWatermarkColor);
 				if (page->usedPercent > page->usedPercentDisplay)
 				{
 					RcDrawRectangle(fillRec, MonokaiRed);

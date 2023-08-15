@@ -21,9 +21,7 @@ Description:
 
 int main()
 {
-	MemArena_t stdHeap;
-	InitMemArena_StdHeap(&stdHeap);
-	InitThreadLocalScratchArenas(&stdHeap, Kilobytes(256), 256);
+	InitThreadLocalScratchArenas(Gigabytes(64), 256);
 	
 	printf("\nHello World!\n\n");
 	

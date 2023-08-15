@@ -58,6 +58,7 @@ struct PigMemGraphArenaPage_t
 	u64 id;
 	u64 size;
 	u64 used;
+	u64 highWatermark;
 	u64 numAllocations;
 	r32 usedPercent;
 	
@@ -76,7 +77,6 @@ struct PigMemGraphArena_t
 	MemArena_t* pntr;
 	MyStr_t name;
 	Color_t fillColor;
-	u64 lowerHighWatermarkOverTimeAmount;
 	
 	VarArray_t pages; //PigMemGraphArenaPage_t
 	
