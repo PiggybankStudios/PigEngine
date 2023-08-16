@@ -153,6 +153,7 @@ struct ResourceFontMetaInfo_t
 struct ResourceModelMetaInfo_t
 {
 	ModelTextureType_t textureType;
+	bool copyVertices;
 };
 
 //TODO: We could make these be straight up typedefs in release mode?

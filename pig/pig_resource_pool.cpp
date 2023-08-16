@@ -658,11 +658,11 @@ MusicRef_t ResourcePoolGetOrLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	return ResourcePoolLoadMusic(pool, filePath);
 }
 
-ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType)
+ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices)
 {
 	ProcessLog_t modelParseLog = {}; CreateDefaultProcessLog(&modelParseLog);
 	Model_t tempModel = {};
-	if (!TryLoadModel(&modelParseLog, filePath, textureType, pool->allocArena, &tempModel))
+	if (!TryLoadModel(&modelParseLog, filePath, textureType, copyVertices, pool->allocArena, &tempModel))
 	{
 		PrintLine_E("Failed to load model for pool from \"%.*s\"", filePath.length, filePath.chars);
 		DumpProcessLog(&modelParseLog, "Model Parse Log");
@@ -684,9 +684,9 @@ ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTe
 	
 	return TakeRefModel(pool, newEntry);
 }
-ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType)
+ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices)
 {
 	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->models, filePath);
 	if (existingEntry != nullptr) { return TakeRefModel(pool, existingEntry); }
-	return ResourcePoolLoadModel(pool, filePath, textureType);
+	return ResourcePoolLoadModel(pool, filePath, textureType, copyVertices);
 }

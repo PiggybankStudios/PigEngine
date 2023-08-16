@@ -632,7 +632,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 		}
 	}
 	
-	LogPrintLine_I(log, "Found %llu material(s) in material library", matLib->numMaterials);
+	LogPrintLine_I(log, "Found %llu material%s in material library", matLib->numMaterials, Plural(matLib->numMaterials, "s"));
 	LogExitSuccess(log);
 	return true;
 }
@@ -1015,9 +1015,12 @@ bool TryDeserObjFile(MyStr_t objFileContents, ProcessLog_t* log, ObjModelData_t*
 			}
 			else if (StrEquals(linePieces[0], "s")) //smoothing group
 			{
-				LogPrintLine_W(log, "This model file has smoothing group \"%.*s\" which we don't support yet", linePieces[1].length, linePieces[1].chars);
-				log->hadWarnings = true;
 				//TODO: Add support for smoothing groups
+				if (!StrEqualsIgnoreCase(linePieces[1], "off"))
+				{
+					LogPrintLine_W(log, "This model file has smoothing group \"%.*s\" which we don't support yet", linePieces[1].length, linePieces[1].chars);
+					log->hadWarnings = true;
+				}
 			}
 			else if (StrEquals(linePieces[0], "mtllib")) //material library
 			{

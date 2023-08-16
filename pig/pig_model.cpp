@@ -29,7 +29,7 @@ void DestroyModel(Model_t* model)
 	ClearPointer(model);
 }
 
-Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena, ModelTextureType_t textureType)
+Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena, ModelTextureType_t textureType, bool copyVertices)
 {
 	NotNull(objData);
 	NotNull(memArena);
@@ -169,7 +169,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 							}
 						}
 						Assert(numVertsFilled == numVertices);
-						bool createBufferSuccess = CreateVertBuffer3D(memArena, &newPart->buffer, false, numVertices, vertices, false);
+						bool createBufferSuccess = CreateVertBuffer3D(memArena, &newPart->buffer, false, numVertices, vertices, copyVertices);
 						Assert(createBufferSuccess);
 						TempPopMark();
 					}
@@ -183,7 +183,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 	return result;
 }
 
-bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textureType, MemArena_t* memArena, Model_t* modelOut)
+bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices, MemArena_t* memArena, Model_t* modelOut)
 {
 	NotNull3(log, memArena, modelOut);
 	NotNullStr(&filePath);
@@ -199,7 +199,7 @@ bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textur
 			ObjModelData_t objData = {};
 			if (TryDeserObjFile(objFileContentsStr, log, &objData, scratch))
 			{
-				*modelOut = CreateModelFromObjModelData(&objData, memArena, textureType);
+				*modelOut = CreateModelFromObjModelData(&objData, memArena, textureType, copyVertices);
 				result = true;
 			}
 		}
