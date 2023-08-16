@@ -22,6 +22,17 @@ void GameHandleReload();
 void GamePinResources();
 void GamePrepareForClose();
 
+//pig_resources.cpp
+void AccessResource(ResourceType_t type, u64 resourceIndex);
+void AccessResource(const Texture_t* texture);
+void AccessResource(const VectorImg_t* vectorImg);
+void AccessResource(const SpriteSheet_t* sheet);
+void AccessResource(const Shader_t* shader);
+void AccessResource(const Font_t* font);
+void AccessResource(const Sound_t* soundOrMusic);
+void AccessResource(const Model_t* model);
+Texture_t* FindTextureResourceByFilename(MyStr_t filename, u64* textureIndexOut = nullptr);
+
 //pig_debug_console.cpp
 void DebugConsoleRegisterCommand(DebugConsole_t* console, MyStr_t command, MyStr_t description, u64 numArguments = 0, MyStr_t* arguments = nullptr);
 void DebugConsoleLineAdded(DebugConsole_t* console, StringFifoLine_t* newLine);

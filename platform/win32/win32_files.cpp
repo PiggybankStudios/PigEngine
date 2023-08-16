@@ -925,7 +925,7 @@ SHOW_SOURCE_FILE_DEFINITION(Win32_ShowSourceFile)
 	u64 executeResult = (u64)ShellExecuteA(
 		NULL,   //No parent window
 		"open", //The action verb
-		"\"C:\\Program Files\\Sublime Text 3\\subl.exe\"", //The target file
+		"\"C:\\Program Files\\Sublime Text\\subl.exe\"", //The target file
 		commandStr.pntr, //No parameters
 		NULL, //Use default working directory
 		SW_SHOWNORMAL //Show command is normal

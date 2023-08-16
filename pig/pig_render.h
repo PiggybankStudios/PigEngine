@@ -561,6 +561,24 @@ struct SpriteSheet_t
 	VarArray_t frames; //SpriteSheetFrame_t
 };
 
+enum ModelTextureType_t
+{
+	ModelTextureType_None = 0,
+	ModelTextureType_FromResources,
+	ModelTextureType_FromModelsFolder,
+	ModelTextureType_NumTypes,
+};
+const char* GetModelTextureTypeStr(ModelTextureType_t enumValue)
+{
+	switch (enumValue)
+	{
+		case ModelTextureType_None:             return "None";
+		case ModelTextureType_FromResources:    return "FromResources";
+		case ModelTextureType_FromModelsFolder: return "FromModelsFolder";
+		default: return "Unknown";
+	}
+}
+
 struct ModelMaterial_t
 {
 	u64 materialIndex;
@@ -572,9 +590,9 @@ struct ModelMaterial_t
 	Color_t ambientColor;
 	Color_t diffuseColor;
 	Color_t specularColor;
-	// Texture_t ambientTexture;
-	Texture_t diffuseTexture;
-	// Texture_t specularTexture;
+	// Texture_t ambientTexture; i64 ambientTextureResourceIndex;
+	Texture_t diffuseTexture; i64 diffuseTextureResourceIndex;
+	Texture_t specularTexture; i64 specularTextureResourceIndex;
 };
 struct ModelPart_t
 {
@@ -585,6 +603,7 @@ struct ModelPart_t
 struct Model_t
 {
 	MemArena_t* allocArena;
+	ModelTextureType_t textureType;
 	VarArray_t materials; //ModelMaterial_t
 	VarArray_t parts; //ModelPart_t
 };

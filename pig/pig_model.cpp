@@ -29,7 +29,7 @@ void DestroyModel(Model_t* model)
 	ClearPointer(model);
 }
 
-Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena)
+Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena, ModelTextureType_t textureType)
 {
 	NotNull(objData);
 	NotNull(memArena);
@@ -66,6 +66,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 	
 	Model_t result = {};
 	result.allocArena = memArena;
+	result.textureType = textureType;
 	CreateVarArray(&result.materials, memArena, sizeof(ModelMaterial_t), objData->materials.length);
 	CreateVarArray(&result.parts, memArena, sizeof(ModelPart_t), numParts);
 	
@@ -81,19 +82,56 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 		material->ambientColor     = objMaterial->ambientColor;
 		material->diffuseColor     = objMaterial->diffuseColor;
 		material->specularColor    = objMaterial->specularColor;
+		// material->ambientTextureResourceIndex = -1;
+		material->diffuseTextureResourceIndex = -1;
+		material->specularTextureResourceIndex = -1;
 		if (!IsEmptyStr(objMaterial->diffuseMapPath))
 		{
-			MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, objMaterial->diffuseMapPath.length, objMaterial->diffuseMapPath.pntr);
-			bool loadSuccess = LoadTexture(memArena, &material->diffuseTexture, texturePath, false, true);
-			DebugAssertAndUnused(loadSuccess, loadSuccess);
+			MyStr_t mapFilename = GetFileNamePart(objMaterial->diffuseMapPath);
+			if (textureType == ModelTextureType_FromModelsFolder)
+			{
+				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, mapFilename.length, mapFilename.pntr);
+				bool loadSuccess = LoadTexture(memArena, &material->diffuseTexture, texturePath, false, true);
+				DebugAssertAndUnused(loadSuccess, loadSuccess);
+			}
+			else if (textureType == ModelTextureType_FromResources)
+			{
+				u64 textureResourceIndex = 0;
+				Texture_t* tesourceTexturePntr = FindTextureResourceByFilename(mapFilename, &textureResourceIndex);
+				if (tesourceTexturePntr != nullptr)
+				{
+					AccessResource(tesourceTexturePntr);
+					material->diffuseTextureResourceIndex = (i64)textureResourceIndex;
+				}
+			}
+		}
+		if (!IsEmptyStr(objMaterial->specularMapPath))
+		{
+			MyStr_t mapFilename = GetFileNamePart(objMaterial->specularMapPath);
+			if (textureType == ModelTextureType_FromModelsFolder)
+			{
+				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, mapFilename.length, mapFilename.pntr);
+				bool loadSuccess = LoadTexture(memArena, &material->specularTexture, texturePath, false, true);
+				DebugAssertAndUnused(loadSuccess, loadSuccess);
+			}
+			else if (textureType == ModelTextureType_FromResources)
+			{
+				u64 textureResourceIndex = 0;
+				Texture_t* tesourceTexturePntr = FindTextureResourceByFilename(mapFilename, &textureResourceIndex);
+				if (tesourceTexturePntr != nullptr)
+				{
+					AccessResource(tesourceTexturePntr);
+					material->specularTextureResourceIndex = (i64)textureResourceIndex;
+				}
+			}
 		}
 	}
 	
 	{
 		u64 currentMaterialIndex = 0;
-		u64 startFaceIndex = 0;
 		VarArrayLoop(&objData->objects, oIndex)
 		{
+			u64 startFaceIndex = 0;
 			VarArrayLoopGet(ObjModelDataObject_t, objObject, &objData->objects, oIndex);
 			VarArrayLoop(&objObject->faces, fIndex)
 			{
@@ -143,4 +181,51 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 	}
 	
 	return result;
+}
+
+bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textureType, MemArena_t* memArena, Model_t* modelOut)
+{
+	NotNull3(log, memArena, modelOut);
+	NotNullStr(&filePath);
+	MemArena_t* scratch = GetScratchArena(memArena);
+	bool result = false;
+	
+	if (StrEndsWith(filePath, ".obj", true))
+	{
+		PlatFileContents_t objFile = {};
+		if (plat->ReadFileContents(filePath, &objFile))
+		{
+			MyStr_t objFileContentsStr = NewStr(objFile.length, objFile.chars);
+			ObjModelData_t objData = {};
+			if (TryDeserObjFile(objFileContentsStr, log, &objData, scratch))
+			{
+				*modelOut = CreateModelFromObjModelData(&objData, memArena, textureType);
+				result = true;
+			}
+		}
+		else
+		{
+			LogPrintLine_E(log, "Couldn't open model file at \"%.*s\"", filePath.length, filePath.chars);
+			LogExitFailure(log, DeserObjFileError_MissingFile);
+		}
+	}
+	
+	FreeScratchArena(scratch);
+	return result;
+}
+
+void AccessModelTextures(Model_t* model)
+{
+	VarArrayLoop(&model->materials, mIndex)
+	{
+		VarArrayLoopGet(ModelMaterial_t, material, &model->materials, mIndex);
+		if (material->diffuseTextureResourceIndex >= 0)
+		{
+			AccessResource(ResourceType_Texture, (u64)material->diffuseTextureResourceIndex);
+		}
+		if (material->specularTextureResourceIndex >= 0)
+		{
+			AccessResource(ResourceType_Texture, (u64)material->specularTextureResourceIndex);
+		}
+	}
 }

@@ -416,7 +416,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			if (type != ResourceType_None && (targetType == ResourceType_None || targetType == type))
 			{
 				u64 numOfType = GetNumResourcesOfType(type);
-				PrintLine_N("%llu %s Resources:", numOfType, GetResourceTypeStr(type));
+				PrintLine_N("%llu %s Resource%s:", numOfType, GetResourceTypeStr(type), Plural(numOfType, "s"));
 				for (u64 rIndex = 0; rIndex < numOfType; rIndex++)
 				{
 					const char* resourcePath = GetPathOrNameForResource(type, rIndex);

@@ -43,6 +43,7 @@ void FreeResourcePoolEntry(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 			case ResourceType_Font:        DestroyFont(&entry->font);               break;
 			case ResourceType_Sound:       FreeSound(&entry->sound);                break;
 			case ResourceType_Music:       FreeSound(&entry->music);                break;
+			case ResourceType_Model:       DestroyModel(&entry->model);             break;
 			default: AssertMsg(false, "Unhandle ResourceType_t in FreeResourcePoolEntry"); break;
 		}
 		entry->id = 0;
@@ -261,6 +262,19 @@ MusicRef_t TakeRefMusic(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	result.pool = pool;
 	result.arrayIndex = entry->arrayIndex;
 	result.pntr = &entry->music;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
+	return result;
+}
+ModelRef_t TakeRefModel(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
+{
+	NotNull2(pool, entry);
+	Assert(entry->id != 0);
+	Assert(entry->type == ResourceType_Model);
+	ModelRef_t result;
+	result.pool = pool;
+	result.arrayIndex = entry->arrayIndex;
+	result.pntr = &entry->model;
 	IncrementU64(entry->refCount);
 	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
@@ -642,4 +656,37 @@ MusicRef_t ResourcePoolGetOrLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->musics, filePath);
 	if (existingEntry != nullptr) { return TakeRefMusic(pool, existingEntry); }
 	return ResourcePoolLoadMusic(pool, filePath);
+}
+
+ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType)
+{
+	ProcessLog_t modelParseLog = {}; CreateDefaultProcessLog(&modelParseLog);
+	Model_t tempModel = {};
+	if (!TryLoadModel(&modelParseLog, filePath, textureType, pool->allocArena, &tempModel))
+	{
+		PrintLine_E("Failed to load model for pool from \"%.*s\"", filePath.length, filePath.chars);
+		DumpProcessLog(&modelParseLog, "Model Parse Log");
+		return ModelRef_Invalid;
+	}
+	else if (modelParseLog.hadErrors || modelParseLog.hadWarnings) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
+	FreeProcessLog(&modelParseLog);
+	
+	ResourcePoolEntry_t* newEntry = FindEmptyResourcePoolEntry(&pool->models, true);
+	DebugAssert(newEntry != nullptr);
+	newEntry->id = pool->nextModelId;
+	pool->nextModelId++;
+	pool->numModels++;
+	newEntry->type = ResourceType_Model;
+	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
+	newEntry->filePath = AllocString(pool->allocArena, &filePath);
+	MyMemCopy(&newEntry->model, &tempModel, sizeof(Model_t));
+	
+	return TakeRefModel(pool, newEntry);
+}
+ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType)
+{
+	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->models, filePath);
+	if (existingEntry != nullptr) { return TakeRefModel(pool, existingEntry); }
+	return ResourcePoolLoadModel(pool, filePath, textureType);
 }

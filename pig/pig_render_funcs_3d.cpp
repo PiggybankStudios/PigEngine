@@ -349,12 +349,50 @@ void RcDrawBoxWireframe(box boundingBox, Color_t color)
 	RcDrawLine3D(NewVec3(min.x, max.y, max.z), NewVec3(min.x, max.y, min.z), color);
 }
 
-void RcApplyModelMaterial(ModelMaterial_t* material, bool changeTexture = true)
+void RcApplyModelMaterial(ModelTextureType_t textureType, ModelMaterial_t* material, bool changeTexture = true)
 {
 	if (changeTexture)
 	{
-		RcBindTexture1(&material->diffuseTexture);
-		RcSetSourceRec1(NewRec(Vec2_Zero, material->diffuseTexture.size));
+		Texture_t* diffuseTexture = &material->diffuseTexture;
+		Texture_t* specularTexture = &material->specularTexture;
+		if (textureType == ModelTextureType_FromResources)
+		{
+			if (material->diffuseTextureResourceIndex >= 0)
+			{
+				Assert(material->diffuseTextureResourceIndex < RESOURCES_NUM_TEXTURES);
+				diffuseTexture = &pig->resources.textures->items[material->diffuseTextureResourceIndex];
+			}
+			else { diffuseTexture = nullptr; }
+			
+			if (material->specularTextureResourceIndex >= 0)
+			{
+				Assert(material->specularTextureResourceIndex < RESOURCES_NUM_TEXTURES);
+				specularTexture = &pig->resources.textures->items[material->specularTextureResourceIndex];
+			}
+			else { specularTexture = nullptr; }
+		}
+		
+		if (diffuseTexture != nullptr)
+		{
+			RcBindTexture1(diffuseTexture);
+			RcSetSourceRec1(NewRec(Vec2_Zero, diffuseTexture->size));
+		}
+		else
+		{
+			RcBindTexture1(nullptr);
+			RcSetSourceRec1(Rec_Default);
+		}
+		
+		if (specularTexture != nullptr)
+		{
+			RcBindTexture2(specularTexture);
+			RcSetSourceRec2(NewRec(Vec2_Zero, specularTexture->size));
+		}
+		else
+		{
+			RcBindTexture2(nullptr);
+			RcSetSourceRec2(Rec_Default);
+		}
 	}
 	RcSetDynamicUniformVec3("AmbientColor",  ToVec3(material->ambientColor));
 	RcSetDynamicUniformVec3("DiffuseColor",  ToVec3(material->diffuseColor));
@@ -377,7 +415,7 @@ void RcDrawModelSimple(v3 position, quat rotation, v3 scale, Color_t color)
 		if (part->buffer.isValid)
 		{
 			ModelMaterial_t* material = VarArrayGetHard(&rc->state.boundModel->materials, part->materialIndex, ModelMaterial_t);
-			RcApplyModelMaterial(material);
+			RcApplyModelMaterial(rc->state.boundModel->textureType, material);
 			RcBindVertBuffer(&part->buffer);
 			RcDrawBuffer(VertBufferPrimitive_Triangles);
 		}
@@ -399,7 +437,7 @@ void RcDrawModelParts(u64 startPartIndex, u64 numParts, v3 position, quat rotati
 		if (part->buffer.isValid)
 		{
 			ModelMaterial_t* material = VarArrayGetHard(&rc->state.boundModel->materials, part->materialIndex, ModelMaterial_t);
-			RcApplyModelMaterial(material);
+			RcApplyModelMaterial(rc->state.boundModel->textureType, material);
 			RcBindVertBuffer(&part->buffer);
 			RcDrawBuffer(VertBufferPrimitive_Triangles);
 		}
@@ -423,7 +461,7 @@ void RcDrawModelCustomTexture(v3 position, quat rotation, v3 scale, Color_t colo
 		if (part->buffer.isValid)
 		{
 			ModelMaterial_t* material = VarArrayGetHard(&rc->state.boundModel->materials, part->materialIndex, ModelMaterial_t);
-			RcApplyModelMaterial(material, false);
+			RcApplyModelMaterial(rc->state.boundModel->textureType, material, false);
 			RcBindVertBuffer(&part->buffer);
 			RcDrawBuffer(VertBufferPrimitive_Triangles);
 		}

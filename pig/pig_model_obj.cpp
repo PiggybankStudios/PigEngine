@@ -11,6 +11,7 @@ Description:
 enum TryDeserializeObjFileError_t
 {
 	DeserObjFileError_None = 0,
+	DeserObjFileError_MissingFile,
 	DeserObjFileError_EmptyFile,
 	DeserObjFileError_LinePieceCountIsWrong,
 	DeserObjFileError_IntParseFailure,
@@ -30,6 +31,7 @@ const char* GetTryDeserializeObjFileErrorStr(TryDeserializeObjFileError_t error)
 	switch (error)
 	{
 		case DeserObjFileError_None:                       return "None";
+		case DeserObjFileError_MissingFile:                return "MissingFile";
 		case DeserObjFileError_EmptyFile:                  return "EmptyFile";
 		case DeserObjFileError_LinePieceCountIsWrong:      return "LinePieceCountIsWrong";
 		case DeserObjFileError_IntParseFailure:            return "IntParseFailure";
@@ -1011,6 +1013,12 @@ bool TryDeserObjFile(MyStr_t objFileContents, ProcessLog_t* log, ObjModelData_t*
 				MyMemCopy(newFace, &faceValue, sizeof(ObjModelDataFace_t));
 				totalNumFaces++;
 			}
+			else if (StrEquals(linePieces[0], "s")) //smoothing group
+			{
+				LogPrintLine_W(log, "This model file has smoothing group \"%.*s\" which we don't support yet", linePieces[1].length, linePieces[1].chars);
+				log->hadWarnings = true;
+				//TODO: Add support for smoothing groups
+			}
 			else if (StrEquals(linePieces[0], "mtllib")) //material library
 			{
 				if (numLinePieces < 2)
@@ -1106,8 +1114,14 @@ bool TryDeserObjFile(MyStr_t objFileContents, ProcessLog_t* log, ObjModelData_t*
 	}
 	// PrintLine_D("There were %llu line(s) in the obj file", lineParser.lineIndex);
 	
-	LogPrintLine_I(log, "Found %llu object(s) %llu vertice(s) %llu normal(s) %llu texCoord(s) %llu group(s) %llu face(s) and %llu material(s)",
-		objData->objects.length, objData->vertices.length, objData->normals.length, objData->texCoords.length, numGroupsFound, totalNumFaces, objData->materials.length
+	LogPrintLine_I(log, "Found %llu object%s %llu vert%s %llu normal%s %llu texCoord%s %llu group%s %llu face%s and %llu material%s",
+		objData->objects.length, Plural(objData->objects.length, "s"),
+		objData->vertices.length, PluralEx(objData->vertices.length, "ex", "ices"),
+		objData->normals.length, Plural(objData->normals.length, "s"),
+		objData->texCoords.length, Plural(objData->texCoords.length, "s"),
+		numGroupsFound, Plural(numGroupsFound, "s"),
+		totalNumFaces, Plural(totalNumFaces, "s"),
+		objData->materials.length, Plural(objData->materials.length, "s")
 	);
 	
 	LogExitSuccess(log);

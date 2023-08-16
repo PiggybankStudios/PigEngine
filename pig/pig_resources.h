@@ -20,6 +20,7 @@ enum ResourceType_t
 	ResourceType_Font,
 	ResourceType_Sound,
 	ResourceType_Music,
+	ResourceType_Model,
 	ResourceType_NumTypes,
 };
 const char* GetResourceTypeStr(ResourceType_t resourceType)
@@ -34,6 +35,7 @@ const char* GetResourceTypeStr(ResourceType_t resourceType)
 		case ResourceType_Font:        return "Font";
 		case ResourceType_Sound:       return "Sound";
 		case ResourceType_Music:       return "Music";
+		case ResourceType_Model:       return "Model";
 		default: return "Unknown";
 	}
 }
@@ -147,6 +149,12 @@ struct ResourceFontMetaInfo_t
 	ResourceFontFaceMetaInfo_t faces[MAX_NUM_RESOURCE_FONT_FACES];
 };
 
+
+struct ResourceModelMetaInfo_t
+{
+	ModelTextureType_t textureType;
+};
+
 //TODO: We could make these be straight up typedefs in release mode?
 //NOTE: The reloadIndex is also acting like a "filled" flag since 0 is an invalid reloadIndex
 struct TextureHandle_t
@@ -191,6 +199,12 @@ struct MusicHandle_t
 	u64 reloadIndex;
 	Sound_t* pntr;
 };
+struct ModelHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	Model_t* pntr;
+};
 
 #include "game_resources.h"
 
@@ -207,6 +221,7 @@ struct Resources_t
 	u64 numFontsAlloc;
 	u64 numSoundsAlloc;
 	u64 numMusicsAlloc;
+	u64 numModelsAlloc;
 	
 	ResourceStatus_t* textureStatus;
 	ResourceStatus_t* vectorStatus;
@@ -215,6 +230,7 @@ struct Resources_t
 	ResourceStatus_t* fontStatus;
 	ResourceStatus_t* soundStatus;
 	ResourceStatus_t* musicStatus;
+	ResourceStatus_t* modelStatus;
 	
 	ResourceTextures_t* textures;
 	ResourceVectors_t*  vectors;
@@ -223,6 +239,7 @@ struct Resources_t
 	ResourceFonts_t*    fonts;
 	ResourceSounds_t*   sounds;
 	ResourceMusics_t*   musics;
+	ResourceModels_t*   models;
 };
 
 #endif //  _PIG_RESOURCES_H

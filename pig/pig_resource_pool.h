@@ -24,6 +24,7 @@ struct ResourcePoolEntry_t
 		Font_t font;
 		Sound_t sound;
 		Sound_t music;
+		Model_t model;
 	};
 };
 
@@ -44,6 +45,7 @@ struct ResourcePool_t
 			u64 nextFontId;
 			u64 nextSoundId;
 			u64 nextMusicId;
+			u64 nextModelId;
 		};
 	};
 	union
@@ -59,6 +61,7 @@ struct ResourcePool_t
 			u64 numFonts;
 			u64 numSounds;
 			u64 numMusics;
+			u64 numModels;
 		};
 	};
 	union
@@ -77,10 +80,11 @@ struct ResourcePool_t
 			BktArray_t fonts;
 			BktArray_t sounds;
 			BktArray_t musics;
+			BktArray_t models;
 		};
 	};
 };
-CompileAssert(ResourceType_NumTypes == 8); //Update the above code if ResourceType_NumTypes changes
+CompileAssert(ResourceType_NumTypes == 9); //Update the above code if ResourceType_NumTypes changes
 
 struct TextureRef_t
 {
@@ -124,6 +128,12 @@ struct MusicRef_t
 	u64 arrayIndex;
 	Sound_t* pntr;
 };
+struct ModelRef_t
+{
+	ResourcePool_t* pool;
+	u64 arrayIndex;
+	Model_t* pntr;
+};
 
 bool IsValidRef(const TextureRef_t&     reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const VectorImgRef_t&   reference) { return (reference.pool != nullptr); }
@@ -132,6 +142,7 @@ bool IsValidRef(const ShaderRef_t&      reference) { return (reference.pool != n
 bool IsValidRef(const FontRef_t&        reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const SoundRef_t&       reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const MusicRef_t&       reference) { return (reference.pool != nullptr); }
+bool IsValidRef(const ModelRef_t&       reference) { return (reference.pool != nullptr); }
 
 #define TextureRef_Invalid     TextureRef_t()
 #define VectorImgRef_Invalid   VectorImgRef_t()
@@ -140,5 +151,6 @@ bool IsValidRef(const MusicRef_t&       reference) { return (reference.pool != n
 #define FontRef_Invalid        FontRef_t()
 #define SoundRef_Invalid       SoundRef_t()
 #define MusicRef_Invalid       MusicRef_t()
+#define ModelRef_Invalid       ModelRef_t()
 
 #endif //  _PIG_RESOURCE_POOL_H

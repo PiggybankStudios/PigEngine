@@ -34,6 +34,7 @@ void Pig_InitResources()
 	pig->resources.numFontsAlloc      = RESOURCES_NUM_FONTS;
 	pig->resources.numSoundsAlloc     = RESOURCES_NUM_SOUNDS;
 	pig->resources.numMusicsAlloc     = RESOURCES_NUM_MUSICS;
+	pig->resources.numModelsAlloc     = RESOURCES_NUM_MODELS;
 	
 	Assert(sizeof(ResourceTextures_t) == sizeof(Texture_t)     * RESOURCES_NUM_TEXTURES);
 	Assert(sizeof(ResourceVectors_t)  == sizeof(VectorImg_t)   * RESOURCES_NUM_VECTORS);
@@ -42,6 +43,7 @@ void Pig_InitResources()
 	Assert(sizeof(ResourceFonts_t)    == sizeof(Font_t)        * RESOURCES_NUM_FONTS);
 	Assert(sizeof(ResourceSounds_t)   == sizeof(Sound_t)       * RESOURCES_NUM_SOUNDS);
 	Assert(sizeof(ResourceMusics_t)   == sizeof(Sound_t)       * RESOURCES_NUM_MUSICS);
+	Assert(sizeof(ResourceModels_t)   == sizeof(Model_t)       * RESOURCES_NUM_MODELS);
 	
 	pig->resources.textureStatus = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_TEXTURES);
 	pig->resources.vectorStatus  = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_VECTORS);
@@ -50,6 +52,7 @@ void Pig_InitResources()
 	pig->resources.fontStatus    = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_FONTS);
 	pig->resources.soundStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SOUNDS);
 	pig->resources.musicStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MUSICS);
+	pig->resources.modelStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MODELS);
 	NotNull(pig->resources.textureStatus);
 	NotNull(pig->resources.vectorStatus);
 	NotNull(pig->resources.sheetStatus);
@@ -57,6 +60,7 @@ void Pig_InitResources()
 	NotNull(pig->resources.fontStatus);
 	NotNull(pig->resources.soundStatus);
 	NotNull(pig->resources.musicStatus);
+	NotNull(pig->resources.modelStatus);
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_TEXTURES; rIndex++) { InitResourceStatus(&pig->resources.textureStatus[rIndex]); }
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_VECTORS;  rIndex++) { InitResourceStatus(&pig->resources.vectorStatus[rIndex]);  }
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHEETS;   rIndex++) { InitResourceStatus(&pig->resources.sheetStatus[rIndex]);   }
@@ -64,6 +68,7 @@ void Pig_InitResources()
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_FONTS;    rIndex++) { InitResourceStatus(&pig->resources.fontStatus[rIndex]);    }
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SOUNDS;   rIndex++) { InitResourceStatus(&pig->resources.soundStatus[rIndex]);   }
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MUSICS;   rIndex++) { InitResourceStatus(&pig->resources.musicStatus[rIndex]);   }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MODELS;   rIndex++) { InitResourceStatus(&pig->resources.modelStatus[rIndex]);   }
 	
 	pig->resources.textures = (ResourceTextures_t*)AllocArray(fixedHeap, Texture_t,     RESOURCES_NUM_TEXTURES);
 	pig->resources.vectors  =  (ResourceVectors_t*)AllocArray(fixedHeap, VectorImg_t,   RESOURCES_NUM_VECTORS);
@@ -72,6 +77,7 @@ void Pig_InitResources()
 	pig->resources.fonts    =    (ResourceFonts_t*)AllocArray(fixedHeap, Font_t,        RESOURCES_NUM_FONTS);
 	pig->resources.sounds   =   (ResourceSounds_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_SOUNDS);
 	pig->resources.musics   =   (ResourceMusics_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_MUSICS);
+	pig->resources.models   =   (ResourceModels_t*)AllocArray(fixedHeap, Model_t,       RESOURCES_NUM_MODELS);
 	NotNull(pig->resources.textures);
 	NotNull(pig->resources.vectors);
 	NotNull(pig->resources.sheets);
@@ -79,6 +85,7 @@ void Pig_InitResources()
 	NotNull(pig->resources.fonts);
 	NotNull(pig->resources.sounds);
 	NotNull(pig->resources.musics);
+	NotNull(pig->resources.models);
 	ClearPointer(pig->resources.textures);
 	ClearPointer(pig->resources.vectors);
 	ClearPointer(pig->resources.sheets);
@@ -86,6 +93,7 @@ void Pig_InitResources()
 	ClearPointer(pig->resources.fonts);
 	ClearPointer(pig->resources.sounds);
 	ClearPointer(pig->resources.musics);
+	ClearPointer(pig->resources.models);
 }
 
 // +--------------------------------------------------------------+
@@ -102,6 +110,7 @@ u64 GetNumResourcesOfType(ResourceType_t resourceType)
 		case ResourceType_Font:        return RESOURCES_NUM_FONTS;
 		case ResourceType_Sound:       return RESOURCES_NUM_SOUNDS;
 		case ResourceType_Music:       return RESOURCES_NUM_MUSICS;
+		case ResourceType_Model:       return RESOURCES_NUM_MODELS;
 		default: Unimplemented(); return 0;
 	}
 }
@@ -144,34 +153,15 @@ const char* GetPathOrNameForResource(ResourceType_t type, u64 resourceIndex)
 		{
 			result = Resources_GetPathForMusic(resourceIndex);
 		} break;
+		case ResourceType_Model:
+		{
+			ResourceModelMetaInfo_t metaInfo = {};
+			result = Resources_GetPathForModel(resourceIndex, &metaInfo);
+		} break;
 		default: Unimplemented(); break;
 	}
 	return result;
 }
-
-#if 0
-const char* GetResourceStatus(ResourceType_t type, u64 resourceIndex)
-{
-	Texture_t* texture;
-	VectorImg_t* vector;
-	SpriteSheet_t* sheet;
-	Shader_t* shader;
-	Font_t* font;
-	Sound_t* sound;
-	Sound_t* music;
-	switch (type)
-	{
-		case ResourceType_Texture:     texture = &pig->resources.textures->items[resourceIndex]; return texture->isValid               ? "Loaded" : "Error"; break;
-		case ResourceType_VectorImage: vector  = &pig->resources.vectors->items[resourceIndex];  return vector->isValid                ? "Loaded" : "Error"; break;
-		case ResourceType_Sheet:       sheet   = &pig->resources.sheets->items[resourceIndex];   return sheet->isValid                 ? "Loaded" : "Error"; break;
-		case ResourceType_Shader:      shader  = &pig->resources.shaders->items[resourceIndex];  return shader->isValid                ? "Loaded" : "Error"; break;
-		case ResourceType_Font:        font    = &pig->resources.fonts->items[resourceIndex];    return font->isValid                  ? "Loaded" : "Error"; break;
-		case ResourceType_Sound:       sound   = &pig->resources.sounds->items[resourceIndex];   return (sound->allocArena != nullptr) ? "Loaded" : "Error"; break;
-		case ResourceType_Music:       music   = &pig->resources.musics->items[resourceIndex];   return (music->allocArena != nullptr) ? "Loaded" : "Error"; break;
-		default: Unimplemented(); return "Unknown"; break;
-	}
-}
-#endif
 
 void* GetResourcePntr(ResourceType_t type, u64 resourceIndex)
 {
@@ -184,6 +174,7 @@ void* GetResourcePntr(ResourceType_t type, u64 resourceIndex)
 		case ResourceType_Font:        Assert(resourceIndex < RESOURCES_NUM_FONTS);    return (void*)(&pig->resources.fonts->items[resourceIndex]);
 		case ResourceType_Sound:       Assert(resourceIndex < RESOURCES_NUM_SOUNDS);   return (void*)(&pig->resources.sounds->items[resourceIndex]);
 		case ResourceType_Music:       Assert(resourceIndex < RESOURCES_NUM_MUSICS);   return (void*)(&pig->resources.musics->items[resourceIndex]);
+		case ResourceType_Model:       Assert(resourceIndex < RESOURCES_NUM_MODELS);   return (void*)(&pig->resources.models->items[resourceIndex]);
 		default: Unimplemented(); return nullptr; break;
 	}
 }
@@ -226,6 +217,7 @@ ResourceStatus_t* GetResourceStatus(ResourceType_t type, u64 resourceIndex)
 		case ResourceType_Font:        Assert(resourceIndex < RESOURCES_NUM_FONTS);    return &pig->resources.fontStatus[resourceIndex];
 		case ResourceType_Sound:       Assert(resourceIndex < RESOURCES_NUM_SOUNDS);   return &pig->resources.soundStatus[resourceIndex];
 		case ResourceType_Music:       Assert(resourceIndex < RESOURCES_NUM_MUSICS);   return &pig->resources.musicStatus[resourceIndex];
+		case ResourceType_Model:       Assert(resourceIndex < RESOURCES_NUM_MODELS);   return &pig->resources.modelStatus[resourceIndex];
 		default: Unimplemented(); return nullptr;
 	}
 }
@@ -996,6 +988,57 @@ void Pig_LoadAllMusics(bool onlyPinned = false)
 }
 
 // +==============================+
+// |            Model             |
+// +==============================+
+void Pig_LoadModelResource(u64 modelIndex)
+{
+	NotNull2(pig->resources.models, pig->resources.modelStatus);
+	Assert(modelIndex < RESOURCES_NUM_MODELS);
+	Model_t* model = &pig->resources.models->items[modelIndex];
+	ResourceStatus_t* modelStatus = &pig->resources.modelStatus[modelIndex];
+	modelStatus->lastAccessTime = ProgramTime;
+	
+	ResourceModelMetaInfo_t metaInfo = {};
+	const char* modelPathStr = Resources_GetPathForModel(modelIndex, &metaInfo);
+	NotNull(modelPathStr);
+	
+	ProcessLog_t modelParseLog;
+	CreateDefaultProcessLog(&modelParseLog);
+	Model_t tempModel = {};
+	if (TryLoadModel(&modelParseLog, NewStr(modelPathStr), metaInfo.textureType, mainHeap, &tempModel))
+	{
+		if (model->allocArena != nullptr) //TODO: Change this to something like isValid
+		{
+			modelStatus->state = ResourceState_Unloaded;
+			DestroyModel(model);
+		}
+		MyMemCopy(model, &tempModel, sizeof(Model_t));
+		modelStatus->state = ResourceState_Loaded;
+		
+		StopWatchingFilesForResource(ResourceType_Model, modelIndex);
+		WatchFileForResource(ResourceType_Model, modelIndex, NewStr(modelPathStr));
+	}
+	else
+	{
+		DestroyModel(&tempModel);
+		modelStatus->state = ResourceStateWarnOrError(modelStatus->state);
+	}
+	
+	if (modelParseLog.hadErrors || modelParseLog.hadWarnings) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
+	FreeProcessLog(&modelParseLog);
+}
+void Pig_LoadAllModels(bool onlyPinned = false)
+{
+	for (u64 modelIndex = 0; modelIndex < RESOURCES_NUM_MODELS; modelIndex++)
+	{
+		if (!onlyPinned || IsResourcePinned(ResourceType_Model, modelIndex))
+		{
+			Pig_LoadModelResource(modelIndex);
+		}
+	}
+}
+
+// +==============================+
 // |           Generic            |
 // +==============================+
 void Pig_LoadResource(ResourceType_t type, u64 resourceIndex)
@@ -1009,6 +1052,7 @@ void Pig_LoadResource(ResourceType_t type, u64 resourceIndex)
 		case ResourceType_Font:        Pig_LoadFontResource(resourceIndex);        break;
 		case ResourceType_Sound:       Pig_LoadSoundResource(resourceIndex);       break;
 		case ResourceType_Music:       Pig_LoadMusicResource(resourceIndex);       break;
+		case ResourceType_Model:       Pig_LoadModelResource(resourceIndex);       break;
 		default: Unimplemented(); break;
 	}
 }
@@ -1021,6 +1065,7 @@ void Pig_LoadAllResources(bool onlyPinned = false)
 	Pig_LoadAllFonts(onlyPinned);
 	Pig_LoadAllSounds(onlyPinned);
 	Pig_LoadAllMusics(onlyPinned);
+	Pig_LoadAllModels(onlyPinned);
 }
 void Pig_LoadResourceAtStartup(bool onlyPinned, r32 loadingBarBase, r32 loadingBarAmount)
 {
@@ -1194,6 +1239,24 @@ void Pig_HandleResourcesOnReload()
 		if (oldMusicsCount < RESOURCES_NUM_MUSICS) { NotifyPrint_I("Loading %llu new music resource%s...", numNewMusics, (numNewMusics == 1) ? "" : "s"); }
 		for (u64 musicIndex = oldMusicsCount; musicIndex < RESOURCES_NUM_MUSICS; musicIndex++) { InitResourceStatus(&pig->resources.musicStatus[musicIndex]); Pig_LoadMusicResource(musicIndex); }
 	}
+	if (pig->resources.numModelsAlloc != RESOURCES_NUM_MODELS)
+	{
+		PrintLine_N("Model resource count changed: %llu -> %llu", pig->resources.numModelsAlloc, RESOURCES_NUM_MODELS);
+		u64 oldModelsCount = pig->resources.numModelsAlloc;
+		Model_t* newSpace = AllocArray(fixedHeap, Model_t, RESOURCES_NUM_MODELS);
+		ResourceStatus_t* newStatusSpace = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MODELS);
+		NotNull2(newSpace, newStatusSpace);
+		MyMemCopy(newSpace, pig->resources.models, sizeof(Model_t) * MinU64(RESOURCES_NUM_MODELS, oldModelsCount));
+		MyMemCopy(newStatusSpace, pig->resources.modelStatus, sizeof(ResourceStatus_t) * MinU64(RESOURCES_NUM_MODELS, oldModelsCount));
+		FreeMem(fixedHeap, pig->resources.models, sizeof(Model_t) * oldModelsCount);
+		FreeMem(fixedHeap, pig->resources.modelStatus, sizeof(ResourceStatus_t) * oldModelsCount);
+		pig->resources.numModelsAlloc = RESOURCES_NUM_MODELS;
+		pig->resources.models = (ResourceModels_t*)newSpace;
+		pig->resources.modelStatus = newStatusSpace;
+		u64 numNewModels = RESOURCES_NUM_MODELS - oldModelsCount;
+		if (oldModelsCount < RESOURCES_NUM_MODELS) { NotifyPrint_I("Loading %llu new model resource%s...", numNewModels, (numNewModels == 1) ? "" : "s"); }
+		for (u64 modelIndex = oldModelsCount; modelIndex < RESOURCES_NUM_MODELS; modelIndex++) { InitResourceStatus(&pig->resources.modelStatus[modelIndex]); Pig_LoadMusicResource(modelIndex); }
+	}
 }
 
 void Pig_UpdateResources()
@@ -1243,6 +1306,11 @@ void Pig_UpdateResources()
 					PrintLine_N("Reloading Music[%llu]...", watch->resourceIndex);
 					Pig_LoadMusicResource(watch->resourceIndex);
 				} break;
+				case ResourceType_Model:
+				{
+					PrintLine_N("Reloading Model[%llu]...", watch->resourceIndex);
+					Pig_LoadModelResource(watch->resourceIndex);
+				} break;
 				default: DebugAssert(false); break;
 			}
 		}
@@ -1290,7 +1358,7 @@ void PinAllResourcesOfType(ResourceType_t type)
 	}
 }
 
-void AccessResource(ResourceType_t type, u64 resourceIndex)
+void AccessResource(ResourceType_t type, u64 resourceIndex) //pre-declared in pig_func_defs.h
 {
 	ResourceStatus_t* status = GetResourceStatus(type, resourceIndex);
 	NotNull(status);
@@ -1298,50 +1366,64 @@ void AccessResource(ResourceType_t type, u64 resourceIndex)
 	{
 		Pig_LoadResource(type, resourceIndex);
 	}
+	else if (status->state == ResourceState_Loaded)
+	{
+		if (type == ResourceType_Model)
+		{
+			AccessModelTextures(&pig->resources.models->items[resourceIndex]);
+		}
+	}
 }
 //TODO: We don't really need all these overloads. We could probably just take a const void* straight up.
 //      But it is a little more compile-time type safe this way I guess.
-void AccessResource(const Texture_t* texture)
+void AccessResource(const Texture_t* texture) //pre-declared in pig_func_defs.h
 {
 	u64 textureIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)texture, &textureIndex);
 	Assert(type == ResourceType_Texture);
 	AccessResource(ResourceType_Texture, textureIndex);
 }
-void AccessResource(const VectorImg_t* vectorImg)
+void AccessResource(const VectorImg_t* vectorImg) //pre-declared in pig_func_defs.h
 {
 	u64 vectorImgIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)vectorImg, &vectorImgIndex);
 	Assert(type == ResourceType_VectorImage);
 	AccessResource(ResourceType_VectorImage, vectorImgIndex);
 }
-void AccessResource(const SpriteSheet_t* sheet)
+void AccessResource(const SpriteSheet_t* sheet) //pre-declared in pig_func_defs.h
 {
 	u64 sheetIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)sheet, &sheetIndex);
 	Assert(type == ResourceType_Sheet);
 	AccessResource(ResourceType_Sheet, sheetIndex);
 }
-void AccessResource(const Shader_t* shader)
+void AccessResource(const Shader_t* shader) //pre-declared in pig_func_defs.h
 {
 	u64 shaderIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)shader, &shaderIndex);
 	Assert(type == ResourceType_Shader);
 	AccessResource(ResourceType_Shader, shaderIndex);
 }
-void AccessResource(const Font_t* font)
+void AccessResource(const Font_t* font) //pre-declared in pig_func_defs.h
 {
 	u64 fontIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)font, &fontIndex);
 	Assert(type == ResourceType_Font);
 	AccessResource(ResourceType_Font, fontIndex);
 }
-void AccessResource(const Sound_t* soundOrMusic)
+void AccessResource(const Sound_t* soundOrMusic) //pre-declared in pig_func_defs.h
 {
 	u64 soundOrMusicIndex = 0;
 	ResourceType_t type = GetResourceByPntr((const void*)soundOrMusic, &soundOrMusicIndex);
 	Assert(type == ResourceType_Sound || type == ResourceType_Music);
 	AccessResource(type, soundOrMusicIndex);
+}
+void AccessResource(const Model_t* model) //pre-declared in pig_func_defs.h
+{
+	u64 modelIndex = 0;
+	ResourceType_t type = GetResourceByPntr((const void*)model, &modelIndex);
+	Assert(type == ResourceType_Model);
+	AccessResource(ResourceType_Model, modelIndex);
 }
 
 // +--------------------------------------------------------------+
@@ -1378,6 +1460,11 @@ bool IsHandleFilled(const SoundHandle_t* handle)
 	return (handle->reloadIndex != 0);
 }
 bool IsHandleFilled(const MusicHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const ModelHandle_t* handle)
 {
 	NotNull(handle);
 	return (handle->reloadIndex != 0);
@@ -1470,6 +1557,18 @@ MusicHandle_t GetMusicHandle(const Sound_t* musicPointer)
 	result.pntr = (Sound_t*)musicPointer;
 	return result;
 }
+ModelHandle_t GetModelHandle(const Model_t* modelPointer)
+{
+	ModelHandle_t result = {};
+	if (modelPointer == nullptr && pig->resources.models != nullptr) { return result; }
+	Assert(modelPointer >= (Model_t*)pig->resources.models);
+	if (pig->resources.models == nullptr) { Assert(modelPointer < ((Model_t*)pig->resources.models) + RESOURCES_NUM_MODELS); }
+	else { Assert(modelPointer < ((Model_t*)pig->resources.models) + pig->resources.numModelsAlloc); }
+	result.index = (u64)(modelPointer - ((Model_t*)pig->resources.models));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (Model_t*)modelPointer;
+	return result;
+}
 
 Texture_t* GetPointer(TextureHandle_t* handle)
 {
@@ -1541,11 +1640,36 @@ Sound_t* GetPointer(MusicHandle_t* handle)
 	handle->reloadIndex = pig->reloadIndex;
 	return handle->pntr;
 }
+Model_t* GetPointer(ModelHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numModelsAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.models == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.models->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
 
 // +--------------------------------------------------------------+
 // |                      Lookup by Filename                      |
 // +--------------------------------------------------------------+
-SpriteSheet_t* FindSpriteSheetResourceByFilename(MyStr_t filename)
+Texture_t* FindTextureResourceByFilename(MyStr_t filename, u64* textureIndexOut) //pre-declared in pig_func_defs.h
+{
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_TEXTURES; rIndex++)
+	{
+		const char* texturePath = GetPathOrNameForResource(ResourceType_Texture, rIndex);
+		NotNull(texturePath);
+		const char* textureFileName = GetFileNamePartNt(texturePath);
+		if (StrEqualsIgnoreCase(filename, textureFileName))
+		{
+			SetOptionalOutPntr(textureIndexOut, rIndex);
+			return &pig->resources.textures->items[rIndex];
+		}
+	}
+	return nullptr;
+}
+SpriteSheet_t* FindSpriteSheetResourceByFilename(MyStr_t filename, u64* sheetIndexOut = nullptr)
 {
 	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHEETS; rIndex++)
 	{
@@ -1554,6 +1678,7 @@ SpriteSheet_t* FindSpriteSheetResourceByFilename(MyStr_t filename)
 		const char* spriteSheetFileName = GetFileNamePartNt(spriteSheetPath);
 		if (StrEqualsIgnoreCase(filename, spriteSheetFileName))
 		{
+			SetOptionalOutPntr(sheetIndexOut, rIndex);
 			return &pig->resources.sheets->items[rIndex];
 		}
 	}
