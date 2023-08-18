@@ -180,8 +180,8 @@ void RcDrawVoxelOrthoFace2D(rec rectangle, rec sourceRec, Color_t color, Dir3_t 
 	else
 	{
 		u64 startIndex = 0;
-		if (side == Dir3_Left) { startIndex = 6; }
-		if (side == Dir3_Up) { startIndex = 12; }
+		if (side == Dir3_Left) { startIndex = 1*6; }
+		if (side == Dir3_Up) { startIndex = 2*6; }
 		RcBindVertBuffer(&rc->voxelOrtho2D);
 		RcDrawBuffer(VertBufferPrimitive_Triangles, startIndex, 6);
 	}
@@ -195,6 +195,75 @@ void RcDrawVoxelOrtho2D(rec rectangle, rec forwardSourceRec, rec leftSourceRec, 
 void RcDrawVoxelOrtho2D(rec rectangle, rec sourceRec, Color_t color)
 {
 	RcDrawVoxelOrthoFace2D(rectangle, sourceRec, color, Dir3_All);
+}
+
+mat4 GetOrthoHexagonProjectionMatrix(rec rectangle, box bounds)
+{
+	//            v5
+	//          __-__
+	//   v4  _--  T  --_  v0
+	//      |-__ +y  __-|
+	//      |   --^--   |
+	//      |  F  |  L  |
+	//v3 +x <-__  |  __-> -z v1
+	//          --_--
+	//            v2
+	v2 hexagonCenter = NewVec2(0, -0.5f);
+	Hexagon_t hexagon = NewHexagon(hexagonCenter, 0.5f, -ToRadians32(30));
+	v3 hexagonCenter3 = Vec3FromVec2(hexagonCenter, 0);
+	v3 hexagonBlTip = Vec3FromVec2(GetHexagonVertex(hexagon, 3), 0);
+	v3 hexagonBrTip = Vec3FromVec2(GetHexagonVertex(hexagon, 1), 0);
+	
+	mat4 worldMatrix = Mat4_Identity;
+	Mat4Transform(worldMatrix, Mat4Translate3(-0.5f, 0, -0.5f));
+	Mat4Transform(worldMatrix, Mat4Scale3(bounds.size));
+	Mat4Transform(worldMatrix, Mat4Translate3(bounds.bottomLeft + NewVec3(bounds.width/2, 0, bounds.depth/2)));
+	Mat4Transform(worldMatrix, Mat4FromBasis(hexagonBlTip, hexagonCenter3, -hexagonBrTip)); //orthographic projection
+	Mat4Transform(worldMatrix, Mat4Scale2(rectangle.size));
+	//TODO: Why do we have this weird factor of about 0.94f??
+	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x + rectangle.width*0.94f, rectangle.y + rectangle.height*0.75f, RcGetRealDepth()));
+	return worldMatrix;
+}
+
+void RcDrawBoxOrtho2D(rec rectangle, box bounds,
+	rec frontSourceRec, rec leftSourceRec, rec topSourceRec,
+	Color_t frontColor, Color_t leftColor, Color_t topColor)
+{
+	mat4 orthoMatrix = GetOrthoHexagonProjectionMatrix(rectangle, bounds);
+	RcSetWorldMatrix(orthoMatrix);
+	
+	const u64 topFaceIndex = 0*6; //see GenerateVertsForBox for face indices
+	const u64 frontFaceIndex = 2*6;
+	const u64 leftFaceIndex = 3*6;
+	RcBindVertBuffer(&rc->cubeBuffer);
+	
+	RcSetColor1(frontColor);
+	RcSetSourceRec1(frontSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, frontFaceIndex, 6);
+	
+	RcSetColor1(leftColor);
+	RcSetSourceRec1(leftSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, leftFaceIndex, 6);
+	
+	RcSetColor1(topColor);
+	RcSetSourceRec1(topSourceRec);
+	RcDrawBuffer(VertBufferPrimitive_Triangles, topFaceIndex, 6);
+}
+
+void RcDrawModelOrtho2D(rec rectangle, const Model_t* model, const rec* materialSourceRecs, u64 numMaterialSourceRecs, Color_t color)
+{
+	NotNull2(model, materialSourceRecs);
+	Assert(numMaterialSourceRecs > 0);
+	VarArrayLoop(&model->parts, pIndex)
+	{
+		VarArrayLoopGet(ModelPart_t, part, &model->parts, pIndex);
+		mat4 orthoMatrix = GetOrthoHexagonProjectionMatrix(rectangle, NewBox(0, 0, 0, 1, 1, 1));
+		RcSetWorldMatrix(orthoMatrix);
+		RcSetSourceRec1(materialSourceRecs[part->materialIndex % numMaterialSourceRecs]);
+		RcSetColor1(color);
+		RcBindVertBuffer(&part->buffer);
+		RcDrawBuffer(VertBufferPrimitive_Triangles);
+	}
 }
 
 void RcDrawCircle(v2 center, r32 radius, Color_t color, bool bindShader = true)
