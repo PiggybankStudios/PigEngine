@@ -54,6 +54,9 @@ struct PigState_t
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	MemArena_t audioHeap;
+	#if PIG_MAIN_ARENA_DEBUG
+	MemArena_t mainHeapDebug;
+	#endif
 	
 	//AppStates
 	AppGlobals_t appGlobals;

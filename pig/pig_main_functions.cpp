@@ -29,6 +29,10 @@ void PigInitialize(EngineMemory_t* memory)
 	InitMemArena_PagedHeapFuncs(&pig->largeAllocHeap, PIG_LARGE_ALLOC_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
+	#if PIG_MAIN_ARENA_DEBUG
+	InitMemArena_PagedHeapFuncs(&pig->mainHeapDebug, PIG_MAIN_ARENA_DEBUG_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	pig->mainHeap.debugArena = &pig->mainHeapDebug;
+	#endif
 	TempPushMark();
 	
 	PerfTime_t initStartTime = plat->GetPerfTime();

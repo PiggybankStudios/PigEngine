@@ -13,7 +13,8 @@ const char* PigDebugCommandInfoStrs[] = {
 	"break", "Runs MyDebugBreak()", "\n",
 	"assert", "Runs Assert()", "\n",
 	"assert_exit", "Toggles whether assertions should force close the application when hit", "{on/off}", "\n",
-	"arena_info", "Displays info about a particular memory arena", "{arena_name}", "\n",
+	"arena_info", "Displays info about a particular memory arena", "[arena_name]", "\n",
+	"walk_arena", "Fires a debug breakpoint and then runs MemArenaVery on the specified arena", "[arena_name]", "{assert_on_verify_failure}", "\n",
 	"reload", "Reloads a specific resource", "[resource_name]", "{resource_type}", "\n",
 	"resources", "List all resources (or all by a specific type)", "{resource_type}", "\n",
 	"watches", "List all file watches that are active for resources", "{resource_type}", "\n",
@@ -316,6 +317,72 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			DebugPrintArenaInfo(&pig->audioHeap, "AudioHeap");
 		}
+		else 
+		{
+			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+		}
+	}
+	
+	// +========================================+
+	// | walk_arena {assert_on_verify_failure}  |
+	// +========================================+
+	else if (StrEqualsIgnoreCase(command, "walk_arena"))
+	{
+		if (numArguments < 1 || numArguments > 2) { PrintLine_E("walk_arena takes 1 or 2 arguments, not %llu", numArguments); return validCommand; }
+		
+		bool assertOnFailure = false;
+		if (numArguments >= 2)
+		{
+			TryParseFailureReason_t parseFailureReason;
+			if (!TryParseBool(arguments[1], &assertOnFailure, &parseFailureReason))
+			{
+				PrintLine_E("Couldn't parse argument as bool \"%.*s\" %s", arguments[1].length, arguments[1].chars, GetTryParseFailureReasonStr(parseFailureReason));
+				return validCommand;
+			}
+		}
+		
+		if (StrEqualsIgnoreCase(arguments[0], "Plat") || StrEqualsIgnoreCase(arguments[0], "PlatHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->platHeap, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->fixedHeap, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "Main") || StrEqualsIgnoreCase(arguments[0], "MainHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->mainHeap, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "LargeAlloc") || StrEqualsIgnoreCase(arguments[0], "LargeAllocHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->largeAllocHeap, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "Std") || StrEqualsIgnoreCase(arguments[0], "StdHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->stdHeap, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "Temp") || StrEqualsIgnoreCase(arguments[0], "TempArena"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->tempArena, assertOnFailure);
+		}
+		else if (StrEqualsIgnoreCase(arguments[0], "Audio") || StrEqualsIgnoreCase(arguments[0], "AudioHeap"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->audioHeap, assertOnFailure);
+		}
+		#if PIG_MAIN_ARENA_DEBUG
+		else if (StrEqualsIgnoreCase(arguments[0], "MainDebug") || StrEqualsIgnoreCase(arguments[0], "MainHeapDebug"))
+		{
+			MyDebugBreak();
+			MemArenaVerify(&pig->mainHeapDebug, assertOnFailure);
+		}
+		#endif
 		else 
 		{
 			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);

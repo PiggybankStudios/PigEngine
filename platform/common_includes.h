@@ -78,6 +78,7 @@ Date:   09\14\2021
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
 #define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
+// #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
 #include "gylib/gy_defines_check.h"
 #include "gylib/gy_basic_macros.h"
 
