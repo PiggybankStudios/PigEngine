@@ -1255,7 +1255,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.modelStatus = newStatusSpace;
 		u64 numNewModels = RESOURCES_NUM_MODELS - oldModelsCount;
 		if (oldModelsCount < RESOURCES_NUM_MODELS) { NotifyPrint_I("Loading %llu new model resource%s...", numNewModels, (numNewModels == 1) ? "" : "s"); }
-		for (u64 modelIndex = oldModelsCount; modelIndex < RESOURCES_NUM_MODELS; modelIndex++) { InitResourceStatus(&pig->resources.modelStatus[modelIndex]); Pig_LoadMusicResource(modelIndex); }
+		for (u64 modelIndex = oldModelsCount; modelIndex < RESOURCES_NUM_MODELS; modelIndex++) { InitResourceStatus(&pig->resources.modelStatus[modelIndex]); Pig_LoadModelResource(modelIndex); }
 	}
 }
 
