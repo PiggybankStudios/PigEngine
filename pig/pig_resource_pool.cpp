@@ -336,6 +336,14 @@ MusicRef_t DuplicateRefMusic(const MusicRef_t* reference)
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->musics, ResourcePoolEntry_t, reference->arrayIndex);
 	return TakeRefMusic(reference->pool, entry);
 }
+ModelRef_t DuplicateRefModel(const ModelRef_t* reference)
+{
+	NotNull(reference);
+	NotNull(reference->pool);
+	Assert(reference->arrayIndex < reference->pool->models.length);
+	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->models, ResourcePoolEntry_t, reference->arrayIndex);
+	return TakeRefModel(reference->pool, entry);
+}
 
 void ReleaseRef(TextureRef_t* reference)
 {
@@ -428,6 +436,19 @@ void ReleaseRef(MusicRef_t* reference)
 	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
+void ReleaseRef(ModelRef_t* reference)
+{
+	NotNull(reference);
+	NotNull(reference->pool);
+	NotNull(reference->pntr);
+	Assert(reference->arrayIndex < reference->pool->models.length);
+	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->models, ResourcePoolEntry_t, reference->arrayIndex);
+	AssertMsg(entry->id != 0, "The resource pool model was already freed! This is a double release situation!");
+	Assert(entry->refCount > 0);
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
+	ClearPointer(reference);
+}
 
 void SoftReleaseRef(TextureRef_t*     reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(VectorImgRef_t*   reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
@@ -436,6 +457,7 @@ void SoftReleaseRef(ShaderRef_t*      reference) { NotNull(reference); if (!IsVa
 void SoftReleaseRef(FontRef_t*        reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(SoundRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(MusicRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
+void SoftReleaseRef(ModelRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 
 // +--------------------------------------------------------------+
 // |                       Main Loading API                       |
@@ -658,18 +680,19 @@ MusicRef_t ResourcePoolGetOrLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	return ResourcePoolLoadMusic(pool, filePath);
 }
 
-ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices)
+ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices, bool flipUvY, ProcessLog_t* log = nullptr)
 {
-	ProcessLog_t modelParseLog = {}; CreateDefaultProcessLog(&modelParseLog);
+	ProcessLog_t modelParseLog = {};
+	if (log == nullptr) { CreateDefaultProcessLog(&modelParseLog); log = &modelParseLog; }
 	Model_t tempModel = {};
-	if (!TryLoadModel(&modelParseLog, filePath, textureType, copyVertices, pool->allocArena, &tempModel))
+	if (!TryLoadModel(log, filePath, textureType, copyVertices, flipUvY, pool->allocArena, &tempModel))
 	{
 		PrintLine_E("Failed to load model for pool from \"%.*s\"", filePath.length, filePath.chars);
-		DumpProcessLog(&modelParseLog, "Model Parse Log");
+		if (log == nullptr) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
 		return ModelRef_Invalid;
 	}
-	else if (modelParseLog.hadErrors || modelParseLog.hadWarnings) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
-	FreeProcessLog(&modelParseLog);
+	else if (log == nullptr && (modelParseLog.hadErrors || modelParseLog.hadWarnings)) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
+	if (log == nullptr) { FreeProcessLog(&modelParseLog); }
 	
 	ResourcePoolEntry_t* newEntry = FindEmptyResourcePoolEntry(&pool->models, true);
 	DebugAssert(newEntry != nullptr);
@@ -684,9 +707,9 @@ ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTe
 	
 	return TakeRefModel(pool, newEntry);
 }
-ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices)
+ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices, bool flipUvY, ProcessLog_t* log = nullptr)
 {
 	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->models, filePath);
 	if (existingEntry != nullptr) { return TakeRefModel(pool, existingEntry); }
-	return ResourcePoolLoadModel(pool, filePath, textureType, copyVertices);
+	return ResourcePoolLoadModel(pool, filePath, textureType, copyVertices, flipUvY, log);
 }

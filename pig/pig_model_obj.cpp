@@ -654,12 +654,14 @@ bool FindObjMaterialByName(ObjModelData_t* objData, MyStr_t materialName, u64* m
 	return false;
 }
 
-bool TryDeserObjFile(MyStr_t objFileContents, ProcessLog_t* log, ObjModelData_t* objData, MemArena_t* memArena)
+bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* log, ObjModelData_t* objData, MemArena_t* memArena)
 {
 	NotNullStr(&objFileContents);
 	NotNull(log);
 	NotNull(objData);
 	NotNull(memArena);
+	NotNullStr(&folderPath);
+	Assert(IsEmptyStr(folderPath) || StrEndsWith(folderPath, "/") || StrEndsWith(folderPath, "\\"));
 	Assert(memArena != TempArena);
 	
 	ClearPointer(objData);
@@ -1037,7 +1039,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, ProcessLog_t* log, ObjModelData_t*
 				//TODO: Should we check to make sure the file path is relative? (Doesn't start with C:/ or a /)
 				// PrintLine_D("The obj file wants us to use a material library \"%.*s\"", fileName.length, fileName.pntr);
 				TempPushMark();
-				MyStr_t filePath = TempPrintStr("%s/%.*s", RESOURCE_FOLDER_MODELS, fileName.length, fileName.pntr);
+				MyStr_t filePath = TempPrintStr("%.*s%.*s", folderPath.length, folderPath.chars, fileName.length, fileName.pntr);
 				PlatFileContents_t matLibFile = {};
 				if (!plat->ReadFileContents(filePath, &matLibFile))
 				{

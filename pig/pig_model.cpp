@@ -29,7 +29,7 @@ void DestroyModel(Model_t* model)
 	ClearPointer(model);
 }
 
-Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena, ModelTextureType_t textureType, bool copyVertices)
+Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memArena, ModelTextureType_t textureType, bool copyVertices, bool flipUvY)
 {
 	NotNull(objData);
 	NotNull(memArena);
@@ -165,6 +165,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 								vertices[(faceIndex - startFaceIndex)*3 + triVertIndex].texCoord = *VarArrayGetHard(&objData->texCoords, partFace->texCoordIndices[triVertIndex], v2);
 								vertices[(faceIndex - startFaceIndex)*3 + triVertIndex].normal   = *VarArrayGetHard(&objData->normals,   partFace->normalIndices[triVertIndex],   v3);
 								vertices[(faceIndex - startFaceIndex)*3 + triVertIndex].color = ToVec4(White); //TODO: Should we get the color from somewhere?
+								if (flipUvY) { vertices[(faceIndex - startFaceIndex)*3 + triVertIndex].texCoord.y = (1 - vertices[(faceIndex - startFaceIndex)*3 + triVertIndex].texCoord.y); }
 								numVertsFilled++;
 							}
 						}
@@ -183,7 +184,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 	return result;
 }
 
-bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices, MemArena_t* memArena, Model_t* modelOut)
+bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textureType, bool copyVertices, bool flipUvY, MemArena_t* memArena, Model_t* modelOut)
 {
 	NotNull3(log, memArena, modelOut);
 	NotNullStr(&filePath);
@@ -196,10 +197,11 @@ bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textur
 		if (plat->ReadFileContents(filePath, &objFile))
 		{
 			MyStr_t objFileContentsStr = NewStr(objFile.length, objFile.chars);
+			MyStr_t folderPath = GetDirectoryPart(filePath);
 			ObjModelData_t objData = {};
-			if (TryDeserObjFile(objFileContentsStr, log, &objData, scratch))
+			if (TryDeserObjFile(objFileContentsStr, folderPath, log, &objData, scratch))
 			{
-				*modelOut = CreateModelFromObjModelData(&objData, memArena, textureType, copyVertices);
+				*modelOut = CreateModelFromObjModelData(&objData, memArena, textureType, copyVertices, flipUvY);
 				result = true;
 			}
 		}

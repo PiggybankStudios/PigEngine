@@ -1005,7 +1005,7 @@ void Pig_LoadModelResource(u64 modelIndex)
 	ProcessLog_t modelParseLog;
 	CreateDefaultProcessLog(&modelParseLog);
 	Model_t tempModel = {};
-	if (TryLoadModel(&modelParseLog, NewStr(modelPathStr), metaInfo.textureType, metaInfo.copyVertices, mainHeap, &tempModel))
+	if (TryLoadModel(&modelParseLog, NewStr(modelPathStr), metaInfo.textureType, metaInfo.copyVertices, metaInfo.flipUvY, mainHeap, &tempModel))
 	{
 		if (model->allocArena != nullptr) //TODO: Change this to something like isValid
 		{

@@ -167,6 +167,7 @@ Date:   09\14\2021
 #include "stb/stb_rect_pack.h"
 
 #define GYLIB_LOOKUP_PRIMES_1000
+#define GYLIB_DEFAULT_RANDOM_SERIES_TYPE RandomSeriesType_XoroShiro128
 #include "gylib/gy.h"
 
 // +--------------------------------------------------------------+
