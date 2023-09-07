@@ -1015,6 +1015,18 @@ void Pig_LoadModelResource(u64 modelIndex)
 		MyMemCopy(model, &tempModel, sizeof(Model_t));
 		modelStatus->state = ResourceState_Loaded;
 		
+		MyStr_t armaturePath = NewStr(metaInfo.armaturePath);
+		if (!IsEmptyStr(armaturePath))
+		{
+			ModelArmature_t tempArmature = {};
+			if (TryLoadModelArmatureFrom(armaturePath, &modelParseLog, &tempArmature, TempArena))
+			{
+				bool foundBonesForAllParts = AddArmatureToModel(model, &tempArmature, &modelParseLog);
+				if (!foundBonesForAllParts) { DebugAssertMsg(false, "Some parts in the model are not connected to the armature!"); }
+			}
+			else { DebugAssertMsg(false, "Failed to parse armature for model!"); }
+		}
+		
 		StopWatchingFilesForResource(ResourceType_Model, modelIndex);
 		WatchFileForResource(ResourceType_Model, modelIndex, NewStr(modelPathStr));
 	}

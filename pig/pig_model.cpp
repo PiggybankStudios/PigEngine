@@ -22,6 +22,7 @@ void DestroyModel(Model_t* model)
 	VarArrayLoop(&model->parts, pIndex)
 	{
 		VarArrayLoopGet(ModelPart_t, part, &model->parts, pIndex);
+		FreeString(model->allocArena, &part->name);
 		DestroyVertBuffer(&part->buffer);
 	}
 	FreeVarArray(&model->materials);
@@ -149,6 +150,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 						ModelPart_t* newPart = VarArrayAdd(&result.parts, ModelPart_t);
 						NotNull(newPart);
 						ClearPointer(newPart);
+						newPart->name = AllocString(memArena, &objObject->name);
 						newPart->partIndex = result.parts.length-1;
 						newPart->materialIndex = currentMaterialIndex;
 						TempPushMark();

@@ -561,6 +561,27 @@ struct SpriteSheet_t
 	VarArray_t frames; //SpriteSheetFrame_t
 };
 
+struct ModelArmatureBone_t
+{
+	u64 id;
+	u64 parentBoneId; //0 for root bone
+	ModelArmatureBone_t* parentBone;
+	MyStr_t name;
+	VarArray_t partNames; //MyStr_t
+	v3 head;
+	v3 tail;
+	mat4 transform;
+};
+struct ModelArmature_t
+{
+	MemArena_t* allocArena;
+	MyStr_t name;
+	u64 nextBoneId;
+	u64 rootBoneId;
+	ModelArmatureBone_t* rootBone;
+	VarArray_t bones;
+};
+
 enum ModelTextureType_t
 {
 	ModelTextureType_None = 0,
@@ -596,8 +617,10 @@ struct ModelMaterial_t
 };
 struct ModelPart_t
 {
+	MyStr_t name;
 	u64 partIndex;
 	u64 materialIndex;
+	u64 boneId;
 	VertBuffer_t buffer;
 };
 struct Model_t
@@ -606,6 +629,9 @@ struct Model_t
 	ModelTextureType_t textureType;
 	VarArray_t materials; //ModelMaterial_t
 	VarArray_t parts; //ModelPart_t
+	
+	bool hasArmature;
+	ModelArmature_t armature;
 };
 
 enum PolygonFillMode_t

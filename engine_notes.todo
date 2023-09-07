@@ -1,6 +1,14 @@
 [ ] Add a UI checkbox implementation
 [ ] Add a UI combobox implementation
 
+# Things I could clean up throughout the entire codebase
+	[ ] Do we use Create/Destroy or Init/Free?
+	[ ] Do we prefix functions with namespace standins? Like Pig_DoSomething or VarArray_Add? Maybe IsVarArraySomething should maybe be VarArray_IsSomething?
+	[ ] Can some function names be shared amongst unique types? Like IsInitialized which would have an implementation for many types?
+	[ ] Do we store allocArena at all levels of a complex struct with inner structs? How do we imply that a certain struct should only be used inside another one that has the full context, like allocArena?
+	[ ] Should all structures have a "isInitialized" bool? Or do we use allocArena for that when possible? Or do we use other nullable values?
+	[ ] Does MemArena_t* come at the beginning or end of a function? What about ProcessLog_t*? Parent structure pointer? Output pointers?
+
 # A dumping ground for any and all notes and TODO lists
 	{ } Rename game stuff to App
 	(!) If we run from a different directory than our exe and use the -exe command line option, all resources start reloading constantly
