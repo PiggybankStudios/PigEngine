@@ -32,6 +32,7 @@ void StartAppState_Game(bool initialize, AppState_t prevState, MyStr_t transitio
 		game->testSound = LoadSound(NewStr("Resources/Sounds/test"));
 		Assert(game->testSound.isValid);
 		
+		game->pigEngineText = NewStr("Pig Engine");
 		game->pigPos.x = (ScreenSize.width - game->pigTexture.width) / 2.0f;
 		game->pigPos.y = (ScreenSize.height - game->pigTexture.height) / 2.0f;
 		game->pigVel.x = 1;
@@ -60,8 +61,7 @@ void UpdateAppState_Game()
 {
 	MemArena_t* scratch = GetScratchArena();
 	
-	MyStr_t pigEngineText = NewStr("Pig Engine");
-	v2i pigEngineTextSize = MeasureText(game->mainFont.font, pigEngineText);
+	v2i pigEngineTextSize = MeasureText(game->mainFont.font, game->pigEngineText);
 	v2i totalWidgetSize = NewVec2i(
 		MaxI32(game->pigTexture.width, pigEngineTextSize.width),
 		game->pigTexture.height + pigEngineTextSize.height
@@ -129,20 +129,17 @@ void RenderAppState_Game(bool isOnTop)
 	
 	PdDrawTexturedRec(game->backgroundTexture, NewReci(0, 0, ScreenSize));
 	
-	{
-		MyStr_t pigEngineText = NewStr("Pig Engine");
-		reci pigIconRec = NewReci(Vec2Roundi(game->pigPos), game->pigTexture.size);
-		v2i pigEngineTextPos = pigIconRec.topLeft + NewVec2i(0, pigIconRec.height);
-		LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
-		PdBindFont(&game->mainFont);
-		PdDrawText(pigEngineText, pigEngineTextPos);
-		pd->graphics->setDrawMode(oldDrawMode);
-		PdDrawTexturedRec(game->pigTexture, pigIconRec);
-	}
+	reci pigIconRec = NewReci(Vec2Roundi(game->pigPos), game->pigTexture.size);
+	v2i pigEngineTextPos = pigIconRec.topLeft + NewVec2i(0, pigIconRec.height);
+	LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+	PdBindFont(&game->mainFont);
+	PdDrawText(game->pigEngineText, pigEngineTextPos);
+	pd->graphics->setDrawMode(oldDrawMode);
+	PdDrawTexturedRec(game->pigTexture, pigIconRec);
 	
 	v2i testFramePos = NewVec2i(
-		ScreenSize.width/2 - game->pieSheet.frameSize.width/2,
-		ScreenSize.height/2 - game->pieSheet.frameSize.height/2
+		ScreenSize.width/2 - game->testSheet.frameSize.width/2,
+		ScreenSize.height/2 - game->testSheet.frameSize.height/2
 	);
 	PdDrawSheetFrame(game->testSheet, game->testSheetFrame, testFramePos);
 	
