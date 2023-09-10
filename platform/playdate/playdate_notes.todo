@@ -1,0 +1,55 @@
+
+# TODO List:
+	[ ] Music manager
+	[ ] Btn Repeat Logic
+	[ ] Debug menu with infinite checkboxes (one menu item to pop it up)
+	[ ] Debug input? and Debug Commands
+	[ ] Debug Console (overlay?)
+	[ ] File System Wrappers
+	[ ] SaveGame system
+	[ ] Support for pausing, stepping frame by frame, scaling time, etc.
+	[ ] Yes/No Dialog
+	[ ] Software Keyboard
+	[ ] Settings menu
+	[ ] Togglable Mouse
+	[ ] Automatically ToUpper any strings being rendered in a font that only supports uppercase
+	[ ] AppState animated transitions?
+	[ ] Assertion actually freezes in emulator?
+
+# Notes during Setup
+	[ ] "https://help.play.date/hardware/get-started/"
+	[ ] "https://play.date/dev/"
+	[ ] "https://sdk.play.date/2.0.3/Inside%20Playdate%20with%20C.html#_how_to_use_the_c_api"
+	[ ] Download AArch32 bare-metal target (arm-non-eabi) "https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads"
+	[ ] Pulp "https://play.date/pulp/"
+	[ ] Caps (Font Import Tool) "https://play.date/caps/"
+	[ ] Arcade Fonts Collection "https://idleberg.github.io/playdate-arcade-fonts"
+
+# PlayDate Specs:
+	[ ] "https://help.play.date/hardware/the-specs/"
+	[ ] Display:      400x240 (2.7-inch diagonal)
+	[ ] Memory (RAM): 16 MB
+	[ ] Storage:      4 GB (Flash)
+	[ ] CPU:          168MHz Cortex M7
+	[ ] Total Size:   76mm x 74mm x 9mm
+	[ ] Cost:         $199
+
+# Simulator Keyboard Shortcuts
+	[ ] Restart              Cmd/Ctrl-R
+	[ ] Pause                Space
+	[ ] Lock                 Cmd/Ctrl-L
+	[ ] Menu                 Escape
+	[ ] Crank Forward        [
+	[ ] Crank Backward       ]
+	[ ] Volume Down          -
+	[ ] Volume Up            =
+	[ ] Toggle Full Screen   Fn-F
+	[ ] Rotate Display Left  Cmd/Ctrl ◀︎
+	[ ] Rotate Display Right Cmd/Ctrl ▶︎
+	[ ] 2x Display           Cmd/Ctrl-2
+
+# Useful Defines from pd_api.h
+	[ ] LCD_COLUMNS     // 400
+	[ ] LCD_ROWS        // 240
+	[ ] LCD_ROWSIZE     // 52
+	[ ] LCD_SCREEN_RECT // LCDMakeRect(0,0,LCD_COLUMNS,LCD_ROWS)
