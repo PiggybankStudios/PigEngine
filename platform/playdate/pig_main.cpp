@@ -7,7 +7,7 @@ Description:
 	** we actually compile (all others are #included into this one)
 */
 
-#include "pig_version.h"
+#include "pig_playdate_version.h"
 
 #include "gylib/gy_defines_check.h"
 

@@ -1,14 +1,14 @@
 /*
-File:   version.h
+File:   pig_playdate_version.h
 Author: Taylor Robbins
 Date:   09\06\2023
 */
 
-#ifndef _PIG_VERSION_H
-#define _PIG_VERSION_H
+#ifndef _PIG_PLAYDATE_VERSION_H
+#define _PIG_PLAYDATE_VERSION_H
 
 #define PIG_VERSION_MAJOR 0
 #define PIG_VERSION_MINOR 1
 #define PIG_VERSION_BUILD 512
 
-#endif //  _PIG_VERSION_H
+#endif //  _PIG_PLAYDATE_VERSION_H
