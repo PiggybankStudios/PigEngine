@@ -1,0 +1,6 @@
+*.sublime-workspace
+build/*
+!build/build.bat
+data/pdex.dll
+lib/include/gylib/
+engine/

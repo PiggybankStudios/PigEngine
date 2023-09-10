@@ -9,6 +9,6 @@ Date:   09\06\2023
 
 #define PIG_VERSION_MAJOR 0
 #define PIG_VERSION_MINOR 1
-#define PIG_VERSION_BUILD 505
+#define PIG_VERSION_BUILD 506
 
 #endif //  _PIG_VERSION_H
