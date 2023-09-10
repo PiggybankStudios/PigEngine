@@ -3,7 +3,7 @@ File:   input.cpp
 Author: Taylor Robbins
 Date:   09\08\2023
 Description: 
-	** Handles taking the raw input from the PlayDate's input API and converting it
+	** Handles taking the raw input from the Playdate's input API and converting it
 	** into a highly usable format for the game to query.
 */
 

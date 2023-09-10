@@ -7,7 +7,7 @@ Date:   09\08\2023
 #ifndef _PIG_MAIN_H
 #define _PIG_MAIN_H
 
-//PlayDate has 16 MB of memory, we should be able to make 64x 256kB pages. Reserve one for FIXED_HEAP, and 6 for scratch arenas
+//Playdate has 16 MB of memory, we should be able to make 64x 256kB pages. Reserve one for FIXED_HEAP, and 6 for scratch arenas
 #define FIXED_HEAP_SIZE              Kilobytes(256)
 #define MAIN_HEAP_PAGE_SIZE          Kilobytes(256)
 #define MAIN_HEAP_MAX_NUM_PAGES      57
