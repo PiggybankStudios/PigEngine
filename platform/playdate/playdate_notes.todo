@@ -15,6 +15,7 @@
 	[ ] Automatically ToUpper any strings being rendered in a font that only supports uppercase
 	[ ] AppState animated transitions?
 	[ ] Assertion actually freezes in emulator?
+	[ ] Notification system
 
 # Notes during Setup
 	[ ] "https://help.play.date/hardware/get-started/"
