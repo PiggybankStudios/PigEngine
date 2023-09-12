@@ -79,8 +79,8 @@ void UpdateAppInput()
 	UpdateAppInputBtnState(Btn_Up,    IsFlagSet(currentBtnBits, kButtonUp));
 	
 	input->crankAngle = pd->system->getCrankAngle();
-	input->crankDelta = input->crankAngle - input->crankAnglePrev;
-	input->crankMoved = BasicallyEqualR32(input->crankAngle, input->crankAnglePrev, CRANK_DELTA_DEADZONE);
+	input->crankDelta = ToDegrees32(AngleDiffR32(ToRadians32(input->crankAngle), ToRadians32(input->crankAnglePrev)));
+	input->crankMoved = !BasicallyEqualR32(input->crankDelta, 0, CRANK_DELTA_DEADZONE);
 	input->crankAngleRadians = ToRadians32(input->crankAngle);
 	UpdateAppInputBtnState(Btn_CrankDock, pd->system->isCrankDocked());
 	UpdateAppInputBtnState(Btn_CrankCw, (input->crankDelta >= CRANK_BTN_DEADZONE));

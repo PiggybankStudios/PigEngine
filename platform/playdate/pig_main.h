@@ -36,6 +36,8 @@ struct PigEngineState_t
 	SoundPool_t soundPool;
 	Font_t debugFont;
 	RandomSeries_t random;
+	SpriteSheet_t crankHintBackSheet;
+	SpriteSheet_t crankHintSheet;
 	
 	PDMenuItem* fpsDisplayMenuItem;
 	bool fpsDisplayEnabled;
@@ -43,7 +45,6 @@ struct PigEngineState_t
 	bool debugEnabled;
 	
 	PerfGraph_t perfGraph;
-
 };
 
 #endif //  _PIG_MAIN_H

@@ -57,6 +57,7 @@ r32 TimeScale = 1.0f;
 #include "sprite_sheet.cpp"
 #include "font.cpp"
 #include "input.cpp"
+#include "playdate_input_hints.cpp"
 #include "perf_graph.cpp"
 
 #include "app_state.cpp"
@@ -173,6 +174,11 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			u8 blackDotPixels[4] = { 0x00 };
 			blackDotTexture = CreateTexture(NewVec2i(1, 1), ArrayCount(blackDotPixels), blackDotPixels, nullptr);
 			Assert(blackDotTexture.isValid);
+			
+			pig->crankHintBackSheet = LoadSpriteSheet(NewStr("Resources/Sheets/crank_hint_back"), 1);
+			Assert(pig->crankHintBackSheet.isValid);
+			pig->crankHintSheet = LoadSpriteSheet(NewStr("Resources/Sheets/crank_hint"), 8);
+			Assert(pig->crankHintSheet.isValid);
 			
 			WriteLine_N("Initializing...");
 			CreateRandomSeries(&pig->random);

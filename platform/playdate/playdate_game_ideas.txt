@@ -30,3 +30,4 @@ Wordle
 Rubiks Cube Algorithm Quick Reference
 Temple Run
 Bloons TD
+The "Dots" game on pen and paper where you make boxes

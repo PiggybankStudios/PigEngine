@@ -7,8 +7,8 @@ Date:   09\08\2023
 #ifndef _INPUT_H
 #define _INPUT_H
 
-#define CRANK_DELTA_DEADZONE  0.1f
-#define CRANK_BTN_DEADZONE    0.1f
+#define CRANK_DELTA_DEADZONE  0.1f //degrees
+#define CRANK_BTN_DEADZONE    0.1f //degrees
 
 enum Btn_t
 {
@@ -104,8 +104,8 @@ struct AppInput_t
 	r32 crankAngle;
 	r32 crankAnglePrev;
 	r32 crankDelta;
-	r32 crankMoved;
-	r32 crankDeltaHandled;
+	bool crankMoved;
+	bool crankDeltaHandled;
 	r32 crankAngleRadians;
 	
 	v3 accelVec; //don't forget to call pd->system->setPeripheralsEnabled(kAccelerometer)
