@@ -28,3 +28,5 @@ E-Reader for Books
 Anagram Game (Animalgrams)
 Wordle
 Rubiks Cube Algorithm Quick Reference
+Temple Run
+Bloons TD
