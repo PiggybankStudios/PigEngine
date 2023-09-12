@@ -36,3 +36,32 @@ Texture_t LoadTexture(MyStr_t path)
 	return result;
 }
 
+Texture_t CreateTexture(v2i size, u64 dataSize, const u8* pixelData, const u8* maskData)
+{
+	Texture_t result = {};
+	result.size = size;
+	
+	result.bitmap = pd->graphics->newBitmap(size.width, size.height, kColorWhite);
+	if (result.bitmap != nullptr)
+	{
+		BitmapData_t bitmapData = GetBitmapData(result.bitmap);
+		if (dataSize == (u64)bitmapData.rowWidth * size.height)
+		{
+			NotNull(bitmapData.data);
+			MyMemCopy(bitmapData.data, pixelData, dataSize);
+			if (maskData != nullptr && bitmapData.mask != nullptr) { MyMemCopy(bitmapData.mask, maskData, dataSize); }
+			
+			result.isValid = true;
+		}
+		else
+		{
+			pd->system->error("Passed %llu bytes instead of expected %llu to CreateTexture", dataSize, (u64)bitmapData.rowWidth * size.height);
+		}
+	}
+	else
+	{
+		pd->system->error("Failed to create %dx%d texture!", size.width, size.height);
+	}
+	
+	return result;
+}

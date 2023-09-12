@@ -167,6 +167,13 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			pig->debugFont = LoadFont(NewStr(DEBUG_FONT_PATH));
 			Assert(pig->debugFont.isValid);
 			
+			u8 whiteDotPixels[4] = { 0xFF };
+			whiteDotTexture = CreateTexture(NewVec2i(1, 1), ArrayCount(whiteDotPixels), whiteDotPixels, nullptr);
+			Assert(whiteDotTexture.isValid);
+			u8 blackDotPixels[4] = { 0x00 };
+			blackDotTexture = CreateTexture(NewVec2i(1, 1), ArrayCount(blackDotPixels), blackDotPixels, nullptr);
+			Assert(blackDotTexture.isValid);
+			
 			WriteLine_N("Initializing...");
 			CreateRandomSeries(&pig->random);
 			#if 1

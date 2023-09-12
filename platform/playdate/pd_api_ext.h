@@ -89,6 +89,12 @@ v2i MeasureText(LCDFont* font, MyStr_t text, i32 tracking = 0)
 // +--------------------------------------------------------------+
 // |                           Drawing                            |
 // +--------------------------------------------------------------+
+v2i renderOffset = Vec2i_Zero;
+void PdSetRenderOffset(v2i offset)
+{
+	renderOffset = offset;
+}
+
 Font_t* boundFont = nullptr;
 Font_t* PdBindFont(Font_t* font)
 {
@@ -109,13 +115,14 @@ LCDBitmapDrawMode PdSetDrawMode(LCDBitmapDrawMode drawMode)
 
 void PdBeginFrame()
 {
+	renderOffset = Vec2i_Zero;
 	boundFont = nullptr;
 	currentDrawMode = kDrawModeCopy;
 }
 
 void PdDrawText(MyStr_t text, v2i position)
 {
-	pd->graphics->drawText(text.chars, text.length, kUTF8Encoding, position.x, position.y);
+	pd->graphics->drawText(text.chars, text.length, kUTF8Encoding, renderOffset.x + position.x, renderOffset.y + position.y);
 }
 void PdDrawTextPrint(v2i position, const char* formatString, ...)
 {
@@ -126,15 +133,40 @@ void PdDrawTextPrint(v2i position, const char* formatString, ...)
 	FreeScratchArena(scratch);
 }
 
+void PdDrawTexturedRec(LCDBitmap* bitmap, v2i bitmapSize, reci drawRec)
+{
+	NotNull(bitmap);
+	pd->graphics->drawRotatedBitmap(
+		bitmap,
+		renderOffset.x + drawRec.x,
+		renderOffset.y + drawRec.y,
+		0.0f, //rotation
+		0.0f, 0.0f, //centerx/y
+		(r32)drawRec.width / (r32)bitmapSize.width, //scalex
+		(r32)drawRec.height / (r32)bitmapSize.height //scaley
+	);
+}
+void PdDrawTexturedRec(Texture_t texture, reci drawRec)
+{
+	PdDrawTexturedRec(texture.bitmap, texture.size, drawRec);
+}
+
+Texture_t whiteDotTexture = {};
+Texture_t blackDotTexture = {};
 void PdDrawRec(reci drawRec, LCDColor color = kColorBlack)
 {
+	#if 0
 	pd->graphics->drawRect(
-		drawRec.x, //x
-		drawRec.y, //y
+		renderOffset.x + drawRec.x, //x
+		renderOffset.y + drawRec.y, //y
 		drawRec.width, //width
 		drawRec.height, //height
 		color //color
 	);
+	#else
+	Assert(color == kColorBlack || color == kColorWhite);
+	PdDrawTexturedRec((color == kColorWhite) ? whiteDotTexture : blackDotTexture, drawRec);
+	#endif
 }
 void PdDrawRecOutline(reci drawRec, i32 thickness, bool outside = false, LCDColor color = kColorBlack)
 {
@@ -148,30 +180,13 @@ void PdDrawRecOutline(reci drawRec, i32 thickness, bool outside = false, LCDColo
 	}
 }
 
-void PdDrawTexturedRec(LCDBitmap* bitmap, v2i bitmapSize, reci drawRec)
-{
-	NotNull(bitmap);
-	pd->graphics->drawRotatedBitmap(
-		bitmap,
-		drawRec.x, drawRec.y,
-		0.0f, //rotation
-		0.0f, 0.0f, //centerx/y
-		(r32)drawRec.width / (r32)bitmapSize.width, //scalex
-		(r32)drawRec.height / (r32)bitmapSize.height //scaley
-	);
-}
-void PdDrawTexturedRec(Texture_t texture, reci drawRec)
-{
-	PdDrawTexturedRec(texture.bitmap, texture.size, drawRec);
-}
-
 void PdDrawLine(v2i start, v2i end, i32 width, LCDColor color = kColorBlack)
 {
 	pd->graphics->drawLine(
-		start.x, //x1
-		start.y, //y1
-		end.x, //x2
-		end.y, //y2
+		renderOffset.x + start.x, //x1
+		renderOffset.y + start.y, //y1
+		renderOffset.x + end.x, //x2
+		renderOffset.y + end.y, //y2
 		width, //width
 		color //color
 	);

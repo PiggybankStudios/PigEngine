@@ -34,13 +34,15 @@ void RenderPerfGraph(PerfGraph_t* graph)
 	NotNull(graph);
 	if (graph->enabled)
 	{
+		LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
+		
 		i32 graphBottom = graph->mainRec.y + graph->mainRec.height;
 		
 		// PdDrawRec(graph->mainRec, kColorWhite);
 		
 		r32 scaleY = (r32)graph->mainRec.height / (r32)(2*TARGET_FRAMERATE);
 		i32 targetLineY = graphBottom - RoundR32i(TARGET_FRAMERATE * scaleY);
-		PdDrawRec(NewReci(graph->mainRec.x, targetLineY, graph->mainRec.width, 2), kColorXOR);
+		PdDrawRec(NewReci(graph->mainRec.x, targetLineY, graph->mainRec.width, 2), kColorBlack);
 		
 		v2i prevPos = Vec2i_Zero;
 		for (i32 vIndex = 0; vIndex < PERF_GRAPH_WIDTH; vIndex++)
@@ -56,10 +58,9 @@ void RenderPerfGraph(PerfGraph_t* graph)
 			prevPos = newPos;
 		}
 		
-		PdDrawRecOutline(graph->mainRec, 2, true, kColorXOR);
+		PdDrawRecOutline(graph->mainRec, 2, true, kColorBlack);
 		
 		PdBindFont(&graph->font);
-		LCDBitmapDrawMode oldDrawMode = PdSetDrawMode(kDrawModeNXOR);
 		v2i textPos = NewVec2i(graph->mainRec.x + graph->mainRec.width + 3, graph->mainRec.y);
 		i32 advanceY = boundFont->lineHeight + 1;
 		
