@@ -56,6 +56,7 @@ r32 TimeScale = 1.0f;
 #include "texture.cpp"
 #include "sprite_sheet.cpp"
 #include "font.cpp"
+#include "pig_render.cpp"
 #include "input.cpp"
 #include "playdate_input_hints.cpp"
 #include "perf_graph.cpp"

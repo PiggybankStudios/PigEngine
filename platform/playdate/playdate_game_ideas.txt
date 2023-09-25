@@ -31,3 +31,6 @@ Rubiks Cube Algorithm Quick Reference
 Temple Run
 Bloons TD
 The "Dots" game on pen and paper where you make boxes
+Last Call BBS Treasure Room Game
+Opus Magnum Mini-Games
+Little Inferno
