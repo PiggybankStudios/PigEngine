@@ -66,7 +66,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                         GLAD Source                          |
 // +--------------------------------------------------------------+
-#if OPENGL_SUPPORTED
+#if OPENGL_SUPPORTED && !WASM_COMPILATION
 #include "glad/glad.c"
 #endif
 

@@ -108,6 +108,8 @@ Date:   09\14\2021
 	// 	#include <openal/al.h>
 	// 	#include <openal/alc.h>
 	// #endif
+#elif WASM_COMPILATION
+	// TODO: Anything we want to #include here? There really isn't a whole lot of built-in "platform" header files
 #elif OSX_COMPILATION
 	// #include <pthread.h>
 	// #include <semaphore.h>
@@ -132,8 +134,6 @@ Date:   09\14\2021
 	// 	#include <AL/al.h>
 	// 	#include <AL/alc.h>
 	// #endif
-#elif WASM_COMPILATION
-	// TODO: Anything we want to #include here? There really isn't a whole lot of built-in "platform" header files
 #endif
 
 // +--------------------------------------------------------------+
@@ -145,6 +145,8 @@ Date:   09\14\2021
 	#include "glad/glad.h"
 	#endif
 	#include "GLFW/glfw3.h"
+#elif WASM_COMPILATION
+	//TODO: Any platform files we want to include?
 #elif OSX_COMPILATION
 	#define GLFW_EXPOSE_NATIVE_NSGL
 	#define GLFW_EXPOSE_NATIVE_COCOA
@@ -184,7 +186,7 @@ Date:   09\14\2021
 #elif LINUX_COMPILATION
 #include "linux/linux_shared_types.h"
 #elif WASM_COMPILATION
-// #include "web/web_shared_types.h"
+#include "web/web_shared_types.h"
 #endif
 
 #include "common_api_funcs.h"
@@ -201,7 +203,9 @@ Date:   09\14\2021
 #elif LINUX_COMPILATION
 // TODO: Include any other files that need to declare functions or types
 #elif WASM_COMPILATION
-// TODO: Include any other files that need to declare functions or types
+#include "web/web_opengl_defines.h"
+#include "web/web_opengl_types.h"
+#include "web/web_opengl_api.h"
 #endif
 
 #endif //  _COMMON_INCLUDES_H

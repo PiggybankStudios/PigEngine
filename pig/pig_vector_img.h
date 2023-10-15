@@ -23,12 +23,12 @@ const char* GetVectorImgErrorStr(VectorImgError_t error)
 {
 	switch (error)
 	{
-		case TextureError_None:            return "None";
-		case TextureError_CouldntOpenFile: return "CouldntOpenFile";
-		case TextureError_EmptyFile:       return "EmptyFile";
-		case VectorImgError_NoGroups:      return "NoGroups";
-		case VectorImgError_XmlError:      return "XmlError";
-		case VectorImgError_SvgError:      return "SvgError";
+		case VectorImgError_None:            return "None";
+		case VectorImgError_CouldntOpenFile: return "CouldntOpenFile";
+		case VectorImgError_EmptyFile:       return "EmptyFile";
+		case VectorImgError_NoGroups:        return "NoGroups";
+		case VectorImgError_XmlError:        return "XmlError";
+		case VectorImgError_SvgError:        return "SvgError";
 		default: return "Unknown";
 	}
 }
