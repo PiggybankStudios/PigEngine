@@ -33,6 +33,6 @@ const char* GetAppStateChangeStr(AppStateChange_t stateChange)
 void StartAppState(AppState_t appState, AppState_t oldAppState, bool initialize);
 void StopAppState(AppState_t appState, AppState_t newAppState, bool deinitialize, bool shuttingDown);
 void UpdateAppState(AppState_t appState);
-void RenderAppState(AppState_t appState, FrameBuffer_t* renderBuffer);
+void RenderAppState(AppState_t appState, FrameBuffer_t* renderBuffer, bool bottomLayer);
 
 #endif //  _PIG_APP_STATES_H
