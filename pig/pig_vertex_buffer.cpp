@@ -183,6 +183,11 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 			}
 		} break;
 		#endif
+		default:
+		{
+			AssertMsg(false, "Unhandled RenderApi in CreateVertBufferWithIndices");
+			return false;
+		} break;
 	}
 	
 	return result;
