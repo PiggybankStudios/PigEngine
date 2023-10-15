@@ -12,10 +12,6 @@ Description:
 #define ENGINE_LAYER
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #define GYLIB_SCRATCH_ARENA_AVAILABLE
-#if WASM_COMPILATION
-#define GY_CUSTOM_STD_LIB
-#define GY_WASM_STD_LIB
-#endif
 #include "common_includes.h"
 
 #define MSFGIF_NO_STD_LIB
