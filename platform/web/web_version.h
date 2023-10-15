@@ -1,7 +1,7 @@
 /*
 File:   web_version.h
 Author: Taylor Robbins
-Date:   03\08\2022
+Date:   10\15\2023
 Description:
 	** Defines the macros that contain the values for the current platform layer version number
 	** for the web assembly version of the platform layer.
@@ -12,9 +12,9 @@ Description:
 #define _WEB_VERSION_H
 
 #define WEB_VERSION_MAJOR 0
-#define WEB_VERSION_MINOR 1
+#define WEB_VERSION_MINOR 2
 
 //NOTE: Auto-incremented by a python script before each build
-#define WEB_VERSION_BUILD 3593
+#define WEB_VERSION_BUILD 10
 
 #endif //  _WEB_VERSION_H

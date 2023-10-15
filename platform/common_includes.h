@@ -184,7 +184,7 @@ Date:   09\14\2021
 #elif LINUX_COMPILATION
 #include "linux/linux_shared_types.h"
 #elif WASM_COMPILATION
-#include "web/web_shared_types.h"
+// #include "web/web_shared_types.h"
 #endif
 
 #include "common_api_funcs.h"
