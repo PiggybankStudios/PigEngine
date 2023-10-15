@@ -17,8 +17,11 @@ Description:
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
+//NOTE: Since PigWasmStdLib already uses stb_sprintf.h as the implementation of vsnprintf, we don't need to re-include the source for that here
+#if !USING_PIG_WASM_STD_LIB
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
+#endif
 
 #if SLUG_SUPPORTED
 // #define TERATHON_NO_SYSTEM
