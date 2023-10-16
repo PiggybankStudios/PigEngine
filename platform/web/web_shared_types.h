@@ -169,6 +169,9 @@ enum PlatAudioDeviceState_t
 	PlatAudioDeviceState_Active,
 	PlatAudioDeviceState_NumStates,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState);
+#else
 const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState)
 {
 	switch (deviceState)
@@ -181,6 +184,7 @@ const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState)
 		default: return "Unknown";
 	}
 }
+#endif
 struct PlatAudioDevice_t
 {
 	MemArena_t* allocArena;

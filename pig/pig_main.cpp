@@ -10,6 +10,9 @@ Description:
 // |                           Includes                           |
 // +--------------------------------------------------------------+
 #define ENGINE_LAYER
+#if WASM_COMPILATION
+#define PIG_COMMON_HEADER_ONLY
+#endif
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #define GYLIB_SCRATCH_ARENA_AVAILABLE
 #include "common_includes.h"

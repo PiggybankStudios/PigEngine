@@ -8,7 +8,7 @@ Description:
 	** This file will be linked with pig_main.cpp to create game.wasm.
 */
 
-#if 0
+#if 1
 #define PLATFORM_LAYER
 #include "common_includes.h"
 #else

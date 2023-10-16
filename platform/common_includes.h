@@ -78,7 +78,7 @@ Date:   09\14\2021
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
 #define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
-#if !PLATFORM_LAYER && WASM_COMPILATION //TODO: Change WASM_COMPILATION here to some sort of SINGLE_UNIT_COMPILATION
+#ifdef PIG_COMMON_HEADER_ONLY
 #define GYLIB_HEADER_ONLY
 #endif
 // #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
