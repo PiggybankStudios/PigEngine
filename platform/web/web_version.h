@@ -15,6 +15,6 @@ Description:
 #define WEB_VERSION_MINOR 2
 
 //NOTE: Auto-incremented by a python script before each build
-#define WEB_VERSION_BUILD 38
+#define WEB_VERSION_BUILD 88
 
 #endif //  _WEB_VERSION_H

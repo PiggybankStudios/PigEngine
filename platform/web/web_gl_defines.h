@@ -1,11 +1,11 @@
 /*
-File:   web_opengl_defines.h
+File:   web_gl_defines.h
 Author: Taylor Robbins
 Date:   10\15\2023
 */
 
-#ifndef _WEB_OPENGL_DEFINES_H
-#define _WEB_OPENGL_DEFINES_H
+#ifndef _WEB_GL_DEFINES_H
+#define _WEB_GL_DEFINES_H
 
 #define GL_FALSE 0
 #define GL_TRUE 1
@@ -149,4 +149,4 @@ Date:   10\15\2023
 #define GL_DEPTH_TEST 0x0B71
 // #define GL_ALPHA_TEST 0x0BC0
 
-#endif //  _WEB_OPENGL_DEFINES_H
+#endif //  _WEB_GL_DEFINES_H

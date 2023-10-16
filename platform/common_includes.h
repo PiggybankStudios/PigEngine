@@ -78,6 +78,9 @@ Date:   09\14\2021
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
 #define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
+#if !PLATFORM_LAYER && WASM_COMPILATION //TODO: Change WASM_COMPILATION here to some sort of SINGLE_UNIT_COMPILATION
+#define GYLIB_HEADER_ONLY
+#endif
 // #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
 #include "gylib/gy_defines_check.h"
 #include "gylib/gy_basic_macros.h"
@@ -203,9 +206,9 @@ Date:   09\14\2021
 #elif LINUX_COMPILATION
 // TODO: Include any other files that need to declare functions or types
 #elif WASM_COMPILATION
-#include "web/web_opengl_defines.h"
-#include "web/web_opengl_types.h"
-#include "web/web_opengl_api.h"
+#include "web/web_gl_defines.h"
+#include "web/web_gl_types.h"
+#include "web/web_gl_api.h"
 #endif
 
 #endif //  _COMMON_INCLUDES_H

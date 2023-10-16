@@ -1,11 +1,11 @@
 /*
-File:   web_opengl_types.h
+File:   web_gl_types.h
 Author: Taylor Robbins
 Date:   10\15\2023
 */
 
-#ifndef _WEB_OPENGL_TYPES_H
-#define _WEB_OPENGL_TYPES_H
+#ifndef _WEB_GL_TYPES_H
+#define _WEB_GL_TYPES_H
 
 typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
@@ -40,4 +40,4 @@ typedef int64_t GLint64EXT;
 typedef uint64_t GLuint64;
 typedef uint64_t GLuint64EXT;
 
-#endif //  _WEB_OPENGL_TYPES_H
+#endif //  _WEB_GL_TYPES_H

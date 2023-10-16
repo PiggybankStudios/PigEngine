@@ -8,21 +8,12 @@ Description:
 	** This file will be linked with pig_main.cpp to create game.wasm.
 */
 
-#if 1
-#include <limits.h>
-#include <stdint.h>
-#include <float.h>
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <intrin.h>
-#include <stdio.h>
+#if 0
+#define PLATFORM_LAYER
+#include "common_includes.h"
 #else
-#include "gylib/gy_defines_check.h"
 #define GYLIB_LOOKUP_PRIMES_10
+#include "gylib/gy_defines_check.h"
 #include "gylib/gy.h"
 #endif
 
@@ -35,5 +26,5 @@ WASM_IMPORTED_FUNC void jsPrintString(const char* labelStrPntr, const char* strP
 // +==============================+
 WASM_EXPORTED_FUNC(void, Initialize)
 {
-	jsPrintString("", "Pig Engine is Coming!");
+	jsPrintString("Pig Engine", "in WebAssembly!");
 }

@@ -1,11 +1,11 @@
 /*
-File:   web_opengl_api.h
+File:   web_gl_api.h
 Author: Taylor Robbins
 Date:   10\15\2023
 */
 
-#ifndef _WEB_OPENGL_API_H
-#define _WEB_OPENGL_API_H
+#ifndef _WEB_GL_API_H
+#define _WEB_GL_API_H
 
 WASM_IMPORTED_FUNC GLenum jsGlGetError();
 
@@ -56,7 +56,7 @@ WASM_IMPORTED_FUNC void jsGlVertexAttribPointer(GLuint index, GLint size, GLenum
 
 WASM_IMPORTED_FUNC void jsGlDrawArrays(GLenum mode, GLint first, GLsizei count);
 
-#endif //  _WEB_OPENGL_API_H
+#endif //  _WEB_GL_API_H
 
 // +--------------------------------------------------------------+
 // |                   Autocomplete Dictionary                    |
