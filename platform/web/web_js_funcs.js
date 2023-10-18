@@ -51,7 +51,7 @@ function jsGetTime()
 	return new Date().getTime();
 }
 
-function jsStartRendering(canvasWidth, canvasHeight)
+function jsInitRendering(canvasWidth, canvasHeight)
 {
 	console.assert(globals.canvas == null);
 	globals.canvas = PigWasm_AcquireCanvas(canvasWidth, canvasHeight);
@@ -59,42 +59,19 @@ function jsStartRendering(canvasWidth, canvasHeight)
 	globals.glContext = PigWasm_CreateGlContext(globals.canvas);
 	console.assert(globals.glContext != null);
 	globals.pixelRatio = window.devicePixelRatio;
-	
-	// window.addEventListener("mousemove", function(event)
-	// {
-	// 	let clientBounds = canvas.getBoundingClientRect();
-	// 	let pixelRatio = window.devicePixelRatio;
-	// 	mousePositionX = Math.round(event.clientX - clientBounds.left) * pixelRatio;
-	// 	mousePositionY = Math.round(event.clientY - clientBounds.top) * pixelRatio;
-	// });
-	// window.addEventListener("keydown", function(event)
-	// {
-	// 	let key = KeyDownEventStrToKeyEnum(event.code);
-	// 	globals.wasmModule.exports.HandleKeyPressOrRelease(key, true);
-	// });
-	// window.addEventListener("keyup", function(event)
-	// {
-	// 	let key = KeyDownEventStrToKeyEnum(event.code);
-	// 	globals.wasmModule.exports.HandleKeyPressOrRelease(key, false);
-	// });
-	// window.addEventListener("mousedown", function(event)
-	// {
-	// 	let mouseBtn = MouseDownEventNumToBtnEnum(event.button);
-	// 	globals.wasmModule.exports.HandleMousePressOrRelease(mouseBtn, true);
-	// });
-	// window.addEventListener("mouseup", function(event)
-	// {
-	// 	let mouseBtn = MouseDownEventNumToBtnEnum(event.button);
-	// 	globals.wasmModule.exports.HandleMousePressOrRelease(mouseBtn, false);
-	// });
-	
-	function UpdateAndRenderCallback()
+}
+
+function jsDownloadFile(urlPntr, callbackPntr)
+{
+	let url = wasmPntrToJsString(globals.wasmMemory, urlPntr);
+	download([url]).then(function(files)
 	{
-		globals.wasmModule.exports.WasmUpdateAndRender(); //TODO: Measure elapsed time!
-		window.requestAnimationFrame(UpdateAndRenderCallback);
-	}
-	globals.wasmModule.exports.WasmUpdateAndRender();
-	window.requestAnimationFrame(UpdateAndRenderCallback);
+		alert("all files downloaded" + files);
+		globals.wasmModule.exports.WasmFileFinishedDownload(urlPntr, callbackPntr);
+	}).catch(function(e)
+	{
+		alert("something went wrong: " + e);
+	});
 }
 
 webJsFuncs =
@@ -105,7 +82,8 @@ webJsFuncs =
 	jsPrintCallStack: jsPrintCallStack,
 	jsConsoleWriteLine: jsConsoleWriteLine,
 	jsGetTime: jsGetTime,
-	jsStartRendering: jsStartRendering,
+	jsInitRendering: jsInitRendering,
+	jsDownloadFile: jsDownloadFile,
 };
 
 // ========================== End of web_js_funcs.js ===========================

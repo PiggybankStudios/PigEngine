@@ -4,7 +4,12 @@ File:   web_main.js
 Author: Taylor Robbins
 Date:   10\15\2023
 Description:
-	** Contains the main client-side code for the web platform layer of Pig Engine
+	** Contains the asynchronous StartMainLoop function (and a call to it) that
+	** orchestrates loading the WASM module and calling WasmInitialize.
+	** Then, assuming the module called jsInitRendering, we kick off a series of
+	** window.requestAnimationFrame calls which ultimately call WasmUpdateAndRender.
+	** Everything else is handled by js* functions in web_js_funcs.js and jsGl*
+	** functions in web_gl_api.js.
 */
 
 appApiFuncs =
@@ -15,8 +20,6 @@ appApiFuncs =
 
 async function StartMainLoop()
 {
-	// console.log("StartMainLoop...");
-	
 	// console.log("Calling PigWasm_Init...");
 	initialWasmPageCount = 2;
 	globals.wasmMemory = PigWasm_InitMemory(initialWasmPageCount);
@@ -27,19 +30,53 @@ async function StartMainLoop()
 		appApiFuncs
 	);
 	
-	// console.log("Getting time...");
-	let initializeTimestamp = Math.floor(Date.now() / 1000); //TODO: Should we be worried about this being a 32-bit float?
 	// console.log("Calling WasmInitialize...");
-	// console.log("wasmMemory.buffer.byteLength after WasmInitialize:", globals.wasmMemory.buffer.byteLength.toString(16));
+	let initializeTimestamp = Math.floor(Date.now() / 1000); //TODO: Should we be worried about this being a 32-bit float?
 	globals.wasmModule.exports.WasmInitialize(initializeTimestamp);
-	// console.log("wasmMemory.buffer.byteLength after WasmInitialize:", globals.wasmMemory.buffer.byteLength.toString(16));
 	
-	if (globals.canvas == null)
+	if (globals.canvas != null)
 	{
-		console.error("The WasmModule failed to call jsStartRendering during WasmInitialize!");
+		// window.addEventListener("mousemove", function(event)
+		// {
+		// 	let clientBounds = canvas.getBoundingClientRect();
+		// 	let pixelRatio = window.devicePixelRatio;
+		// 	mousePositionX = Math.round(event.clientX - clientBounds.left) * pixelRatio;
+		// 	mousePositionY = Math.round(event.clientY - clientBounds.top) * pixelRatio;
+		// });
+		// window.addEventListener("keydown", function(event)
+		// {
+		// 	let key = KeyDownEventStrToKeyEnum(event.code);
+		// 	globals.wasmModule.exports.HandleKeyPressOrRelease(key, true);
+		// });
+		// window.addEventListener("keyup", function(event)
+		// {
+		// 	let key = KeyDownEventStrToKeyEnum(event.code);
+		// 	globals.wasmModule.exports.HandleKeyPressOrRelease(key, false);
+		// });
+		// window.addEventListener("mousedown", function(event)
+		// {
+		// 	let mouseBtn = MouseDownEventNumToBtnEnum(event.button);
+		// 	globals.wasmModule.exports.HandleMousePressOrRelease(mouseBtn, true);
+		// });
+		// window.addEventListener("mouseup", function(event)
+		// {
+		// 	let mouseBtn = MouseDownEventNumToBtnEnum(event.button);
+		// 	globals.wasmModule.exports.HandleMousePressOrRelease(mouseBtn, false);
+		// });
+		
+		function UpdateAndRenderCallback()
+		{
+			globals.wasmModule.exports.WasmUpdateAndRender(); //TODO: Measure elapsed time!
+			window.requestAnimationFrame(UpdateAndRenderCallback);
+		}
+		globals.wasmModule.exports.WasmUpdateAndRender();
+		window.requestAnimationFrame(UpdateAndRenderCallback);
+		console.log("Render loop has begun!");
 	}
-	
-	console.log("StartMainLoop Done!");
+	else
+	{
+		console.error("The WasmModule failed to call jsInitRendering during WasmInitialize!");
+	}
 }
 
 StartMainLoop();

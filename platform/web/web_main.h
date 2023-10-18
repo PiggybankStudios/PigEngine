@@ -20,10 +20,10 @@ struct WebPlatformState_t
 	u64 programTime;
 	bool mouseLeftBtnDown;
 	
-	Shader_t testShader;
-	VertBuffer_t squareBuffer;
-	Texture_t testTexture;
-	VertexArrayObject_t testVao;
+	Web_Shader_t testShader;
+	Web_VertBuffer_t squareBuffer;
+	Web_Texture_t testTexture;
+	Web_VertexArrayObject_t testVao;
 };
 
 #endif //  _WEB_MAIN_H
