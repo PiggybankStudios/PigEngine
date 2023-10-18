@@ -26,6 +26,8 @@ Description:
 #include "web_render_types.h"
 #include "web_main.h"
 
+#include "web_js_funcs.h"
+
 // +--------------------------------------------------------------+
 // |                           Globals                            |
 // +--------------------------------------------------------------+
@@ -36,7 +38,6 @@ WebPlatformState_t* Platform = nullptr;
 // +--------------------------------------------------------------+
 // |                         Source Files                         |
 // +--------------------------------------------------------------+
-#include "web_js_funcs.cpp"
 #include "web_core.cpp"
 #include "web_debug.cpp"
 // #include "web_render_types.cpp"
@@ -63,25 +64,17 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	
 	Platform->programTime = 0;
 	
-	//Went up by 2,097,152 aka 2048kB aka 32 pages
+	//TODO: Call out to PigEngine functions to ask about StartupOptions, use that to determine the resolution we should request for the canvas
+	Platform->canvasSize = NewVec2i(800, 600);
+	
 	Platform->initialized = true;
 	u64 endMemUsage = jsStdGetHeapSize();
 	PrintLine_D("End Memory Usage: %llu (0x%08X) %llukB", endMemUsage, endMemUsage, endMemUsage/1024);
 	TempPopMark();
 	AssertMsg(GetNumMarks(&Platform->tempArena) == 0, "TempArena mark count is not 0 at end of WasmInitialize!");
 	
-	//Heap Base 67136 (0x10640) aka 1 page + 1,600 bytes
-	//Got to 458752 (0x70000)
-	// jsPrintInteger("HeapBaseAddress", GetHeapBaseAddress());
-	// int startAddress = GetHeapBaseAddress();
-	// if ((startAddress % WASM_MEMORY_PAGE_SIZE) != 0) { startAddress += WASM_MEMORY_PAGE_SIZE - (startAddress % WASM_MEMORY_PAGE_SIZE); }
-	// for (int bIndex = startAddress; bIndex < WASM_MEMORY_PAGE_SIZE*7; bIndex += Kilobytes(1))
-	// {
-	// 	jsPrintInteger("Address", bIndex);
-	// 	// *(u8*)(bIndex) = 0xDD;
-	// 	memset((void*)(bIndex), 0xDD, Kilobytes(1)-1);
-	// }
-	// jsPrintString("Finished", "Up to 64 pages!");
+	//This will immediately call WasmUpdateAndRender at least once, so it must stay at the end of WasmInitilize
+	jsStartRendering(Platform->canvasSize.width, Platform->canvasSize.height);
 }
 
 // +==============================+
@@ -95,8 +88,8 @@ WASM_EXPORTED_FUNC(void, WasmUpdateAndRender)
 	
 	jsGlViewport(0, 0, Platform->canvasSize.width, Platform->canvasSize.height);
 	
-	// jsGlClearColor(OscillateBy(Platform->programTime, 0, 1, (Platform->mouseLeftBtnDown ? 200 : 1000)), 0, 0, 1);
-	// jsGlClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+	jsGlClearColor(OscillateBy(Platform->programTime, 0, 1, (Platform->mouseLeftBtnDown ? 200 : 1000)), 0, 0, 1);
+	jsGlClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 	
 	// jsGlUseProgram(Platform->testShader.glId);
 	// mat4 worldMatrix = Mat4RotateZ(OscillateBy(Platform->programTime, 0, TwoPi32, (Platform->mouseLeftBtnDown ? 2000 : 10000)));
