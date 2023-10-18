@@ -1,61 +1,67 @@
 /*
 File:   web_debug.cpp
 Author: Taylor Robbins
-Date:   03\13\2022
+Date:   10\16\2023
 Description: 
-	** Holds functions that help us reroute and distribute debug output to the javascript print functions
+	** Holds functions that help with debug output when compiling for the web
 */
-
-#define WEB_DEBUG_OUTPUT_PRINT_BUFFER_SIZE 1024 //chars
 
 void Web_DebugOutputFromPlat(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool newLine, const char* message)
 {
 	//TODO: Add support for finding line breaks and adhering to them (requires backing state)
 	switch (dbgLevel)
 	{
-		case DbgLevel_None:    js_ConsoleLog(message);    break;
-		case DbgLevel_Debug:   js_ConsoleDebug(message);  break;
-		case DbgLevel_Regular: js_ConsoleLog(message);    break;
-		case DbgLevel_Info:    js_ConsoleInfo(message);   break;
-		case DbgLevel_Notify:  js_ConsoleNotify(message); break;
-		case DbgLevel_Other:   js_ConsoleOther(message);  break;
-		case DbgLevel_Warning: js_ConsoleWarn(message);   break;
-		case DbgLevel_Error:   js_ConsoleError(message);  break;
+		case DbgLevel_None:    jsConsoleWriteLine(1, message); break;
+		case DbgLevel_Debug:   jsConsoleWriteLine(0, message); break;
+		case DbgLevel_Regular: jsConsoleWriteLine(1, message); break;
+		case DbgLevel_Info:    jsConsoleWriteLine(2, message); break;
+		case DbgLevel_Notify:  jsConsoleWriteLine(3, message); break;
+		case DbgLevel_Other:   jsConsoleWriteLine(4, message); break;
+		case DbgLevel_Warning: jsConsoleWriteLine(5, message); break;
+		case DbgLevel_Error:   jsConsoleWriteLine(6, message); break;
 		default: Assert_(false); break;
 	}
 }
 
 void Web_DebugPrintFromPlat(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t dbgLevel, bool newLine, const char* formatString, ...)
 {
-	char printBuffer[WEB_DEBUG_OUTPUT_PRINT_BUFFER_SIZE];
-	va_list args;
-	va_start(args, formatString);
-	int printResult = MyVaListPrintf(
-		printBuffer,
-		WEB_DEBUG_OUTPUT_PRINT_BUFFER_SIZE,
-		formatString,
-		args
-	);
-	va_end(args);
-	//TODO: Add error checking!
-	printBuffer[WEB_DEBUG_OUTPUT_PRINT_BUFFER_SIZE-1] = '\0';
-	
-	Web_DebugOutputFromPlat(flags, filePath, lineNumber, funcName, dbgLevel, newLine, printBuffer);
+	MemArena_t* scratch = GetScratchArena();
+	PrintInArenaVa(scratch, printResult, printLength, formatString);
+	if (printLength >= 0)
+	{
+		Web_DebugOutputFromPlat(flags, filePath, lineNumber, funcName, dbgLevel, newLine, printResult);
+	}
+	else
+	{
+		Web_DebugOutputFromPlat(flags, filePath, lineNumber, funcName, DbgLevel_Error, true, "[[PRINT_ERROR]]");
+		Web_DebugOutputFromPlat(flags, filePath, lineNumber, funcName, dbgLevel, newLine, formatString);
+	}
+	FreeScratchArena(scratch);
 }
 
 // +--------------------------------------------------------------+
 // |                        GyLib Handlers                        |
 // +--------------------------------------------------------------+
-//TODO: Should we add any flags that indicate this message comes from mylib?
-//void Web_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
+// void Web_GyLibDebugOutputHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 GYLIB_DEBUG_OUTPUT_HANDLER_DEF(Web_GyLibDebugOutputHandler)
 {
-	// TODO: Unimplemented
+	Web_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, message);
 }
-// void Web_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...);
+// void Web_GyLibDebugPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
 GYLIB_DEBUG_PRINT_HANDLER_DEF(Web_GyLibDebugPrintHandler)
 {
-	// TODO: Unimplemented
+	MemArena_t* scratch = GetScratchArena();
+	PrintInArenaVa(scratch, printResult, printLength, formatString);
+	if (printLength >= 0)
+	{
+		Web_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, printResult);
+	}
+	else
+	{
+		Web_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, DbgLevel_Error, true, "[[PRINT_ERROR]]");
+		Web_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, formatString);
+	}
+	FreeScratchArena(scratch);
 }
 
 // +--------------------------------------------------------------+
@@ -63,7 +69,8 @@ GYLIB_DEBUG_PRINT_HANDLER_DEF(Web_GyLibDebugPrintHandler)
 // +--------------------------------------------------------------+
 void Web_DebugInit()
 {
-	
+	GyLibDebugOutputFunc = Web_GyLibDebugOutputHandler;
+	GyLibDebugPrintFunc = Web_GyLibDebugPrintHandler;
 }
 
 // +--------------------------------------------------------------+

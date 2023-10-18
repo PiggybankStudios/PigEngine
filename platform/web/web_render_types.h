@@ -1,13 +1,11 @@
 /*
-File:   web_helpers.h
+File:   web_render_types.h
 Author: Taylor Robbins
-Date:   04\26\2022
+Date:   10\16\2023
 */
 
-#ifndef _WEB_HELPERS_H
-#define _WEB_HELPERS_H
-
-//TODO: Remove me when we are done testing gl functionality without the application
+#ifndef _WEB_RENDER_TYPES_H
+#define _WEB_RENDER_TYPES_H
 
 struct Shader_t
 {
@@ -170,4 +168,4 @@ struct VertexArrayObject_t
 	VertexAttribLocations_t attribLocations;
 };
 
-#endif //  _WEB_HELPERS_H
+#endif //  _WEB_RENDER_TYPES_H

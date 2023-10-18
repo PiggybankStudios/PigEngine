@@ -16,6 +16,9 @@ Date:   09\14\2021
 #if !defined(OPENGL_SUPPORTED)
 #error You must define OPENGL_SUPPORTED in the build options
 #endif
+#if !defined(WEBGL_SUPPORTED)
+#error You must define WEBGL_SUPPORTED in the build options
+#endif
 #if !defined(VULKAN_SUPPORTED)
 #error You must define VULKAN_SUPPORTED in the build options
 #endif
@@ -80,6 +83,11 @@ Date:   09\14\2021
 #define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
 #ifdef PIG_COMMON_HEADER_ONLY
 #define GYLIB_HEADER_ONLY
+#endif
+#ifdef WASM_COMPILATION
+// In web builds, the platform and the engine are compiled separately and then linked. We are going to utilize static to make their TempArena and scratchArena globals be separate per-compilation unit
+#define GYLIB_TEMP_MEMORY_STATIC
+#define GYLIB_SCRATCH_ARENAS_STATIC
 #endif
 // #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
 #include "gylib/gy_defines_check.h"

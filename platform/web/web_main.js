@@ -1,4 +1,4 @@
-// ============================= Start of web_main.js =============================
+// =========================== Start of web_main.js ============================
 /*
 File:   web_main.js
 Author: Taylor Robbins
@@ -26,20 +26,49 @@ function jsPrintString(labelStrPntr, strPntr)
 	console.log(labelStr + ": " + str);
 }
 
+function jsPrintCallStack(labelStrPntr)
+{
+	let labelStr = wasmPntrToJsString(stdGlobals.wasmMemory, labelStrPntr);
+	console.log(labelStr + " (Stack Trace):");
+	console.trace();
+}
+
+function jsConsoleWriteLine(level, messagePntr)
+{
+	let messageStr = wasmPntrToJsString(stdGlobals.wasmMemory, messagePntr);
+	if      (level == 0) { console.debug("%c" + messageStr, "color: #AFAFA2;"); } //debug (MonokaiGray1)
+	else if (level == 1) { console.log(messageStr);                             } //regular/none
+	else if (level == 2) { console.info("%c" + messageStr, "color: #A6E22E;");  } //info (MonokaiGreen)
+	else if (level == 3) { console.info("%c" + messageStr, "color: #AE81FF;");  } //notify (MonokaiPurple)
+	else if (level == 4) { console.info("%c" + messageStr, "color: #66D9EF;");  } //other (MonokaiBlue)
+	else if (level == 5) { console.warn(messageStr);                            } //warning
+	else if (level == 6) { console.error(messageStr);                           } //error
+	else { console.log(messageStr); }
+}
+
+function jsGetTime()
+{
+	return new Date().getTime();
+}
+
 appApiFuncs = {
 	jsPrintInteger: jsPrintInteger,
 	jsPrintFloat: jsPrintFloat,
 	jsPrintString: jsPrintString,
+	jsPrintCallStack: jsPrintCallStack,
+	jsConsoleWriteLine: jsConsoleWriteLine,
+	jsGetTime: jsGetTime,
+	...webglDrawingFunctions,
 };
 
-async function MainLoop()
+async function StartMainLoop()
 {
-	// console.log("MainLoop start...");
+	// console.log("StartMainLoop...");
 	canvas = PigWasm_AcquireCanvas(800, 600);
 	glContext = PigWasm_CreateGlContext(canvas);
 	
 	// console.log("Calling init...");
-	initialWasmPageCount = 64;
+	initialWasmPageCount = 2;
 	wasmMemory = PigWasm_InitMemory(initialWasmPageCount);
 	wasmModule = await PigWasm_Init(
 		wasmMemory,
@@ -50,8 +79,10 @@ async function MainLoop()
 	
 	// console.log("Getting time...");
 	let initializeTimestamp = Math.floor(Date.now() / 1000); //TODO: Should we be worried about this being a 32-bit float?
-	// console.log("Calling Initialize...");
-	wasmModule.exports.Initialize(initializeTimestamp);
+	// console.log("Calling WasmInitialize...");
+	// console.log("wasmMemory.buffer.byteLength after WasmInitialize:", wasmMemory.buffer.byteLength.toString(16));
+	wasmModule.exports.WasmInitialize(initializeTimestamp);
+	// console.log("wasmMemory.buffer.byteLength after WasmInitialize:", wasmMemory.buffer.byteLength.toString(16));
 	
 	// window.addEventListener("mousemove", function(event)
 	// {
@@ -81,17 +112,16 @@ async function MainLoop()
 	// 	wasmModule.exports.HandleMousePressOrRelease(mouseBtn, false);
 	// });
 	
-	// wasmModule.exports.UpdateAndRender(0);
-	
-	// function renderFrame()
+	// function UpdateAndRenderCallback()
 	// {
-	// 	wasmModule.exports.UpdateAndRender(16.6666);
-	// 	window.requestAnimationFrame(renderFrame);
+	// 	wasmModule.exports.WasmUpdateAndRender(); //TODO: Measure elapsed time!
+	// 	window.requestAnimationFrame(UpdateAndRenderCallback);
 	// }
-	// window.requestAnimationFrame(renderFrame);
-	// console.log("MainLoop Done!");
+	// wasmModule.exports.WasmUpdateAndRender();
+	// window.requestAnimationFrame(UpdateAndRenderCallback);
+	// console.log("StartMainLoop Done!");
 }
 
-MainLoop();
+StartMainLoop();
 
-// ============================== End of main.js ==============================
+// ============================ End of web_main.js =============================
