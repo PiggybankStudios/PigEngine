@@ -63,7 +63,7 @@ const webglDrawingFunctions =
 	},
 	jsGlGetAttribLocation: (programIndex, namePntr) =>
 	{
-		let newLocation = globals.glContext.getAttribLocation(glGlobals.programs[programIndex], wasmPntrToJsString(wasmMemory, namePntr));
+		let newLocation = globals.glContext.getAttribLocation(glGlobals.programs[programIndex], StrPntrToJsStr(namePntr));
 		if (newLocation === -1) { return -1; }
 		let result = glGlobals.attribLocations.length;
 		glGlobals.attribLocations.push(newLocation);
@@ -71,7 +71,7 @@ const webglDrawingFunctions =
 	},
 	jsGlGetUniformLocation: (programIndex, namePntr) =>
 	{
-		let newLocation = globals.glContext.getUniformLocation(glGlobals.programs[programIndex], wasmPntrToJsString(wasmMemory, namePntr));
+		let newLocation = globals.glContext.getUniformLocation(glGlobals.programs[programIndex], StrPntrToJsStr(namePntr));
 		if (newLocation === -1) { return -1; }
 		let result = glGlobals.uniformLocations.length;
 		glGlobals.uniformLocations.push(newLocation);
@@ -89,7 +89,7 @@ const webglDrawingFunctions =
 	jsGlDepthFunc:               (func)                                          => { globals.glContext.depthFunc(func); },
 	jsGlFrontFace:               (mode)                                          => { globals.glContext.frontFace(mode); },
 	jsGlLineWidth:               (width)                                         => { globals.glContext.lineWidth(width); },
-	jsGlShaderSource:            (shaderIndex, count, stringPntr)                => { globals.glContext.shaderSource(glGlobals.shaders[shaderIndex], wasmPntrToJsString(wasmMemory, stringPntr)); },
+	jsGlShaderSource:            (shaderIndex, count, stringPntr)                => { globals.glContext.shaderSource(glGlobals.shaders[shaderIndex], StrPntrToJsStr(stringPntr)); },
 	jsGlCompileShader:           (shaderIndex)                                   => { globals.glContext.compileShader(glGlobals.shaders[shaderIndex]); },
 	jsGlAttachShader:            (programIndex, shaderIndex)                     => { globals.glContext.attachShader(glGlobals.programs[programIndex], glGlobals.shaders[shaderIndex]); },
 	jsGlLinkProgram:             (programIndex)                                  => { globals.glContext.linkProgram(glGlobals.programs[programIndex]); },

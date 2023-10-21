@@ -8,6 +8,46 @@ Description:
 	** but don't get exposed directly to the WASM module
 */
 
+// +--------------------------------------------------------------+
+// |                 String Marshalling Functions                 |
+// +--------------------------------------------------------------+
+function StrPntrToJsStr(strPntr)
+{
+	const codes = [];
+	const wasmMemBuffer = new Uint8Array(globals.wasmMemory.buffer).subarray(strPntr);
+	
+	let cIndex = 0;
+	while (true)
+	{
+		const char = wasmMemBuffer[cIndex];
+		if (char == 0) { break; }
+		codes.push(char);
+		cIndex++;
+	}
+	
+	//TODO: Can we do something else? If we do our own UTF-8 parsing maybe?
+	return String.fromCharCode(...codes);
+}
+const encoder = new TextEncoder("utf8");
+function JsStrToStrPntr(memArenaPntr, jsString)
+{
+	let encodedStr = encoder.encode(jsString + "\0");
+	let allocSize = encodedStr.length;
+	let resultPntr = globals.wasmModule.exports.WasmAllocMem(memArenaPntr, allocSize);
+	if (resultPntr != 0)
+	{
+		var wasmMemBuffer = new Uint8Array(globals.wasmMemory.buffer).subarray(resultPntr);
+		wasmMemBuffer.set(encodedStr);
+	}
+	return resultPntr;
+}
+function FreeStrPntr(memArenaPntr, strPntr)
+{
+	//TODO: We should probably calculate the size of the string by looping until we find a null-term char in the wasm memory
+	// Freeing the string doesn't REQUIRE we know the length, but it can help with bookkeeping in some kinds of MemArenas
+	globals.wasmModule.exports.WasmFreeMem(memArenaPntr, strPntr, 0);
+}
+
 // "https://stackoverflow.com/questions/22733685/how-to-download-files-using-javascript-asynchronously"
 // Download a file form a url.
 function saveFile(url)
@@ -38,6 +78,5 @@ function download(urls)
 {
 	return Promise.all(urls.map(saveFile));
 }
-
 
 // =========================== End of web_helpers.js ===========================

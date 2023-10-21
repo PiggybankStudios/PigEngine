@@ -18,5 +18,6 @@ WASM_IMPORTED_FUNC void jsConsoleWriteLine(int level, const char* messagePntr);
 WASM_IMPORTED_FUNC double jsGetTime();
 WASM_IMPORTED_FUNC void jsInitRendering(int canvasWidth, int canvasHeight);
 WASM_IMPORTED_FUNC void jsDownloadFile(const char* urlPntr, FileDownloadedCallback_f* callbackPntr);
+WASM_IMPORTED_FUNC const char* jsGetString(MemArena_t* memArenaPntr);
 
 #endif //  _WEB_JS_FUNCS_H

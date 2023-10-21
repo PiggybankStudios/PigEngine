@@ -63,6 +63,7 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	u64 initialMemUsage = jsStdGetHeapSize();
 	Web_MemoryInit();
 	TempPushMark();
+	MemArena_t* scratch = GetScratchArena();
 	
 	Web_DebugInit();
 	WriteLine_O("+======================================+");
@@ -94,7 +95,7 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	
 	Platform->testVao = Web_CreateVertexArrayObject(Web_VertexType_Default2D);
 	
-	jsDownloadFile("Resources/icon16.png", TestFileDownloaded);
+	// jsDownloadFile("Resources/icon16.png", TestFileDownloaded);
 	
 	u32 testTextureData[] = {
 		TransparentWhite_Value,   PureRed_Value,          PureOrange_Value,       TransparentWhite_Value,
@@ -104,9 +105,17 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	};
 	Platform->testTexture = Web_CreateTexture(NewVec2i(4, 4), (u8*)testTextureData, true, false);
 	
+	const char* jsString = jsGetString(scratch);
+	PrintLine_D("jsString: \"%s\" (%p)", jsString, jsString);
+	for (int bIndex = 0; bIndex < 10; bIndex++)
+	{
+		PrintLine_D("%08X = %02X", (u32)(jsString + bIndex), CharToU32(*(jsString + bIndex)));
+	}
+	
 	Platform->initialized = true;
 	u64 endMemUsage = jsStdGetHeapSize();
 	PrintLine_D("End Memory Usage: %llu (0x%08X) %llukB", endMemUsage, endMemUsage, endMemUsage/1024);
+	FreeScratchArena(scratch);
 	TempPopMark();
 	AssertMsg(GetNumMarks(&Platform->tempArena) == 0, "TempArena mark count is not 0 at end of WasmInitialize!");
 }
@@ -149,6 +158,27 @@ WASM_EXPORTED_FUNC(void, WasmUpdateAndRender)
 	AssertMsg(GetNumMarks(&Platform->tempArena) == 0, "TempArena mark count is not 0 at end of WasmUpdateAndRender!");
 }
 
+// +==============================+
+// |         WasmAllocMem         |
+// +==============================+
+WASM_EXPORTED_FUNC(void*, WasmAllocMem, MemArena_t* memArenaPntr, uint32_t numBytes)
+{
+	void* result = AllocMem(memArenaPntr, numBytes);
+	PrintLine_D("WasmAllocMem(%p, %u) => %p", memArenaPntr, numBytes, result);
+	return result;
+}
+// +==============================+
+// |         WasmFreeMem          |
+// +==============================+
+WASM_EXPORTED_FUNC(void, WasmFreeMem, MemArena_t* memArenaPntr, void* allocPntr, uint32_t allocSize)
+{
+	PrintLine_D("FreeMem(%p, %p, %u)", memArenaPntr, allocPntr, allocSize);
+	FreeMem(memArenaPntr, allocPntr, allocSize);
+}
+
+// +==============================+
+// |   WasmFileFinishedDownload   |
+// +==============================+
 WASM_EXPORTED_FUNC(void, WasmFileFinishedDownload, const char* filePath, FileDownloadedCallback_f* callbackPntr)
 {
 	NotNull(callbackPntr);

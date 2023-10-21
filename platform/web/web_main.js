@@ -33,6 +33,7 @@ async function StartMainLoop()
 	// console.log("Calling WasmInitialize...");
 	let initializeTimestamp = Math.floor(Date.now() / 1000); //TODO: Should we be worried about this being a 32-bit float?
 	globals.wasmModule.exports.WasmInitialize(initializeTimestamp);
+	// console.log("wasmModule:", globals.wasmModule);
 	
 	if (globals.canvas != null)
 	{

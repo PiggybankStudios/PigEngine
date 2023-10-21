@@ -1,9 +1,9 @@
 [ ] Add a UI checkbox implementation
 [ ] Add a UI combobox implementation
 
+[ ] TODO: "developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer"
+
 # Web Assembly TODO
-	[ ] Make sure asserts are working properly
-	[ ] Add a way for javascript to request memory allocation and free (pass MemArena_t through javascript?)
 	[ ] Change saveFile so it brings the file contents into memory, not to disk
 	[ ] Can we access structure members in a javascript function?
 	[ ] Can we return a structure from a javascript function?
@@ -124,6 +124,8 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] Add a way for javascript to request memory allocation and free (pass MemArena_t through javascript?)
+	[X] Make sure asserts are working properly
 	[X] Add a UI button implementation
 	[X] Move "fullscreen" command logic into a function and call that instead of running a debug command when F11 is pressed
 	[X] Add support for "Handling" an InputEvent_t and therefore handling it's related events and keys/btns

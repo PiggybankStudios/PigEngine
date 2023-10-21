@@ -9,33 +9,33 @@ Description:
 
 function jsPrintInteger(labelStrPntr, number)
 {
-	let labelStr = wasmPntrToJsString(globals.wasmMemory, labelStrPntr);
+	let labelStr = StrPntrToJsStr(labelStrPntr);
 	console.log(labelStr + ": " + number + " (0x" + number.toString(16) + ")");
 }
 
 function jsPrintFloat(labelStrPntr, number)
 {
-	let labelStr = wasmPntrToJsString(globals.wasmMemory, labelStrPntr);
+	let labelStr = StrPntrToJsStr(labelStrPntr);
 	console.log(labelStr + ": " + number);
 }
 
 function jsPrintString(labelStrPntr, strPntr)
 {
-	let labelStr = wasmPntrToJsString(globals.wasmMemory, labelStrPntr);
-	let str = wasmPntrToJsString(globals.wasmMemory, strPntr);
+	let labelStr = StrPntrToJsStr(labelStrPntr);
+	let str = StrPntrToJsStr(strPntr);
 	console.log(labelStr + ": " + str);
 }
 
 function jsPrintCallStack(labelStrPntr)
 {
-	let labelStr = wasmPntrToJsString(globals.wasmMemory, labelStrPntr);
+	let labelStr = StrPntrToJsStr(labelStrPntr);
 	console.log(labelStr + " (Stack Trace):");
 	console.trace();
 }
 
 function jsConsoleWriteLine(level, messagePntr)
 {
-	let messageStr = wasmPntrToJsString(globals.wasmMemory, messagePntr);
+	let messageStr = StrPntrToJsStr(messagePntr);
 	if      (level == 0) { console.debug("%c" + messageStr, "color: #AFAFA2;"); } //debug (MonokaiGray1)
 	else if (level == 1) { console.log(messageStr);                             } //regular/none
 	else if (level == 2) { console.info("%c" + messageStr, "color: #A6E22E;");  } //info (MonokaiGreen)
@@ -63,7 +63,7 @@ function jsInitRendering(canvasWidth, canvasHeight)
 
 function jsDownloadFile(urlPntr, callbackPntr)
 {
-	let url = wasmPntrToJsString(globals.wasmMemory, urlPntr);
+	let url = StrPntrToJsStr(urlPntr);
 	download([url]).then(function(files)
 	{
 		alert("all files downloaded" + files);
@@ -72,6 +72,11 @@ function jsDownloadFile(urlPntr, callbackPntr)
 	{
 		alert("something went wrong: " + e);
 	});
+}
+
+function jsGetString(memArenaPntr)
+{
+	return JsStrToStrPntr(memArenaPntr, "Hello from Javascript!");
 }
 
 webJsFuncs =
@@ -84,6 +89,7 @@ webJsFuncs =
 	jsGetTime: jsGetTime,
 	jsInitRendering: jsInitRendering,
 	jsDownloadFile: jsDownloadFile,
+	jsGetString: jsGetString,
 };
 
 // ========================== End of web_js_funcs.js ===========================
