@@ -61,16 +61,25 @@ function jsInitRendering(canvasWidth, canvasHeight)
 	globals.pixelRatio = window.devicePixelRatio;
 }
 
-function jsDownloadFile(urlPntr, callbackPntr)
+function jsDownloadFile(urlPntr, memArenaPntr, callbackPntr)
 {
 	let url = StrPntrToJsStr(urlPntr);
-	download([url]).then(function(files)
+	fetch(url, { cache: "no-cache" })
+	.then(data => data.blob())
+	.then(blob => blob.arrayBuffer())
+	.then(resultBuffer =>
 	{
-		alert("all files downloaded" + files);
-		globals.wasmModule.exports.WasmFileFinishedDownload(urlPntr, callbackPntr);
-	}).catch(function(e)
-	{
-		alert("something went wrong: " + e);
+		// console.log(resultBuffer);
+		let bufferU8 = new Uint8Array(resultBuffer);
+		let spacePntr = globals.wasmModule.exports.WasmAllocMem(memArenaPntr, resultBuffer.byteLength);
+		// console.log("Allocated at " + spacePntr);
+		let buf = new Uint8Array(wasmMemory.buffer);
+		for (let bIndex = 0; bIndex < resultBuffer.byteLength; bIndex++)
+		{
+			buf[spacePntr + bIndex] = bufferU8[bIndex];
+		}
+		globals.wasmModule.exports.WasmFileFinishedDownload(urlPntr, resultBuffer.byteLength, spacePntr, callbackPntr);
+		globals.wasmModule.exports.WasmFreeMem(memArenaPntr, spacePntr, resultBuffer.byteLength);
 	});
 }
 

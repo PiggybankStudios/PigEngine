@@ -46,10 +46,14 @@ WebPlatformState_t* Platform = nullptr;
 // +--------------------------------------------------------------+
 // |                       Helper Functions                       |
 // +--------------------------------------------------------------+
-// void TestFileDownloaded(const char* filePath, const u8* filePntr, u64 fileSize)
+// void TestFileDownloaded(const char* filePath, u32 fileSize, const u8* fileContentsPntr)
 FILE_DOWNLOADED_CALLBACK_DEF(TestFileDownloaded)
 {
-	PrintLine_D("Downloaded \"%s\" %llu bytes %p", filePath, fileSize, filePntr);
+	PrintLine_D("Downloaded \"%s\" %u bytes %p", filePath, fileSize, fileContentsPntr);
+	for (u64 bIndex = 0; bIndex+4 <= fileSize && bIndex < 100; bIndex += 4)
+	{
+		PrintLine_D("%08X: %02X %02X %02X %02X", (u32)(fileContentsPntr + bIndex), fileContentsPntr[bIndex+0], fileContentsPntr[bIndex+1], fileContentsPntr[bIndex+2], fileContentsPntr[bIndex+3]);
+	}
 }
 
 // +--------------------------------------------------------------+
@@ -95,7 +99,7 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	
 	Platform->testVao = Web_CreateVertexArrayObject(Web_VertexType_Default2D);
 	
-	// jsDownloadFile("Resources/icon16.png", TestFileDownloaded);
+	jsDownloadFile("Resources/icon16.png", &Platform->chunkArena, TestFileDownloaded);
 	
 	u32 testTextureData[] = {
 		TransparentWhite_Value,   PureRed_Value,          PureOrange_Value,       TransparentWhite_Value,
@@ -105,12 +109,12 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	};
 	Platform->testTexture = Web_CreateTexture(NewVec2i(4, 4), (u8*)testTextureData, true, false);
 	
-	const char* jsString = jsGetString(scratch);
-	PrintLine_D("jsString: \"%s\" (%p)", jsString, jsString);
-	for (int bIndex = 0; bIndex < 10; bIndex++)
-	{
-		PrintLine_D("%08X = %02X", (u32)(jsString + bIndex), CharToU32(*(jsString + bIndex)));
-	}
+	// const char* jsString = jsGetString(scratch);
+	// PrintLine_D("jsString: \"%s\" (%p)", jsString, jsString);
+	// for (int bIndex = 0; bIndex < 10; bIndex++)
+	// {
+	// 	PrintLine_D("%08X = %02X", (u32)(jsString + bIndex), CharToU32(*(jsString + bIndex)));
+	// }
 	
 	Platform->initialized = true;
 	u64 endMemUsage = jsStdGetHeapSize();
@@ -179,12 +183,12 @@ WASM_EXPORTED_FUNC(void, WasmFreeMem, MemArena_t* memArenaPntr, void* allocPntr,
 // +==============================+
 // |   WasmFileFinishedDownload   |
 // +==============================+
-WASM_EXPORTED_FUNC(void, WasmFileFinishedDownload, const char* filePath, FileDownloadedCallback_f* callbackPntr)
+WASM_EXPORTED_FUNC(void, WasmFileFinishedDownload, const char* filePath, u32 fileSize, const u8* fileContentsPntr, FileDownloadedCallback_f* callbackPntr)
 {
 	NotNull(callbackPntr);
-	// PrintLine_D("WasmFileFinishedDownload(\"%s\", %p)", filePath, callbackPntr);
+	PrintLine_D("WasmFileFinishedDownload(\"%s\", %u, %p, %p)", filePath, fileSize, fileContentsPntr, callbackPntr);
 	if (callbackPntr != nullptr)
 	{
-		callbackPntr(filePath, nullptr, 0);
+		callbackPntr(filePath, fileSize, fileContentsPntr);
 	}
 }

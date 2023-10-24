@@ -20,11 +20,11 @@ void Web_MemoryInit()
 	
 	MyMemCopy(&Platform->stdHeap, &tempStdHeap, sizeof(MemArena_t));
 	
-	InitMemArena_PagedHeapArena(&Platform->mainHeap, PLAT_MAIN_HEAP_PAGE_SIZE, &Platform->stdHeap);
-	FlagUnset(Platform->mainHeap.flags, MemArenaFlag_AutoFreePages); //Wasm can't free memory
+	InitMemArena_PagedHeapArena(&Platform->chunkArena, WASM_MEMORY_PAGE_SIZE, &Platform->stdHeap);
+	FlagUnset(Platform->chunkArena.flags, MemArenaFlag_AutoFreePages); //Wasm can't free memory
 	
 	//At 512kB, this takes 8 wasm pages
-	u8* tempArenaSpace = AllocArray(&Platform->stdHeap, u8, PLAT_TEMP_ARENA_SIZE);
+	u8* tempArenaSpace = AllocArray(&Platform->chunkArena, u8, PLAT_TEMP_ARENA_SIZE);
 	NotNull(tempArenaSpace);
 	InitMemArena_MarkedStack(&Platform->tempArena, PLAT_TEMP_ARENA_SIZE, tempArenaSpace, PLAT_TEMP_ARENA_MAX_MARKS);
 	TempArena = &Platform->tempArena;
@@ -32,8 +32,10 @@ void Web_MemoryInit()
 	//At 256kB each, 3 arenas, this takes 24 wasm pages
 	for (u64 aIndex = 0; aIndex < ArrayCount(Platform->scratchArenas); aIndex++)
 	{
-		InitMemArena_PagedStackArena(&Platform->scratchArenas[aIndex], WEB_SCRATCH_ARENA_PAGE_SIZE, &Platform->mainHeap, WEB_SCRATCH_ARENA_MAX_NUM_MARKS);
+		InitMemArena_PagedStackArena(&Platform->scratchArenas[aIndex], WEB_SCRATCH_ARENA_PAGE_SIZE, &Platform->chunkArena, WEB_SCRATCH_ARENA_MAX_NUM_MARKS);
 	}
+	
+	InitMemArena_PagedHeapArena(&Platform->mainHeap, PLAT_MAIN_HEAP_PAGE_SIZE, &Platform->chunkArena);
 }
 
 // Pass in 1 or 2 arenas that you DON'T want to get back from this function. i.e. you are going to use those arenas for memory that outlives your scratch memory

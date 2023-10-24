@@ -12,6 +12,7 @@ struct WebPlatformState_t
 	bool initialized;
 	
 	MemArena_t stdHeap;
+	MemArena_t chunkArena;
 	MemArena_t mainHeap;
 	MemArena_t tempArena;
 	MemArena_t scratchArenas[NUM_SCRATCH_ARENAS_PER_THREAD];
