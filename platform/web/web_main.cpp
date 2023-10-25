@@ -23,6 +23,7 @@ Description:
 // +--------------------------------------------------------------+
 #include "web_version.h"
 #include "web_defines.h"
+#include "web_js_types.h"
 #include "web_render_types.h"
 #include "web_main.h"
 
@@ -99,7 +100,8 @@ WASM_EXPORTED_FUNC(void, WasmInitialize)
 	
 	Platform->testVao = Web_CreateVertexArrayObject(Web_VertexType_Default2D);
 	
-	jsDownloadFile("Resources/icon16.png", &Platform->chunkArena, TestFileDownloaded);
+	Platform->downloadingId = jsDownloadFile("Resources/manifest_all.txt", &Platform->chunkArena, TestFileDownloaded);
+	PrintLine_D("Progress[%u] at start: %f", Platform->downloadingId, jsGetAsyncInfo(Platform->downloadingId));
 	
 	u32 testTextureData[] = {
 		TransparentWhite_Value,   PureRed_Value,          PureOrange_Value,       TransparentWhite_Value,
@@ -132,6 +134,13 @@ WASM_EXPORTED_FUNC(void, WasmUpdateAndRender)
 	NotNull(Platform);
 	TempPushMark();
 	Platform->programTime += 16; //TODO: Get the time elapsed from javascript?
+	
+	if (Platform->downloadingId != 0)
+	{
+		r32 progress = jsGetAsyncInfo(Platform->downloadingId);
+		PrintLine_D("Progress[%u]: %f", Platform->downloadingId, progress);
+		if (progress >= 1.0f || progress <= -1.0f) { Platform->downloadingId = 0; }
+	}
 	
 	jsGlViewport(0, 0, Platform->canvasSize.width, Platform->canvasSize.height);
 	jsGlEnable(GL_BLEND);

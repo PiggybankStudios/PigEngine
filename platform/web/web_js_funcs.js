@@ -64,6 +64,20 @@ function jsInitRendering(canvasWidth, canvasHeight)
 function jsDownloadFile(urlPntr, memArenaPntr, callbackPntr)
 {
 	let url = StrPntrToJsStr(urlPntr);
+	
+	let asyncId = globals.nextAsyncId;
+	globals.nextAsyncId += 1;
+	
+	//TODO: When do we remove items from this array?
+	var newAsyncInfo = {
+		id: asyncId,
+		type: "download",
+		url: url,
+		progress: 0.0,
+		finished: false,
+	};
+	globals.asyncInfos.push(newAsyncInfo);
+	
 	fetch(url, { cache: "no-cache" })
 	.then(data => data.blob())
 	.then(blob => blob.arrayBuffer())
@@ -78,9 +92,25 @@ function jsDownloadFile(urlPntr, memArenaPntr, callbackPntr)
 		{
 			buf[spacePntr + bIndex] = bufferU8[bIndex];
 		}
+		newAsyncInfo.progress = 1.0;
+		newAsyncInfo.finished = true;
 		globals.wasmModule.exports.WasmFileFinishedDownload(urlPntr, resultBuffer.byteLength, spacePntr, callbackPntr);
 		globals.wasmModule.exports.WasmFreeMem(memArenaPntr, spacePntr, resultBuffer.byteLength);
 	});
+	
+	return asyncId;
+}
+
+function jsGetAsyncInfo(id)
+{
+	for (asyncInfoIndex in globals.asyncInfos)
+	{
+		if (globals.asyncInfos[asyncInfoIndex].id == id)
+		{
+			return globals.asyncInfos[asyncInfoIndex].progress;
+		}
+	}
+	return -1.0;
 }
 
 function jsGetString(memArenaPntr)
@@ -98,6 +128,7 @@ webJsFuncs =
 	jsGetTime: jsGetTime,
 	jsInitRendering: jsInitRendering,
 	jsDownloadFile: jsDownloadFile,
+	jsGetAsyncInfo: jsGetAsyncInfo,
 	jsGetString: jsGetString,
 };
 

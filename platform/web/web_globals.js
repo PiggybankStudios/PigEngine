@@ -17,6 +17,8 @@ var globals =
 	canvas: null,
 	glContext: null,
 	pixelRatio: null,
+	nextAsyncId: 1,
+	asyncInfos: [],
 };
 
 // =========================== End of web_globals.js ===========================

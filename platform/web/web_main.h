@@ -20,6 +20,7 @@ struct WebPlatformState_t
 	v2i canvasSize;
 	u64 programTime;
 	bool mouseLeftBtnDown;
+	AsyncId_t downloadingId;
 	
 	Web_Shader_t testShader;
 	Web_VertBuffer_t squareBuffer;
