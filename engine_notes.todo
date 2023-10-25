@@ -3,6 +3,8 @@
 
 [ ] TODO: "developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer"
 
+[!] TODO: %.*s does not work with u64 type length argument when compiling for WebAssembly (with stb_printf.h as the backing implementation)
+
 # Web Assembly TODO
 	[ ] Change saveFile so it brings the file contents into memory, not to disk
 	[ ] Can we access structure members in a javascript function?

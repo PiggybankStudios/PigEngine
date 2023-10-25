@@ -50,11 +50,38 @@ WebPlatformState_t* Platform = nullptr;
 // void TestFileDownloaded(const char* filePath, u32 fileSize, const u8* fileContentsPntr)
 FILE_DOWNLOADED_CALLBACK_DEF(TestFileDownloaded)
 {
+	MemArena_t* scratch = GetScratchArena();
 	PrintLine_D("Downloaded \"%s\" %u bytes %p", filePath, fileSize, fileContentsPntr);
 	for (u64 bIndex = 0; bIndex+4 <= fileSize && bIndex < 100; bIndex += 4)
 	{
 		PrintLine_D("%08X: %02X %02X %02X %02X", (u32)(fileContentsPntr + bIndex), fileContentsPntr[bIndex+0], fileContentsPntr[bIndex+1], fileContentsPntr[bIndex+2], fileContentsPntr[bIndex+3]);
 	}
+	
+	ProcessLog_t parseLog = {};
+	CreateProcessLog(&parseLog, Kilobytes(8), TempArena, &Platform->mainHeap);
+	ResourceManifest_t manifest = {};
+	bool parseSuccess = TryDeserResourceManifest(NewStr(fileSize, (const char*)fileContentsPntr), &parseLog, &manifest, scratch);
+	if (parseSuccess)
+	{
+		PrintLine_I("Successfully deserialize resource manifest with %llu entries and %llu/%llu chars", manifest.entries.length, manifest.stringsChunkUsed, manifest.stringsChunk.length);
+		VarArrayLoop(&manifest.entries, eIndex)
+		{
+			VarArrayLoopGet(ResourceManifestEntry_t, entry, &manifest.entries, eIndex);
+			PrintLine_I("  [%llu]: \"%.*s\"", eIndex, (u32)entry->path.length, entry->path.chars);
+		}
+	}
+	else
+	{
+		PrintLine_W("Failed to deserialize Resource Manifest at %s", filePath);
+		PrintLine_W("Error: %s", GetTryDeserResourceManifestErrorStr((TryDeserResourceManifestError_t)parseLog.errorCode));
+	}
+	if (!parseSuccess || parseLog.hadWarnings)
+	{
+		//TODO: Implement me!
+	}
+	FreeResourceManifest(&manifest);
+	FreeProcessLog(&parseLog);
+	FreeScratchArena(scratch);
 }
 
 // +--------------------------------------------------------------+
