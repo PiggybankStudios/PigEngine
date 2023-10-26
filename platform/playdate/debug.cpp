@@ -30,11 +30,11 @@ enum DbgFlags_t
 // +--------------------------------------------------------------+
 // |                 Main Debug Output Functions                  |
 // +--------------------------------------------------------------+
-void AppDebugOutput(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
+void AppDebugOutput(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 {
 	pd->system->logToConsole(message);
 }
-void AppDebugPrint(u8 flags, const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
+void AppDebugPrint(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
 {
 	MemArena_t* scratch = GetScratchArena();
 	PrintInArenaVa(scratch, printedStr, printedLength, formatString);
@@ -158,5 +158,43 @@ GYLIB_DEBUG_PRINT_HANDLER_DEF(GyLibPrintHandler)
 	#define WriteLine_Ex(flags, message)           //nothing
 	#define PrintLine_Ex(flags, formatString, ...) //nothing
 #endif
+
+// +--------------------------------------------------------------+
+// |                       Dump Process Log                       |
+// +--------------------------------------------------------------+
+void DumpProcessLog(const ProcessLog_t* log, const char* headerAndFooterStr = nullptr, DbgLevel_t minLevel = DbgLevel_Debug)
+{
+	NotNull(log);
+	Assert(minLevel < DbgLevel_NumLevels);
+	MemArena_t* scratch = GetScratchArena();
+	
+	if (headerAndFooterStr != nullptr) { PrintLine_R("v========= %s =========v", headerAndFooterStr); }
+	
+	const StringFifoLine_t* srcLine = log->fifo.firstLine;
+	while (srcLine != nullptr)
+	{
+		PushMemMark(scratch);
+		const ProcessLogLine_t* srcMetaStruct = GetFifoLineMetaStruct(srcLine, ProcessLogLine_t);
+		
+		if (srcMetaStruct->dbgLevel >= minLevel)
+		{
+			MyStr_t text = GetFifoLineText(srcLine);
+			text = AllocString(scratch, &text);
+			MyStr_t metaString = GetFifoLineMetaString(srcLine);
+			u64 sepCharIndex = 0;
+			bool foundSepChar = FindNextCharInStr(metaString, 0, "|", &sepCharIndex);
+			MyStr_t filePathStr = (foundSepChar ? StrSubstring(&metaString, 0, sepCharIndex) : metaString);
+			filePathStr = AllocString(scratch, &filePathStr);
+			MyStr_t funcNameStr = (foundSepChar ? StrSubstring(&metaString, sepCharIndex+1) : MyStr_Empty);
+			funcNameStr = AllocString(scratch, &funcNameStr);
+			AppDebugOutput(srcMetaStruct->flags, filePathStr.chars, srcMetaStruct->fileLineNumber, funcNameStr.chars, srcMetaStruct->dbgLevel, true, text.chars);
+		}
+		
+		PopMemMark(scratch);
+		srcLine = srcLine->next;
+	}
+	
+	if (headerAndFooterStr != nullptr) { PrintLine_R("^========= %s =========^", headerAndFooterStr); }
+}
 
 #endif //  _DEBUG_H

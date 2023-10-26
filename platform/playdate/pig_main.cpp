@@ -52,6 +52,7 @@ r32 TimeScale = 1.0f;
 #include "scratch.cpp"
 #include "debug.cpp"
 #include "pig_helpers.cpp"
+#include "pig_file.cpp"
 #include "sound.cpp"
 #include "texture.cpp"
 #include "sprite_sheet.cpp"
