@@ -18,6 +18,11 @@ enum PlatType_t
 	PlatType_OSX,
 	PlatType_Linux,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetPlatTypeStr(PlatType_t platType);
+const char* GetKeyStrOnPlatform(PlatType_t platType, Key_t key);
+const char* GetModifierKeyStrOnPlatform(PlatType_t platType, ModifierKey_t modifierKey);
+#else
 const char* GetPlatTypeStr(PlatType_t platType)
 {
 	switch (platType)
@@ -49,6 +54,7 @@ const char* GetModifierKeyStrOnPlatform(PlatType_t platType, ModifierKey_t modif
 		default: return GetModifierKeyStr(modifierKey);
 	}
 }
+#endif
 
 enum RenderApi_t
 {
@@ -58,6 +64,9 @@ enum RenderApi_t
 	RenderApi_Vulkan,
 	RenderApi_NumModes,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetRenderApiStr(RenderApi_t renderApi);
+#else
 const char* GetRenderApiStr(RenderApi_t renderApi)
 {
 	switch (renderApi)
@@ -69,6 +78,7 @@ const char* GetRenderApiStr(RenderApi_t renderApi)
 		default: return "Unknown";
 	}
 }
+#endif
 
 struct Version_t
 {
@@ -232,6 +242,9 @@ enum ControllerType_t
 	ControllerType_Nintendo,
 	ControllerType_NumTypes,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetControllerTypeStr(ControllerType_t controllerType);
+#else
 const char* GetControllerTypeStr(ControllerType_t controllerType)
 {
 	switch (controllerType)
@@ -244,6 +257,7 @@ const char* GetControllerTypeStr(ControllerType_t controllerType)
 		default: return "Unknown";
 	}
 }
+#endif
 
 struct PlatControllerState_t
 {
@@ -329,6 +343,9 @@ enum PlatCursor_t
 	PlatCursor_ResizeVertical,
 	PlatCursor_NumCursors,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetPlatCursorStr(PlatCursor_t platCursor);
+#else
 const char* GetPlatCursorStr(PlatCursor_t platCursor)
 {
 	switch (platCursor)
@@ -341,6 +358,7 @@ const char* GetPlatCursorStr(PlatCursor_t platCursor)
 		default: return "Unknown";
 	}
 }
+#endif
 
 enum PlatMouseMode_t
 {
@@ -349,6 +367,9 @@ enum PlatMouseMode_t
 	PlatMouseMode_FirstPersonCamera, //mouse is invisible, centered every frame, and position info is delta only
 	PlatMouseMode_NumModes,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetPlatMouseModeStr(PlatMouseMode_t mouseMode);
+#else
 const char* GetPlatMouseModeStr(PlatMouseMode_t mouseMode)
 {
 	switch (mouseMode)
@@ -359,6 +380,7 @@ const char* GetPlatMouseModeStr(PlatMouseMode_t mouseMode)
 		default: return "Unknown";
 	}
 }
+#endif
 
 struct PlatAudioFormat_t
 {
@@ -366,7 +388,11 @@ struct PlatAudioFormat_t
 	u64 numChannels;
 	u64 samplesPerSecond;
 };
-inline bool operator == (PlatAudioFormat_t left, PlatAudioFormat_t right)  { return (left.bitsPerSample == right.bitsPerSample && left.numChannels == right.numChannels && left.samplesPerSecond == right.samplesPerSecond); }
+#ifdef PIG_COMMON_HEADER_ONLY
+bool operator == (PlatAudioFormat_t left, PlatAudioFormat_t right);
+#else
+bool operator == (PlatAudioFormat_t left, PlatAudioFormat_t right)  { return (left.bitsPerSample == right.bitsPerSample && left.numChannels == right.numChannels && left.samplesPerSecond == right.samplesPerSecond); }
+#endif
 
 enum PlatImageFormat_t
 {
@@ -375,6 +401,9 @@ enum PlatImageFormat_t
 	PlatImageFormat_Tga,
 	PlatImageFormat_NumFormats,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetPlatImageFormatStr(PlatImageFormat_t imageFormat);
+#else
 const char* GetPlatImageFormatStr(PlatImageFormat_t imageFormat)
 {
 	switch (imageFormat)
@@ -385,6 +414,7 @@ const char* GetPlatImageFormatStr(PlatImageFormat_t imageFormat)
 		default: return "Unknown";
 	}
 }
+#endif
 
 enum SpecialFolder_t
 {
@@ -394,6 +424,9 @@ enum SpecialFolder_t
 	SpecialFolder_Share,
 	SpecialFolder_NumTypes,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetSpecialFolderStr(SpecialFolder_t specialFolder);
+#else
 const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
 {
 	switch (specialFolder)
@@ -406,6 +439,7 @@ const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
 		default: return "Unknown";
 	}
 }
+#endif
 
 #if PROCMON_SUPPORTED
 

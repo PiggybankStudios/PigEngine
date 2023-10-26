@@ -1,15 +1,13 @@
 /*
-File:   web_helpers.h
+File:   web_render_types.h
 Author: Taylor Robbins
-Date:   04\26\2022
+Date:   10\16\2023
 */
 
-#ifndef _WEB_HELPERS_H
-#define _WEB_HELPERS_H
+#ifndef _WEB_RENDER_TYPES_H
+#define _WEB_RENDER_TYPES_H
 
-//TODO: Remove me when we are done testing gl functionality without the application
-
-struct Shader_t
+struct Web_Shader_t
 {
 	GLuint glId;
 	GLuint vertId;
@@ -42,7 +40,7 @@ struct Shader_t
 	} uniforms;
 };
 
-struct Texture_t
+struct Web_Texture_t
 {
 	bool isValid;
 	GLint glId;
@@ -59,24 +57,24 @@ struct Texture_t
 	};
 };
 
-enum VertexType_t
+enum Web_VertexType_t
 {
-	VertexType_None = 0x00,
-	VertexType_All  = 0x1F,
+	Web_VertexType_None = 0x00,
+	Web_VertexType_All  = 0x1F,
 	
-	VertexType_PositionBit  = 0x01,
-	VertexType_ColorBit     = 0x02,
-	VertexType_TexCoordBit  = 0x04,
-	VertexType_NormalBit    = 0x08,
-	VertexType_TangentBit   = 0x10,
+	Web_VertexType_PositionBit  = 0x01,
+	Web_VertexType_ColorBit     = 0x02,
+	Web_VertexType_TexCoordBit  = 0x04,
+	Web_VertexType_NormalBit    = 0x08,
+	Web_VertexType_TangentBit   = 0x10,
 	
-	VertexType_Default2D = (VertexType_PositionBit|VertexType_ColorBit|VertexType_TexCoordBit),
-	VertexType_Default3D = (VertexType_PositionBit|VertexType_ColorBit|VertexType_TexCoordBit|VertexType_NormalBit),
+	Web_VertexType_Default2D = (Web_VertexType_PositionBit|Web_VertexType_ColorBit|Web_VertexType_TexCoordBit),
+	Web_VertexType_Default3D = (Web_VertexType_PositionBit|Web_VertexType_ColorBit|Web_VertexType_TexCoordBit|Web_VertexType_NormalBit),
 };
 
 // VertexType_Default2D
 START_PACK()
-struct ATTR_PACKED Vertex2D_t
+struct ATTR_PACKED Web_Vertex2D_t
 {
 	union
 	{
@@ -95,11 +93,11 @@ struct ATTR_PACKED Vertex2D_t
 	};
 };
 END_PACK()
-#define VertexType_Default2D_Size sizeof(Vertex2D_t)
+#define Web_VertexType_Default2D_Size sizeof(Web_Vertex2D_t)
 
 // VertexType_Default3D
 START_PACK()
-struct ATTR_PACKED Vertex3D_t
+struct ATTR_PACKED Web_Vertex3D_t
 {
 	union
 	{
@@ -123,34 +121,34 @@ struct ATTR_PACKED Vertex3D_t
 	};
 };
 END_PACK()
-#define VertexType_Default3D_Size sizeof(Vertex3D_t)
+#define Web_VertexType_Default3D_Size sizeof(Vertex3D_t)
 
-struct VertBuffer_t
+struct Web_VertBuffer_t
 {
 	MemArena_t* allocArena;
 	bool isValid;
 	
 	bool isDynamic;
 	u64 numVertices;
-	VertexType_t vertexType;
+	Web_VertexType_t vertexType;
 	u64 vertexSize;
 	bool hasVerticesCopy;
 	union
 	{
 		void* vertsVoidPntr;
-		Vertex2D_t* verts2D;
-		Vertex3D_t* verts3D;
+		Web_Vertex2D_t* verts2D;
+		Web_Vertex3D_t* verts3D;
 	};
 	
 	GLuint glId;
 };
 
-#define MAX_NUM_VERTEX_ATTRIBUTES 5
-struct VertexAttribLocations_t
+#define WEB_MAX_NUM_VERTEX_ATTRIBUTES 5
+struct Web_VertexAttribLocations_t
 {
 	union
 	{
-		GLint values[MAX_NUM_VERTEX_ATTRIBUTES];
+		GLint values[WEB_MAX_NUM_VERTEX_ATTRIBUTES];
 		struct
 		{
 			GLint position;
@@ -162,12 +160,12 @@ struct VertexAttribLocations_t
 	} gl;
 };
 
-struct VertexArrayObject_t
+struct Web_VertexArrayObject_t
 {
-	VertexType_t vertexType;
+	Web_VertexType_t vertexType;
 	GLuint glId;
 	bool boundOnce;
-	VertexAttribLocations_t attribLocations;
+	Web_VertexAttribLocations_t attribLocations;
 };
 
-#endif //  _WEB_HELPERS_H
+#endif //  _WEB_RENDER_TYPES_H

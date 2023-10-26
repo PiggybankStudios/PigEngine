@@ -62,7 +62,7 @@ void Pig_HandleAppStateChanges(bool initialAppState)
 		StartAppState(pig->newAppState, oldAppState, !pig->appStateInitialized[pig->newAppState]);
 		pig->appStateInitialized[pig->newAppState] = true;
 	}
-	else if (pig->appStateChange != AppState_None) { Unimplemented(); }
+	else if (pig->appStateChange != AppStateChange_None) { Unimplemented(); }
 	
 	pig->appStateChange = AppStateChange_None;
 	pig->newAppState = AppState_None;

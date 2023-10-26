@@ -218,6 +218,9 @@ enum InputEventType_t
 	InputEventType_TaskCompleted,
 	InputEventType_NumTypes,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetInputEventTypeStr(InputEventType_t eventType);
+#else
 const char* GetInputEventTypeStr(InputEventType_t eventType)
 {
 	switch (eventType)
@@ -234,6 +237,7 @@ const char* GetInputEventTypeStr(InputEventType_t eventType)
 		default: return "Unknown";
 	}
 }
+#endif
 
 struct InputEvent_t
 {

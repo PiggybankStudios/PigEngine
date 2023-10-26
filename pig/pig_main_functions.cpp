@@ -77,10 +77,12 @@ void PigInitialize(EngineMemory_t* memory)
 	AssertMsg(isFolder, "Failed to find Resources directory. Please make sure that the executable is next to the Resources folder!");
 	#endif
 	
+	#if OPENGL_SUPPORTED
 	PigInitGlad();
 	const GLubyte* vendor = glGetString(GL_VENDOR); // Returns the vendor
 	const GLubyte* renderer = glGetString(GL_RENDERER); // Returns a hint to the model
 	PrintLine_D("Using %s API on %s %s", GetRenderApiStr(pig->renderApi), vendor, renderer);
+	#endif
 	
 	SeedRand((u32)LocalTimestamp);
 	CreateRandomSeries(&pig->random);

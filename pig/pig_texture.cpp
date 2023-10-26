@@ -239,17 +239,27 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 
 void TextureGenerateMipmaps(Texture_t* texture)
 {
-	if (texture->antialiasingNumSamples == 0)
+	switch (pig->renderApi)
 	{
-		glBindTexture(GL_TEXTURE_2D, texture->glId);
-		AssertNoOpenGlError();
-		glGenerateMipmap(GL_TEXTURE_2D);
-		AssertNoOpenGlError();
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			if (texture->antialiasingNumSamples == 0)
+			{
+				glBindTexture(GL_TEXTURE_2D, texture->glId);
+				AssertNoOpenGlError();
+				glGenerateMipmap(GL_TEXTURE_2D);
+				AssertNoOpenGlError();
+			}
+			else
+			{
+				WriteLine_W("Warning: Trying to generate mipmaps for texture with antialiasing, which doesn't support mipmaps");
+			}
+		} break;
+		#endif
+		default: AssertMsg(false, "Unsupported API in TextureGenerateMipmaps"); break;
 	}
-	else
-	{
-		WriteLine_W("Warning: Trying to generate mipmaps for texture with antialiasing, which doesn't support mipmaps");
-	}
+	
 }
 
 const char* PrintTextureError(const Texture_t* texture)

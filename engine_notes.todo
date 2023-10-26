@@ -1,6 +1,17 @@
 [ ] Add a UI checkbox implementation
 [ ] Add a UI combobox implementation
 
+[ ] TODO: "developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer"
+
+[!] TODO: %.*s does not work with u64 type length argument when compiling for WebAssembly (with stb_printf.h as the backing implementation)
+
+# Web Assembly TODO
+	[ ] Change saveFile so it brings the file contents into memory, not to disk
+	[ ] Can we access structure members in a javascript function?
+	[ ] Can we return a structure from a javascript function?
+	[ ] Package Resources into a .zip file, put the wasm, js, html, css, zip, ico, etc. into a new folder called "web_build" or something like that
+	[ ] Parse zip file in native code
+
 # Things I could clean up throughout the entire codebase
 	[ ] Do we use Create/Destroy or Init/Free?
 	[ ] Do we prefix functions with namespace standins? Like Pig_DoSomething or VarArray_Add? Maybe IsVarArraySomething should maybe be VarArray_IsSomething?
@@ -80,12 +91,6 @@
 	[ ] Add debug command to visualize handling of specific keys over time
 	[ ] Port the sprite sheet editing appstate over
 
-# Web Assembly TODO
-	[ ] How do I do a game loop?
-	[ ] Can I do any multi threading?
-	[ ] Can I have a separate wasm like a dll that gets loaded?
-	[ ] What does the html template have to contain to make things work?
-
 # Twitch Links and Notes
 	[ ] Take a look at JUCE - 2kirbs
 	[ ] 
@@ -121,6 +126,8 @@
 	[ ] #pragma debug(on/off)
 
 # Finished TODO List Items
+	[X] Add a way for javascript to request memory allocation and free (pass MemArena_t through javascript?)
+	[X] Make sure asserts are working properly
 	[X] Add a UI button implementation
 	[X] Move "fullscreen" command logic into a function and call that instead of running a debug command when F11 is pressed
 	[X] Add support for "Handling" an InputEvent_t and therefore handling it's related events and keys/btns
@@ -248,6 +255,12 @@
 	[X] Saw and Square waves
 	[X] End of list placeholder
 #
+
+# Old Web Assembly TODO
+	[ ] How do I do a game loop?
+	[ ] Can I do any multi threading?
+	[ ] Can I have a separate wasm like a dll that gets loaded?
+	[ ] What does the html template have to contain to make things work?
 
 # Web Assembly Related Tabs
 	[ ] "https://clang.llvm.org/docs/DiagnosticsReference.html#wenum-compare-switch"

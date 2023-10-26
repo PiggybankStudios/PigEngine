@@ -10,19 +10,21 @@ Description:
 // |                           Includes                           |
 // +--------------------------------------------------------------+
 #define ENGINE_LAYER
+#if WASM_COMPILATION
+#define PIG_COMMON_HEADER_ONLY
+#endif
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #define GYLIB_SCRATCH_ARENA_AVAILABLE
-#if WASM_COMPILATION
-#define GY_CUSTOM_STD_LIB
-#define GY_WASM_STD_LIB
-#endif
 #include "common_includes.h"
 
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
+//NOTE: Since PigWasmStdLib already uses stb_sprintf.h as the implementation of vsnprintf, we don't need to re-include the source for that here
+#if !USING_PIG_WASM_STD_LIB
 #define STB_SPRINTF_IMPLEMENTATION
 #include "stb/stb_sprintf.h"
+#endif
 
 #if SLUG_SUPPORTED
 // #define TERATHON_NO_SYSTEM
@@ -70,7 +72,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                         GLAD Source                          |
 // +--------------------------------------------------------------+
-#if OPENGL_SUPPORTED
+#if OPENGL_SUPPORTED && !WASM_COMPILATION
 #include "glad/glad.c"
 #endif
 

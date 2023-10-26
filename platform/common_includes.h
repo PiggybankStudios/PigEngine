@@ -16,6 +16,9 @@ Date:   09\14\2021
 #if !defined(OPENGL_SUPPORTED)
 #error You must define OPENGL_SUPPORTED in the build options
 #endif
+#if !defined(WEBGL_SUPPORTED)
+#error You must define WEBGL_SUPPORTED in the build options
+#endif
 #if !defined(VULKAN_SUPPORTED)
 #error You must define VULKAN_SUPPORTED in the build options
 #endif
@@ -78,6 +81,14 @@ Date:   09\14\2021
 // |                     Gylib First Include                      |
 // +--------------------------------------------------------------+
 #define GYLIB_ASSERTIONS_ENABLED ASSERTIONS_ENABLED
+#ifdef PIG_COMMON_HEADER_ONLY
+#define GYLIB_HEADER_ONLY
+#endif
+#ifdef WASM_COMPILATION
+// In web builds, the platform and the engine are compiled separately and then linked. We are going to utilize static to make their TempArena and scratchArena globals be separate per-compilation unit
+#define GYLIB_TEMP_MEMORY_STATIC
+#define GYLIB_SCRATCH_ARENAS_STATIC
+#endif
 // #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
 #include "gylib/gy_defines_check.h"
 #include "gylib/gy_basic_macros.h"
@@ -108,6 +119,8 @@ Date:   09\14\2021
 	// 	#include <openal/al.h>
 	// 	#include <openal/alc.h>
 	// #endif
+#elif WASM_COMPILATION
+	// TODO: Anything we want to #include here? There really isn't a whole lot of built-in "platform" header files
 #elif OSX_COMPILATION
 	// #include <pthread.h>
 	// #include <semaphore.h>
@@ -132,8 +145,6 @@ Date:   09\14\2021
 	// 	#include <AL/al.h>
 	// 	#include <AL/alc.h>
 	// #endif
-#elif WASM_COMPILATION
-	// TODO: Anything we want to #include here? There really isn't a whole lot of built-in "platform" header files
 #endif
 
 // +--------------------------------------------------------------+
@@ -145,6 +156,8 @@ Date:   09\14\2021
 	#include "glad/glad.h"
 	#endif
 	#include "GLFW/glfw3.h"
+#elif WASM_COMPILATION
+	//TODO: Any platform files we want to include?
 #elif OSX_COMPILATION
 	#define GLFW_EXPOSE_NATIVE_NSGL
 	#define GLFW_EXPOSE_NATIVE_COCOA
@@ -201,7 +214,9 @@ Date:   09\14\2021
 #elif LINUX_COMPILATION
 // TODO: Include any other files that need to declare functions or types
 #elif WASM_COMPILATION
-// TODO: Include any other files that need to declare functions or types
+#include "web/web_gl_defines.h"
+#include "web/web_gl_types.h"
+#include "web/web_gl_api.h"
 #endif
 
 #endif //  _COMMON_INCLUDES_H

@@ -1,11 +1,13 @@
 /*
 File:   web_shared_types.h
 Author: Taylor Robbins
-Date:   10\15\2023
+Date:   03\13\2022
 */
 
 #ifndef _WEB_SHARED_TYPES_H
 #define _WEB_SHARED_TYPES_H
+
+//TODO: Copy the shared type structures here when we are ready to implement them
 
 // +--------------------------------------------------------------+
 // |                            Files                             |
@@ -21,7 +23,7 @@ struct PlatFileEnumerator_t
 	u64 index;
 	u64 nextIndex;
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Implement me!
 };
 
 struct PlatFileContents_t
@@ -40,10 +42,10 @@ struct PlatFileContents_t
 		char* chars;
 	};
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Put platform specific stuff here
 };
 
-struct PlatOpenFile_t //NOT SUPPORTED
+struct PlatOpenFile_t
 {
 	u64 id;
 	bool isOpen;
@@ -53,24 +55,24 @@ struct PlatOpenFile_t //NOT SUPPORTED
 	MyStr_t path;
 	MyStr_t fullPath;
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Put platform specific stuff here
 };
 
 // +--------------------------------------------------------------+
 // |                           Threads                            |
 // +--------------------------------------------------------------+
-typedef int ThreadId_t; //NOT SUPPORTED
+typedef int ThreadId_t;
 
 #define THREAD_FUNCTION_DEF(functionName, userPntrVarName) int functionName(void* userPntrVarName)
 typedef THREAD_FUNCTION_DEF(PlatThreadFunction_f, userPntr);
 
-struct PlatThreadIdPair_t //NOT SUPPORTED
+struct PlatThreadIdPair_t
 {
 	u64 internalId;
 	ThreadId_t osId;
 };
 
-struct PlatThread_t //NOT SUPPORTED
+struct PlatThread_t
 {
 	u64 id;
 	bool active;
@@ -86,12 +88,12 @@ struct PlatThread_t //NOT SUPPORTED
 	const char* assertionFailedExpression;
 };
 
-struct PlatThreadPoolThread_t //NOT SUPPORTED
+struct PlatThreadPoolThread_t
 {
 	u64 id;
 	PlatThread_t* threadPntr;
 	MemArena_t tempArena;
-	u64 scratchArenasMaxSize;
+	u64 scratchArenasPageSize;
 	u64 scratchArenasMarkCount;
 	
 	bool shouldClose;
@@ -99,17 +101,17 @@ struct PlatThreadPoolThread_t //NOT SUPPORTED
 	bool isAwake;
 };
 
-struct PlatMutex_t //NOT SUPPORTED
+struct PlatMutex_t
 {
 	u64 id;
 };
 
-struct PlatSemaphore_t //NOT SUPPORTED
+struct PlatSemaphore_t
 {
 	u64 id;
 };
 
-struct PlatInterlockedInt_t //NOT SUPPORTED
+struct PlatInterlockedInt_t
 {
 	u64 id;
 };
@@ -117,7 +119,7 @@ struct PlatInterlockedInt_t //NOT SUPPORTED
 // +--------------------------------------------------------------+
 // |                          Processes                           |
 // +--------------------------------------------------------------+
-struct PlatRunningProcess_t //NOT SUPPORTED
+struct PlatRunningProcess_t
 {
 	u64 id;
 	MemArena_t* allocArena;
@@ -129,6 +131,8 @@ struct PlatRunningProcess_t //NOT SUPPORTED
 	u64 lastExitCodeCheckTime;
 	u64 exitCode;
 	bool readyForRemoval;
+	
+	//TODO: Implement me!
 };
 
 // +--------------------------------------------------------------+
@@ -154,7 +158,7 @@ struct PlatWindow_t
 	WindowEngineInput_t input;
 	WindowEngineInput_t activeInput;
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Put platform specific stuff here
 };
 
 // +--------------------------------------------------------------+
@@ -169,9 +173,6 @@ enum PlatAudioDeviceState_t
 	PlatAudioDeviceState_Active,
 	PlatAudioDeviceState_NumStates,
 };
-#ifdef PIG_COMMON_HEADER_ONLY
-const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState);
-#else
 const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState)
 {
 	switch (deviceState)
@@ -184,7 +185,6 @@ const char* GetAudioDeviceStateStr(PlatAudioDeviceState_t deviceState)
 		default: return "Unknown";
 	}
 }
-#endif
 struct PlatAudioDevice_t
 {
 	MemArena_t* allocArena;
@@ -193,25 +193,30 @@ struct PlatAudioDevice_t
 	MyStr_t name;
 	MyStr_t deviceId;
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Put platform specific stuff here
 };
 
 // +--------------------------------------------------------------+
 // |                            Other                             |
 // +--------------------------------------------------------------+
-typedef int GlLoadProc_f;
+#define GL_LOAD_PROC_DEFINITION(functionName) void functionName()
+typedef GL_LOAD_PROC_DEFINITION(GlLoadProcBase_f);
+typedef GlLoadProcBase_f* GlLoadProc_f;
 
-#define MAX_NUM_CONTROLLERS  1
+//TODO: Is this even a thing on web? Do we have any controller support at all?
+#define MAX_NUM_CONTROLLERS  4 //this is just hardcoded for now until we learn more about controller support on web
 
-struct PlatWatchedFile_t //NOT SUPPORTED
+struct PlatWatchedFile_t
 {
 	u64 id;
 	MyStr_t path;
 	MyStr_t fullPath;
 	PlatInterlockedInt_t changed;
+	
+	//TODO: Put platform specific stuff here
 };
 
-struct PlatTaskInput_t //NOT SUPPORTED
+struct PlatTaskInput_t
 {
 	MemArena_t* memArena;
 	u64 type; //to be filled with enum by application
@@ -239,7 +244,7 @@ struct PlatTaskInput_t //NOT SUPPORTED
 	void* callbackFunc;
 	void* callbackContext;
 };
-struct PlatTaskResult_t //NOT SUPPORTED
+struct PlatTaskResult_t
 {
 	bool success;
 	u8 resultCode;
@@ -251,7 +256,7 @@ struct PlatTaskResult_t //NOT SUPPORTED
 	u64 resultSize3;
 	void* resultPntr3;
 };
-struct PlatTask_t //NOT SUPPORTED
+struct PlatTask_t
 {
 	u64 id; //used as a filled flag, 0 meaning not filled
 	PlatInterlockedInt_t claimId; //thread interlock point
@@ -264,7 +269,8 @@ struct PlatTask_t //NOT SUPPORTED
 
 struct PerfTime_t
 {
-	int placeholder; //TODO: Add handle here once support is finished
+	//TODO: Put platform specific stuff here
+	u64 placeholder;
 };
 
 struct PerfSection_t
@@ -295,7 +301,7 @@ struct PlatRectPackContext_t
 	u64 id;
 	v2i packSize;
 	
-	int placeholder; //TODO: Add handle here once support is finished
+	stbrp_context stbContext;
 };
 
 #endif //  _WEB_SHARED_TYPES_H

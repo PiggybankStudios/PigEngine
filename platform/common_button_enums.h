@@ -122,6 +122,9 @@ enum Key_t
 	
 	Key_NumKeys,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetKeyStr(Key_t key);
+#else
 const char* GetKeyStr(Key_t key)
 {
 	switch (key)
@@ -224,6 +227,7 @@ const char* GetKeyStr(Key_t key)
 		default: return "Unknown";
 	}
 }
+#endif
 
 // +--------------------------------------------------------------+
 // |                       ControllerBtn_t                        |
@@ -263,6 +267,9 @@ enum ControllerBtn_t
 	
 	ControllerBtn_NumBtns,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetControllerBtnStr(ControllerBtn_t controllerBtn);
+#else
 const char* GetControllerBtnStr(ControllerBtn_t controllerBtn)
 {
 	switch (controllerBtn)
@@ -295,6 +302,7 @@ const char* GetControllerBtnStr(ControllerBtn_t controllerBtn)
 		default: return "Unknown";
 	}
 }
+#endif
 
 // +--------------------------------------------------------------+
 // |                          MouseBtn_t                          |
@@ -309,6 +317,9 @@ enum MouseBtn_t
 	
 	MouseBtn_NumBtns,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetMouseBtnStr(MouseBtn_t mouseBtn);
+#else
 const char* GetMouseBtnStr(MouseBtn_t mouseBtn)
 {
 	switch (mouseBtn)
@@ -320,6 +331,7 @@ const char* GetMouseBtnStr(MouseBtn_t mouseBtn)
 		default: return "Unknown";
 	}
 }
+#endif
 
 // +--------------------------------------------------------------+
 // |                        ModifierKey_t                         |
@@ -341,6 +353,9 @@ enum ModifierKey_t
 	ModifierKey_All = 0x0F,
 	ModifierKey_NumKeys = 4,
 };
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetModifierKeyStr(ModifierKey_t modifierKey);
+#else
 const char* GetModifierKeyStr(ModifierKey_t modifierKey)
 {
 	switch (modifierKey)
@@ -357,6 +372,11 @@ const char* GetModifierKeyStr(ModifierKey_t modifierKey)
 		default: return "Unknown";
 	}
 }
+#endif
+
+#ifdef PIG_COMMON_HEADER_ONLY
+ModifierKey_t GetModifierKeyForKey(Key_t key);
+#else
 ModifierKey_t GetModifierKeyForKey(Key_t key)
 {
 	switch (key)
@@ -367,6 +387,11 @@ ModifierKey_t GetModifierKeyForKey(Key_t key)
 		default: return ModifierKey_None;
 	}
 }
+#endif
+
+#ifdef PIG_COMMON_HEADER_ONLY
+Key_t GetKeyForModifierKey(ModifierKey_t modifierKey);
+#else
 Key_t GetKeyForModifierKey(ModifierKey_t modifierKey)
 {
 	switch (modifierKey)
@@ -377,5 +402,6 @@ Key_t GetKeyForModifierKey(ModifierKey_t modifierKey)
 		default: return Key_None;
 	}
 }
+#endif
 
 #endif //  _COMMON_BUTTON_ENUMS_H
