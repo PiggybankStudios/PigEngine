@@ -91,6 +91,7 @@ void DebugToggledCallback(void* userData)
 // +--------------------------------------------------------------+
 // |                        Event Handler                         |
 // +--------------------------------------------------------------+
+EXTERN_C_START
 int MainUpdateCallback(void* userData)
 {
 	PdBeginFrame();
@@ -115,8 +116,11 @@ int MainUpdateCallback(void* userData)
 	
 	RenderPerfGraph(&pig->perfGraph);
 	
-	return 0;
+	// Return a 1 to indicate we want the display to update
+	// TODO: Are there any game types where we don't want to request display update every frame?
+	return 1;
 }
+EXTERN_C_END
 
 void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 {
@@ -195,8 +199,12 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			InitPerfGraph(&pig->perfGraph);
 			
 			AppState_t firstAppState = InitGame();
-			StartFirstAppState(firstAppState);
+			if (firstAppState != AppState_None)
+			{
+				StartFirstAppState(firstAppState);
+			}
 			
+			WriteLine_D("Registering MainUpdateCallback...");
 			pd->system->setUpdateCallback(MainUpdateCallback, nullptr);
 		} break;
 		

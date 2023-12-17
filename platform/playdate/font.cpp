@@ -38,7 +38,7 @@ Font_t LoadFont(MyStr_t path)
 				if (fontPage != nullptr)
 				{
 					LCDBitmap* glyphBitmap = nullptr;
-					i32 glyphAdvance = 0;
+					int glyphAdvance = 0;
 					LCDFontGlyph* fontGlyph = pd->graphics->getPageGlyph(fontPage, codepoint, &glyphBitmap, &glyphAdvance);
 					if (fontGlyph != nullptr)// && glyphBitmap != nullptr && glyphAdvance > 0)
 					{

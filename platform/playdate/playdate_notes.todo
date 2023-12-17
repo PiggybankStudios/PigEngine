@@ -1,5 +1,6 @@
 
 # TODO List:
+	{ } Make a version of ProcessLog that routes directly to debug output as lines get sent in?
 	[ ] Music manager
 	[ ] Btn Repeat Logic
 	[ ] Debug menu with infinite checkboxes (one menu item to pop it up)
@@ -16,6 +17,21 @@
 	[ ] AppState animated transitions?
 	[ ] Assertion actually freezes in emulator?
 	[ ] Notification system
+	[ ] "https://en.wikipedia.org/wiki/Sbrk" in function `_sbrk_r': sbrkr.c:(.text._sbrk_r+0xc): undefined reference to `_sbrk'
+	[ ] "https://gcc.gnu.org/onlinedocs/gcc/Spec-Files.html"
+	[ ] "https://gcc.gnu.org/onlinedocs/gcc-4.4.2/gcc/Preprocessor-Options.html"
+	[ ] "https://developer.arm.com/documentation/dui0774/k/Compiler-Command-line-Options/-mcpu"
+	[ ] Crash info get's written to "crashlog.txt" that can be accessed by connected PD in Data Disk mode
+		--- crash at 2023/12/17 18:50:55---
+		build:712beb42-2.1.1-release.161138-buildbot
+		   r0:20009448    r1:00000000     r2:00000001    r3: 900e113f
+		  r12:00000004    lr:9001411b     pc:90014140   psr: 21070000
+		 cfsr:01000000  hfsr:40000000  mmfar:00000000  bfar: 00000000
+		rcccsr:00000000
+		heap allocated: 1992832
+		Lua totalbytes=0 GCdebt=0 GCestimate=0 stacksize=0
+	[ ] 
+
 
 # Notes during Setup
 	[ ] "https://help.play.date/hardware/get-started/"
@@ -25,15 +41,28 @@
 	[ ] Pulp "https://play.date/pulp/"
 	[ ] Caps (Font Import Tool) "https://play.date/caps/"
 	[ ] Arcade Fonts Collection "https://idleberg.github.io/playdate-arcade-fonts"
+	[ ] To Build Example for for Device:
+		{ } Open "Developer Command Prompt for VS 2022"
+		{ } cd "example/folder/path"
+		{ } mkdir build_nmake
+		{ } cd build_nmake
+		{ } cmake .. -G "NMake Makefiles" --toolchain=%PLAYDATE_SDK_PATH%/C_API/buildsupport/arm.cmake
+		{ } nmake
+		{ } Example.pdx folder is made in the upper folder (not inside build_nmake)
 
 # PlayDate Specs:
 	[ ] "https://help.play.date/hardware/the-specs/"
 	[ ] Display:      400x240 (2.7-inch diagonal)
 	[ ] Memory (RAM): 16 MB
 	[ ] Storage:      4 GB (Flash)
-	[ ] CPU:          168MHz Cortex M7
+	[ ] CPU:          168MHz Cortex M7 (ARMz STM32F746 IGK6 7BA3V VQ PHL 7B 803)
 	[ ] Total Size:   76mm x 74mm x 9mm
 	[ ] Cost:         $199
+
+# Playdate Hardware Notes:
+	[ ] "https://www.ifixit.com/Teardown/Playdate+Teardown/143811"
+	[ ] "https://hackaday.io/project/166471-cheapdate-playdate-clone"
+	[ ] "https://github.com/cranksters/playdate-reverse-engineering"
 
 # Simulator Keyboard Shortcuts
 	[ ] Restart              Cmd/Ctrl-R

@@ -59,7 +59,9 @@ void UpdateAppInput()
 	ElapsedMs = (r32)input->elapsedMs;
 	TimeScale = input->timeScale;
 	
-	input->timeSinceEpochSecs = pd->system->getSecondsSinceEpoch(&input->timeSinceEpochMs);
+	unsigned int timeSinceEpochMs;
+	input->timeSinceEpochSecs = pd->system->getSecondsSinceEpoch(&timeSinceEpochMs);
+	input->timeSinceEpochMs = timeSinceEpochMs;
 	input->timeSinceEpoch = (u64)input->timeSinceEpochSecs * 1000 + (u64)input->timeSinceEpochMs;
 	input->realProgramTime = (u32)(input->timeSinceEpoch - pig->programStartTimeSinceEpoch);
 	input->realElapsedMsU32 = (input->realProgramTime >= input->realProgramTimePrev) ? input->realProgramTime - input->realProgramTimePrev : 0;

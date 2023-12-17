@@ -16,14 +16,17 @@ Texture_t LoadTexture(MyStr_t path)
 	result.bitmap = pd->graphics->loadBitmap(pathNullTerm.chars, &loadBitmapErrorStr);
 	if (loadBitmapErrorStr == nullptr)
 	{
+		int width, height;
 		pd->graphics->getBitmapData(
 			result.bitmap,
-			&result.width,
-			&result.height,
+			&width,
+			&height,
 			nullptr, //rowbytes
 			nullptr, //mask
 			nullptr //data
 		);
+		result.width = width;
+		result.height = height;
 		
 		result.isValid = true;
 	}

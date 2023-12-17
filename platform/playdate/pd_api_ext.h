@@ -53,29 +53,33 @@ struct BitmapData_t
 BitmapData_t GetBitmapData(LCDBitmap* bitmap, bool sizeOnly = false)
 {
 	BitmapData_t result = {};
+	int width, height, rowWidth;
 	pd->graphics->getBitmapData(
 		bitmap,
-		&result.size.width,
-		&result.size.height,
-		&result.rowWidth, //rowbytes
+		&width,
+		&height,
+		&rowWidth, //rowbytes
 		(sizeOnly ? nullptr : &result.mask), //mask
 		(sizeOnly ? nullptr : &result.data) //data
 	);
+	result.size.width = width;
+	result.size.height = height;
+	result.rowWidth = rowWidth;
 	return result;
 }
 
 v2i GetBitmapSize(LCDBitmap* bitmap)
 {
-	v2i result = Vec2i_Zero;
+	int width, height;
 	pd->graphics->getBitmapData(
 		bitmap,
-		&result.width,
-		&result.height,
+		&width,
+		&height,
 		nullptr, //rowbytes
 		nullptr, //mask
 		nullptr //data
 	);
-	return result;
+	return NewVec2i(width, height);
 }
 
 v2i MeasureText(LCDFont* font, MyStr_t text, i32 tracking = 0)
@@ -84,6 +88,17 @@ v2i MeasureText(LCDFont* font, MyStr_t text, i32 tracking = 0)
 	result.width  = pd->graphics->getTextWidth(font, text.chars, text.length, kUTF8Encoding, tracking);
 	result.height = pd->graphics->getFontHeight(font);
 	return result;
+}
+
+static volatile char dummy;
+
+void MicroDelay(unsigned int milliseconds)
+{
+    unsigned int start = pd->system->getCurrentTimeMilliseconds();
+    while (start + milliseconds > pd->system->getCurrentTimeMilliseconds())
+    {
+        (void)dummy;
+    }
 }
 
 // +--------------------------------------------------------------+

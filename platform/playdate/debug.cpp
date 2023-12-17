@@ -15,6 +15,8 @@ Date:   09\08\2023
 #define WARNING_OUTPUT_ENABLED 1
 #define ERROR_OUTPUT_ENABLED   1
 
+#define DEBUG_OUTPUT_DELAY     0 //ms
+
 enum DbgFlags_t
 {
 	DbgFlags_None         = 0x00,
@@ -33,6 +35,9 @@ enum DbgFlags_t
 void AppDebugOutput(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 {
 	pd->system->logToConsole(message);
+	#if DEBUG_OUTPUT_DELAY > 0
+	MicroDelay(DEBUG_OUTPUT_DELAY);
+	#endif
 }
 void AppDebugPrint(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
 {

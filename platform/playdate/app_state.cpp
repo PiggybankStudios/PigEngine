@@ -157,6 +157,11 @@ void RenderAppStateStack()
 		}
 	}
 	
+	if (pig->appStates.stackSize == 0)
+	{
+		pd->graphics->clear(kColorBlack);
+	}
+	
 	for (u64 sIndex = firstFullAppStateIndex; sIndex < pig->appStates.stackSize; sIndex++)
 	{
 		RenderAppState(pig->appStates.stack[sIndex], (sIndex == pig->appStates.stackSize-1));

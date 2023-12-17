@@ -70,7 +70,7 @@ void RenderPerfGraph(PerfGraph_t* graph)
 		PdDrawTextPrint(textPos, "%dms", RoundR32i(graph->values[0]));
 		textPos.y += advanceY;
 		
-		PdDrawTextPrint(textPos, "%.2f", TimeScale);
+		PdDrawTextPrint(textPos, "%.2lf", (r64)TimeScale);
 		textPos.y += advanceY;
 		
 		PdSetDrawMode(oldDrawMode);
