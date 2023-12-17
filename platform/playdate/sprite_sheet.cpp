@@ -33,13 +33,13 @@ SpriteSheet_t LoadSpriteSheet(MyStr_t path, i32 numFramesX)
 		
 		if (frameIndex == 0)
 		{
-			pd->system->error("The sprite sheet at \"%.*s\" had no frames?", path.length, path.chars);
+			pd->system->error("The sprite sheet at \"%.*s\" had no frames?", StrPrint(path));
 			result.isValid = false;
 		}
 	}
 	else
 	{
-		pd->system->error("Failed to load sprite sheet from \"%.*s\": %s", path.length, path.chars, loadBitmapTableErrorStr);
+		pd->system->error("Failed to load sprite sheet from \"%.*s\": %s", StrPrint(path), loadBitmapTableErrorStr);
 	}
 	
 	return result;
