@@ -92,7 +92,7 @@ bool IsMouseOverButton(Button_t* btn)
 	NotNull(btn);
 	if (!IsEmptyStr(btn->mouseCapturePrefix))
 	{
-		return IsMouseOverPrint("%.*s%llu", btn->mouseCapturePrefix.length, btn->mouseCapturePrefix.pntr, btn->id);
+		return IsMouseOverPrint("%.*s%llu", StrPrint(btn->mouseCapturePrefix), btn->id);
 	}
 	else
 	{
@@ -157,7 +157,7 @@ void ButtonCaptureMouse(Button_t* btn, v2 renderOffset)
 		rec mainRec = btn->mainRec + renderOffset;
 		if (!IsEmptyStr(btn->mouseCapturePrefix))
 		{
-			MouseHitRecPrint(mainRec, "%.*s%llu", btn->mouseCapturePrefix.length, btn->mouseCapturePrefix.pntr, btn->id);
+			MouseHitRecPrint(mainRec, "%.*s%llu", StrPrint(btn->mouseCapturePrefix), btn->id);
 		}
 		else
 		{

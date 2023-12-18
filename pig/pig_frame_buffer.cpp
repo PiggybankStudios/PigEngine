@@ -251,7 +251,7 @@ const char* PrintFrameBufferError(const FrameBuffer_t* buffer)
 	}
 	else if (buffer->error == FrameBufferError_ApiError)
 	{
-		return TempPrint("Api: %.*s", buffer->apiErrorStr.length, buffer->apiErrorStr.pntr);
+		return TempPrint("Api: %.*s", StrPrint(buffer->apiErrorStr));
 	}
 	else
 	{

@@ -443,8 +443,8 @@ bool Deser_ParseTypeParamR32(ProcessLog_t* log, TextParser_t* parser, VarArray_t
 	if (Deser_WasKeySeen(previousKeys, token->key))
 	{
 		LogPrintLine_W(log, "Warning: Found \"%.*s\" a second time in one Type \"%.*s\" (on line %llu)",
-			token->key.length, token->key.pntr,
-			currentType->name.length, currentType->name.pntr,
+			StrPrint(token->key),
+			StrPrint(currentType->name),
 			parser->lineParser.lineIndex+1
 		);
 		return false;
@@ -452,7 +452,7 @@ bool Deser_ParseTypeParamR32(ProcessLog_t* log, TextParser_t* parser, VarArray_t
 	if (!TryParsePartsParamR32(token->value, paramOut, &log->parseFailureReason))
 	{
 		LogPrintLine_E(log, "Failed to parse \"%.*s\" as r32 parameter (line %llu): %s",
-			token->key.length, token->key.pntr,
+			StrPrint(token->key),
 			parser->lineParser.lineIndex+1,
 			GetTryParseFailureReasonStr(log->parseFailureReason)
 		);
@@ -523,7 +523,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 	{
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
-			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), token.str.length, token.str.pntr);
+			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
 			LogExitFailure(log, PartsPrefabCollectionError_TokenBeforeFilePrefix);
 			FreeVarArray(&types);
 			FreeVarArray(&bursts);
@@ -540,7 +540,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				{
 					if (!StrEquals(token.str, PARTS_PREFAB_COLLECTION_PREFIX))
 					{
-						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
 						LogExitFailure(log, PartsPrefabCollectionError_InvalidFilePrefix);
 						FreeVarArray(&types);
 						FreeVarArray(&bursts);
@@ -552,7 +552,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				}
 				else
 				{
-					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
 					LogExitFailure(log, PartsPrefabCollectionError_MultipleFilePrefix);
 					FreeVarArray(&types);
 					FreeVarArray(&bursts);
@@ -586,7 +586,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					}
 					else if (Deser_FindPartsTypeByName(&types, token.value) != UINT64_MAX)
 					{
-						LogPrintLine_E(log, "Type on line %llu has same name as previous type: \"%.*s\"", parser.lineParser.lineIndex+1, token.value.length, token.value.pntr);
+						LogPrintLine_E(log, "Type on line %llu has same name as previous type: \"%.*s\"", parser.lineParser.lineIndex+1, StrPrint(token.value));
 						log->hadWarnings = true;
 					}
 					else
@@ -640,7 +640,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					}
 					else if (Deser_FindPartsBurstByName(&bursts, token.value) != UINT64_MAX)
 					{
-						LogPrintLine_E(log, "Burst on line %llu has same name as previous burst: \"%.*s\"", parser.lineParser.lineIndex+1, token.value.length, token.value.pntr);
+						LogPrintLine_E(log, "Burst on line %llu has same name as previous burst: \"%.*s\"", parser.lineParser.lineIndex+1, StrPrint(token.value));
 						log->hadWarnings = true;
 					}
 					else
@@ -673,7 +673,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					}
 					else if (Deser_FindPartsPrefabByName(&collectionOut->prefabs, token.value) != UINT64_MAX)
 					{
-						LogPrintLine_E(log, "Prefab on line %llu has same name as previous prefab: \"%.*s\"", parser.lineParser.lineIndex+1, token.value.length, token.value.pntr);
+						LogPrintLine_E(log, "Prefab on line %llu has same name as previous prefab: \"%.*s\"", parser.lineParser.lineIndex+1, StrPrint(token.value));
 						log->hadWarnings = true;
 					}
 					else
@@ -704,7 +704,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					{
 						LogPrintLine_E(log, "No equals character found in ColorName on line %llu: \"%.*s\"",
 							parser.lineParser.lineIndex+1,
-							token.value.length, token.value.pntr
+							StrPrint(token.value)
 						);
 						log->hadWarnings = true;
 					}
@@ -712,14 +712,14 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					{
 						LogPrintLine_E(log, "Too many equals in ColorName on line %llu: \"%.*s\"",
 							parser.lineParser.lineIndex+1,
-							token.value.length, token.value.pntr
+							StrPrint(token.value)
 						);
 						log->hadWarnings = true;
 					}
 					else if (Deser_FindNamedColor(&namedColors, pieces[0], nullptr))
 					{
 						LogPrintLine_E(log, "Found a second ColorName named \"%.*s\", please use a different name (on line %llu)",
-							pieces[0].length, pieces[0].pntr,
+							StrPrint(pieces[0]),
 							parser.lineParser.lineIndex+1
 						);
 						log->hadWarnings = true;
@@ -727,8 +727,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					else if (!TryParseColor(pieces[1], &colorValue, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Failed to parse value \"%.*s\" for ColorName \"%.*s\" (on line %llu)",
-							pieces[1].length, pieces[1].pntr,
-							pieces[0].length, pieces[0].pntr,
+							StrPrint(pieces[1]),
+							StrPrint(pieces[0]),
 							parser.lineParser.lineIndex+1
 						);
 						log->hadWarnings = true;
@@ -758,7 +758,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Sheet\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -766,7 +766,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("Texture")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Sheet\" on a Type \"%.*s\" when \"Texture\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -774,8 +774,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (resourceType == ResourceType_None)
 						{
 							LogPrintLine_E(log, "Warning: Unknown path given for \"Sheet\" in Type \"%.*s\": \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentType->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -784,8 +784,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						{
 							LogPrintLine_E(log, "Warning: A path for a %s Resource was given for \"Sheet\" in Type \"%.*s\": \"%.*s\" (on line %llu)",
 								GetResourceTypeStr(resourceType),
-								currentType->name.length, currentType->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentType->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -805,7 +805,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Texture")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Texture\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -813,7 +813,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Texture\" on a Type \"%.*s\" when \"Sheet\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -821,8 +821,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (resourceType == ResourceType_None)
 						{
 							LogPrintLine_E(log, "Warning: Unknown path given for \"Texture\" in Type \"%.*s\": \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentType->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -831,8 +831,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						{
 							LogPrintLine_E(log, "Warning: A path for a %s Resource was given for \"Texture\" in Type \"%.*s\": \"%.*s\" (on line %llu)",
 								GetResourceTypeStr(resourceType),
-								currentType->name.length, currentType->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentType->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -857,7 +857,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_E(log, "The \"Frame\" option was given before \"Sheet\" was defined for Type \"%.*s\". Please set \"Sheet\" before using \"Frame\". (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -865,7 +865,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("Frame")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Frame\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -873,7 +873,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamVec2i(token.value, &currentType->frame, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as vec2i parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -892,7 +892,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_E(log, "The \"FrameTime\" option was given before \"Sheet\" was defined for Type \"%.*s\". Please set \"Sheet\" before using \"FrameTime\". (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -900,7 +900,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("FrameTime")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"FrameTime\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -908,7 +908,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamR32(token.value, &currentType->frameTime, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as r32 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -927,7 +927,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_E(log, "The \"FrameCount\" option was given before \"Sheet\" was defined for Type \"%.*s\". Please set \"Sheet\" before using \"FrameCount\". (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -935,7 +935,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("FrameCount")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"FrameCount\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -943,7 +943,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamI32(token.value, &currentType->frameCount, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as i32 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -962,7 +962,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (!Deser_WasKeySeen(&previousKeys, NewStr("Sheet")))
 						{
 							LogPrintLine_E(log, "The \"FrameOffset\" option was given before \"Sheet\" was defined for Type \"%.*s\". Please set \"Sheet\" before using \"FrameOffset\". (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -970,7 +970,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("FrameOffset")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"FrameOffset\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -978,7 +978,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamI32(token.value, &currentType->frameOffset, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as i32 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -1012,7 +1012,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("ColorStart")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"ColorStart\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1020,8 +1020,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamColor(&namedColors, token.value, &currentType->colorStart, &log->parseFailureReason, &failedColorStr))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as color parameter parameter \"%.*s\" (line %llu). Make sure all the color names are typed correctly and pre-declared: %s (%llu named colors)",
-								token.key.length, token.key.pntr,
-								failedColorStr.length, failedColorStr.pntr,
+								StrPrint(token.key),
+								StrPrint(failedColorStr),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason),
 								namedColors.length
@@ -1042,7 +1042,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("ColorEnd")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"ColorEnd\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1050,8 +1050,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamColor(&namedColors, token.value, &currentType->colorEnd, &log->parseFailureReason, &failedColorStr))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as color parameter \"%.*s\" (line %llu). Make sure all the color names are typed correctly and pre-declared: %s (%llu named colors)",
-								token.key.length, token.key.pntr,
-								failedColorStr.length, failedColorStr.pntr,
+								StrPrint(token.key),
+								StrPrint(failedColorStr),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason),
 								namedColors.length
@@ -1085,7 +1085,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Speed")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Velocity\" on a Type \"%.*s\" when \"Speed\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1093,7 +1093,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("Direction")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Velocity\" on a Type \"%.*s\" when \"Direction\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1101,7 +1101,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (Deser_WasKeySeen(&previousKeys, NewStr("Velocity")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Velocity\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1109,7 +1109,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamVec2(token.value, &currentType->velocity, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as vec2 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -1129,7 +1129,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Velocity")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Direction\" on a Type \"%.*s\" when \"Velocity\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1156,7 +1156,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Velocity")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Speed\" on a Type \"%.*s\" when \"Velocity\" was already given, Only one or the other is allowed (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1182,7 +1182,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Acceleration")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Acceleration\" a second time in one Type \"%.*s\" (on line %llu)",
-								currentType->name.length, currentType->name.pntr,
+								StrPrint(currentType->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1190,7 +1190,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamVec2(token.value, &currentType->acceleration, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as vec2 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -1266,7 +1266,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Using")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Using\" a second time in one Burst \"%.*s\" (on line %llu)",
-								currentBurst->name.length, currentBurst->name.pntr,
+								StrPrint(currentBurst->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1274,8 +1274,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (typeId == UINT64_MAX)
 						{
 							LogPrintLine_E(log, "Burst \"%.*s\" requests type \"%.*s\" which doesn't exist. Make sure you used to correct name. (line %llu)",
-								currentBurst->name.length, currentBurst->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentBurst->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1295,7 +1295,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Count")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Count\" a second time in one Burst \"%.*s\" (on line %llu)",
-								currentBurst->name.length, currentBurst->name.pntr,
+								StrPrint(currentBurst->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1303,7 +1303,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsParamI32(token.value, &currentBurst->count, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as i32 parameter (line %llu): %s",
-								token.key.length, token.key.pntr,
+								StrPrint(token.key),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -1322,7 +1322,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (Deser_WasKeySeen(&previousKeys, NewStr("Shape")))
 						{
 							LogPrintLine_W(log, "Warning: Found \"Shape\" a second time in one Burst \"%.*s\" (on line %llu)",
-								currentBurst->name.length, currentBurst->name.pntr,
+								StrPrint(currentBurst->name),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1330,7 +1330,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						else if (!TryParsePartsEmissionShape(token.value, &currentBurst->shape, &log->parseFailureReason))
 						{
 							LogPrintLine_E(log, "Failed to parse \"%.*s\" as emission shape parameter (line %llu): %s",
-								token.value.length, token.value.pntr,
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1,
 								GetTryParseFailureReasonStr(log->parseFailureReason)
 							);
@@ -1361,8 +1361,8 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 						if (burstId == UINT64_MAX)
 						{
 							LogPrintLine_E(log, "Prefab \"%.*s\" requests burst \"%.*s\" which doesn't exist. Make sure you used to correct name. (line %llu)",
-								currentPrefab->name.length, currentPrefab->name.pntr,
-								token.value.length, token.value.pntr,
+								StrPrint(currentPrefab->name),
+								StrPrint(token.value),
 								parser.lineParser.lineIndex+1
 							);
 							log->hadWarnings = true;
@@ -1389,7 +1389,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				if (!isKnownKey)
 				{
 					LogPrintLine_W(log, "Unknown key \"%.*s\" on line %llu. Are you sure you typed the name correctly? Is this key in the right place in the file?",
-						token.key.length, token.key.pntr, parser.lineParser.lineIndex+1
+						StrPrint(token.key), parser.lineParser.lineIndex+1
 					);
 					log->hadWarnings = true;
 				}
@@ -1403,7 +1403,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 			} break;
 			default:
 			{
-				LogPrintLine_W(log, "Warning: Unhandled ParsingTokenType! Type: %u Token: \"%.*s\"", token.type, token.str.length, token.str.pntr);
+				LogPrintLine_W(log, "Warning: Unhandled ParsingTokenType! Type: %u Token: \"%.*s\"", token.type, StrPrint(token.str));
 				log->hadWarnings = true;
 			} break;
 		}

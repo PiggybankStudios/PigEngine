@@ -816,7 +816,7 @@ void RcDrawVectorImgShape(VectorImgShape_t* shape, Color_t color)
 					shape->path.vertBufferGenFailed = !GenerateVertBufferForVectorImgPathShape(shape, SVG_TRIANGULATION_CURVE_VERT_COUNT);
 					if (shape->path.vertBufferGenFailed)
 					{
-						PrintLine_W("Failed to triangulate VectorImgShape \"%.*s\"", shape->idStr.length, shape->idStr.pntr);
+						PrintLine_W("Failed to triangulate VectorImgShape \"%.*s\"", StrPrint(shape->idStr));
 					}
 				}
 				if (shape->path.vertBufferUpToDate)

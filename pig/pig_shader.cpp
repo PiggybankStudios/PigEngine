@@ -297,7 +297,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 					glGetShaderInfoLog(shaderOut->glVertId, vertInfoLogLength, NULL, shaderOut->vertexLog.pntr);
 					CreateShader_CheckOpenGlError("glGetShaderInfoLog(vertId)") { return false; }
 					shaderOut->vertexLog.pntr[shaderOut->vertexLog.length] = '\0';
-					PrintLineAt((vertCompileStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Vertex Log:\n%.*s", shaderOut->vertexLog.length, shaderOut->vertexLog.pntr);
+					PrintLineAt((vertCompileStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Vertex Log:\n%.*s", StrPrint(shaderOut->vertexLog));
 				}
 				else { PrintLine_W("Warning: Failed to allocate space for %d byte vertex shader log!", vertInfoLogLength); }
 			}
@@ -359,7 +359,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 					glGetShaderInfoLog(shaderOut->glFragId, fragInfoLogLength, NULL, shaderOut->fragmentLog.pntr);
 					CreateShader_CheckOpenGlError("glGetShaderInfoLog(fragId)") { return false; }
 					shaderOut->fragmentLog.pntr[shaderOut->fragmentLog.length] = '\0';
-					PrintLineAt((fragCompileStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Fragment Log:\n%.*s", shaderOut->fragmentLog.length, shaderOut->fragmentLog.pntr);
+					PrintLineAt((fragCompileStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Fragment Log:\n%.*s", StrPrint(shaderOut->fragmentLog));
 				}
 				else { PrintLine_W("Warning: Failed to allocate space for %d byte fragment shader log!", fragInfoLogLength); }
 			}
@@ -404,7 +404,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 					glGetProgramInfoLog(shaderOut->glId, linkInfoLogLength, NULL, shaderOut->linkLog.pntr);
 					CreateShader_CheckOpenGlError("glGetProgramInfoLog(programId)") { return false; }
 					shaderOut->linkLog.pntr[shaderOut->linkLog.length] = '\0';
-					PrintLineAt((linkStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Link Log:\n%.*s", shaderOut->linkLog.length, shaderOut->linkLog.pntr);
+					PrintLineAt((linkStatus != GL_TRUE) ? DbgLevel_Error : DbgLevel_Warning, "Link Log:\n%.*s", StrPrint(shaderOut->linkLog));
 				}
 				else { PrintLine_W("Warning: Failed to allocate space for %d byte link log!", linkInfoLogLength); }
 			}

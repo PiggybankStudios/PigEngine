@@ -281,9 +281,9 @@ void RenderDebugOverlayControllerState(PigDebugOverlay_t* overlay, const PlatCon
 			"%.*s\n"
 			"%s (%llu btns, %llu axes)\n"
 			"%.*s",
-			controller->name.length, controller->name.pntr,
+			StrPrint(controller->name),
 			GetControllerTypeStr(controller->type), controller->numButtons, controller->numAxes,
-			controller->typeIdStr.length, controller->typeIdStr.pntr
+			StrPrint(controller->typeIdStr)
 		);
 	}
 	else
@@ -476,7 +476,7 @@ void RenderPigDebugOverlayBelowConsole(PigDebugOverlay_t* overlay)
 				"Resolution: %dx%d (%lldHz)\n"
 				"Number: %llu\n"
 				"NumVideoModes: %llu\n",
-				monitorInfo->name.length, monitorInfo->name.pntr, (monitorInfo->isPrimary ? " (Primary)" : ""),
+				StrPrint(monitorInfo->name), (monitorInfo->isPrimary ? " (Primary)" : ""),
 				currentResolution.width, currentResolution.height, currentFramerate,
 				monitorInfo->designatedNumber,
 				monitorInfo->videoModes.length
@@ -608,12 +608,12 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding,
 				"Timezone: %.*s %s%s",
-				pigIn->localTimezoneName.length, pigIn->localTimezoneName.pntr,
+				StrPrint(pigIn->localTimezoneName),
 				(pigIn->localTimezoneOffset > 0) ? "+" : "-", TempFormatMillisecondsNt((u64)AbsI64(pigIn->localTimezoneOffset) * 1000ULL)
 			);
 			textPos.y += stepY;
 			
-			RcDrawTextPrintWithBackground(textPos, ((pig->focusedItemPntr != nullptr) ? MonokaiWhite : MonokaiGray1), backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, pig->focusedItemName.length, pig->focusedItemName.pntr);
+			RcDrawTextPrintWithBackground(textPos, ((pig->focusedItemPntr != nullptr) ? MonokaiWhite : MonokaiGray1), backgroundColor, backgroundPadding, "Focused Item: %p \"%.*s\"", pig->focusedItemPntr, StrPrint(pig->focusedItemName));
 			textPos.y += stepY;
 			
 			RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Music Fade: %.0f%% %s", pig->musicSystem.currentFadeProgress*100, GetMusicFadeStr(pig->musicSystem.currentFade));
@@ -621,7 +621,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			
 			if (pig->mouseHit.priority > 0)
 			{
-				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", pig->mouseHit.name.length, pig->mouseHit.name.pntr, pig->mouseHit.priority, pig->mouseHit.pntr);
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "Mouse Hit: \"\b%.*s\b\" (priority %llu, %p)", StrPrint(pig->mouseHit.name), pig->mouseHit.priority, pig->mouseHit.pntr);
 				textPos.y += stepY;
 			}
 			else
@@ -642,7 +642,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 			StrHashDictIter_t touchedFilesIter = StrHashDictGetIter(&pigIn->touchedFiles, ProcmonFile_t);
 			for (ProcmonFile_t* touchedFile = nullptr; StrHashDictIter(&touchedFilesIter, ProcmonFile_t, &touchedFile); )
 			{
-				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, touchedFile->filePath.length, touchedFile->filePath.pntr);
+				RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %3llu %5llu %.*s", touchedFile->id, touchedFile->processId, touchedFile->numTouches, StrPrint(touchedFile->filePath));
 				textPos.y += stepY;
 				numFilePaths++;
 			}
@@ -659,7 +659,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				if (slot->hash != 0)
 				{
 					ProcmonEntry_t* processEntry = (ProcmonEntry_t*)(slot + 1);
-					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, processEntry->processName.length, processEntry->processName.pntr);
+					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, backgroundColor, backgroundPadding, "%3llu: %5llu 0x%02X %.*s", pIndex, processEntry->numEvents, processEntry->eventBits, StrPrint(processEntry->processName));
 					#if 0
 					r32 resetPosX = textPos.x;
 					textPos.x += rc->flowInfo.renderRec.width + 10;
@@ -813,7 +813,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 						displayText = TempPrintStr("(%d:%02d.%02d/%d:%02d.%02d) %.*s",
 							currentMinutes, currentSeconds, currentHundredths,
 							totalMinutes, totalSeconds, totalHundredths,
-							musicName.length, musicName.pntr
+							StrPrint(musicName)
 						);
 						displayColor = MonokaiWhite;
 					}

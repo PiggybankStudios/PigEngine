@@ -361,7 +361,7 @@ yajl_val LogJsonArray(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yaj
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -371,7 +371,7 @@ yajl_val LogJsonArray(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, yaj
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not array at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not array at \"%.*s\"", GetYajlTypeStr(resultNode->type), StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -388,7 +388,7 @@ yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, ya
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -399,7 +399,7 @@ yajl_val LogJsonObject(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, ya
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not object at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not object at \"%.*s\"", GetYajlTypeStr(resultNode->type), StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -416,7 +416,7 @@ MyStr_t LogJsonValueStr(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, M
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -427,7 +427,7 @@ MyStr_t LogJsonValueStr(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, M
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not string at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not string at \"%.*s\"", GetYajlTypeStr(resultNode->type), StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -444,7 +444,7 @@ i64 LogJsonValueI64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, i64 d
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -455,7 +455,7 @@ i64 LogJsonValueI64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, i64 d
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not i64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not i64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -472,7 +472,7 @@ r64 LogJsonValueR64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, r64 d
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Failed to find Json node by path: \"%.*s\"", StrPrint(pathStr));
 		}
 		return defaultValue;
 	}
@@ -482,7 +482,7 @@ r64 LogJsonValueR64(ProcessLog_t* log, yajl_val rootNode, MyStr_t pathStr, r64 d
 		{
 			if (isError) { log->hadErrors = true; }
 			else { log->hadWarnings = true; }
-			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not r64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), pathStr.length, pathStr.chars);
+			LogPrintLineAt(log, (isError ? DbgLevel_Error : DbgLevel_Warning), "Found %s not r64 at \"%.*s\"", GetYajlTypeStr(resultNode->type), StrPrint(pathStr));
 		}
 		return defaultValue;
 	}

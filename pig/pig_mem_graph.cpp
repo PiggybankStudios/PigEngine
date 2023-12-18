@@ -411,7 +411,7 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 					}
 					RcDrawTextPrintWithBackground(textPos, MonokaiWhite, ColorTransparent(Black, 0.5f), Vec2Fill(2),
 						"%.*s\n%.1f%%%s\n%llu%s\n%s/%s",
-						arena->name.length, arena->name.pntr,
+						StrPrint(arena->name),
 						page->usedPercent * 100, lastUsedChangeAmountStr,
 						page->numAllocations, lastAllocationsChangeAmountStr,
 						FormatBytesNt(page->used, TempArena), FormatBytesNt(page->size, TempArena)

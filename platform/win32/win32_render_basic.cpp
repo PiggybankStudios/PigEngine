@@ -147,14 +147,14 @@ Win32_Texture_t Win32_LoadTexture_OpenGL(MyStr_t filePath, bool pixelated, bool 
 	
 	if (!Win32_ReadFileContents(filePath, &imageFile))
 	{
-		PrintLine_E("Failed to open image file at \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to open image file at \"%.*s\"", StrPrint(fullPath));
 		TempPopMark();
 		return result;
 	}
 	
 	if (!Win32_TryParseImageFile(&imageFile, 4, &imageData))
 	{
-		PrintLine_E("Failed to parse image file as an image using stb_image at \"%.*s\"!", fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to parse image file as an image using stb_image at \"%.*s\"!", StrPrint(fullPath));
 		Win32_FreeFileContents(&imageFile);
 		TempPopMark();
 		return result;
@@ -185,7 +185,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	
 	if (!Win32_ReadFileContents(filePath, &shaderFile))
 	{
-		PrintLine_E("Failed to open shader file at \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to open shader file at \"%.*s\"", StrPrint(fullPath));
 		TempPopMark();
 		return result;
 	}
@@ -196,7 +196,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	u64 splitIndex = Win32_FindFragmentShaderSplit(NewStr(shaderFile.size, shaderFile.chars));
 	if (splitIndex == 0 || splitIndex >= shaderFile.size)
 	{
-		PrintLine_E("Couldn't find the split between vertex and fragment shader in \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Couldn't find the split between vertex and fragment shader in \"%.*s\"", StrPrint(fullPath));
 		Win32_FreeFileContents(&shaderFile);
 		TempPopMark();
 		return result;
@@ -221,7 +221,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	// glGetShaderiv(result.vertId, GL_INFO_LOG_LENGTH, &logLength);
 	if (compiled != GL_TRUE)
 	{
-		PrintLine_E("Vertex shader failed to compile in \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Vertex shader failed to compile in \"%.*s\"", StrPrint(fullPath));
 		
 		GLint vertInfoLogLength = 0;
 		glGetShaderiv(result.vertId, GL_INFO_LOG_LENGTH, &vertInfoLogLength);
@@ -256,7 +256,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	// glGetShaderiv(result.fragId, GL_INFO_LOG_LENGTH, &logLength);
 	if (compiled != GL_TRUE)
 	{
-		PrintLine_E("Fragment shader failed to compile in \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Fragment shader failed to compile in \"%.*s\"", StrPrint(fullPath));
 		
 		GLint fragInfoLogLength = 0;
 		glGetShaderiv(result.fragId, GL_INFO_LOG_LENGTH, &fragInfoLogLength);
@@ -289,7 +289,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	// glGetProgramiv(result.glId, GL_INFO_LOG_LENGTH, &logLength);
 	if (compiled != GL_TRUE)
 	{
-		PrintLine_E("Shader failed to link in \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Shader failed to link in \"%.*s\"", StrPrint(fullPath));
 		glDeleteProgram(result.glId); Win32_AssertNoOpenGlError(glDeleteShader);
 		glDeleteShader(result.vertId); Win32_AssertNoOpenGlError(glDeleteShader);
 		glDeleteShader(result.fragId); Win32_AssertNoOpenGlError(glDeleteShader);

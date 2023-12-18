@@ -245,7 +245,7 @@ u64 DoPartsPrefab(ParticleEngine_t* engine, RandomSeries_t* random, const PartsP
 			}
 			else
 			{
-				PrintLine_W("Warning: Particle type \"%.*s\" doesn't have sheet or texture defined for it!", type->name.length, type->name.pntr);
+				PrintLine_W("Warning: Particle type \"%.*s\" doesn't have sheet or texture defined for it!", StrPrint(type->name));
 			}
 			
 			if (newPart != nullptr)

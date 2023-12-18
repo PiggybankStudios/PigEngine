@@ -584,17 +584,17 @@ bool Win32_LoadGameControllerDbFile(MyStr_t filePath)
 		int updateMappingResult = glfwUpdateGamepadMappings(dbFile.chars);
 		if (updateMappingResult == GLFW_TRUE)
 		{
-			PrintLine_I("Loaded controller DB file at \"%.*s\"", filePath.length, filePath.pntr);
+			PrintLine_I("Loaded controller DB file at \"%.*s\"", StrPrint(filePath));
 		}
 		else
 		{
-			PrintLine_E("Failed to parse the controller DB file at \"%.*s\"", filePath.length, filePath.pntr);
+			PrintLine_E("Failed to parse the controller DB file at \"%.*s\"", StrPrint(filePath));
 		}
 		Win32_FreeFileContents(&dbFile);
 	}
 	else
 	{
-		PrintLine_W("No controller DB file at \"%.*s\"", filePath.length, filePath.pntr);
+		PrintLine_W("No controller DB file at \"%.*s\"", StrPrint(filePath));
 	}
 	return result;
 }

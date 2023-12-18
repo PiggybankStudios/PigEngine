@@ -1694,7 +1694,7 @@ void ToggleFullscreen(bool doDebugOutput = false)
 		{
 			PrintLine_I("Coming out of fullscreen on monitor %llu \"%.*s\". Going to windowed at %dx%d %lldHz",
 				window->input.fullscreenMonitor->designatedNumber,
-				window->input.fullscreenMonitor->name.length, window->input.fullscreenMonitor->name.pntr,
+				StrPrint(window->input.fullscreenMonitor->name),
 				pigOut->windowedResolution.width, pigOut->windowedResolution.height,
 				pigOut->windowedFramerate
 			);
@@ -1717,7 +1717,7 @@ void ToggleFullscreen(bool doDebugOutput = false)
 		{
 			PrintLine_I("Enabling fullscreen on monitor %llu \"%.*s\" at %dx%d %lldHz",
 				currentMonitor->designatedNumber,
-				currentMonitor->name.length, currentMonitor->name.pntr,
+				StrPrint(currentMonitor->name),
 				currentVideoMode->resolution.width, currentVideoMode->resolution.height,
 				currentVideoMode->framerates[currentVideoMode->currentFramerateIndex]
 			);
@@ -1738,7 +1738,7 @@ void DoFullscreenOnMonitor(const PlatWindow_t* window, const PlatMonitorInfo_t* 
 	
 	if (doDebugOutput)
 	{
-		PrintLine_I("Changing to fullscreen mode %dx%d at %lldHz on monitor %d \"%.*s\"", resolution.width, resolution.height, framerate, monitor->designatedNumber, monitor->name.length, monitor->name.pntr);
+		PrintLine_I("Changing to fullscreen mode %dx%d at %lldHz on monitor %d \"%.*s\"", resolution.width, resolution.height, framerate, monitor->designatedNumber, StrPrint(monitor->name));
 	}
 	pigOut->changeFullscreen = true;
 	pigOut->changeFullscreenWindowId = window->id;

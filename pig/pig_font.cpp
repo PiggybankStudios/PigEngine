@@ -97,7 +97,7 @@ FontFace_t* FontStartFace(Font_t* font, MyStr_t fontNameOrPath, bool requestFrom
 		{
 			if (!plat->ReadPlatformFont(fontNameOrPath, fontSize, bold, italic, &result->fontFile))
 			{
-				PrintLine_E("Failed to open platform font file by name \"%.*s\" for new face in font", fontNameOrPath.length, fontNameOrPath.pntr);
+				PrintLine_E("Failed to open platform font file by name \"%.*s\" for new face in font", StrPrint(fontNameOrPath));
 				FreeVarArray(&result->bakes);
 				VarArrayPop(&font->faces, FontFace_t);
 				return nullptr;
@@ -107,7 +107,7 @@ FontFace_t* FontStartFace(Font_t* font, MyStr_t fontNameOrPath, bool requestFrom
 		{
 			if (!plat->ReadFileContents(fontNameOrPath, &result->fontFile))
 			{
-				PrintLine_E("Failed to open font file at \"%.*s\" for new face in font", fontNameOrPath.length, fontNameOrPath.pntr);
+				PrintLine_E("Failed to open font file at \"%.*s\" for new face in font", StrPrint(fontNameOrPath));
 				FreeVarArray(&result->bakes);
 				VarArrayPop(&font->faces, FontFace_t);
 				return nullptr;
@@ -130,7 +130,7 @@ void ChangeFontFileForActiveFace(Font_t* font, FontFace_t* face, MyStr_t fontNam
 	PlatFileContents_t newFontFile = {};
 	if (!plat->ReadPlatformFont(fontName, fontSize, bold, italic, &newFontFile))
 	{
-		PrintLine_E("Failed to open platform font file by name \"%.*s\" for changing face in font", fontName.length, fontName.pntr);
+		PrintLine_E("Failed to open platform font file by name \"%.*s\" for changing face in font", StrPrint(fontName));
 		DebugAssert(false);
 		return;
 	}

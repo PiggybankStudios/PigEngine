@@ -56,7 +56,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 	{
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
-			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), token.str.length, token.str.pntr);
+			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
 			LogExitFailure(log, SpriteSheetMetaError_TokenBeforeFilePrefix);
 			return false;
 		}
@@ -80,7 +80,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!StrEquals(token.str, SPRITE_SHEET_META_FILE_PREFIX))
 					{
-						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_InvalidFilePrefix);
 						return false;
 					}
@@ -88,7 +88,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				}
 				else
 				{
-					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
 					LogExitFailure(log, SpriteSheetMetaError_MultipleFilePrefix);
 					return false;
 				}
@@ -106,7 +106,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -132,7 +132,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -154,7 +154,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as v2 for Point on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -167,7 +167,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found Codepoint key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found Codepoint key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -184,7 +184,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as u32 for Codepoint on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -197,7 +197,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found AdvanceX key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found AdvanceX key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -214,7 +214,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as r32 for AdvanceX on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -227,7 +227,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found CharBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found CharBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -244,7 +244,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as reci for CharBounds on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -257,7 +257,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found LogicalBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found LogicalBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -274,7 +274,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as reci for LogicalBounds on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -287,7 +287,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				{
 					if (!currentFrameFilled)
 					{
-						LogPrintLine_E(log, "Found CharOffset key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Found CharOffset key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
@@ -304,7 +304,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							LogPrintLine_W(log, "WARNING: Couldn't parse value as v2i for CharOffset on line %llu for frame (%d, %d): \"%.*s\"",
 								textParser.lineParser.lineIndex+1,
 								currentFramePos.x, currentFramePos.y,
-								token.value.length, token.value.pntr
+								StrPrint(token.value)
 							);
 							log->hadWarnings = true;
 						}
@@ -312,7 +312,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				}
 				else
 				{
-					LogPrintLine_W(log, "WARNING: Unhandled key: \"%.*s\"", token.key.length, token.key.pntr);
+					LogPrintLine_W(log, "WARNING: Unhandled key: \"%.*s\"", StrPrint(token.key));
 					log->hadWarnings = true;
 				}
 			} break;
@@ -332,7 +332,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 							textParser.lineParser.lineIndex+1,
 							newFrameValue.x, newFrameValue.y,
 							sheet->numFramesX, sheet->numFramesY,
-							token.str.length, token.str.pntr
+							StrPrint(token.str)
 						);
 						log->hadWarnings = true;
 						currentFrameIsValid = false;
@@ -350,7 +350,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				}
 				else
 				{
-					LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+					LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 					log->hadWarnings = true;
 				}
 			} break;
@@ -394,7 +394,7 @@ MyStr_t SerializeSpriteSheetMeta(const SpriteSheet_t* sheet, MemArena_t* memAren
 				TwoPassPrint(result.pntr, result.length, &byteIndex, "(%d, %d)\n", frame->gridPos.x, frame->gridPos.y);
 				if (!IsEmptyStr(frame->name))
 				{
-					TwoPassPrint(result.pntr, result.length, &byteIndex, "\tName: %.*s\n", frame->name.length, frame->name.pntr);
+					TwoPassPrint(result.pntr, result.length, &byteIndex, "\tName: %.*s\n", StrPrint(frame->name));
 				}
 				if (frame->codepoint != 0)
 				{
@@ -429,7 +429,7 @@ MyStr_t SerializeSpriteSheetMeta(const SpriteSheet_t* sheet, MemArena_t* memAren
 					TwoPassPrint(result.pntr, result.length, &byteIndex, "\tPoint: (%g, %g)\n", point->point.x, point->point.y);
 					if (!IsEmptyStr(point->name))
 					{
-						TwoPassPrint(result.pntr, result.length, &byteIndex, "\t\tName: %.*s\n", point->name.length, point->name.pntr);
+						TwoPassPrint(result.pntr, result.length, &byteIndex, "\t\tName: %.*s\n", StrPrint(point->name));
 					}
 				}
 			}

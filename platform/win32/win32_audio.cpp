@@ -141,7 +141,7 @@ void Win32_EnumerateAudioDevices()
 			}
 			newDevice->devicePntr = devicePntr;
 			
-			// PrintLine_D("Device[%llu]: \"%.*s\"%s \"%.*s\"", dIndex, newDevice->name.length, newDevice->name.pntr, newDevice->isDefaultDevice ? " (Default)" : "", newDevice->deviceId.length, newDevice->deviceId.pntr);
+			// PrintLine_D("Device[%llu]: \"%.*s\"%s \"%.*s\"", dIndex, StrPrint(newDevice->name), newDevice->isDefaultDevice ? " (Default)" : "", StrPrint(newDevice->deviceId));
 			
 			CoTaskMemFree(deviceIdWide);
 			PropVariantClear(&deviceNameProperty);
@@ -433,7 +433,7 @@ HRESULT AudioCallbackClass_c::OnDefaultDeviceChanged(EDataFlow flow, ERole role,
 		case eCommunications: roleStr = "Communications"; break;
 	}
 	UNUSED(threadId);
-	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDefaultDeviceChanged: thread %u %s %s \"%.*s\"", threadId, flowStr, roleStr, nameStr.length, nameStr.pntr);
+	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDefaultDeviceChanged: thread %u %s %s \"%.*s\"", threadId, flowStr, roleStr, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
 	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
@@ -449,7 +449,7 @@ HRESULT AudioCallbackClass_c::OnDeviceAdded(LPCWSTR pwstrDeviceId)
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
 	UNUSED(threadId);
-	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceAdded: thread %u \"%.*s\"", threadId, nameStr.length, nameStr.pntr);
+	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceAdded: thread %u \"%.*s\"", threadId, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
 	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
@@ -465,7 +465,7 @@ HRESULT AudioCallbackClass_c::OnDeviceRemoved(LPCWSTR pwstrDeviceId)
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
 	UNUSED(threadId);
-	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceRemoved: thread %u \"%.*s\"", threadId, nameStr.length, nameStr.pntr);
+	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceRemoved: thread %u \"%.*s\"", threadId, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
 	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
@@ -482,7 +482,7 @@ HRESULT AudioCallbackClass_c::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD 
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
 	UNUSED(threadId);
 	UNUSED(dwNewState);
-	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceStateChanged: thread %u 0x%08X \"%.*s\"", threadId, dwNewState, nameStr.length, nameStr.pntr);
+	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceStateChanged: thread %u 0x%08X \"%.*s\"", threadId, dwNewState, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
 	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);

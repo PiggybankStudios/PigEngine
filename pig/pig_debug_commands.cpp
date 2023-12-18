@@ -177,15 +177,15 @@ void DebugPrintDebugBindingEntry(const char* indentation, const PigDebugBindings
 					Print_I("%s+", GetModifierKeyStr(modifierKey));
 				}
 			}
-			PrintLine_I("%s: \"%.*s\"", GetKeyStr(binding->key), binding->commandStr.length, binding->commandStr.pntr);
+			PrintLine_I("%s: \"%.*s\"", GetKeyStr(binding->key), StrPrint(binding->commandStr));
 		} break;
 		case PigDebugBindingType_Mouse:
 		{
-			PrintLine_I("%sMouse_%s: \"%.*s\"", indentation, GetMouseBtnStr(binding->mouseBtn), binding->commandStr.length, binding->commandStr.pntr);
+			PrintLine_I("%sMouse_%s: \"%.*s\"", indentation, GetMouseBtnStr(binding->mouseBtn), StrPrint(binding->commandStr));
 		} break;
 		case PigDebugBindingType_Controller:
 		{
-			PrintLine_I("%sController_%s: \"%.*s\"", indentation, GetControllerBtnStr(binding->controllerBtn), binding->commandStr.length, binding->commandStr.pntr);
+			PrintLine_I("%sController_%s: \"%.*s\"", indentation, GetControllerBtnStr(binding->controllerBtn), StrPrint(binding->commandStr));
 		} break;
 		default: DebugAssert(false); break;
 	}
@@ -236,11 +236,11 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			if (descriptionTruncated.length > DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT) { descriptionTruncated.length = DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT-3; isDescTruncated = true; }
 			if (commandInfo->numArguments > 0)
 			{
-				PrintLine_D("  %.*s (%llu arg%s): %.*s%s", commandInfo->name.length, commandInfo->name.pntr, commandInfo->numArguments, (commandInfo->numArguments == 1) ? "" : "s", descriptionTruncated.length, descriptionTruncated.pntr, (isDescTruncated ? "..." : ""));
+				PrintLine_D("  %.*s (%llu arg%s): %.*s%s", StrPrint(commandInfo->name), commandInfo->numArguments, (commandInfo->numArguments == 1) ? "" : "s", StrPrint(descriptionTruncated), (isDescTruncated ? "..." : ""));
 			}
 			else
 			{
-				PrintLine_D("  %.*s: %.*s%s", commandInfo->name.length, commandInfo->name.pntr, descriptionTruncated.length, descriptionTruncated.pntr, (isDescTruncated ? "..." : ""));
+				PrintLine_D("  %.*s: %.*s%s", StrPrint(commandInfo->name), StrPrint(descriptionTruncated), (isDescTruncated ? "..." : ""));
 			}
 		}
 	}
@@ -275,7 +275,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		if (numArguments >= 1)
 		{
 			TryParseFailureReason_t parseFailureReason;
-			if (!TryParseBool(arguments[0], &newValue, &parseFailureReason)) { PrintLine_E("Failed to parse \"%.*s\" as boolean: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason)); return validCommand; }
+			if (!TryParseBool(arguments[0], &newValue, &parseFailureReason)) { PrintLine_E("Failed to parse \"%.*s\" as boolean: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason)); return validCommand; }
 			newValue = !newValue; //this is a negative boolean value
 		}
 		pig->dontExitOnAssert = newValue;
@@ -319,7 +319,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		else 
 		{
-			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Unknown arena name: \"%.*s\"", StrPrint(arguments[0]));
 		}
 	}
 	
@@ -336,7 +336,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			TryParseFailureReason_t parseFailureReason;
 			if (!TryParseBool(arguments[1], &assertOnFailure, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse argument as bool \"%.*s\" %s", arguments[1].length, arguments[1].chars, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse argument as bool \"%.*s\" %s", StrPrint(arguments[1]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 		}
@@ -385,7 +385,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		#endif
 		else 
 		{
-			PrintLine_E("Unknown arena name: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Unknown arena name: \"%.*s\"", StrPrint(arguments[0]));
 		}
 	}
 	
@@ -418,7 +418,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			}
 			if (targetType == ResourceType_None)
 			{
-				PrintLine_E("Unknown resource type given for argument 2: \"%.*s\"", arguments[1].length, arguments[1].pntr);
+				PrintLine_E("Unknown resource type given for argument 2: \"%.*s\"", StrPrint(arguments[1]));
 				return validCommand;
 			}
 		}
@@ -448,7 +448,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		
 		if (!foundResource)
 		{
-			PrintLine_E("Unknown resource name \"%.*s\" for %s resource", targetName.length, targetName.pntr, (targetType == ResourceType_None ? "Any" : GetResourceTypeStr(targetType)));
+			PrintLine_E("Unknown resource name \"%.*s\" for %s resource", StrPrint(targetName), (targetType == ResourceType_None ? "Any" : GetResourceTypeStr(targetType)));
 		}
 	}
 	
@@ -472,7 +472,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			}
 			if (targetType == ResourceType_None)
 			{
-				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", StrPrint(arguments[0]));
 				return validCommand;
 			}
 		}
@@ -494,7 +494,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					if (status->state == ResourceState_Error) { dbgLevel = DbgLevel_Error; }
 					else if (status->state == ResourceState_Warning) { dbgLevel = DbgLevel_Warning; }
 					else if (status->state == ResourceState_Loaded) { dbgLevel = DbgLevel_Info; }
-					PrintLineAt(dbgLevel, "%s[%llu]: \"%.*s\"", GetResourceTypeStr(type), rIndex, resourceName.length, resourceName.pntr);
+					PrintLineAt(dbgLevel, "%s[%llu]: \"%.*s\"", GetResourceTypeStr(type), rIndex, StrPrint(resourceName));
 				}
 			}
 		}
@@ -521,7 +521,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			}
 			if (targetType == ResourceType_None)
 			{
-				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", arguments[0].length, arguments[0].pntr);
+				PrintLine_E("Unknown resource type given for argument 1: \"%.*s\"", StrPrint(arguments[0]));
 				return validCommand;
 			}
 		}
@@ -533,7 +533,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			if (targetType == watch->type || targetType == ResourceType_None)
 			{
 				bool doesFileExist = plat->DoesFileExist(watch->watchedFile->path, nullptr);
-				PrintLineAt(doesFileExist ? DbgLevel_Info : DbgLevel_Warning, "\t%s[%llu]: \"%.*s\"", GetResourceTypeStr(watch->type), watch->resourceIndex, watch->watchedFile->path.length, watch->watchedFile->path.pntr);
+				PrintLineAt(doesFileExist ? DbgLevel_Info : DbgLevel_Warning, "\t%s[%llu]: \"%.*s\"", GetResourceTypeStr(watch->type), watch->resourceIndex, StrPrint(watch->watchedFile->path));
 			}
 		}
 		#else //DEVELOPER_MODE
@@ -580,7 +580,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		else
 		{
-			PrintLine_E("Unknown argument \"%.*s\"! Known values: \"music\", \"sounds\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Unknown argument \"%.*s\"! Known values: \"music\", \"sounds\"", StrPrint(arguments[0]));
 		}
 	}
 	
@@ -605,7 +605,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
 		if (!TryParseR32(arguments[1], &volumeValue, &parseFailureReason))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", StrPrint(arguments[1]), GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
 		if (volumeValue < 0 || volumeValue > 100)
@@ -631,7 +631,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		else
 		{
-			PrintLine_E("Unknown volume type \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Unknown volume type \"%.*s\"", StrPrint(arguments[0]));
 			return validCommand;
 		}
 	}
@@ -668,7 +668,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			if (!TryParseU64(arguments[0], &monitorNumber, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 			if (monitorNumber == 0)
@@ -687,8 +687,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				foundMonitor = true;
 				PrintLine_N("Monitor %llu \"%.*s\" supports %llu video mode%s:",
 					monitorInfo->designatedNumber,
-					monitorInfo->name.length,
-					monitorInfo->name.pntr,
+					StrPrint(monitorInfo->name),
 					monitorInfo->videoModes.length,
 					(monitorInfo->videoModes.length == 1 ? "" : "s")
 				);
@@ -735,12 +734,12 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
 		if (!TryParseI32(arguments[0], &resolution.width, &parseFailureReason))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
 		if (!TryParseI32(arguments[1], &resolution.height, &parseFailureReason))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", StrPrint(arguments[1]), GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
 		if (resolution.width < PIG_WINDOW_MIN_SIZE.width || resolution.height < PIG_WINDOW_MIN_SIZE.height)
@@ -777,7 +776,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			bool fullscreenEnabled = false;
 			if (!TryParseBool(arguments[0], &fullscreenEnabled, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse \"%.*s\" as bool: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse \"%.*s\" as bool: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 			if (!fullscreenEnabled && numArguments != 4) { PrintLine_E("turning on fullscreen takes 4 arguments, not %llu", numArguments); return validCommand; }
@@ -786,19 +785,19 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			v2i resolution = Vec2i_Zero;
 			if (!TryParseI32(arguments[1], &resolution.width, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[1].length, arguments[1].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", StrPrint(arguments[1]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 			if (!TryParseI32(arguments[2], &resolution.height, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", arguments[2].length, arguments[2].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse \"%.*s\" as i32: %s", StrPrint(arguments[2]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 			
 			i64 framerate = 0;
 			if (!TryParseI64(arguments[3], &framerate, &parseFailureReason))
 			{
-				PrintLine_E("Couldn't parse \"%.*s\" as i64: %s", arguments[3].length, arguments[3].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+				PrintLine_E("Couldn't parse \"%.*s\" as i64: %s", StrPrint(arguments[3]), GetTryParseFailureReasonStr(parseFailureReason));
 				return validCommand;
 			}
 			if (framerate <= 0)
@@ -812,7 +811,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 				u64 monitorNumber = 0;
 				if (!TryParseU64(arguments[4], &monitorNumber, &parseFailureReason))
 				{
-					PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[4].length, arguments[4].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+					PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", StrPrint(arguments[4]), GetTryParseFailureReasonStr(parseFailureReason));
 					return validCommand;
 				}
 				
@@ -909,7 +908,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		else if (!TryParseR32(arguments[0], &requestedScale, &parseFailureReason))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			PrintLine_E("Couldn't parse \"%.*s\" as r32: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
 		
@@ -949,7 +948,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		PigDebugBindingsEntry_t binding = {};
 		if (!PigTryDeserBindingStr(arguments[0], &binding))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as binding", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Couldn't parse \"%.*s\" as binding", StrPrint(arguments[0]));
 			return validCommand;
 		}
 		
@@ -987,7 +986,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		PigDebugBindingsEntry_t binding = {};
 		if (!PigTryDeserBindingStr(arguments[0], &binding))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as binding", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("Couldn't parse \"%.*s\" as binding", StrPrint(arguments[0]));
 			return validCommand;
 		}
 		
@@ -1120,7 +1119,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		if (requestedAppState == AppState_None)
 		{
-			PrintLine_E("There is no AppState \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("There is no AppState \"%.*s\"", StrPrint(arguments[0]));
 			return validCommand;
 		}
 		
@@ -1156,7 +1155,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		if (requestedAppState == AppState_None)
 		{
-			PrintLine_E("There is no AppState \"%.*s\"", arguments[0].length, arguments[0].pntr);
+			PrintLine_E("There is no AppState \"%.*s\"", StrPrint(arguments[0]));
 			return validCommand;
 		}
 		
@@ -1225,9 +1224,9 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					"  Friend[%llu]: ID: %llu \"%.*s%s%.*s%s\" %s %llu group%s%s",
 					fIndex,
 					friendInfo->id,
-					friendInfo->name.length, friendInfo->name.pntr,
+					StrPrint(friendInfo->name),
 					(friendInfo->nickname.length > 0) ? " (" : "",
-					friendInfo->nickname.length, friendInfo->nickname.pntr,
+					StrPrint(friendInfo->nickname),
 					(friendInfo->nickname.length > 0) ? ")" : "",
 					GetPlatSteamFriendOnlineStatusStr(friendInfo->onlineStatus),
 					friendInfo->numGroups, (friendInfo->numGroups == 1) ? "" : "s",
@@ -1259,7 +1258,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					VarArrayLoop(&friendInfo->presenceStrs, sIndex)
 					{
 						VarArrayLoopGet(PlatSteamFriendPresenceStr_t, presenceStr, &friendInfo->presenceStrs, sIndex);
-						Print_D(" \"%.*s\"=\"%.*s\"", presenceStr->key.length, presenceStr->key.pntr, presenceStr->value.length, presenceStr->value.pntr);
+						Print_D(" \"%.*s\"=\"%.*s\"", StrPrint(presenceStr->key), StrPrint(presenceStr->value));
 					}
 					WriteLine_D("");
 				}
@@ -1271,7 +1270,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			VarArrayLoop(&platInfo->steamFriendsList->groups, gIndex)
 			{
 				VarArrayLoopGet(PlatSteamFriendGroup_t, group, &platInfo->steamFriendsList->groups, gIndex);
-				PrintLine_I("  Group[%llu]: \"%.*s\" (%llu member%s)", gIndex, group->name.length, group->name.pntr, group->memberIds.length, (group->memberIds.length == 1) ? "" : "s");
+				PrintLine_I("  Group[%llu]: \"%.*s\" (%llu member%s)", gIndex, StrPrint(group->name), group->memberIds.length, (group->memberIds.length == 1) ? "" : "s");
 				VarArrayLoop(&group->memberIds, mIndex)
 				{
 					VarArrayLoopGet(u64, memberIdPntr, &group->memberIds, mIndex);
@@ -1283,9 +1282,9 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					PrintLineAt(dbgLevel,
 						"    Member[%llu]: \"%.*s%s%.*s%s\" %s",
 						mIndex,
-						friendInfo->name.length, friendInfo->name.pntr,
+						StrPrint(friendInfo->name),
 						(friendInfo->nickname.length > 0) ? " (" : "",
-						friendInfo->nickname.length, friendInfo->nickname.pntr,
+						StrPrint(friendInfo->nickname),
 						(friendInfo->nickname.length > 0) ? ")" : "",
 						GetPlatSteamFriendOnlineStatusStr(friendInfo->onlineStatus)
 					);
@@ -1327,7 +1326,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		if (friendInfo == nullptr)
 		{
-			PrintLine_E("Unknown friend \"%.*s\"", friendName.length, friendName.pntr);
+			PrintLine_E("Unknown friend \"%.*s\"", StrPrint(friendName));
 			return validCommand;
 		}
 		
@@ -1387,7 +1386,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		ResourceType_t targetResourceType = ResourceType_None;
 		if (numArguments >= 1)
 		{
-			if (!TryParseEnum(arguments[0], &targetResourceType, ResourceType_NumTypes, GetResourceTypeStr, &parseFailureReason)) { PrintLine_E("Unknown resource type \"%.*s\"", arguments[0].length, arguments[0].chars); return validCommand; }
+			if (!TryParseEnum(arguments[0], &targetResourceType, ResourceType_NumTypes, GetResourceTypeStr, &parseFailureReason)) { PrintLine_E("Unknown resource type \"%.*s\"", StrPrint(arguments[0])); return validCommand; }
 		}
 		
 		for (u64 tIndex = 1; tIndex < ResourceType_NumTypes; tIndex++)
@@ -1404,7 +1403,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 					ResourcePoolEntry_t* entry = BktArrayGet(resourceArray, ResourcePoolEntry_t, rIndex);
 					if (entry->id != 0)
 					{
-						PrintLine_I("  %s[%llu]: \"%.*s\" (referenced %llu time%s)", GetResourceTypeStr(resourceType), loadedResourceIndex, entry->filePath.length, entry->filePath.chars, entry->refCount, ((entry->refCount == 1) ? "" : "s"));
+						PrintLine_I("  %s[%llu]: \"%.*s\" (referenced %llu time%s)", GetResourceTypeStr(resourceType), loadedResourceIndex, StrPrint(entry->filePath), entry->refCount, ((entry->refCount == 1) ? "" : "s"));
 						loadedResourceIndex++;
 					}
 				}
@@ -1428,7 +1427,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		u64 numBytesToAlloc = 0;
 		if (!TryParseU64(arguments[0], &numBytesToAlloc, &parseFailureReason))
 		{
-			PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", arguments[0].length, arguments[0].pntr, GetTryParseFailureReasonStr(parseFailureReason));
+			PrintLine_E("Couldn't parse \"%.*s\" as u64: %s", StrPrint(arguments[0]), GetTryParseFailureReasonStr(parseFailureReason));
 			return validCommand;
 		}
 		numBytesToAlloc *= unitMultiplier;
@@ -1478,7 +1477,7 @@ bool PigParseDebugCommand(MyStr_t commandStr) //pre-declared in pig_func_defs.h
 	}
 	else
 	{
-		PrintLine_E("Unknown command \"%.*s\"", command.length, command.pntr);
+		PrintLine_E("Unknown command \"%.*s\"", StrPrint(command));
 	}
 	
 	TempPopMark();
