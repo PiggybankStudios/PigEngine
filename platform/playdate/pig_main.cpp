@@ -140,6 +140,7 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			{
 				MemArena_t stdHeapOnStack;
 				InitMemArena_StdHeap(&stdHeapOnStack);
+				FlagUnset(stdHeapOnStack.flags, MemArenaFlag_TelemetryEnabled);
 				pigEngineState = AllocStruct(&stdHeapOnStack, PigEngineState_t);
 				NotNull(pigEngineState);
 				ClearPointer(pigEngineState);
@@ -148,8 +149,10 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			}
 			void* fixedHeapPntr = MyMalloc(FIXED_HEAP_SIZE);
 			NotNull(fixedHeapPntr);
-			InitMemArena_FixedHeap(&pigEngineState->fixedHeap, FIXED_HEAP_SIZE, fixedHeapPntr);
-			InitMemArena_PagedHeapArena(&pigEngineState->mainHeap, MAIN_HEAP_PAGE_SIZE, &pigEngineState->stdHeap, MAIN_HEAP_MAX_NUM_PAGES);
+			//NOTE: On the playdate device, all of our structures need to be properly aligned.
+			//      To help encourage this, we made all our main arnas default to 8-byte alignment.
+			InitMemArena_FixedHeap(&pigEngineState->fixedHeap, FIXED_HEAP_SIZE, fixedHeapPntr, AllocAlignment_8Bytes);
+			InitMemArena_PagedHeapArena(&pigEngineState->mainHeap, MAIN_HEAP_PAGE_SIZE, &pigEngineState->stdHeap, MAIN_HEAP_MAX_NUM_PAGES, AllocAlignment_8Bytes);
 			pigEngineState->initialized = true;
 			
 			Assert(pig == nullptr);
@@ -157,7 +160,7 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			fixedHeap = &pigEngineState->fixedHeap;
 			mainHeap = &pigEngineState->mainHeap;
 			
-			InitScratchArenas(&pig->stdHeap, SCRATCH_ARENA_SIZE, SCRATCH_ARENA_MAX_NUM_MARKS);
+			InitScratchArenas(&pig->stdHeap, SCRATCH_ARENA_SIZE, SCRATCH_ARENA_MAX_NUM_MARKS, AllocAlignment_8Bytes);
 			
 			WriteLine_O("+==============================+");
 			PrintLine_O("|     %s v%u.%u(%0u)     |", "Pig Engine", PIG_VERSION_MAJOR, PIG_VERSION_MINOR, PIG_VERSION_BUILD);

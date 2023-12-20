@@ -34,18 +34,27 @@ enum DbgFlags_t
 // +--------------------------------------------------------------+
 void AppDebugOutput(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 {
-	pd->system->logToConsole(message);
-	#if DEBUG_OUTPUT_DELAY > 0
-	MicroDelay(DEBUG_OUTPUT_DELAY);
-	#endif
+	if (pd != nullptr)
+	{
+		pd->system->logToConsole(message);
+		#if DEBUG_OUTPUT_DELAY > 0
+		MicroDelay(DEBUG_OUTPUT_DELAY);
+		#endif
+	}
 }
 void AppDebugPrint(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
 {
-	MemArena_t* scratch = GetScratchArena();
-	PrintInArenaVa(scratch, printedStr, printedLength, formatString);
-	//TODO: Add error checking!
-	AppDebugOutput(flags, filePath, lineNumber, funcName, level, newLine, printedStr);
-	FreeScratchArena(scratch);
+	if (pig != nullptr)
+	{
+		MemArena_t* scratch = GetScratchArena();
+		if (scratch != nullptr)
+		{
+			PrintInArenaVa(scratch, printedStr, printedLength, formatString);
+			//TODO: Add error checking!
+			AppDebugOutput(flags, filePath, lineNumber, funcName, level, newLine, printedStr);
+			FreeScratchArena(scratch);
+		}
+	}
 }
 
 // +--------------------------------------------------------------+
@@ -65,11 +74,17 @@ GYLIB_DEBUG_OUTPUT_HANDLER_DEF(GyLibOutputHandler)
 // void GyLibPrintHandler(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
 GYLIB_DEBUG_PRINT_HANDLER_DEF(GyLibPrintHandler)
 {
-	MemArena_t* scratch = GetScratchArena();
-	PrintInArenaVa(scratch, printedStr, printedLength, formatString);
-	//TODO: Add error checking!
-	if (pig != nullptr) { GyLibOutputHandler(filePath, lineNumber, funcName, level, newLine, printedStr); }
-	FreeScratchArena(scratch);
+	if (pig != nullptr)
+	{
+		MemArena_t* scratch = GetScratchArena();
+		if (scratch != nullptr)
+		{
+			PrintInArenaVa(scratch, printedStr, printedLength, formatString);
+			//TODO: Add error checking!
+			GyLibOutputHandler(filePath, lineNumber, funcName, level, newLine, printedStr);
+			FreeScratchArena(scratch);
+		}
+	}
 }
 
 // +--------------------------------------------------------------+

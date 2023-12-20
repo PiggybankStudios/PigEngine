@@ -27,6 +27,8 @@ void InitScratchArenas(MemArena_t* sourceArena, u64 perArenaSize, u64 maxNumMark
 // Pass in 1 or 2 arenas that you DON'T want to get back from this function. i.e. you are going to use those arenas for memory that outlives your scratch memory
 inline MemArena_t* GetScratchArena(MemArena_t* avoidConflictWith1, MemArena_t* avoidConflictWith2) //pre-declared in gy_scratch_arenas.h
 {
+	if (pig == nullptr) { return nullptr; }
+	if (pig->scratchArenas[0].type != MemArenaType_MarkedStack) { return nullptr; }
 	u64 scratchIndex = 0;
 	while ((avoidConflictWith1 != nullptr && avoidConflictWith1 == &pig->scratchArenas[scratchIndex]) ||
 	       (avoidConflictWith2 != nullptr && avoidConflictWith2 == &pig->scratchArenas[scratchIndex]))
