@@ -18,6 +18,9 @@ Date:   09\08\2023
 #define TARGET_FRAME_TIME        (1000.0f / TARGET_FRAMERATE) //ms
 #define TIME_SCALE_SNAP_PERCENT  0.1f
 
+#define PLAYDATE_SCREEN_WIDTH 400
+#define PLAYDATE_SCREEN_HEIGHT 240
+
 #define DEBUG_FONT_PATH "Resources/Fonts/pixel8"
 
 struct PigEngineState_t

@@ -8,6 +8,18 @@ Description:
 
 //NOTE: The "data" directory is read/writable, while the default directory is only readable and ships with the game
 
+bool DoesFileExist(bool fromDataDir, MyStr_t path)
+{
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t pathNullTerm = AllocString(scratch, &path);
+	
+	FileStat fileStats = {};
+	int statResult = pd->file->stat(pathNullTerm.chars, &fileStats);
+	
+	FreeScratchArena(scratch);
+	return (statResult == 0 && fileStats.isdir == 0);
+}
+
 bool ReadEntireFile(bool fromDataDir, MyStr_t path, MyStr_t* contentsOut, MemArena_t* memArena)
 {
 	NotNullStr(&path);
@@ -56,5 +68,32 @@ bool ReadEntireFile(bool fromDataDir, MyStr_t path, MyStr_t* contentsOut, MemAre
 	pd->file->close(fileHandle);
 	FreeScratchArena(scratch);
 	
+	return true;
+}
+
+bool WriteEntireFile(MyStr_t path, MyStr_t contents)
+{
+	NotNullStr(&path);
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t pathNullTerm = AllocString(scratch, &path);
+	
+	SDFile* fileHandle = pd->file->open(pathNullTerm.chars, kFileWrite);
+	if (fileHandle == nullptr)
+	{
+		PrintLine_E("Failed to open file at \"%s\": %s", pathNullTerm.chars, pd->file->geterr());
+		FreeScratchArena(scratch);
+		return false;
+	}
+	
+	int writeResult = pd->file->write(fileHandle, contents.pntr, (unsigned int)contents.length);
+	if (writeResult < 0)
+	{
+		PrintLine_E("Failed to write %llu bytes to file at \"%s\": %s", contents.length, pathNullTerm.chars, pd->file->geterr());
+		pd->file->close(fileHandle);
+		FreeScratchArena(scratch);
+		return false;
+	}
+	
+	FreeScratchArena(scratch);
 	return true;
 }
