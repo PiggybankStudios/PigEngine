@@ -167,7 +167,7 @@ void PdDrawTexturedRec(Texture_t texture, reci drawRec)
 }
 
 bool currentClipRecActive = false;
-reci currentClipRec = NewReci(-1, -1, -1, -1);
+reci currentClipRec = { -1, -1, -1, -1 };
 reci PdSetClipRec(reci rectangle)
 {
 	reci oldClipRec = currentClipRec;
