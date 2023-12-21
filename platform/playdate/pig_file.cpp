@@ -94,6 +94,7 @@ bool WriteEntireFile(MyStr_t path, MyStr_t contents)
 		return false;
 	}
 	
+	pd->file->close(fileHandle);
 	FreeScratchArena(scratch);
 	return true;
 }
