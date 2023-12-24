@@ -291,7 +291,7 @@ ResourceWatch_t* WatchFileForResource(ResourceType_t resourceType, u64 resourceI
 	PlatWatchedFile_t* newWatch = plat->WatchFile(filePath);
 	if (newWatch == nullptr) { return nullptr; }
 	
-	// PrintLine_D("Watching resource file \"%.*s\"", filePath.length, filePath.pntr);
+	// PrintLine_D("Watching resource file \"%.*s\"", StrPrint(filePath));
 	ResourceWatch_t* newResourceWatch = VarArrayAdd(&pig->resources.watches, ResourceWatch_t);
 	NotNull(newResourceWatch);
 	ClearPointer(newResourceWatch);
@@ -545,7 +545,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 		}
 		else
 		{
-			NotifyPrint_E("Failed to load meta file for sheet[%llu] at \"%.*s\"", sheetIndex, metaInfo.metaFilePath.length, metaInfo.metaFilePath.pntr);
+			NotifyPrint_E("Failed to load meta file for sheet[%llu] at \"%.*s\"", sheetIndex, StrPrint(metaInfo.metaFilePath));
 			sheetStatus->state = ResourceState_Warning;
 		}
 	}
@@ -640,7 +640,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 		if (dumpLogOnFailure)
 		{
 			PrintLine_E("Failed to load sprite sheet from \"%.*s\"! Error %s%s%s",
-				filePath.length, filePath.pntr,
+				StrPrint(filePath),
 				GetSpriteSheetErrorStr(spriteSheetOut->error),
 				(spriteSheetOut->error == SpriteSheetError_TextureError) ? ": " : "",
 				(spriteSheetOut->error == SpriteSheetError_TextureError) ? GetTextureErrorStr(spriteSheetOut->texture.error) : ""
@@ -671,7 +671,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 		}
 		else if (dumpLogOnFailure)
 		{
-			PrintLine_E("Failed to open meta file for sprite sheet at \"%.*s\"", metaFilePath.length, metaFilePath.pntr);
+			PrintLine_E("Failed to open meta file for sprite sheet at \"%.*s\"", StrPrint(metaFilePath));
 		}
 	}
 	
@@ -922,7 +922,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 			}
 			else
 			{
-				PrintLine_E("Failed to deserialize ogg music[%llu] at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+				PrintLine_E("Failed to deserialize ogg music[%llu] at \"%.*s\"", musicIndex, StrPrint(musicPathStr));
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "OGG Parse Log"); }
@@ -938,7 +938,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 			}
 			else
 			{
-				PrintLine_E("Failed to deserialize wav music[%llu] at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+				PrintLine_E("Failed to deserialize wav music[%llu] at \"%.*s\"", musicIndex, StrPrint(musicPathStr));
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "WAV Parse Log"); }
@@ -959,7 +959,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 	}
 	else
 	{
-		PrintLine_E("Missing sound[%llu] file at \"%.*s\"", musicIndex, musicPathStr.length, musicPathStr.pntr);
+		PrintLine_E("Missing sound[%llu] file at \"%.*s\"", musicIndex, StrPrint(musicPathStr));
 		DebugAssert(false);
 		musicStatus->state = ResourceStateWarnOrError(musicStatus->state);
 		return;

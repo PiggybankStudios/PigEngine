@@ -98,7 +98,7 @@ PLAT_API_START_PROCESS_DEFINITION(Win32_StartProcess)
 	if (createProcessSuccess == 0)
 	{
 		DWORD errorCode = GetLastError();
-		PrintLine_E("Failed to create process from path: \"%.*s\" in \"%.*s\": %s", fullFilePath.length, fullFilePath.pntr, actualWorkingDirectory.length, actualWorkingDirectory.pntr, Win32_GetErrorCodeStr(errorCode, true));
+		PrintLine_E("Failed to create process from path: \"%.*s\" in \"%.*s\": %s", StrPrint(fullFilePath), StrPrint(actualWorkingDirectory), Win32_GetErrorCodeStr(errorCode, true));
 		Win32_UnlockMutex(&Platform->runningProcessesMutex);
 		return nullptr;
 	}
@@ -141,7 +141,7 @@ PLAT_API_CHECK_RUNNING_PROCESS_DEFINITION(Win32_CheckRunningProcess)
 	if (getExitCodeSuccess == 0)
 	{
 		DWORD errorCode = GetLastError();
-		PrintLine_E("Failed to get exitCode for running process \"%.*s\": %s", runningProcess->filePath.length, runningProcess->filePath.pntr, Win32_GetErrorCodeStr(errorCode));
+		PrintLine_E("Failed to get exitCode for running process \"%.*s\": %s", StrPrint(runningProcess->filePath), Win32_GetErrorCodeStr(errorCode));
 		runningProcess->isFinished = true;
 		runningProcess->exitCode = 0;
 		return;

@@ -24,7 +24,7 @@ v2 RcDrawSteamFriendCard(u64 friendId, v2 position, v2 minSize, v2 maxSize, r32 
 	{
 		if (friendInfo->nickname.length > 0)
 		{
-			titleStr = TempPrintStr("%.*s (%.*s)", friendInfo->name.length, friendInfo->name.pntr, friendInfo->nickname.length, friendInfo->nickname.pntr);
+			titleStr = TempPrintStr("%.*s (%.*s)", StrPrint(friendInfo->name), StrPrint(friendInfo->nickname));
 		}
 		else
 		{

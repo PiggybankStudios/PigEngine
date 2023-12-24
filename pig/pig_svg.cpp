@@ -81,7 +81,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 	MyStr_t parensPart = FindStrParensPart(transformStr);
 	if (parensPart.length == 0)
 	{
-		LogPrintLine_E(log, "Transform string contained no parenthesis: \"%.*s\"", transformStr.length, transformStr.pntr);
+		LogPrintLine_E(log, "Transform string contained no parenthesis: \"%.*s\"", StrPrint(transformStr));
 		return false;
 	}
 	u64 parensIndex = (u64)(parensPart.pntr - transformStr.pntr);
@@ -93,7 +93,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		r32 parsedValue = 0;
 		if (!TryParseR32(parensPart, &parsedValue, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Couldn't parse transform scale as r32: \"%.*s\"", parensPart.length, parensPart.pntr);
+			LogPrintLine_E(log, "Couldn't parse transform scale as r32: \"%.*s\"", StrPrint(parensPart));
 			return false;
 		}
 		
@@ -107,7 +107,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		r32 parsedValue = 0;
 		if (!TryParseR32(parensPart, &parsedValue, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Couldn't parse transform rotation as r32: \"%.*s\"", parensPart.length, parensPart.pntr);
+			LogPrintLine_E(log, "Couldn't parse transform rotation as r32: \"%.*s\"", StrPrint(parensPart));
 			return false;
 		}
 		
@@ -121,7 +121,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		v2 parsedValue = Vec2_Zero;
 		if (!TryParseV2(parensPart, &parsedValue, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Couldn't parse transform translate as vec2: \"%.*s\"", parensPart.length, parensPart.pntr);
+			LogPrintLine_E(log, "Couldn't parse transform translate as vec2: \"%.*s\"", StrPrint(parensPart));
 			return false;
 		}
 		
@@ -137,7 +137,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		MyStr_t* numberParts = SplitString(TempArena, parensPart, ",", &numNumberParts);
 		if (numNumberParts != 6)
 		{
-			LogPrintLine_E(log, "We don't support %llu parts in a \"matrix\" transformation: \"%.*s\"", numNumberParts, transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "We don't support %llu parts in a \"matrix\" transformation: \"%.*s\"", numNumberParts, StrPrint(transformStr));
 			return false;
 		}
 		
@@ -146,33 +146,33 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 		
 		if (!TryParseR32(numberParts[0], &transformOut->matrix.r0c0, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[0] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[0] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		if (!TryParseR32(numberParts[1], &transformOut->matrix.r0c1, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[1] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[1] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		if (!TryParseR32(numberParts[2], &transformOut->matrix.r1c0, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[2] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[2] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		if (!TryParseR32(numberParts[3], &transformOut->matrix.r1c1, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[3] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[3] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		//The last 2 numbers are translation, so in a 4x4 matrix, they go in the w column
 		if (!TryParseR32(numberParts[4], &transformOut->matrix.r0c3, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[4] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[4] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		if (!TryParseR32(numberParts[5], &transformOut->matrix.r1c3, &log->parseFailureReason))
 		{
-			LogPrintLine_E(log, "Failed to parse number[5] as r32 in matrix transformation: \"%.*s\"", transformStr.length, transformStr.pntr);
+			LogPrintLine_E(log, "Failed to parse number[5] as r32 in matrix transformation: \"%.*s\"", StrPrint(transformStr));
 			return false;
 		}
 		
@@ -186,7 +186,7 @@ bool TryParseSvgTransformString(ProcessLog_t* log, MyStr_t transformStr, SvgTran
 	}
 	else
 	{
-		LogPrintLine_E(log, "Unknown transform type before parenthesis: \"%.*s\"", transformStr.length, transformStr.pntr);
+		LogPrintLine_E(log, "Unknown transform type before parenthesis: \"%.*s\"", StrPrint(transformStr));
 		return false;
 	}
 }
@@ -210,7 +210,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 		bool pieceHasColon = FindNextCharInStr(pieces[pIndex], 0, ":", &colonIndex);
 		if (!pieceHasColon)
 		{
-			LogPrintLine_E(log, "Style string property %u/%u did not contain a colon: \"%.*s\"", pIndex+1, numPieces, pieces[pIndex].length, pieces[pIndex].pntr);
+			LogPrintLine_E(log, "Style string property %u/%u did not contain a colon: \"%.*s\"", pIndex+1, numPieces, StrPrint(pieces[pIndex]));
 			TempPopMark();
 			return false;
 		}
@@ -219,7 +219,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 		MyStr_t value = NewStr(pieces[pIndex].length - (colonIndex+1), &pieces[pIndex].pntr[colonIndex+1]);
 		if (key.length == 0 || value.length == 0)
 		{
-			LogPrintLine_E(log, "Style string property %u/%u had empty key or value: \"%.*s\"", pIndex+1, numPieces, pieces[pIndex].length, pieces[pIndex].pntr);
+			LogPrintLine_E(log, "Style string property %u/%u had empty key or value: \"%.*s\"", pIndex+1, numPieces, StrPrint(pieces[pIndex]));
 			TempPopMark();
 			return false;
 		}
@@ -253,7 +253,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 			}
 			else
 			{
-				LogPrintLine_E(log, "Failed to parse style value \"fill\" as known style or as color: \"%.*s\"", value.length, value.pntr);
+				LogPrintLine_E(log, "Failed to parse style value \"fill\" as known style or as color: \"%.*s\"", StrPrint(value));
 				TempPopMark();
 				return false;
 			}
@@ -265,7 +265,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 		{
 			if (!TryParseR32(value, &opacity, &log->parseFailureReason))
 			{
-				LogPrintLine_E(log, "Failed to parse style value \"opacity\" as r32: \"%.*s\"", value.length, value.pntr);
+				LogPrintLine_E(log, "Failed to parse style value \"opacity\" as r32: \"%.*s\"", StrPrint(value));
 				TempPopMark();
 				return false;
 			}
@@ -292,7 +292,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 			}
 			else
 			{
-				LogPrintLine_E(log, "Failed to parse style value \"stroke\" as known style or as color: \"%.*s\"", value.length, value.pntr);
+				LogPrintLine_E(log, "Failed to parse style value \"stroke\" as known style or as color: \"%.*s\"", StrPrint(value));
 				TempPopMark();
 				return false;
 			}
@@ -305,7 +305,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 			r32 widthValue;
 			if (!TryParseR32(value, &widthValue, &log->parseFailureReason))
 			{
-				LogPrintLine_E(log, "Failed to parse style value \"stroke-width\" as r32: \"%.*s\"", value.length, value.pntr);
+				LogPrintLine_E(log, "Failed to parse style value \"stroke-width\" as r32: \"%.*s\"", StrPrint(value));
 				TempPopMark();
 				return false;
 			}
@@ -319,7 +319,7 @@ bool TryParseSvgShapeStyleString(ProcessLog_t* log, MyStr_t styleStr, SvgFill_t*
 		{
 			if (!TryParseR32(value, &strokeOpacity, &log->parseFailureReason))
 			{
-				LogPrintLine_E(log, "Failed to parse style value \"stroke-opacity\" as r32: \"%.*s\"", value.length, value.pntr);
+				LogPrintLine_E(log, "Failed to parse style value \"stroke-opacity\" as r32: \"%.*s\"", StrPrint(value));
 				TempPopMark();
 				return false;
 			}
@@ -432,7 +432,7 @@ bool TryParseSvgPathDataString(ProcessLog_t* log, MyStr_t dataStr, BezierPath_t*
 				r32 parsedValue = 0;
 				if (!TryParseR32(numbersStr, &parsedValue, &log->parseFailureReason))
 				{
-					LogPrintLine_E(log, "Couldn't parse value as r32 in path number starting at byte %llu: \"%.*s\"", cIndex, numbersStr.length, numbersStr.pntr);
+					LogPrintLine_E(log, "Couldn't parse value as r32 in path number starting at byte %llu: \"%.*s\"", cIndex, StrPrint(numbersStr));
 					return false;
 				}
 				
@@ -483,7 +483,7 @@ bool TryParseSvgPathDataString(ProcessLog_t* log, MyStr_t dataStr, BezierPath_t*
 				bool foundComma = FindNextCharInStr(numbersStr, 0, ",", &commaIndex);
 				if (!foundComma)
 				{
-					LogPrintLine_E(log, "Expected vector 2 for %s command but couldn't find comma in next number piece at byte %llu: \"%.*s\"", GetSvgPathDataCmdStr(command), cIndex, numbersStr.length, numbersStr.pntr);
+					LogPrintLine_E(log, "Expected vector 2 for %s command but couldn't find comma in next number piece at byte %llu: \"%.*s\"", GetSvgPathDataCmdStr(command), cIndex, StrPrint(numbersStr));
 					return false;
 				}
 				MyStr_t xStr = StrSubstring(&numbersStr, 0, commaIndex);
@@ -492,12 +492,12 @@ bool TryParseSvgPathDataString(ProcessLog_t* log, MyStr_t dataStr, BezierPath_t*
 				v2 parsedValue = Vec2_Zero;
 				if (!TryParseR32(xStr, &parsedValue.x, &log->parseFailureReason))
 				{
-					LogPrintLine_E(log, "Couldn't parse x value as r32 in path vec2 starting at byte %llu: \"%.*s\"", cIndex, numbersStr.length, numbersStr.pntr);
+					LogPrintLine_E(log, "Couldn't parse x value as r32 in path vec2 starting at byte %llu: \"%.*s\"", cIndex, StrPrint(numbersStr));
 					return false;
 				}
 				if (!TryParseR32(yStr, &parsedValue.y, &log->parseFailureReason))
 				{
-					LogPrintLine_E(log, "Couldn't parse y value as r32 in path vec2 starting at byte %llu: \"%.*s\"", cIndex, numbersStr.length, numbersStr.pntr);
+					LogPrintLine_E(log, "Couldn't parse y value as r32 in path vec2 starting at byte %llu: \"%.*s\"", cIndex, StrPrint(numbersStr));
 					return false;
 				}
 				
@@ -970,10 +970,10 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						else
 						{
 							LogPrintLine_W(log, "Failed to parse transform-center-x property as r32 in group \"%.*s\" ID \"%.*s\" on line %llu: \"%.*s\"",
-								currentGroup->label.length, currentGroup->label.pntr,
-								currentGroup->idStr.length, currentGroup->idStr.pntr,
+								StrPrint(currentGroup->label),
+								StrPrint(currentGroup->idStr),
 								xmlParser.lineParser.lineIndex,
-								centerXProperty->value.length, centerXProperty->value.pntr
+								StrPrint(centerXProperty->value)
 							);
 						}
 					}
@@ -988,10 +988,10 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						else
 						{
 							LogPrintLine_W(log, "Failed to parse transform-center-y property as r32 in group \"%.*s\" ID \"%.*s\" on line %llu: \"%.*s\"",
-								currentGroup->label.length, currentGroup->label.pntr,
-								currentGroup->idStr.length, currentGroup->idStr.pntr,
+								StrPrint(currentGroup->label),
+								StrPrint(currentGroup->idStr),
 								xmlParser.lineParser.lineIndex,
-								centerYProperty->value.length, centerYProperty->value.pntr
+								StrPrint(centerYProperty->value)
 							);
 						}
 					}
@@ -1001,7 +1001,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					{
 						if (!TryParseSvgTransformString(log, transformProperty->value, &currentGroup->transform))
 						{
-							LogPrintLine_E(log, "Failed to parse transform for group on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, transformProperty->value.length, transformProperty->value.pntr);
+							LogPrintLine_E(log, "Failed to parse transform for group on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
 							LogExitFailure(log, TryDeserSvgFileError_GroupTransformIsInvalid);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
@@ -1075,7 +1075,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					v2 circleCenter = Vec2_Zero;
 					if (!TryParseR32(cxProperty->value, &circleCenter.x, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse circle center x value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, cxProperty->value.length, cxProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse circle center x value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(cxProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1083,7 +1083,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					}
 					if (!TryParseR32(cyProperty->value, &circleCenter.y, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse circle center y value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, cyProperty->value.length, cyProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse circle center y value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(cyProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1093,7 +1093,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					r32 circleRadius = 0.0f;
 					if (!TryParseR32(rProperty->value, &circleRadius, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse circle radius value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, rProperty->value.length, rProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse circle radius value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(rProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1125,7 +1125,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					{
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
-							LogPrintLine_E(log, "Couldn't parse circle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, transformProperty->value.length, transformProperty->value.pntr);
+							LogPrintLine_E(log, "Couldn't parse circle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, tStrPrint(ransformProperty->value));
 							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
@@ -1211,7 +1211,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					rec rectangleValue = Rec_Zero;
 					if (!TryParseR32(xProperty->value, &rectangleValue.x, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle x value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, xProperty->value.length, xProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle x value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(xProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1219,7 +1219,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					}
 					if (!TryParseR32(yProperty->value, &rectangleValue.y, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle y value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, yProperty->value.length, yProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle y value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(yProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1227,7 +1227,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					}
 					if (!TryParseR32(widthProperty->value, &rectangleValue.width, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle width value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, widthProperty->value.length, widthProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle width value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(widthProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1235,7 +1235,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					}
 					if (!TryParseR32(heightProperty->value, &rectangleValue.height, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle height value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, heightProperty->value.length, heightProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle height value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(heightProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1245,7 +1245,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					v2 roundedRadius = Vec2_Zero;
 					if (rxProperty != nullptr && !TryParseR32(rxProperty->value, &roundedRadius.x, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle rx value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, rxProperty->value.length, rxProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle rx value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(rxProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1253,7 +1253,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					}
 					if (ryProperty != nullptr && !TryParseR32(ryProperty->value, &roundedRadius.y, &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Couldn't parse rectangle ry value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, ryProperty->value.length, ryProperty->value.pntr);
+						LogPrintLine_E(log, "Couldn't parse rectangle ry value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(ryProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1285,7 +1285,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					{
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
-							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, transformProperty->value.length, transformProperty->value.pntr);
+							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
 							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
@@ -1360,7 +1360,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					
 					if (!TryParseSvgPathDataString(log, dataProperty->value, &newShape->path.value))
 					{
-						LogPrintLine_E(log, "Failed to parse path data on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, dataProperty->value.length, dataProperty->value.pntr);
+						LogPrintLine_E(log, "Failed to parse path data on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(dataProperty->value));
 						LogExitFailure(log, TryDeserSvgFileError_PathFormatError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
@@ -1373,7 +1373,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					{
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
-							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, transformProperty->value.length, transformProperty->value.pntr);
+							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
 							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
@@ -1386,11 +1386,11 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 				}
 				else
 				{
-					// LogPrintLine_I(log, "Parsed unknown token \"%.*s\" with %llu propert%s (and %llu parent%s):", token->type.length, token->type.pntr, token->properties.length, (token->properties.length == 1) ? "y" : "ies", xmlParser.parentTokens.length, (xmlParser.parentTokens.length == 1) ? "" : "s");
+					// LogPrintLine_I(log, "Parsed unknown token \"%.*s\" with %llu propert%s (and %llu parent%s):", StrPrint(token->type), token->properties.length, (token->properties.length == 1) ? "y" : "ies", xmlParser.parentTokens.length, (xmlParser.parentTokens.length == 1) ? "" : "s");
 					// VarArrayLoop(&token->properties, pIndex)
 					// {
 					// 	VarArrayLoopGet(XmlProperty_t, property, &token->properties, pIndex);
-					// 	LogPrintLine_D(log, "\tProperty[%llu]: \"%.*s\"", pIndex, property->key.length, property->key.pntr);
+					// 	LogPrintLine_D(log, "\tProperty[%llu]: \"%.*s\"", pIndex, StrPrint(property->key));
 					// }
 				}
 			} break;
@@ -1422,7 +1422,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 			// +==============================+
 			case XmlParseResultType_Contents:
 			{
-				// LogPrintLine_O(log, "Got contents \"%.*s\"", parse.string.length, parse.string.pntr);
+				// LogPrintLine_O(log, "Got contents \"%.*s\"", StrPrint(parse.string));
 			} break;
 			
 			// +==============================+

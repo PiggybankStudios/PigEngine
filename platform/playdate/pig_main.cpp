@@ -263,7 +263,7 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 		// +==============================+
 		case kEventTerminate:
 		{
-			//TODO: Implement me!
+			ClearAppStateStackBeforeClose();
 		} break;
 		
 		// +==============================+

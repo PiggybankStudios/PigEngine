@@ -144,7 +144,7 @@ bool CreateFoldersForPath(MyStr_t folderOrFilePath)
 				{
 					if (!plat->CreateFolder(parentFolder))
 					{
-						PrintLine_E("Failed to create folder at \"%.*s\"", parentFolder.length, parentFolder.pntr);
+						PrintLine_E("Failed to create folder at \"%.*s\"", StrPrint(parentFolder));
 						return false;
 					}
 				}

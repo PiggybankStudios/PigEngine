@@ -145,6 +145,15 @@ void UpdateAppStateStack()
 	}
 }
 
+void ClearAppStateStackBeforeClose()
+{
+	for (u64 stackIndex = pig->appStates.stackSize; stackIndex > 0; stackIndex--)
+	{
+		StopAppState(pig->appStates.stack[stackIndex-1], true, AppState_None);
+	}
+	pig->appStates.stackSize = 0;
+}
+
 void RenderAppStateStack()
 {
 	u64 firstFullAppStateIndex = 0;

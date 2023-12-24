@@ -91,7 +91,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 			MyStr_t mapFilename = GetFileNamePart(objMaterial->diffuseMapPath);
 			if (textureType == ModelTextureType_FromModelsFolder)
 			{
-				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, mapFilename.length, mapFilename.pntr);
+				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, StrPrint(mapFilename));
 				bool loadSuccess = LoadTexture(memArena, &material->diffuseTexture, texturePath, false, true);
 				DebugAssertAndUnused(loadSuccess, loadSuccess);
 			}
@@ -111,7 +111,7 @@ Model_t CreateModelFromObjModelData(ObjModelData_t* objData, MemArena_t* memAren
 			MyStr_t mapFilename = GetFileNamePart(objMaterial->specularMapPath);
 			if (textureType == ModelTextureType_FromModelsFolder)
 			{
-				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, mapFilename.length, mapFilename.pntr);
+				MyStr_t texturePath = TempPrintStr("%s/Textures/%.*s", RESOURCE_FOLDER_MODELS, StrPrint(mapFilename));
 				bool loadSuccess = LoadTexture(memArena, &material->specularTexture, texturePath, false, true);
 				DebugAssertAndUnused(loadSuccess, loadSuccess);
 			}
@@ -209,7 +209,7 @@ bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textur
 		}
 		else
 		{
-			LogPrintLine_E(log, "Couldn't open model file at \"%.*s\"", filePath.length, filePath.chars);
+			LogPrintLine_E(log, "Couldn't open model file at \"%.*s\"", StrPrint(filePath));
 			LogExitFailure(log, DeserObjFileError_MissingFile);
 		}
 	}

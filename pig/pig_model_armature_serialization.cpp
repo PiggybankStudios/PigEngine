@@ -109,7 +109,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 				}
 				else
 				{
-					LogPrintLine_W(log, "Unknown header \"%.*s\" on line %llu", token.value.length, token.value.chars, parser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Unknown header \"%.*s\" on line %llu", StrPrint(token.value), parser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			} break;
@@ -138,7 +138,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 					}
 					else
 					{
-						LogPrintLine_W(log, "Couldn't parse NumBones \"%.*s\" as u64 %s on line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Couldn't parse NumBones \"%.*s\" as u64 %s on line %llu", StrPrint(token.value), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 						log->hadWarnings = true;
 					}
 				}
@@ -155,7 +155,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 					}
 					else
 					{
-						LogPrintLine_W(log, "Couldn't parse NumChildren \"%.*s\" as u64 %s on line %llu", token.value.length, token.value.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+						LogPrintLine_W(log, "Couldn't parse NumChildren \"%.*s\" as u64 %s on line %llu", StrPrint(token.value), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 						log->hadWarnings = true;
 					}
 				}
@@ -190,7 +190,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 						
 						if (isRootBone && foundRootBone)
 						{
-							LogPrintLine_W(log, "Found more than one root bone in armature! \"%.*s\" is second root bone (on line %llu)", namePart.length, namePart.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+							LogPrintLine_W(log, "Found more than one root bone in armature! \"%.*s\" is second root bone (on line %llu)", StrPrint(namePart), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 							log->hadWarnings = true;
 							isRootBone = false;
 							parentBone = FindArmatureBoneById(armatureOut, armatureOut->rootBoneId);
@@ -204,22 +204,22 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 						mat4 transform = Mat4_Identity;
 						if (!TryParseV3(headPart, &head, &parseFailureReason))
 						{
-							LogPrintLine_W(log, "Couldn't parse HeadPos \"%.*s\" as v3 %s (on line %llu)", headPart.length, headPart.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+							LogPrintLine_W(log, "Couldn't parse HeadPos \"%.*s\" as v3 %s (on line %llu)", StrPrint(headPart), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 							log->hadWarnings = true;
 						}
 						else if (!TryParseV3(tailPart, &tail, &parseFailureReason))
 						{
-							LogPrintLine_W(log, "Couldn't parse TailPos \"%.*s\" as v3 %s (on line %llu)", tailPart.length, tailPart.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+							LogPrintLine_W(log, "Couldn't parse TailPos \"%.*s\" as v3 %s (on line %llu)", StrPrint(tailPart), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 							log->hadWarnings = true;
 						}
 						else if (!TryParseMat4(transformPart, &transform, &parseFailureReason))
 						{
-							LogPrintLine_W(log, "Couldn't parse Transform \"%.*s\" as mat4 %s (on line %llu)", transformPart.length, transformPart.chars, GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
+							LogPrintLine_W(log, "Couldn't parse Transform \"%.*s\" as mat4 %s (on line %llu)", StrPrint(transformPart), GetTryParseFailureReasonStr(parseFailureReason), parser.lineParser.lineIndex);
 							log->hadWarnings = true;
 						}
 						else if (!isRootBone && parentBone == nullptr)
 						{
-							LogPrintLine_E(log, "Unknown bone name \"%.*s\" for parent on bone \"%.*s\" (on line %llu). This could mean the bones are not ordered properly, or it could mean a bone is missing", parentNamePart.length, parentNamePart.chars, namePart.length, namePart.chars, parser.lineParser.lineIndex);
+							LogPrintLine_E(log, "Unknown bone name \"%.*s\" for parent on bone \"%.*s\" (on line %llu). This could mean the bones are not ordered properly, or it could mean a bone is missing", StrPrint(parentNamePart), StrPrint(namePart), parser.lineParser.lineIndex);
 							LogExitFailure(log, TryDeserModelArmatureError_UnknownParentBoneName);
 							PopMemMark(scratch);
 							FreeScratchArena(scratch);
@@ -235,7 +235,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 							newBone->parentBoneId = parentBoneId;
 							
 							LogPrintLine_D(log, "\"%.*s\" transform\n%g, %g, %g, %g\n%g, %g, %g, %g\n%g, %g, %g, %g\n%g, %g, %g, %g",
-								namePart.length, namePart.chars,
+								StrPrint(namePart),
 								newBone->transform.values[0][0], newBone->transform.values[1][0], newBone->transform.values[2][0], newBone->transform.values[3][0],
 								newBone->transform.values[0][1], newBone->transform.values[1][1], newBone->transform.values[2][1], newBone->transform.values[3][1],
 								newBone->transform.values[0][2], newBone->transform.values[1][2], newBone->transform.values[2][2], newBone->transform.values[3][2],
@@ -254,7 +254,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 					}
 					else
 					{
-						LogPrintLine_W(log, "Found %llu pieces separated by | on line %llu. We expect 4 pieces: Name|HeadPos|TailPos|Transform. \"%.*s\"", numParts, parser.lineParser.lineIndex, token.value.length, token.value.chars);
+						LogPrintLine_W(log, "Found %llu pieces separated by | on line %llu. We expect 4 pieces: Name|HeadPos|TailPos|Transform. \"%.*s\"", numParts, parser.lineParser.lineIndex, StrPrint(token.value));
 						log->hadWarnings = true;
 					}
 					PopMemMark(scratch);
@@ -284,7 +284,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 						}
 						else
 						{
-							LogPrintLine_W(log, "Unknown bone name \"%.*s\" for child \"%.*s\" on line %llu", boneNamePart.length, boneNamePart.chars, childNamePart.length, childNamePart.chars, parser.lineParser.lineIndex);
+							LogPrintLine_W(log, "Unknown bone name \"%.*s\" for child \"%.*s\" on line %llu", StrPrint(boneNamePart), StrPrint(childNamePart), parser.lineParser.lineIndex);
 							LogExitFailure(log, TryDeserModelArmatureError_UnknownBoneName);
 							PopMemMark(scratch);
 							FreeScratchArena(scratch);
@@ -293,14 +293,14 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 					}
 					else
 					{
-						LogPrintLine_W(log, "Found %llu pieces separated by | on line %llu. We expect 2 pieces: BoneName|ChildName. \"%.*s\"", numParts, parser.lineParser.lineIndex, token.value.length, token.value.chars);
+						LogPrintLine_W(log, "Found %llu pieces separated by | on line %llu. We expect 2 pieces: BoneName|ChildName. \"%.*s\"", numParts, parser.lineParser.lineIndex, StrPrint(token.value));
 						log->hadWarnings = true;
 					}
 					PopMemMark(scratch);
 				}
 				else
 				{
-					LogPrintLine_W(log, "Unknown Key %.*s on line %llu", token.key.length, token.key.chars, parser.lineParser.lineIndex);
+					LogPrintLine_W(log, "Unknown Key %.*s on line %llu", StrPrint(token.key), parser.lineParser.lineIndex);
 					log->hadWarnings = true;
 				}
 			} break;
@@ -392,7 +392,7 @@ bool TryLoadModelArmatureFrom(MyStr_t armatureFilePath, ProcessLog_t* log, Model
 	}
 	else
 	{
-		LogPrintLine_E(log, "Failed to open model armature file at \"%.*s\"", armatureFilePath.length, armatureFilePath.chars);
+		LogPrintLine_E(log, "Failed to open model armature file at \"%.*s\"", StrPrint(armatureFilePath));
 		LogExitFailure(log, TryDeserModelArmatureError_CouldntOpenFile);
 		return false;
 	}

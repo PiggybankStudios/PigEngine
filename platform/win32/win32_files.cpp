@@ -122,9 +122,9 @@ PLAT_API_START_ENUMERATING_FILES_DEF(Win32_StartEnumeratingFiles)
 	result.folderPath = Win32_GetFullPath(GetTempArena(), folderPath, true);
 	NotNullStr(&result.folderPath);
 	//NOTE: File enumeration in windows requires that we have a slash on the end and a * wildcard character
-	result.folderPath = PrintInArenaStr(GetTempArena(), "%.*s%s", result.folderPath.length, result.folderPath.pntr, (StrEndsWith(result.folderPath, "\\") ? "" : "\\"));
+	result.folderPath = PrintInArenaStr(GetTempArena(), "%.*s%s", StrPrint(result.folderPath), (StrEndsWith(result.folderPath, "\\") ? "" : "\\"));
 	NotNullStr(&result.folderPath);
-	result.folderPathWithWildcard = PrintInArenaStr(GetTempArena(), "%.*s*", result.folderPath.length, result.folderPath.pntr);
+	result.folderPathWithWildcard = PrintInArenaStr(GetTempArena(), "%.*s*", StrPrint(result.folderPath));
 	NotNullStr(&result.folderPathWithWildcard);
 	result.enumerateFiles = enumerateFiles;
 	result.enumerateFolders = enumerateFolders;
@@ -182,7 +182,7 @@ PLAT_API_ENUMERATE_FILES_DEF(Win32_EnumerateFiles)
 		{
 			if (giveFullPath)
 			{
-				*pathOut = PrintInArenaStr(pathOutArena, "%.*s%s", enumerator->folderPath.length, enumerator->folderPath.pntr, enumerator->findData.cFileName);
+				*pathOut = PrintInArenaStr(pathOutArena, "%.*s%s", StrPrint(enumerator->folderPath), enumerator->findData.cFileName);
 				NotNullStr(pathOut);
 				StrReplaceInPlace(*pathOut, "\\", "/");
 			}
@@ -219,7 +219,7 @@ PLAT_API_CREATE_FOLDER(Win32_CreateFolder)
 	bool result = (createResult == TRUE);
 	if (createResult != TRUE)
 	{
-		PrintLine_E("Failed to create new folder at \"%.*s\"", fullFolderPath.length, fullFolderPath.pntr);
+		PrintLine_E("Failed to create new folder at \"%.*s\"", StrPrint(fullFolderPath));
 	}
 	
 	return result;
@@ -267,12 +267,12 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 		contentsOut->errorCode = GetLastError();
 		if (contentsOut->errorCode == ERROR_FILE_NOT_FOUND)
 		{
-			PrintLine_E("File not found at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+			PrintLine_E("File not found at \"%.*s\". Error code: %s", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true));
 		}
 		else
 		{
 			//The file might have permissions that prevent us from reading it
-			PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+			PrintLine_E("Failed to open file that exists at \"%.*s\". Error code: %s", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true));
 		}
 		TempPopMark();
 		CloseHandle(fileHandle);
@@ -288,7 +288,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 	{
 		contentsOut->readSuccess = false;
 		contentsOut->errorCode = GetLastError();
-		PrintLine_E("Failed to size of file at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+		PrintLine_E("Failed to size of file at \"%.*s\". Error code: %s", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true));
 		TempPopMark();
 		CloseHandle(fileHandle);
 		return false;
@@ -313,7 +313,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 		{
 			contentsOut->readSuccess = false;
 			contentsOut->errorCode = GetLastError();
-			PrintLine_E("Failed to ReadFile contents at \"%.*s\". Error code: %s", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true));
+			PrintLine_E("Failed to ReadFile contents at \"%.*s\". Error code: %s", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true));
 			FreeMem(&Platform->stdHeap, resultData);
 			TempPopMark();
 			CloseHandle(fileHandle);
@@ -323,7 +323,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 		{
 			contentsOut->readSuccess = false;
 			contentsOut->errorCode = GetLastError();
-			PrintLine_E("Failed to all of the file at \"%.*s\". Error code: %s. Read %u/%llu bytes", fullPath.length, fullPath.pntr, Win32_GetErrorCodeStr(contentsOut->errorCode, true), bytesRead, contentsOut->size);
+			PrintLine_E("Failed to all of the file at \"%.*s\". Error code: %s. Read %u/%llu bytes", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true), bytesRead, contentsOut->size);
 			FreeMem(&Platform->stdHeap, resultData);
 			TempPopMark();
 			CloseHandle(fileHandle);
@@ -402,18 +402,18 @@ WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
 			}
 			else
 			{
-				PrintLine_W("Only wrote %u/%llu bytes to file at \"%.*s\"", bytesWritten, memorySize, fullPath.length, fullPath.pntr);
+				PrintLine_W("Only wrote %u/%llu bytes to file at \"%.*s\"", bytesWritten, memorySize, StrPrint(fullPath));
 			}
 		}
 		else
 		{
-			PrintLine_E("Failed to write %u bytes to file at \"%.*s\"", memorySize, fullPath.length, fullPath.pntr);
+			PrintLine_E("Failed to write %u bytes to file at \"%.*s\"", memorySize, StrPrint(fullPath));
 		}
 		CloseHandle(fileHandle);
 	}
 	else
 	{
-		PrintLine_E("Failed to open file for writing at \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to open file for writing at \"%.*s\"", StrPrint(fullPath));
 	}
 	TempPopMark();
 	
@@ -443,7 +443,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 	);
 	if (fileHandle == INVALID_HANDLE_VALUE)
 	{
-		PrintLine_E("Failed to %s file at \"%.*s\"", (forWriting ? "Create" : "Open"), fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to %s file at \"%.*s\"", (forWriting ? "Create" : "Open"), StrPrint(fullPath));
 		TempPopMark();
 		return false;
 	}
@@ -461,7 +461,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 	);
 	if (newCursorPos == INVALID_SET_FILE_POINTER)
 	{
-		PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), StrPrint(fullPath));
 		CloseHandle(fileHandle);
 		TempPopMark();
 		return false;
@@ -785,7 +785,7 @@ PLAT_API_SAVE_IMAGE_DATA_TO_FILE(Win32_SaveImageDataToFile)
 	
 	if (context.fileHandle == INVALID_HANDLE_VALUE)
 	{
-		PrintLine_E("Failed to open file for writing image into: \"%.*s\"", fullPath.length, fullPath.pntr);
+		PrintLine_E("Failed to open file for writing image into: \"%.*s\"", StrPrint(fullPath));
 		TempPopMark();
 		return false;
 	}
@@ -890,7 +890,7 @@ SHOW_FILE_DEFINITION(Win32_ShowFile)
 	
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
-	MyStr_t commandStr = TempPrintStr("C:\\Windows\\explorer.exe /select,\"%.*s\"", fullPath.length, fullPath.pntr);
+	MyStr_t commandStr = TempPrintStr("C:\\Windows\\explorer.exe /select,\"%.*s\"", StrPrint(fullPath));
 	
 	int systemResult = system(commandStr.pntr);
 	
@@ -901,7 +901,7 @@ SHOW_FILE_DEFINITION(Win32_ShowFile)
 	}
 	else
 	{
-		PrintLine_D("Command \"%.*s\" returned an error: %d", commandStr.length, commandStr.pntr, errno);
+		PrintLine_D("Command \"%.*s\" returned an error: %d", StrPrint(commandStr), errno);
 		TempPopMark();
 		return false;
 	}
@@ -920,7 +920,7 @@ SHOW_SOURCE_FILE_DEFINITION(Win32_ShowSourceFile)
 	
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
-	MyStr_t commandStr = TempPrintStr("%.*s:%llu", fullPath.length, fullPath.pntr, lineNumber);
+	MyStr_t commandStr = TempPrintStr("%.*s:%llu", StrPrint(fullPath), lineNumber);
 	
 	u64 executeResult = (u64)ShellExecuteA(
 		NULL,   //No parent window
@@ -956,7 +956,7 @@ SHOW_SOURCE_FILE_DEFINITION(Win32_ShowSourceFile)
 			
 			default:
 			{
-				PrintLine_E("ShellExecute failed with result 0x%02X for file at \"%.*s\"", executeResult, fullPath.length, fullPath.pntr);
+				PrintLine_E("ShellExecute failed with result 0x%02X for file at \"%.*s\"", executeResult, StrPrint(fullPath));
 			} break;
 		};
 	}
@@ -1012,9 +1012,9 @@ PLAT_API_GET_SPECIAL_FOLDER_PATH(Win32_GetSpecialFolderPath)
 	MyStr_t result = pathBufferStr;
 	switch (specialFolder)
 	{
-		case SpecialFolder_SavesAndSettings: result = PrintInArenaStr(memArena, "%.*s/%.*s",             pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
-		case SpecialFolder_Screenshots:      result = PrintInArenaStr(memArena, "%.*s/%.*s Screenshots", pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
-		case SpecialFolder_Share:            result = PrintInArenaStr(memArena, "%.*s/%.*s",             pathBufferStr.length, pathBufferStr.pntr, applicationName.length, applicationName.pntr); break;
+		case SpecialFolder_SavesAndSettings: result = PrintInArenaStr(memArena, "%.*s/%.*s",             StrPrint(pathBufferStr), StrPrint(applicationName)); break;
+		case SpecialFolder_Screenshots:      result = PrintInArenaStr(memArena, "%.*s/%.*s Screenshots", StrPrint(pathBufferStr), StrPrint(applicationName)); break;
+		case SpecialFolder_Share:            result = PrintInArenaStr(memArena, "%.*s/%.*s",             StrPrint(pathBufferStr), StrPrint(applicationName)); break;
 		default: Assert(false); break;
 	}
 	

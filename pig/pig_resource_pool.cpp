@@ -63,7 +63,7 @@ void ClearResourcePoolArray(ResourcePool_t* pool, ResourceType_t resourceType, b
 		DebugAssert(entry->arrayIndex == eIndex);
 		if (printLeaks && entry->id != 0 && entry->refCount > 0)
 		{
-			PrintLine_E("Resource Pool %s[%llu] leaked %llu reference%s! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->refCount, ((entry->refCount == 1) ? "" : "s"), entry->filePath.length, entry->filePath.chars);
+			PrintLine_E("Resource Pool %s[%llu] leaked %llu reference%s! \"%.*s\"", GetResourceTypeStr(resourceType), eIndex, entry->refCount, ((entry->refCount == 1) ? "" : "s"), StrPrint(entry->filePath));
 		}
 		if (resourceType == ResourceType_Sound || resourceType == ResourceType_Music)
 		{
@@ -475,7 +475,7 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	bool loadSuccess = LoadTexture(mainHeap, &tempTexture, filePath, pixelated, repeating, imageDataOut);
 	if (!loadSuccess)
 	{
-		PrintLine_E("Failed to load Texture for pool from \"%.*s\": Error %s", filePath.length, filePath.pntr, GetTextureErrorStr(tempTexture.error));
+		PrintLine_E("Failed to load Texture for pool from \"%.*s\": Error %s", StrPrint(filePath), GetTextureErrorStr(tempTexture.error));
 		return TextureRef_Invalid;
 	}
 	
@@ -533,7 +533,7 @@ SpriteSheetRef_t ResourcePoolLoadSpriteSheet(ResourcePool_t* pool, MyStr_t fileP
 	bool loadSuccess = LoadSpriteSheet(mainHeap, &tempSheet, filePath, padding, numFrames, pixelated, useTextureArray);
 	if (!loadSuccess)
 	{
-		PrintLine_E("Failed to load SpriteSheet for pool from \"%.*s\": Error %s", filePath.length, filePath.pntr, GetSpriteSheetErrorStr(tempSheet.error));
+		PrintLine_E("Failed to load SpriteSheet for pool from \"%.*s\": Error %s", StrPrint(filePath), GetSpriteSheetErrorStr(tempSheet.error));
 		return SpriteSheetRef_Invalid;
 	}
 	
@@ -564,7 +564,7 @@ ShaderRef_t ResourcePoolLoadShader(ResourcePool_t* pool, MyStr_t filePath, Verte
 	if (!loadSuccess)
 	{
 		//TODO: Copy the nice error output from Pig_LoadShaderResource
-		PrintLine_E("Failed to load Shader for pool from \"%.*s\": Error %s", filePath.length, filePath.pntr, GetShaderErrorStr(tempShader.error));
+		PrintLine_E("Failed to load Shader for pool from \"%.*s\": Error %s", StrPrint(filePath), GetShaderErrorStr(tempShader.error));
 		return ShaderRef_Invalid;
 	}
 	
@@ -619,7 +619,7 @@ SoundRef_t ResourcePoolLoadSound(ResourcePool_t* pool, MyStr_t filePath)
 	Sound_t tempSound = {};
 	if (!TryLoadSoundOggOrWav(&soundParseLog, filePath, &pig->audioHeap, &tempSound))
 	{
-		PrintLine_E("Failed to load sound for pool from \"%.*s\"", filePath.length, filePath.chars);
+		PrintLine_E("Failed to load sound for pool from \"%.*s\"", StrPrint(filePath));
 		DumpProcessLog(&soundParseLog, "Sound Parse Log");
 		return SoundRef_Invalid;
 	}
@@ -653,7 +653,7 @@ MusicRef_t ResourcePoolLoadMusic(ResourcePool_t* pool, MyStr_t filePath)
 	Sound_t tempMusic = {};
 	if (!TryLoadSoundOggOrWav(&musicParseLog, filePath, &pig->audioHeap, &tempMusic))
 	{
-		PrintLine_E("Failed to load music for pool from \"%.*s\"", filePath.length, filePath.chars);
+		PrintLine_E("Failed to load music for pool from \"%.*s\"", StrPrint(filePath));
 		DumpProcessLog(&musicParseLog, "Music Parse Log");
 		return MusicRef_Invalid;
 	}
@@ -687,7 +687,7 @@ ModelRef_t ResourcePoolLoadModel(ResourcePool_t* pool, MyStr_t filePath, ModelTe
 	Model_t tempModel = {};
 	if (!TryLoadModel(log, filePath, textureType, copyVertices, flipUvY, pool->allocArena, &tempModel))
 	{
-		PrintLine_E("Failed to load model for pool from \"%.*s\"", filePath.length, filePath.chars);
+		PrintLine_E("Failed to load model for pool from \"%.*s\"", StrPrint(filePath));
 		if (log == nullptr) { DumpProcessLog(&modelParseLog, "Model Parse Log"); }
 		return ModelRef_Invalid;
 	}

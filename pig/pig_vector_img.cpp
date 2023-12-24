@@ -519,7 +519,7 @@ bool GenerateVertBufferForVectorImgPathShape(VectorImgShape_t* shape, u64 numCur
 		u64* triangulationIndices = Triangulate2DEarClip(TempArena, TempArena, subPartVertCount, subPartVertices, &triangulationNumIndices, ignoreFailures);
 		if (triangulationIndices == nullptr)
 		{
-			PrintLine_E("Triangulate2DEarClip failed on shape \"%.*s\" ID \"%.*s\"!", shape->name.length, shape->name.pntr, shape->idStr.length, shape->idStr.pntr);
+			PrintLine_E("Triangulate2DEarClip failed on shape \"%.*s\" ID \"%.*s\"!", StrPrint(shape->name), StrPrint(shape->idStr));
 			for (u64 vIndex = 0; vIndex < subPartVertCount; vIndex++)
 			{
 				PrintLine_W("(%g, %g)", subPartVertices[vIndex].x, subPartVertices[vIndex].y);
@@ -578,8 +578,8 @@ void PrintStructureOfVectorImgPartRecurse(const VectorImg_t* image, const Vector
 		{
 			PrintLine_I("%s--Circle[%llu]: \"%.*s\" ID: \"%.*s\" (%.1f, %.1f) radius %.1f",
 				indentStr.pntr, shape->index,
-				shape->name.length, shape->name.pntr,
-				shape->idStr.length, shape->idStr.pntr,
+				StrPrint(shape->name),
+				StrPrint(shape->idStr),
 				shape->circle.center.x, shape->circle.center.y, shape->circle.radius
 			);
 		}
@@ -587,8 +587,8 @@ void PrintStructureOfVectorImgPartRecurse(const VectorImg_t* image, const Vector
 		{
 			PrintLine_I("%s--Rec[%llu]: \"%.*s\" ID: \"%.*s\" (%.1f, %.1f) size %.1fx%.1f rot %.1fdeg rounded (%.1f, %.1f)",
 				indentStr.pntr, shape->index,
-				shape->name.length, shape->name.pntr,
-				shape->idStr.length, shape->idStr.pntr,
+				StrPrint(shape->name),
+				StrPrint(shape->idStr),
 				shape->rectangle.center.x, shape->rectangle.center.y,
 				shape->rectangle.size.width, shape->rectangle.size.height,
 				ToDegrees32(shape->rectangle.rotation),
@@ -599,8 +599,8 @@ void PrintStructureOfVectorImgPartRecurse(const VectorImg_t* image, const Vector
 		{
 			PrintLine_I("%s--%s[%llu]: \"%.*s\" ID: \"%.*s\" (%.1f, %.1f, %.1f, %.1f)",
 				indentStr.pntr, GetVectorImgShapeTypeStr(shape->type), shape->index,
-				shape->name.length, shape->name.pntr,
-				shape->idStr.length, shape->idStr.pntr,
+				StrPrint(shape->name),
+				StrPrint(shape->idStr),
 				shape->bounds.x, shape->bounds.y, shape->bounds.width, shape->bounds.height
 			);
 		}

@@ -16,7 +16,7 @@ Line Rider?
 Space Invaders
 Shmup (Airplane game)
 Memory Game (Match cards)
-Flappy Bird
+Flappy Bird / Jetpack Joyride
 Cookie Clicker
 Match 3 game
 Jelly Car
@@ -38,6 +38,7 @@ Text Adventure
 Pinball (Peggle)
 Tempest (Tunnel Game)
 3D Picross
+Neko Atsume
 
 Super Hexagon
 Accelerometer Based Ball Maze Game

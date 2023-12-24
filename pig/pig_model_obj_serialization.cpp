@@ -175,7 +175,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "newmtl on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -186,7 +186,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -197,11 +197,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &currentMaterial->specularExponent, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\" as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -213,7 +213,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -224,7 +224,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -235,11 +235,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &currentMaterial->opticalDensity, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\" as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -251,7 +251,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -262,7 +262,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -273,11 +273,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &currentMaterial->dissolve, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\" as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -289,7 +289,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -300,7 +300,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -311,11 +311,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseI8(linePieces[1], &currentMaterial->illuminationType, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\" as i8 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -327,7 +327,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -338,7 +338,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -350,11 +350,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &colorVec.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".x as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -363,11 +363,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[2], &colorVec.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".y as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[2].length, linePieces[2].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[2]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -376,11 +376,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[3], &colorVec.z, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".z as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[3].length, linePieces[3].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[3]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -396,7 +396,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -407,7 +407,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -419,11 +419,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &colorVec.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".x as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -432,11 +432,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[2], &colorVec.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".y as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[2].length, linePieces[2].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[2]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -445,11 +445,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[3], &colorVec.z, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".z as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[3].length, linePieces[3].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[3]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -465,7 +465,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -476,7 +476,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -488,11 +488,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					if (!TryParseR32(linePieces[1], &colorVec.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".x as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[1].length, linePieces[1].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[1]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -501,11 +501,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[2], &colorVec.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".y as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[2].length, linePieces[2].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[2]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -514,11 +514,11 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					else if (!TryParseR32(linePieces[3], &colorVec.z, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse %.*s value \"%.*s\".z as r32 on line %llu for material \"%.*s\": \"%.*s\"",
-							linePieces[0].length, linePieces[0].pntr,
-							linePieces[3].length, linePieces[3].pntr,
+							StrPrint(linePieces[0]),
+							StrPrint(linePieces[3]),
 							lineParser.lineIndex+1,
-							currentMaterial->name.length, currentMaterial->name.pntr,
-							fileLine.length, fileLine.pntr
+							StrPrint(currentMaterial->name),
+							StrPrint(fileLine)
 						);
 						LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 						TempPopMark();
@@ -534,7 +534,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -545,7 +545,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -561,7 +561,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of >= 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -572,7 +572,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -588,7 +588,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of >= 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -599,7 +599,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			{
 				if (currentMaterial == nullptr)
 				{
-					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found material attrib %.*s on line %llu before first newmtl: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_MaterialAttribBeforeNew);
 					TempPopMark();
 					return false;
@@ -615,7 +615,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 					LogPrintLine_E(log, "Ns on line %llu had %llu instead of >= 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					TempPopMark();
@@ -625,7 +625,7 @@ bool TryDeserObjMaterialLibFile(MyStr_t matLibFileContents, ProcessLog_t* log, O
 			else
 			{
 				//TODO: Turn this warning output back on once we've actually handled all possible values
-				// LogPrintLine_D(log, "Unknown material attribute \"%.*s\" found at beginning of line %llu: \"%.*s\"", linePieces[0].length, linePieces[0].pntr, lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+				// LogPrintLine_D(log, "Unknown material attribute \"%.*s\" found at beginning of line %llu: \"%.*s\"", StrPrint(linePieces[0]), lineParser.lineIndex+1, StrPrint(fileLine));
 			}
 			
 			TempPopMark();
@@ -714,7 +714,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					LogPrintLine_E(log, "object on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
@@ -737,7 +737,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					LogPrintLine_E(log, "Vertex on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
@@ -750,9 +750,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Vertex on line %llu x value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[1].length, linePieces[1].pntr,
+						StrPrint(linePieces[1]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -763,9 +763,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Vertex on line %llu y value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[2].length, linePieces[2].pntr,
+						StrPrint(linePieces[2]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -776,9 +776,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Vertex on line %llu z value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[3].length, linePieces[3].pntr,
+						StrPrint(linePieces[3]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -789,7 +789,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				v3* newVert = VarArrayAdd(&objData->vertices, v3);
 				NotNull(newVert);
 				*newVert = newVertValue;
-				// PrintLine_D("Vert[%u]: (%f, %f, %f) from \"%.*s\"", objData->vertices.length-1, newVertValue.x, newVertValue.y, newVertValue.z, fileLine.length, fileLine.pntr);
+				// PrintLine_D("Vert[%u]: (%f, %f, %f) from \"%.*s\"", objData->vertices.length-1, newVertValue.x, newVertValue.y, newVertValue.z, StrPrint(fileLine));
 			}
 			else if (StrEquals(linePieces[0], "vn")) //normal
 			{
@@ -798,7 +798,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					LogPrintLine_E(log, "Normal on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
@@ -811,9 +811,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Normal on line %llu x value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[1].length, linePieces[1].pntr,
+						StrPrint(linePieces[1]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -824,9 +824,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Normal on line %llu y value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[2].length, linePieces[2].pntr,
+						StrPrint(linePieces[2]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -837,9 +837,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "Normal on line %llu z value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[3].length, linePieces[3].pntr,
+						StrPrint(linePieces[3]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -858,7 +858,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					LogPrintLine_E(log, "TexCoord on line %llu had %llu instead of 4 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
@@ -871,9 +871,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "TexCoord on line %llu x value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[1].length, linePieces[1].pntr,
+						StrPrint(linePieces[1]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -884,9 +884,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				{
 					LogPrintLine_E(log, "TexCoord on line %llu y value doesn't parse as r32 \"%.*s\" error %s: \"%.*s\"",
 						lineParser.lineIndex+1,
-						linePieces[2].length, linePieces[2].pntr,
+						StrPrint(linePieces[2]),
 						GetTryParseFailureReasonStr(log->parseFailureReason),
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_FloatParseFailure);
 					FreeObjModelData(objData);
@@ -906,7 +906,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 			{
 				if (numLinePieces != 4)
 				{
-					LogPrintLine_E(log, "Found face with %llu vertices. We only support faces with 3 vertices: \"%.*s\"", numLinePieces-1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Found face with %llu vertices. We only support faces with 3 vertices: \"%.*s\"", numLinePieces-1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -914,7 +914,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				}
 				if (currentObject == nullptr)
 				{
-					LogPrintLine_E(log, "Faces started being defined on line %llu before a object was started: \"%.*s\"", lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Faces started being defined on line %llu before a object was started: \"%.*s\"", lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_FacesBeforeObjectStart);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -922,7 +922,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				}
 				if (!materialSelected)
 				{
-					LogPrintLine_E(log, "Faces started being defined on line %llu before a material was selected: \"%.*s\"", lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "Faces started being defined on line %llu before a material was selected: \"%.*s\"", lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_FacesBeforeMaterialSelect);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -938,7 +938,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					
 					if (numIndexPieces != 3)
 					{
-						LogPrintLine_E(log, "Face on line %llu has vertex[%u] with %llu indices. We expected to find 3 indices: \"%.*s\"", lineParser.lineIndex+1, vIndex, numIndexPieces, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu has vertex[%u] with %llu indices. We expected to find 3 indices: \"%.*s\"", lineParser.lineIndex+1, vIndex, numIndexPieces, StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_FaceVertIndexCountIsWrong);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -948,7 +948,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					
 					if (!TryParseU64(indexPieces[0], &faceValue.vertexIndices[vIndex], &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse vertex index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, indexPieces[0].length, indexPieces[0].pntr, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse vertex index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, StrPrint(indexPieces[0]), StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IntParseFailure);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -957,7 +957,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					}
 					else if (!TryParseU64(indexPieces[1], &faceValue.texCoordIndices[vIndex], &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse texCoord index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, indexPieces[1].length, indexPieces[1].pntr, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse texCoord index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, StrPrint(indexPieces[1]), StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IntParseFailure);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -966,7 +966,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					}
 					else if (!TryParseU64(indexPieces[2], &faceValue.normalIndices[vIndex], &log->parseFailureReason))
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse normal index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, indexPieces[2].length, indexPieces[2].pntr, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] couldn't parse normal index \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, vIndex, StrPrint(indexPieces[2]), StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IntParseFailure);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -976,7 +976,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					
 					if (faceValue.vertexIndices[vIndex] == 0 || faceValue.vertexIndices[vIndex] > objData->vertices.length)
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid vertex index %llu when we have %llu vertices: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.vertexIndices[vIndex], objData->vertices.length, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid vertex index %llu when we have %llu vertices: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.vertexIndices[vIndex], objData->vertices.length, StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IndexOutOfBounds);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -985,7 +985,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					}
 					else if (faceValue.texCoordIndices[vIndex] == 0 || faceValue.texCoordIndices[vIndex] > objData->texCoords.length)
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid texCoord index %llu when we have %llu texCoords: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.texCoordIndices[vIndex], objData->texCoords.length, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid texCoord index %llu when we have %llu texCoords: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.texCoordIndices[vIndex], objData->texCoords.length, StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IndexOutOfBounds);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -994,7 +994,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					}
 					else if (faceValue.normalIndices[vIndex] == 0 || faceValue.normalIndices[vIndex] > objData->normals.length)
 					{
-						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid normal index %llu when we have %llu normals: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.normalIndices[vIndex], objData->normals.length, fileLine.length, fileLine.pntr);
+						LogPrintLine_E(log, "Face on line %llu vertex[%u] has invalid normal index %llu when we have %llu normals: \"%.*s\"", lineParser.lineIndex+1, vIndex, faceValue.normalIndices[vIndex], objData->normals.length, StrPrint(fileLine));
 						LogExitFailure(log, DeserObjFileError_IndexOutOfBounds);
 						FreeObjModelData(objData);
 						TempPopMark();
@@ -1020,7 +1020,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				//TODO: Add support for smoothing groups
 				if (!StrEqualsIgnoreCase(linePieces[1], "off"))
 				{
-					LogPrintLine_W(log, "This model file has smoothing group \"%.*s\" which we don't support yet", linePieces[1].length, linePieces[1].chars);
+					LogPrintLine_W(log, "This model file has smoothing group \"%.*s\" which we don't support yet", StrPrint(linePieces[1]));
 					log->hadWarnings = true;
 				}
 			}
@@ -1028,7 +1028,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 			{
 				if (numLinePieces < 2)
 				{
-					LogPrintLine_E(log, "mtllib on line %llu has no filePath following it: \"%.*s\"", lineParser.lineIndex+1, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "mtllib on line %llu has no filePath following it: \"%.*s\"", lineParser.lineIndex+1, StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -1037,13 +1037,13 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				
 				MyStr_t fileName = NewStr((u64)((fileLine.pntr + fileLine.length) - linePieces[1].pntr), linePieces[1].pntr);
 				//TODO: Should we check to make sure the file path is relative? (Doesn't start with C:/ or a /)
-				// PrintLine_D("The obj file wants us to use a material library \"%.*s\"", fileName.length, fileName.pntr);
+				// PrintLine_D("The obj file wants us to use a material library \"%.*s\"", StrPrint(fileName));
 				TempPushMark();
-				MyStr_t filePath = TempPrintStr("%.*s%.*s", folderPath.length, folderPath.chars, fileName.length, fileName.pntr);
+				MyStr_t filePath = TempPrintStr("%.*s%.*s", StrPrint(folderPath), StrPrint(fileName));
 				PlatFileContents_t matLibFile = {};
 				if (!plat->ReadFileContents(filePath, &matLibFile))
 				{
-					LogPrintLine_E(log, "On line %llu couldn't find material library file at \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, filePath.length, filePath.pntr, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "On line %llu couldn't find material library file at \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, StrPrint(filePath), StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_CouldntFindMaterialLibrary);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -1081,7 +1081,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 					LogPrintLine_E(log, "usemtl on line %llu had %llu instead of 2 parts: \"%.*s\"",
 						lineParser.lineIndex+1,
 						numLinePieces,
-						fileLine.length, fileLine.pntr
+						StrPrint(fileLine)
 					);
 					LogExitFailure(log, DeserObjFileError_LinePieceCountIsWrong);
 					FreeObjModelData(objData);
@@ -1097,7 +1097,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				}
 				else
 				{
-					LogPrintLine_E(log, "usemtl on line %llu has unknown material name \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, linePieces[1].length, linePieces[1].pntr, fileLine.length, fileLine.pntr);
+					LogPrintLine_E(log, "usemtl on line %llu has unknown material name \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, StrPrint(linePieces[1]), StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_UnknownMaterial);
 					FreeObjModelData(objData);
 					TempPopMark();
@@ -1107,9 +1107,9 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 			else
 			{
 				LogPrintLine_W(log, "WARNING: Unknown command string \"%.*s\" found at beginning of line %llu: \"%.*s\"",
-					linePieces[0].length, linePieces[0].pntr,
+					StrPrint(linePieces[0]),
 					lineParser.lineIndex+1,
-					fileLine.length, fileLine.pntr
+					StrPrint(fileLine)
 				);
 				log->hadWarnings = true;
 			}

@@ -198,7 +198,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	for (u32 aIndex = 0; aIndex < Platform->programArgs.count; aIndex++)
 	{
 		MyStr_t* argument = &Platform->programArgs.args[aIndex];
-		PrintLine_D(" [%u]: \"%.*s\"", aIndex, argument->length, argument->pntr);
+		PrintLine_D(" [%u]: \"%.*s\"", aIndex, StrPntrPrint(argument));
 	}
 	
 	// +======================================+

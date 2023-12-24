@@ -338,11 +338,11 @@ MyStr_t GetDebugConsoleLinesAsCopyText(DebugConsole_t* console, DebugConsoleText
 				{
 					//TODO: Add timestamp and dbgLevel info to prefixes
 					u64 fileNameIndent = (fileName.length <= longestFileName) ? (longestFileName - fileName.length) : 0;
-					TwoPassPrint(result.pntr, result.length, &byteIndex, "[%*s%.*s:%4llu]: %.*s\n", fileNameIndent, "", fileName.length, fileName.pntr, dbgLine->fileLineNumber, selectedText.length, selectedText.pntr);
+					TwoPassPrint(result.pntr, result.length, &byteIndex, "[%*s%.*s:%4llu]: %.*s\n", fileNameIndent, "", StrPrint(fileName), dbgLine->fileLineNumber, StrPrint(selectedText));
 				}
 				else
 				{
-					TwoPassPrint(result.pntr, result.length, &byteIndex, "%.*s\n", selectedText.length, selectedText.pntr);
+					TwoPassPrint(result.pntr, result.length, &byteIndex, "%.*s\n", StrPrint(selectedText));
 				}
 				
 				if (lineIndex == maxPos.lineIndex) { break; } //to avoid an underflow when maxPos.lineIndex == 0
@@ -451,7 +451,7 @@ void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, bool forceShow
 				newItem->command = AllocString(mainHeap, &registeredCommand->command);
 				if (registeredCommand->description.length > 0)
 				{
-					newItem->displayText = PrintInArenaStr(mainHeap, "%s%.*s", formattedCommandStr, registeredCommand->description.length, registeredCommand->description.pntr);
+					newItem->displayText = PrintInArenaStr(mainHeap, "%s%.*s", formattedCommandStr, StrPrint(registeredCommand->description));
 				}
 				else
 				{
@@ -1056,7 +1056,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				console->recallIndex--;
 				if (console->recallIndex == 0)
 				{
-					// PrintLine_D("Recalling suspended text: \"%.*s\"", console->suspendedInputStr.length, console->suspendedInputStr.pntr);
+					// PrintLine_D("Recalling suspended text: \"%.*s\"", StrPrint(console->suspendedInputStr));
 					TextboxSetText(&console->inputTextbox, console->suspendedInputStr);
 					FreeString(mainHeap, &console->suspendedInputStr);
 					console->suspendedInputStr = MyStr_Empty;
@@ -1328,12 +1328,12 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					{
 						if (!plat->ShowFile(outputFilePath))
 						{
-							PrintLine_E("Failed to show output file at \"%.*s\"", outputFilePath.length, outputFilePath.pntr);
+							PrintLine_E("Failed to show output file at \"%.*s\"", StrPrint(outputFilePath));
 						}
 					}
 					else
 					{
-						PrintLine_E("Failed to write %llu chars to file \"%.*s\"", selectedText.length, outputFilePath.length, outputFilePath.pntr);
+						PrintLine_E("Failed to write %llu chars to file \"%.*s\"", selectedText.length, StrPrint(outputFilePath));
 					}
 				}
 				FreeScratchArena(scratch);
@@ -1610,7 +1610,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					pigOut->cursorType = PlatCursor_Pointer;
 					if (MousePressedAndHandleExtended(MouseBtn_Left))
 					{
-						// PrintLine_I("Clicked on file \"%.*s\" line %u", filePath.length, filePath.pntr, dbgLine->fileLineNumber);
+						// PrintLine_I("Clicked on file \"%.*s\" line %u", StrPrint(filePath), dbgLine->fileLineNumber);
 						if (!plat->ShowSourceFile(filePath, dbgLine->fileLineNumber))
 						{
 							DebugAssert_(false);

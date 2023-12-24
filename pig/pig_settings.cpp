@@ -46,7 +46,7 @@ MyStr_t PigGetSettingsFilePath(MemArena_t* tempArena, MemArena_t* memArena, MySt
 	MyStr_t settingsFolderPath = getSpecialFolderPathPntr(SpecialFolder_SavesAndSettings, applicationName, tempArena);
 	if (settingsFolderPath.length > 0)
 	{
-		return PrintInArenaStr(memArena, "%.*s/%.*s", settingsFolderPath.length, settingsFolderPath.pntr, fileName.length, fileName.pntr);
+		return PrintInArenaStr(memArena, "%.*s/%.*s", StrPrint(settingsFolderPath), StrPrint(fileName));
 	}
 	return MyStr_Empty;
 }
@@ -115,7 +115,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 		{
 			if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 			{
-				LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), token.str.length, token.str.pntr);
+				LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
 				LogExitFailure(log, PigTryDeserSettingsError_TokenBeforeFilePrefix);
 				return false;
 			}
@@ -139,7 +139,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 					{
 						if (token.str.length != PIG_SETTINGS_FILE_PREFIX_LENGTH || MyMemCompare(token.str.pntr, PIG_SETTINGS_FILE_PREFIX_STR, PIG_SETTINGS_FILE_PREFIX_LENGTH) != 0)
 						{
-							LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+							LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
 							LogExitFailure(log, PigTryDeserSettingsError_InvalidFilePrefix);
 							return false;
 						}
@@ -147,7 +147,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 					}
 					else
 					{
-						LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
 						LogExitFailure(log, PigTryDeserSettingsError_MultipleFilePrefix);
 						return false;
 					}
@@ -164,7 +164,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 					}
 					else if (token.value.length == 0)
 					{
-						if (!isSecondPass) { LogPrintLine_W(log, "WARNING: Empty value for setting \"%.*s\" on line %llu", token.key.length, token.key.pntr, textParser.lineParser.lineIndex+1); log->hadWarnings = true; }
+						if (!isSecondPass) { LogPrintLine_W(log, "WARNING: Empty value for setting \"%.*s\" on line %llu", StrPrint(token.key), textParser.lineParser.lineIndex+1); log->hadWarnings = true; }
 					}
 					else
 					{
@@ -192,7 +192,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 				// +==============================+
 				case ParsingTokenType_Unknown:
 				{
-					if (!isSecondPass) { LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr); log->hadWarnings = true; }
+					if (!isSecondPass) { LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str)); log->hadWarnings = true; }
 				} break;
 				
 				default: DebugAssert(false); break;
@@ -243,7 +243,7 @@ bool PigTryLoadSettings(MyStr_t filePath, ProcessLog_t* log, PigSettings_t* sett
 	}
 	else
 	{
-		LogPrintLine_E(log, "Failed to open settings file at \"%.*s\"", filePath.length, filePath.pntr);
+		LogPrintLine_E(log, "Failed to open settings file at \"%.*s\"", StrPrint(filePath));
 		LogExitFailure(log, PigTryDeserSettingsError_CantOpenFile);
 	}
 	return result;
@@ -268,7 +268,7 @@ MyStr_t PigSerializeSettings(const PigSettings_t* settings, MemArena_t* memArena
 		VarArrayLoop(&settings->entries, sIndex)
 		{
 			VarArrayLoopGet(PigSettingsEntry_t, setting, &settings->entries, sIndex);
-			TwoPassPrint(result.pntr, result.length, &byteIndex, "%.*s: %.*s\n", setting->key.length, setting->key.pntr, setting->value.length, setting->value.pntr);
+			TwoPassPrint(result.pntr, result.length, &byteIndex, "%.*s: %.*s\n", StrPrint(setting->key), StrPrint(setting->value));
 		}
 		
 		if (pass == 0)
@@ -294,7 +294,7 @@ bool PigTrySaveSettings(MyStr_t filePath, const PigSettings_t* settings, MemAren
 	
 	if (!CreateFoldersForPath(filePath))
 	{
-		PrintLine_E("Failed to create parent folders for settings file at \"%.*s\"", filePath.length, filePath.pntr);
+		PrintLine_E("Failed to create parent folders for settings file at \"%.*s\"", StrPrint(filePath));
 		return false;
 	}
 	

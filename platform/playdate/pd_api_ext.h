@@ -166,6 +166,54 @@ void PdDrawTexturedRec(Texture_t texture, reci drawRec)
 	PdDrawTexturedRec(texture.bitmap, texture.size, drawRec);
 }
 
+bool currentClipRecActive = false;
+reci currentClipRec = { -1, -1, -1, -1 };
+reci PdSetClipRec(reci rectangle)
+{
+	reci oldClipRec = currentClipRec;
+	if (rectangle.x == -1 && rectangle.y == -1 &&
+		rectangle.width == -1 && rectangle.height == -1)
+	{
+		pd->graphics->clearClipRect();
+		currentClipRecActive = false;
+	}
+	else
+	{
+		pd->graphics->setClipRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+		currentClipRecActive = true;
+	}
+	currentClipRec = rectangle;
+	return oldClipRec;
+}
+reci PdAddClipRec(reci rectangle)
+{
+	if (currentClipRecActive)
+	{
+		return PdSetClipRec(ReciOverlap(currentClipRec, rectangle));
+	}
+	else
+	{
+		return PdSetClipRec(rectangle);
+	}
+}
+reci PdClearClipRec()
+{
+	return PdSetClipRec(NewReci(-1, -1, -1, -1));
+}
+
+void PdDrawTexturedRecPart(Texture_t texture, reci drawRec, reci sourceRec)
+{
+	reci oldClipRec = PdAddClipRec(drawRec);
+	//TODO: This needs to take sourceRec.size into account!
+	reci largerRec = NewReci(
+		drawRec.x - sourceRec.x,
+		drawRec.y - sourceRec.y,
+		texture.size
+	);
+	PdDrawTexturedRec(texture.bitmap, texture.size, largerRec);
+	PdSetClipRec(oldClipRec);
+}
+
 Texture_t whiteDotTexture = {};
 Texture_t blackDotTexture = {};
 void PdDrawRec(reci drawRec, LCDColor color = kColorBlack)

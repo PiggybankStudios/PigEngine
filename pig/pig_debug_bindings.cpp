@@ -145,7 +145,7 @@ MyStr_t PigGetDebugBindingsFilePath(MemArena_t* memArena, MyStr_t applicationNam
 	MyStr_t settingsFolderPath = plat->GetSpecialFolderPath(SpecialFolder_SavesAndSettings, applicationName, TempArena);
 	if (settingsFolderPath.length > 0)
 	{
-		return PrintInArenaStr(memArena, "%.*s/%.*s", settingsFolderPath.length, settingsFolderPath.pntr, fileName.length, fileName.pntr);
+		return PrintInArenaStr(memArena, "%.*s/%.*s", StrPrint(settingsFolderPath), StrPrint(fileName));
 	}
 	return MyStr_Empty;
 }
@@ -191,7 +191,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		{
 			if (log != nullptr)
 			{
-				LogPrintLine_W(log, "Unknown mouse button in binding: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+				LogPrintLine_W(log, "Unknown mouse button in binding: \"%.*s\"", StrPrint(bindingStr));
 				log->hadWarnings = true;
 			}
 			return false;
@@ -223,7 +223,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		{
 			if (log != nullptr)
 			{
-				LogPrintLine_W(log, "Unknown controller button in binding: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+				LogPrintLine_W(log, "Unknown controller button in binding: \"%.*s\"", StrPrint(bindingStr));
 				log->hadWarnings = true;
 			}
 			return false;
@@ -250,7 +250,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 				{
 					if (log != nullptr)
 					{
-						LogPrintLine_W(log, "Invalid UTF-8 found in binding str: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+						LogPrintLine_W(log, "Invalid UTF-8 found in binding str: \"%.*s\"", StrPrint(bindingStr));
 						log->hadWarnings = true;
 					}
 					return false;
@@ -270,7 +270,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 				{
 					if (log != nullptr)
 					{
-						LogPrintLine_W(log, "Binding has an empty piece: \"%.*s\"", bindingStr.length, bindingStr.pntr);
+						LogPrintLine_W(log, "Binding has an empty piece: \"%.*s\"", StrPrint(bindingStr));
 						log->hadWarnings = true;
 					}
 					return false;
@@ -302,7 +302,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 				{
 					if (log != nullptr)
 					{
-						LogPrintLine_W(log, "Unknown key \"%.*s\" in binding: \"%.*s\"", bindingPiece.length, bindingPiece.pntr, bindingStr.length, bindingStr.pntr);
+						LogPrintLine_W(log, "Unknown key \"%.*s\" in binding: \"%.*s\"", StrPrint(bindingPiece), StrPrint(bindingStr));
 						log->hadWarnings = true;
 					}
 					return false;
@@ -316,7 +316,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 					{
 						if (log != nullptr)
 						{
-							LogPrintLine_W(log, "Non modifier key %s used as modifier in binding: \"%.*s\"", GetKeyStr(key), bindingStr.length, bindingStr.pntr);
+							LogPrintLine_W(log, "Non modifier key %s used as modifier in binding: \"%.*s\"", GetKeyStr(key), StrPrint(bindingStr));
 							log->hadWarnings = true;
 						}
 						return false;
@@ -326,7 +326,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 					{
 						if (log != nullptr)
 						{
-							LogPrintLine_W(log, "Modifier key %s repeated in binding: \"%.*s\"", GetKeyStr(key), bindingStr.length, bindingStr.pntr);
+							LogPrintLine_W(log, "Modifier key %s repeated in binding: \"%.*s\"", GetKeyStr(key), StrPrint(bindingStr));
 							log->hadWarnings = true;
 						}
 						return false;
@@ -340,7 +340,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 					{
 						if (log != nullptr)
 						{
-							LogPrintLine_W(log, "Modifier key %s used as primary binding key in binding: \"%.*s\"", GetKeyStr(key), bindingStr.length, bindingStr.pntr);
+							LogPrintLine_W(log, "Modifier key %s used as primary binding key in binding: \"%.*s\"", GetKeyStr(key), StrPrint(bindingStr));
 							log->hadWarnings = true;
 						}
 						return false;
@@ -377,7 +377,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 	{
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
-			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), token.str.length, token.str.pntr);
+			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
 			LogExitFailure(log, PigTryDeserDebugBindingsError_TokenBeforeFilePrefix);
 			return false;
 		}
@@ -401,7 +401,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 				{
 					if (token.str.length != PIG_DBG_BINDINGS_FILE_PREFIX_LENGTH || MyMemCompare(token.str.pntr, PIG_DBG_BINDINGS_FILE_PREFIX_STR, PIG_DBG_BINDINGS_FILE_PREFIX_LENGTH) != 0)
 					{
-						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
 						LogExitFailure(log, PigTryDeserDebugBindingsError_InvalidFilePrefix);
 						return false;
 					}
@@ -409,7 +409,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 				}
 				else
 				{
-					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", token.str.length, token.str.pntr);
+					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
 					LogExitFailure(log, PigTryDeserDebugBindingsError_MultipleFilePrefix);
 					return false;
 				}
@@ -424,7 +424,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 				bool isValidBinding = PigTryDeserBindingStr(token.key, &binding, log);
 				if (!isValidBinding)
 				{
-					LogPrintLine_W(log, "Invalid binding on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+					LogPrintLine_W(log, "Invalid binding on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 					log->hadWarnings = true;
 					break;
 				}
@@ -452,7 +452,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 			// +==============================+
 			case ParsingTokenType_Unknown:
 			{
-				LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, token.str.length, token.str.pntr);
+				LogPrintLine_W(log, "WARNING: Unknown token in file line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
 				log->hadWarnings = true;
 			} break;
 			
@@ -488,12 +488,12 @@ bool PigTryLoadDebugBindings(MyStr_t filePath, ProcessLog_t* log, PigDebugBindin
 	{
 		if (plat->DoesFileExist(filePath, nullptr))
 		{
-			LogPrintLine_E(log, "Failed to open debug bindings file at \"%.*s\"", filePath.length, filePath.pntr);
+			LogPrintLine_E(log, "Failed to open debug bindings file at \"%.*s\"", StrPrint(filePath));
 			LogExitFailure(log, PigTryDeserDebugBindingsError_CantOpenFile);
 		}
 		else
 		{
-			LogPrintLine_W(log, "No debug bindings file found at \"%.*s\"", filePath.length, filePath.pntr);
+			LogPrintLine_W(log, "No debug bindings file found at \"%.*s\"", StrPrint(filePath));
 			log->hadWarnings = true;
 		}
 	}
@@ -534,17 +534,17 @@ void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t fi
 		if (PigTryLoadDebugBindings(filePath, &deserProcessLog, bindingsOut))
 		{
 			u64 numNewBindings = bindingsOut->entries.length - numBindingsBefore;
-			PrintLine_D("Loaded %llu debug binding%s from \"%.*s\"", numNewBindings, (numNewBindings == 1 ? "" : "s"), filePath.length, filePath.pntr);
+			PrintLine_D("Loaded %llu debug binding%s from \"%.*s\"", numNewBindings, (numNewBindings == 1 ? "" : "s"), StrPrint(filePath));
 		}
 		else
 		{
-			PrintLine_D("Failed to load debug bindings from \"%.*s\"", filePath.length, filePath.pntr);
+			PrintLine_D("Failed to load debug bindings from \"%.*s\"", StrPrint(filePath));
 		}
 		if (deserProcessLog.hadWarnings || deserProcessLog.hadErrors) { DumpProcessLog(&deserProcessLog, "Debug Bindings Parse Log"); }
 		FreeProcessLog(&deserProcessLog);
 	}
 	else
 	{
-		PrintLine_D("No debug bindings file found at \"%.*s\"", filePath.length, filePath.pntr);
+		PrintLine_D("No debug bindings file found at \"%.*s\"", StrPrint(filePath));
 	}
 }

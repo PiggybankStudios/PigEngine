@@ -267,7 +267,7 @@ const char* PrintTextureError(const Texture_t* texture)
 	NotNull(texture);
 	if (texture->error == TextureError_ApiError)
 	{
-		return TempPrint("Api: %.*s", texture->apiErrorStr.length, texture->apiErrorStr.pntr);
+		return TempPrint("Api: %.*s", StrPrint(texture->apiErrorStr));
 	}
 	else
 	{

@@ -884,7 +884,7 @@ void UpdateTextbox(Textbox_t* tb)
 				MyStr_t selectedText = TextboxGetSelectedText(tb, true);
 				if (!IsEmptyStr(selectedText))
 				{
-					PrintLine_D("Putting \"%.*s\" in the clipboard", selectedText.length, selectedText.pntr);
+					PrintLine_D("Putting \"%.*s\" in the clipboard", StrPrint(selectedText));
 					if (!plat->CopyTextToClipboard(selectedText))
 					{
 						NotifyPrint_E("Failed to copy %llu byte selected text to clipboard", selectedText.length);

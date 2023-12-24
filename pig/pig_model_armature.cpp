@@ -181,7 +181,7 @@ bool AddArmatureToModel(Model_t* model, const ModelArmature_t* armature, Process
 			foundBonesForAllParts = false;
 			if (log != nullptr)
 			{
-				LogPrintLine_W(log, "Couldn't find bone for model part \"%.*s\" (%llu bones in armature)", modelPart->name.length, modelPart->name.chars, model->armature.bones.length);
+				LogPrintLine_W(log, "Couldn't find bone for model part \"%.*s\" (%llu bones in armature)", StrPrint(modelPart->name), model->armature.bones.length);
 				log->hadWarnings = true;
 			}
 		}

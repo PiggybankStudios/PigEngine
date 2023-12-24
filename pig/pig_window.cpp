@@ -204,11 +204,11 @@ void Pig_SaveScreenshot(FrameBuffer_t* frameBuffer, reci subPartRec, MyStr_t fil
 	{
 		if (plat->SaveImageDataToFile(filePath, &imageData, PlatImageFormat_Png, nullptr))
 		{
-			PrintLine_I("Saved screenshot %dx%d (%llu bytes) to %.*s", imageData.width, imageData.height, imageData.dataSize, filePath.length, filePath.pntr);
+			PrintLine_I("Saved screenshot %dx%d (%llu bytes) to %.*s", imageData.width, imageData.height, imageData.dataSize, StrPrint(filePath));
 		}
 		else
 		{
-			NotifyPrint_E("Failed to save screenshot to %.*s!", filePath.length, filePath.pntr);
+			NotifyPrint_E("Failed to save screenshot to %.*s!", StrPrint(filePath));
 		}
 		FreeMem(&pig->largeAllocHeap, imageData.data8, imageData.dataSize);
 	}
@@ -261,11 +261,11 @@ void Pig_SaveGif(LinkedList_t* frames, MyStr_t filePath)
 	
 	if (plat->WriteEntireFile(filePath, gifResult.data, gifResult.dataSize))
 	{
-		NotifyPrint_I("Saved %llu frame %dx%d resolution %s GIF to \"%.*s\"", totalNumFrames, gifSize.width, gifSize.height, FormatBytesNt(gifResult.dataSize, TempArena), filePath.length, filePath.pntr);
+		NotifyPrint_I("Saved %llu frame %dx%d resolution %s GIF to \"%.*s\"", totalNumFrames, gifSize.width, gifSize.height, FormatBytesNt(gifResult.dataSize, TempArena), StrPrint(filePath));
 	}
 	else
 	{
-		NotifyPrint_E("Failed to save %s GIF data to \"%.*s\"", FormatBytesNt(gifResult.dataSize, TempArena), filePath.length, filePath.pntr);
+		NotifyPrint_E("Failed to save %s GIF data to \"%.*s\"", FormatBytesNt(gifResult.dataSize, TempArena), StrPrint(filePath));
 	}
 	
 	FreeLinkedList(&pig->currentWindowState->gifFrames);

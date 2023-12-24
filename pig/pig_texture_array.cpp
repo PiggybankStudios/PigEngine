@@ -216,13 +216,13 @@ bool LoadTextureArrayFromMultipleFiles(MemArena_t* memArena, Texture_t* textureO
 		{
 			if (imageFileContents.size == 0)
 			{
-				PrintLine_E("Image file %llu/%llu for texture array was empty at \"%.*s\"", fIndex+1, numFiles, filePath.length, filePath.pntr);
+				PrintLine_E("Image file %llu/%llu for texture array was empty at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
 				textureOut->error = TextureError_EmptyFile;
 				allImagesLoadedSuccessfully = false;
 			}
 			else if (!plat->TryParseImageFile(&imageFileContents, 4, imageDataPntr))
 			{
-				PrintLine_E("Failed to parse image %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, filePath.length, filePath.pntr);
+				PrintLine_E("Failed to parse image %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
 				textureOut->error = TextureError_ParseFailure;
 				allImagesLoadedSuccessfully = false;
 			}
@@ -230,7 +230,7 @@ bool LoadTextureArrayFromMultipleFiles(MemArena_t* memArena, Texture_t* textureO
 		}
 		else
 		{
-			PrintLine_E("Failed to open file %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, filePath.length, filePath.pntr);
+			PrintLine_E("Failed to open file %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
 			textureOut->error = TextureError_CouldntOpenFile;
 			allImagesLoadedSuccessfully = false;
 		}
