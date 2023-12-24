@@ -16,6 +16,13 @@ Description:
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #include "gylib/gy.h"
 
+// #define STB_IMAGE_IMPLEMENTATION
+// #define STBI_NO_STDIO
+// #define STBI_ASSERT(condition) Assert(condition)
+// #pragma GCC diagnostic ignored "-Wdouble-promotion"
+// #include "stb/stb_image.h"
+// #pragma GCC diagnostic warning "-Wdouble-promotion"
+
 // +--------------------------------------------------------------+
 // |                         Header Files                         |
 // +--------------------------------------------------------------+
