@@ -99,6 +99,27 @@ bool WriteEntireFile(MyStr_t path, MyStr_t contents)
 	return true;
 }
 
+bool DeleteFile(MyStr_t path)
+{
+	NotNullStr(&path);
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t pathNullTerm = AllocString(scratch, &path);
+	const int recursive = 0;
+	int unlinkResult = pd->file->unlink(pathNullTerm.chars, recursive);
+	FreeScratchArena(scratch);
+	return (unlinkResult == 0);
+}
+bool DeleteFolder(MyStr_t path)
+{
+	NotNullStr(&path);
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t pathNullTerm = AllocString(scratch, &path);
+	const int recursive = 1;
+	int unlinkResult = pd->file->unlink(pathNullTerm.chars, recursive);
+	FreeScratchArena(scratch);
+	return (unlinkResult == 0);
+}
+
 struct FilesInDir_t
 {
 	bool success;

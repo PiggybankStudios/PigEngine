@@ -21,7 +21,7 @@ r32 Oscillate(r32 min, r32 max, u64 periodMs, u64 offset = 0)
 	return OscillateBy(ProgramTime, min, max, periodMs, offset);
 }
 
-u64 TimeSince(u64 programTimeSnapshot)
+u32 TimeSince(u32 programTimeSnapshot)
 {
 	if (programTimeSnapshot <= ProgramTime)
 	{

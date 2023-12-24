@@ -101,7 +101,7 @@ struct AppInput_t
 	r32 realElapsedMs;
 	r32 realTimeScale;
 	
-	r32 crankAngle;
+	r32 crankAngle; //degrees
 	r32 crankAnglePrev;
 	r32 crankDelta;
 	bool crankMoved;
