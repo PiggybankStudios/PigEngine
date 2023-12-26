@@ -47,8 +47,10 @@ MemArena_t* fixedHeap = nullptr;
 MemArena_t* mainHeap = nullptr;
 AppInput_t* input = nullptr;
 
-const v2i ScreenSize = { LCD_COLUMNS, LCD_ROWS };
-const v2 ScreenSizef = { (r32)LCD_COLUMNS, (r32)LCD_ROWS };
+const v2i ScreenSize = { PLAYDATE_SCREEN_WIDTH, PLAYDATE_SCREEN_HEIGHT };
+const v2 ScreenSizef = { (r32)PLAYDATE_SCREEN_WIDTH, (r32)PLAYDATE_SCREEN_HEIGHT };
+const reci ScreenRec = { 0, 0, PLAYDATE_SCREEN_WIDTH, PLAYDATE_SCREEN_HEIGHT };
+const rec ScreenRecf = { 0.0f, 0.0f, (r32)PLAYDATE_SCREEN_WIDTH, (r32)PLAYDATE_SCREEN_HEIGHT };
 u32 ProgramTime = 0;
 r32 ElapsedMs = 0.0f;
 r32 TimeScale = 1.0f;
@@ -56,6 +58,7 @@ r32 TimeScale = 1.0f;
 // +--------------------------------------------------------------+
 // |                         Source Files                         |
 // +--------------------------------------------------------------+
+#include "performance.cpp"
 #include "scratch.cpp"
 #include "debug.cpp"
 #include "pig_helpers.cpp"

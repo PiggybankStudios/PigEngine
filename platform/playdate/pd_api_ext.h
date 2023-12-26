@@ -139,6 +139,10 @@ void PdDrawText(MyStr_t text, v2i position)
 {
 	pd->graphics->drawText(text.chars, text.length, kUTF8Encoding, renderOffset.x + position.x, renderOffset.y + position.y);
 }
+void PdDrawText(const char* textNullTerm, v2i position)
+{
+	PdDrawText(NewStr(textNullTerm), position);
+}
 void PdDrawTextPrint(v2i position, const char* formatString, ...)
 {
 	MemArena_t* scratch = GetScratchArena();
