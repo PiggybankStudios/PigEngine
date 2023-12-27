@@ -31,6 +31,7 @@ Description:
 #include "sprite_sheet.h"
 #include "font_range.h"
 #include "font.h"
+#include "offscreen_rendering.h"
 #include "input.h"
 #include "pd_api_ext.h"
 #include "perf_graph.h"
@@ -67,6 +68,7 @@ r32 TimeScale = 1.0f;
 #include "texture.cpp"
 #include "sprite_sheet.cpp"
 #include "font.cpp"
+#include "offscreen_rendering.cpp"
 #include "pig_render.cpp"
 #include "input.cpp"
 #include "playdate_input_hints.cpp"
@@ -105,6 +107,7 @@ EXTERN_C_START
 int MainUpdateCallback(void* userData)
 {
 	PdBeginFrame();
+	OffscreenRenderingBeginFrame();
 	UpdateAppInput();
 	UpdateSoundPool(&pig->soundPool);
 	UpdatePerfGraph(&pig->perfGraph);
@@ -175,6 +178,8 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 			WriteLine_O("+==============================+");
 			PrintLine_O("|     %s v%u.%u(%0u)     |", "Pig Engine", PIG_VERSION_MAJOR, PIG_VERSION_MINOR, PIG_VERSION_BUILD);
 			WriteLine_O("+==============================+");
+			
+			InitOffscreenRendering();
 			
 			pig->fpsDisplayMenuItem = pd->system->addCheckmarkMenuItem("FPS", 1, FpsToggledCallback, nullptr);
 			NotNull(pig->fpsDisplayMenuItem);

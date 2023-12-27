@@ -105,9 +105,11 @@ void MicroDelay(unsigned int milliseconds)
 // |                           Drawing                            |
 // +--------------------------------------------------------------+
 v2i renderOffset = Vec2i_Zero;
-void PdSetRenderOffset(v2i offset)
+v2i PdSetRenderOffset(v2i offset)
 {
+	v2i result = renderOffset;
 	renderOffset = offset;
+	return result;
 }
 
 Font_t* boundFont = nullptr;
@@ -170,6 +172,24 @@ void PdDrawTexturedRec(Texture_t texture, reci drawRec)
 	PdDrawTexturedRec(texture.bitmap, texture.size, drawRec);
 }
 
+void PdDrawTexturedObb(LCDBitmap* bitmap, v2i bitmapSize, obb2 drawObb)
+{
+	NotNull(bitmap);
+	pd->graphics->drawRotatedBitmap(
+		bitmap,
+		(int)(renderOffset.x + drawObb.x),
+		(int)(renderOffset.y + drawObb.y),
+		ToDegrees32(drawObb.rotation), //rotation
+		0.5f, 0.5f, //centerx/y
+		(r32)drawObb.width / (r32)bitmapSize.width, //scalex
+		(r32)drawObb.height / (r32)bitmapSize.height //scaley
+	);
+}
+void PdDrawTexturedObb(Texture_t texture, obb2 drawObb)
+{
+	PdDrawTexturedObb(texture.bitmap, texture.size, drawObb);
+}
+
 bool currentClipRecActive = false;
 reci currentClipRec = { -1, -1, -1, -1 };
 reci PdSetClipRec(reci rectangle)
@@ -183,7 +203,7 @@ reci PdSetClipRec(reci rectangle)
 	}
 	else
 	{
-		pd->graphics->setClipRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+		pd->graphics->setScreenClipRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 		currentClipRecActive = true;
 	}
 	currentClipRec = rectangle;
@@ -205,16 +225,34 @@ reci PdClearClipRec()
 	return PdSetClipRec(NewReci(-1, -1, -1, -1));
 }
 
-void PdDrawTexturedRecPart(Texture_t texture, reci drawRec, reci sourceRec)
+void PdDrawTexturedRecPart(Texture_t texture, reci drawRec, reci sourceRec, Dir2_t rotation = Dir2_Right)
 {
 	reci oldClipRec = PdAddClipRec(drawRec);
-	//TODO: This needs to take sourceRec.size into account!
-	reci largerRec = NewReci(
-		drawRec.x - sourceRec.x,
-		drawRec.y - sourceRec.y,
-		texture.size
-	);
-	PdDrawTexturedRec(texture.bitmap, texture.size, largerRec);
+	if (rotation == Dir2_Right)
+	{
+		//TODO: This needs to take sourceRec.size into account!
+		reci largerRec = NewReci(
+			drawRec.x - sourceRec.x,
+			drawRec.y - sourceRec.y,
+			texture.size
+		);
+		PdDrawTexturedRec(texture.bitmap, texture.size, largerRec);
+	}
+	else
+	{
+		//TODO: This needs to take sourceRec.size into account!
+		obb2 largerObb = NewObb2D(
+			ToVec2(drawRec.topLeft) + ToVec2(drawRec.size)/2,
+			ToVec2(texture.size),
+			GetDir2AngleR32(rotation)
+		);
+		v2 rightVec = ToVec2(rotation);
+		v2 downVec = ToVec2(Dir2Clockwise(rotation));
+		largerObb.center -= (((r32)sourceRec.x + (r32)sourceRec.width/2) - ((r32)texture.width/2)) * rightVec;
+		largerObb.center -= (((r32)sourceRec.y + (r32)sourceRec.height/2) - ((r32)texture.height/2)) * downVec;
+		PdDrawTexturedObb(texture.bitmap, texture.size, largerObb);
+		
+	}
 	PdSetClipRec(oldClipRec);
 }
 

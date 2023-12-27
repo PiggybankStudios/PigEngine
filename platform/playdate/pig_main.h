@@ -48,6 +48,8 @@ struct PigEngineState_t
 	bool debugEnabled;
 	
 	PerfGraph_t perfGraph;
+	
+	OffscreenRenderState_t offscreenRenderState;
 };
 
 #endif //  _PIG_MAIN_H
