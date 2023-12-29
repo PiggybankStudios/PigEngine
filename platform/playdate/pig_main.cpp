@@ -160,7 +160,7 @@ void HandleSystemEvent(PDSystemEvent event, uint32_t arg)
 				pigEngineState->initialized = true;
 				pigEngineState->stdHeap = stdHeapOnStack;
 			}
-			void* fixedHeapPntr = MyMalloc(FIXED_HEAP_SIZE);
+			void* fixedHeapPntr = AllocMem(&pigEngineState->stdHeap, FIXED_HEAP_SIZE);
 			NotNull(fixedHeapPntr);
 			//NOTE: On the playdate device, all of our structures need to be properly aligned.
 			//      To help encourage this, we made all our main arnas default to 8-byte alignment.

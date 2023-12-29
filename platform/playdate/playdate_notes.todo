@@ -17,6 +17,7 @@
 	[ ] AppState animated transitions?
 	[ ] Assertion actually freezes in emulator?
 	[ ] Notification system
+	[ ] "https://www.youtube.com/watch?v=J5G02ru0GyM"
 	[ ] "https://en.wikipedia.org/wiki/Sbrk" in function `_sbrk_r': sbrkr.c:(.text._sbrk_r+0xc): undefined reference to `_sbrk'
 	[ ] "https://gcc.gnu.org/onlinedocs/gcc/Spec-Files.html"
 	[ ] "https://gcc.gnu.org/onlinedocs/gcc-4.4.2/gcc/Preprocessor-Options.html"
@@ -53,11 +54,16 @@
 # PlayDate Specs:
 	[ ] "https://help.play.date/hardware/the-specs/"
 	[ ] Display:      400x240 (2.7-inch diagonal)
-	[ ] Memory (RAM): 16 MB
+	[ ] Memory (RAM): 16 MB (8kB L1 Cache)
 	[ ] Storage:      4 GB (Flash)
 	[ ] CPU:          168MHz Cortex M7 (ARMz STM32F746 IGK6 7BA3V VQ PHL 7B 803)
 	[ ] Total Size:   76mm x 74mm x 9mm
 	[ ] Cost:         $199
+	@ Chips
+	[ ] ARMz STM32F746IGK6 (Cortex-M7 DSP with FPU) "https://www.st.com/en/microcontrollers-microprocessors/stm32f746ig.html"
+	[ ] CIRRUS CS42L52 (24-bit low power audio codec with speaker driver) "https://www.cirrus.com/products/cs42l52/"
+	[ ] WINBOND W967D6HB (16MB RAM) "https://www.mouser.com/datasheet/2/949/w967d6hb_datasheet_pkg_a01-003_20130529-1489841.pdf"
+	[ ] THGBMDG5D1LBAIL (4GB flash memory) "https://datasheetspdf.com/pdf/1246822/Toshiba/THGBMDG5D1LBAIL/1"
 
 # Playdate Hardware Notes:
 	[ ] "https://www.ifixit.com/Teardown/Playdate+Teardown/143811"
