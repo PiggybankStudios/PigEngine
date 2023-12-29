@@ -55,11 +55,12 @@ SoundInstance_t NewSoundInstance(Sound_t* source)
 	return result;
 }
 
-void StartSoundInstance(SoundInstance_t* instance, int repeatCount = 1, r32 rate = 1.0f)
+void StartSoundInstance(SoundInstance_t* instance, r32 volume = 1.0f, int repeatCount = 1, r32 rate = 1.0f)
 {
 	NotNull(instance);
 	if (!instance->isValid) { return; }
 	
+	pd->sound->sampleplayer->setVolume(instance->player, volume, volume);
 	pd->sound->sampleplayer->play(instance->player, repeatCount, rate);
 	instance->isPlaying = true;
 	instance->repeatCount = repeatCount;
@@ -89,6 +90,7 @@ void UpdateSoundPool(SoundPool_t* pool)
 		if (instance->isValid && !instance->isPlaying)
 		{
 			instance->source->numInstances--;
+			pd->sound->sampleplayer->freePlayer(instance->player);
 			ClearPointer(instance);
 		}
 	}
@@ -108,18 +110,18 @@ SoundInstance_t* AllocSoundInstance(SoundPool_t* pool)
 	return nullptr;
 }
 
-SoundInstance_t* PlaySound(SoundPool_t* pool, Sound_t* source, int repeatCount = 1, r32 rate = 1.0f)
+SoundInstance_t* PlaySound(SoundPool_t* pool, Sound_t* source, r32 volume = 1.0f, int repeatCount = 1, r32 rate = 1.0f)
 {
 	NotNull(pool);
 	SoundInstance_t* instance = AllocSoundInstance(pool);
 	if (instance == nullptr) { return nullptr; }
 	*instance = NewSoundInstance(source);
-	StartSoundInstance(instance, repeatCount, rate);
+	StartSoundInstance(instance, volume, repeatCount, rate);
 	source->numInstances++;
 	return instance;
 }
-SoundInstance_t* PlaySound(Sound_t* source, int repeatCount = 1, r32 rate = 1.0f)
+SoundInstance_t* PlaySound(Sound_t* source, r32 volume = 1.0f, int repeatCount = 1, r32 rate = 1.0f)
 {
 	NotNull(pig);
-	return PlaySound(&pig->soundPool, source, repeatCount, rate);
+	return PlaySound(&pig->soundPool, source, volume, repeatCount, rate);
 }
