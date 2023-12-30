@@ -11,6 +11,7 @@ void InitializeAppInput()
 {
 	NotNull(input);
 	ClearPointer(input);
+	input->crankAngle = pd->system->getCrankAngle();
 }
 
 void UpdateAppInputBtnState(Btn_t btn, bool isDown)
