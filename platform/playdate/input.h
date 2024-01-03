@@ -79,6 +79,9 @@ struct BtnState_t
 	u8 numTransitions;
 	bool handled;
 	bool handledExtended;
+	u32 lastTransitionTime;
+	u32 lastHandleTime;
+	u32 holdTime;
 };
 struct AppInput_t
 {
