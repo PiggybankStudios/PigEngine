@@ -1,6 +1,12 @@
-*.sublime-workspace
 build/*
 !build/build.bat
-data/pdex.dll
-lib/include/gylib/
+lib/include/*
+!lib/include/README.txt
+*sublime-workspace
 engine/
+RawResources/
+data/*.exe
+data/*.dll
+data/*.pdb
+data/*.elf
+data/*.bin

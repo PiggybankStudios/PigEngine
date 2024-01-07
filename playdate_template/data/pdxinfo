@@ -1,5 +1,7 @@
-name=Template Game (Pig Engine)
+name=PlaydateTemplate
 author=Taylor Robbins
-description=Please fill out the description for the game!
-bundleID=com.piggybankstudios.template
-imagePath=
+description=No description given...
+bundleID=com.piggy.playdate_template
+imagePath=Resources/launch_card.png
+version=0.1
+buildNumber=1

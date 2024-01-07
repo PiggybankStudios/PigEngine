@@ -1,7 +1,7 @@
 /*
 File:   game_version.h
 Author: Taylor Robbins
-Date:   09\10\2023
+Date:   12\19\2023
 */
 
 #ifndef _GAME_VERSION_H
@@ -9,6 +9,6 @@ Date:   09\10\2023
 
 #define GAME_VERSION_MAJOR 0
 #define GAME_VERSION_MINOR 1
-#define GAME_VERSION_BUILD 0
+#define GAME_VERSION_BUILD 5
 
 #endif //  _GAME_VERSION_H

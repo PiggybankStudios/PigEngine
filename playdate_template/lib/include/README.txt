@@ -5,3 +5,7 @@ The list of libraries is given below:
 # gylib
 https://github.com/PiggybankStudios/gylib
 gylib folder
+
+# STB Libraries
+https://github.com/nothings/stb
+stb folder

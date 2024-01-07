@@ -1,29 +1,18 @@
 /*
-File:   game.h
+File:   game_state.h
 Author: Taylor Robbins
-Date:   09\08\2023
+Date:   12\19\2023
 */
 
-#ifndef _GAME_H
-#define _GAME_H
-
-#define MAIN_FONT_PATH  "/System/Fonts/Asheville-Sans-14-Bold.pft"
+#ifndef _GAME_STATE_H
+#define _GAME_STATE_H
 
 struct GameState_t
 {
 	bool initialized;
 	
-	Font_t mainFont;
-	SpriteSheet_t testSheet;
-	Texture_t backgroundTexture;
-	Texture_t pigTexture;
-	Sound_t testSound;
-	
-	MyStr_t pigEngineText;
-	v2 pigPos;
-	v2 pigVel;
-	v2i testSheetFrame;
-	bool isInverted;
+	PDMenuItem* mainMenuItem;
+	bool mainMenuRequested;
 };
 
-#endif //  _GAME_H
+#endif //  _GAME_STATE_H
