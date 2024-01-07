@@ -311,4 +311,14 @@ void PdDrawSheetFrame(SpriteSheet_t sheet, v2i frame, v2i position)
 	PdDrawSheetFrame(sheet, frame, NewReci(position, sheet.frameSize));
 }
 
+void PdDrawRotatedSheetFrame(SpriteSheet_t sheet, v2i frame, obb2 drawObb)
+{
+	i32 frameIndex = (frame.y * sheet.numFramesX) + frame.x;
+	LCDBitmap* frameBitmap = pd->graphics->getTableBitmap(sheet.table, frameIndex);
+	if (frameBitmap != nullptr)
+	{
+		PdDrawTexturedObb(frameBitmap, sheet.frameSize, drawObb);
+	}
+}
+
 #endif //  _PD_API_EXT_H
