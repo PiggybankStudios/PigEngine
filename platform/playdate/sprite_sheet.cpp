@@ -6,6 +6,16 @@ Description:
 	** Functions for SpriteSheet_t structure (which wraps LCDBitmapTable*)
 */
 
+void FreeSpriteSheet(SpriteSheet_t* sheetPntr)
+{
+	NotNull(sheetPntr);
+	if (sheetPntr->table != nullptr)
+	{
+		pd->graphics->freeBitmapTable(sheetPntr->table);
+	}
+	ClearPointer(sheetPntr);
+}
+
 SpriteSheet_t LoadSpriteSheet(MyStr_t path, i32 numFramesX)
 {
 	Assert(IsStrNullTerminated(path)); //TODO: Allocate it somewhere if it's not!
@@ -16,7 +26,7 @@ SpriteSheet_t LoadSpriteSheet(MyStr_t path, i32 numFramesX)
 	result.table = pd->graphics->loadBitmapTable(path.chars, &loadBitmapTableErrorStr);
 	if (loadBitmapTableErrorStr == nullptr)
 	{
-	result.isValid = true;
+		result.isValid = true;
 		
 		i32 frameIndex = 0;
 		while (true)

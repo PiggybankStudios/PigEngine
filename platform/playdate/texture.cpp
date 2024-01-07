@@ -6,6 +6,16 @@ Description:
 	** Functions for Texture_t structure (which wraps LCDBitmap*)
 */
 
+void FreeTexture(Texture_t* texturePntr)
+{
+	NotNull(texturePntr);
+	if (texturePntr->bitmap != nullptr)
+	{
+		pd->graphics->freeBitmap(texturePntr->bitmap);
+	}
+	ClearPointer(texturePntr);
+}
+
 Texture_t LoadTexture(MyStr_t path)
 {
 	MemArena_t* scratch = GetScratchArena();

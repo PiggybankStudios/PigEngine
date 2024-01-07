@@ -6,6 +6,16 @@ Description:
 	** Functions for Font_t structure (which wraps LCDFont*)
 */
 
+void FreeFont(Font_t* fontPntr)
+{
+	NotNull(fontPntr);
+	if (fontPntr->font != nullptr)
+	{
+		FreeMem(&pig->stdHeap, fontPntr->font);
+	}
+	ClearPointer(fontPntr);
+}
+
 Font_t LoadFont(MyStr_t path)
 {
 	MemArena_t* scratch = GetScratchArena();
