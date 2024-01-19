@@ -51,6 +51,7 @@ struct PigEngineState_t
 	bool fpsDisplayEnabled;
 	PDMenuItem* debugMenuItem;
 	bool debugEnabled;
+	bool debugOutputDisabledLevels[DbgLevel_NumLevels];
 	
 	PerfGraph_t perfGraph;
 	

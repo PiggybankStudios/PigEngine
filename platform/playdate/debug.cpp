@@ -36,10 +36,13 @@ void AppDebugOutput(u8 flags, const char* filePath, u64 lineNumber, const char* 
 {
 	if (pd != nullptr)
 	{
-		pd->system->logToConsole(message);
-		#if DEBUG_OUTPUT_DELAY > 0
-		MicroDelay(DEBUG_OUTPUT_DELAY);
-		#endif
+		if (pig == nullptr || pig->debugOutputDisabledLevels[level] == false)
+		{
+			pd->system->logToConsole(message);
+			#if DEBUG_OUTPUT_DELAY > 0
+			MicroDelay(DEBUG_OUTPUT_DELAY);
+			#endif
+		}
 	}
 }
 void AppDebugPrint(u8 flags, const char* filePath, u64 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)

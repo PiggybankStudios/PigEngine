@@ -9,6 +9,24 @@ Description:
 #ifndef _PD_API_EXT_H
 #define _PD_API_EXT_H
 
+enum TextAlign_t
+{
+	TextAlign_Left = 0,
+	TextAlign_Right,
+	TextAlign_Center,
+	TextAlign_NumOptions,
+};
+const char* GetTextAlignStr(TextAlign_t enumValue)
+{
+	switch (enumValue)
+	{
+		case TextAlign_Left:   return "Left";
+		case TextAlign_Right:  return "Right";
+		case TextAlign_Center: return "Center";
+		default: return "Unknown";
+	}
+}
+
 // +--------------------------------------------------------------+
 // |                         Enum Strings                         |
 // +--------------------------------------------------------------+
@@ -137,13 +155,21 @@ void PdBeginFrame()
 	currentDrawMode = kDrawModeCopy;
 }
 
-void PdDrawText(MyStr_t text, v2i position)
+void PdDrawText(MyStr_t text, v2i position, TextAlign_t textAlign = TextAlign_Left)
 {
-	pd->graphics->drawText(text.chars, text.length, kUTF8Encoding, renderOffset.x + position.x, renderOffset.y + position.y);
+	Assert(boundFont != nullptr);
+	v2i drawPos = position;
+	if (textAlign != TextAlign_Left && boundFont != nullptr)
+	{
+		v2i textSize = MeasureText(boundFont->font, text);
+		if (textAlign == TextAlign_Right) { drawPos.x -= textSize.width; }
+		if (textAlign == TextAlign_Center) { drawPos.x -= textSize.width/2; }
+	}
+	pd->graphics->drawText(text.chars, text.length, kUTF8Encoding, renderOffset.x + drawPos.x, renderOffset.y + drawPos.y);
 }
-void PdDrawText(const char* textNullTerm, v2i position)
+void PdDrawText(const char* textNullTerm, v2i position, TextAlign_t textAlign = TextAlign_Left)
 {
-	PdDrawText(NewStr(textNullTerm), position);
+	PdDrawText(NewStr(textNullTerm), position, textAlign);
 }
 void PdDrawTextPrint(v2i position, const char* formatString, ...)
 {
@@ -151,6 +177,14 @@ void PdDrawTextPrint(v2i position, const char* formatString, ...)
 	PrintInArenaVa(scratch, printedText, printedLength, formatString);
 	//TODO: Add error checking!
 	PdDrawText(NewStr(printedLength, printedText), position);
+	FreeScratchArena(scratch);
+}
+void PdDrawTextPrintEx(v2i position, TextAlign_t textAlign, const char* formatString, ...)
+{
+	MemArena_t* scratch = GetScratchArena();
+	PrintInArenaVa(scratch, printedText, printedLength, formatString);
+	//TODO: Add error checking!
+	PdDrawText(NewStr(printedLength, printedText), position, textAlign);
 	FreeScratchArena(scratch);
 }
 
