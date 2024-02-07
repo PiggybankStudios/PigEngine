@@ -158,12 +158,16 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->IsFileWatched             = Win32_IsFileWatched;
 	api->WatchFile                 = Win32_WatchFile;
 	api->UnwatchFile               = Win32_UnwatchFile;
+	#ifndef WIN32_GFX_TEST
 	api->GetLoadProcAddressFunc    = Win32_GetLoadProcAddressFunc;
 	api->RenderLoadingScreen       = Win32_RenderLoadingScreen;
+	#endif
 	api->FreeFontData              = Win32_FreeFontData;
 	api->ReadPlatformFont          = Win32_ReadPlatformFont;
 	api->BakeFont                  = Win32_BakeFont;
+	#ifndef WIN32_GFX_TEST
 	api->DebugReadout              = Win32_DebugReadout;
+	#endif
 	api->CopyTextToClipboard       = Win32_CopyTextToClipboard;
 	api->PasteTextFromClipboard    = Win32_PasteTextFromClipboard;
 	api->GetPerfTime               = Win32_GetPerfTime;

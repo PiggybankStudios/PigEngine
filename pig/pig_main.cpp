@@ -6,6 +6,11 @@ Description:
 	** Holds all of the entry points for the engine DLL and includes all other files that need to be included to compile the engine DLL 
 */
 
+#define OPENGL_SUPPORTED  1
+#define WEBGL_SUPPORTED   0
+#define VULKAN_SUPPORTED  0
+#define DIRECTX_SUPPORTED 0
+
 // +--------------------------------------------------------------+
 // |                           Includes                           |
 // +--------------------------------------------------------------+

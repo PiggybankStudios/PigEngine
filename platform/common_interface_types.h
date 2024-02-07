@@ -149,7 +149,9 @@ struct PlatformApi_t
 	PlatApiIsFileWatched_f*             IsFileWatched;
 	PlatApiWatchFile_f*                 WatchFile;
 	PlatApiUnwatchFile_f*               UnwatchFile;
+	#ifndef WIN32_GFX_TEST
 	PlatApiGetLoadProcAddressFunc_f*    GetLoadProcAddressFunc;
+	#endif
 	PlatApiRenderLoadingScreen_f*       RenderLoadingScreen;
 	PlatApiFreeFontData_f*              FreeFontData;
 	PlatApiReadPlatformFont_f*          ReadPlatformFont;

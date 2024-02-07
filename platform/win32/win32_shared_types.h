@@ -219,7 +219,9 @@ struct PlatAudioDevice_t
 // +--------------------------------------------------------------+
 // |                            Other                             |
 // +--------------------------------------------------------------+
+#ifndef WIN32_GFX_TEST
 typedef GLADloadproc GlLoadProc_f;
+#endif
 
 #define MAX_NUM_CONTROLLERS  GLFW_JOYSTICK_LAST //this is 16 controllers right now
 

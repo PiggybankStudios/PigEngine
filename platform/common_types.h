@@ -56,6 +56,7 @@ const char* GetModifierKeyStrOnPlatform(PlatType_t platType, ModifierKey_t modif
 }
 #endif
 
+#ifndef WIN32_GFX_TEST
 enum RenderApi_t
 {
 	RenderApi_None = 0,
@@ -79,6 +80,7 @@ const char* GetRenderApiStr(RenderApi_t renderApi)
 	}
 }
 #endif
+#endif //WIN32_GFX_TEST
 
 struct Version_t
 {

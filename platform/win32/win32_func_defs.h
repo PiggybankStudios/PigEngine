@@ -34,9 +34,11 @@ PLAT_API_GET_THIS_THREAD_ID_DEF(Win32_GetThisThreadId);
 PLAT_API_GET_PROGRAM_TIME_DEFINITION(Win32_GetProgramTime);
 u64 Win32_TimeSince(u64 programTimeSnapshot, bool ignoreFixedTimeScaleEffects);
 
+#ifndef WIN32_GFX_TEST
 // +==============================+
 // |      win32_overlays.cpp      |
 // +==============================+
 void Win32_DrawOverlays(PlatWindow_t* window);
+#endif
 
 #endif //  _WIN_32_FUNC_DEFS_H

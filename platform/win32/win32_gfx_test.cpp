@@ -1,17 +1,27 @@
 /*
-File:   win32_main.cpp
+File:   win32_gfx_test.cpp
 Author: Taylor Robbins
-Date:   09\14\2021
+Date:   02\05\2024
 Description: 
-	** Holds the main entry point for the Win32 Platform Layer executable
+	** In order to test graphics device configuration for various APIs
+	** This is a copy of win32_main.cpp that has a lot of logic ripped out
+	** All other win32_ files that win32_main.cpp would have included are
+	**   also included by this file but any place that needs to consider the
+	**   difference will check #ifdef Win32_GFX_TEST, which is #defined at the top here
 */
+
+#define WIN32_GFX_TEST //TODO: Once we fully move over to pig_graphics, we should remove this #define and simplify all the places that check it
+#define WIN32_BLANK_RENDER_API RenderApi_OpenGL
 
 #define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
 
-#define OPENGL_SUPPORTED  1
-#define WEBGL_SUPPORTED   0
-#define VULKAN_SUPPORTED  0
-#define DIRECTX_SUPPORTED 0
+#define PIG_GFX_OPENGL_SUPPORTED 1
+#define PIG_GFX_WEBGL_SUPPORTED  0
+#define PIG_GFX_VULKAN_SUPPORTED 0
+#define PIG_GFX_D3D11_SUPPORTED  0
+#define PIG_GFX_D3D12_SUPPORTED  0
+#define PIG_GFX_METAL_SUPPORTED  0
+#define PIG_GFX_GLFW_SUPPORTED   1
 
 // +--------------------------------------------------------------+
 // |                           Includes                           |
@@ -25,10 +35,6 @@ Description:
 #include "win32/win32_types.h"
 #include "win32/win32_main.h"
 #include "win32/win32_controller_types.h"
-#include "win32/win32_box2d.h"
-
-#include <float.h>
-#include "gylib/gy_test_floatscan.h"
 
 // +--------------------------------------------------------------+
 // |                       Platform Globals                       |
@@ -38,6 +44,13 @@ Win32PlatformState_t* Platform = nullptr;
 ThreadId_t MainThreadId = 0;
 
 void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cpp can use it
+
+// +--------------------------------------------------------------+
+// |                Personal Library Source Files                 |
+// +--------------------------------------------------------------+
+#include "graphics/pig_graphics.cpp"
+#include "gylib/gy_temp_memory.cpp"
+#include "gylib/gy_scratch_arenas.cpp"
 
 // +--------------------------------------------------------------+
 // |                        STB Libraries                         |
@@ -79,25 +92,8 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "stb/stb_image_write.h"
 
 // +--------------------------------------------------------------+
-// |                         Box2D Source                         |
-// +--------------------------------------------------------------+
-#if BOX2D_SUPPORTED
-#include "b2_files.cpp"
-#endif
-
-// +--------------------------------------------------------------+
-// |                         GLAD Source                          |
-// +--------------------------------------------------------------+
-#if OPENGL_SUPPORTED
-#include "glad/glad.c"
-#endif
-
-// +--------------------------------------------------------------+
 // |                    Platform Source Files                     |
 // +--------------------------------------------------------------+
-#include "gylib/gy_temp_memory.cpp"
-#include "gylib/gy_scratch_arenas.cpp"
-
 #include "win32/win32_func_defs.h"
 #include "win32/win32_debug.cpp"
 #include "win32/win32_program_args.cpp"
@@ -117,10 +113,9 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_glfw.cpp"
 #include "win32/win32_monitors.cpp"
 #include "win32/win32_fonts.cpp"
-#include "win32/win32_procmon.cpp"
-#include "win32/win32_render_basic.cpp"
-#include "win32/win32_overlays.cpp"
-#include "win32/win32_loading.cpp"
+// #include "win32/win32_render_basic.cpp"
+// #include "win32/win32_overlays.cpp"
+// #include "win32/win32_loading.cpp"
 #include "win32/win32_assert.cpp"
 
 #include "win32/win32_interface_filling.cpp"
@@ -227,38 +222,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	Win32_AudioInit();
 	
-	#if PROCMON_SUPPORTED
-	// +==============================+
-	// |     ProcmonDriverLoading     |
-	// +==============================+
-	PerfSection("ProcmonDriverLoading");
-	InitPhase = Win32InitPhase_AudioInitialized;
-	
-	Win32_ProcmonInit();
-	#endif
-	
-	// +==============================+
-	// |       LoadingEngineDll       |
-	// +==============================+
-	PerfSection("LoadingEngineDll");
-	#if PROCMON_SUPPORTED
-	InitPhase = Win32InitPhase_ProcmonDriverLoaded;
-	#else
-	InitPhase = Win32InitPhase_AudioInitialized;
-	#endif
-	
-	Win32_DllLoadingInit();
-	if (!Win32_LoadEngineDll(Platform->engineDllPath, Platform->engineDllTempPath, &Platform->engine))
-	{
-		Win32_InitError("Failed to load the engine DLL. Make sure that the DLL exists next to the executable and that it's the correct version. This could also be caused by missing a glew32.dll");
-	}
-	PrintLine_I("Loaded engine DLL v%u.%02u(%03u)", Platform->engine.version.major, Platform->engine.version.minor, Platform->engine.version.build);
-	
 	// +==============================+
 	// |       InitializingGlfw       |
 	// +==============================+
 	PerfSection("InitializingGlfw");
-	InitPhase = Win32InitPhase_EngineDllLoaded;
+	InitPhase = Win32InitPhase_AudioInitialized;
 	
 	Win32_GlfwInit();
 	Win32_LoadGameControllerDbFile(NewStr(SDL_CONTROLLER_DB_PATH));
@@ -272,10 +240,63 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitPhase = Win32InitPhase_GlfwInitialized;
 	
 	Win32_FillStartupInfo(&Platform->startupInfo);
+	{
+		Platform->startupOptions.mainMemoryRequest = Kilobytes(256);
+		Platform->startupOptions.tempMemoryRequest = Kilobytes(256);
+		Platform->startupOptions.scratchArenaSizes = Kilobytes(256);
+		Platform->startupOptions.openDebugConsole = true;
+		Platform->startupOptions.renderApi = WIN32_BLANK_RENDER_API;
+		Platform->startupOptions.numWindows = 1; //u64
+		PlatWindowOptions_t windowOptions = {};
+		windowOptions.create.resizableWindow = true; //bool 
+		windowOptions.create.topmostWindow = false; //bool 
+		windowOptions.create.decoratedWindow = true; //bool 
+		windowOptions.create.antialiasingNumSamples = 4; //u64 
+		windowOptions.create.autoIconify = false; //bool 
+		windowOptions.create.windowTitle = NewStr(PROJECT_NAME); //MyStr_t 
+		windowOptions.create.fullscreen = false; //bool 
+		windowOptions.create.fullscreenMonitor = nullptr; //const PlatMonitorInfo_t* 
+		windowOptions.create.fullscreenVideoMode = nullptr; //const PlatMonitorVideoMode_t* 
+		windowOptions.create.fullscreenFramerateIndex = 0; //u64 
+		windowOptions.create.windowedResolution = NewVec2i(1600, 900); //v2i 
+		windowOptions.create.windowedLocation = NewVec2i(20, 50); //v2i
+		windowOptions.create.windowedMaximized = false; //bool 
+		windowOptions.create.windowedFramerate = 60; //i64 
+		windowOptions.enforceMinSize = true; //bool 
+		windowOptions.minWindowSize = NewVec2i(400, 200); //v2i 
+		windowOptions.enforceMaxSize = false; //bool 
+		windowOptions.maxWindowSize = Vec2i_Zero; //v2i 
+		windowOptions.forceAspectRatio = false; //bool 
+		windowOptions.aspectRatio = NewVec2i(0, 0); //v2i 
+		Platform->startupOptions.windowOptions = &windowOptions; //PlatWindowOptions_t*
+		MyStr_t iconPaths[6];
+		iconPaths[0] = NewStr("Resources/icon16.png");
+		iconPaths[1] = NewStr("Resources/icon24.png");
+		iconPaths[2] = NewStr("Resources/icon32.png");
+		iconPaths[3] = NewStr("Resources/icon64.png");
+		iconPaths[4] = NewStr("Resources/icon120.png");
+		iconPaths[5] = NewStr("Resources/icon256.png");
+		Platform->startupOptions.numIconFiles = ArrayCount(iconPaths); //u64
+		Platform->startupOptions.iconFilePaths = &iconPaths[0]; //MyStr_t
+		Platform->startupOptions.loadingBackgroundColor = White; //Color_t
+		Platform->startupOptions.loadingBarColor = Black; //Color_t
+		Platform->startupOptions.loadingImagePath = NewStr("Resources/Sprites/pig_loading_image.png"); //MyStr_t
+		Platform->startupOptions.loadingBackPath = NewStr("Resources/Textures/pig_checker_blue.png"); //MyStr_t
+		Platform->startupOptions.loadingBackTiling = true; //bool
+		Platform->startupOptions.loadingBackScale = 2.0f; //r32
+		Platform->startupOptions.audioDeviceIndex = 0; //u64
+		Platform->startupOptions.audioOutputFormat; //PlatAudioFormat_t
+		Platform->startupOptions.audioOutputFormat.bitsPerSample = 32;
+		Platform->startupOptions.audioOutputFormat.numChannels = 2;
+		Platform->startupOptions.audioOutputFormat.samplesPerSecond = 44100;
+		Platform->startupOptions.threadPoolSize = 0; //u64
+		Platform->startupOptions.threadPoolTempArenasSize = 0; //u64
+		Platform->startupOptions.threadPoolTempArenasNumMarks = 0; //u64
+		Platform->startupOptions.threadPoolScratchArenasMaxSize = 0; //u64
+		Platform->startupOptions.threadPoolScratchArenasNumMarks = 0; //u64
+	}
 	
-	WriteLine_N("Calling Pig_GetStartupOptions...");
-	Platform->engine.GetStartupOptions(&Platform->startupInfo, &Platform->startupOptions);
-	WriteLine_N("Pig_GetStartupOptions Complete!");
+	Platform->renderApi = Platform->startupOptions.renderApi;
 	
 	AssertMsg(Platform->startupOptions.numWindows > 0, "The engine DLL requested 0 windows. Is the engine DLL corrupt?");
 	NotNullMsg(Platform->startupOptions.windowOptions, "The engine DLL did not fill out the windowsOptions array. Is the engine DLL corrupt?");
@@ -290,13 +311,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// +===============================+
 	PerfSection("InitializingSocketsAndHttp");
 	InitPhase = Win32InitPhase_StartupOptionsObtained;
-	
-	#if SOCKETS_SUPPORTED
-	if (!InitializeSockets())
-	{
-		Win32_InitError("Failed to initialize sockets!");
-	}
-	#endif
 	
 	// +==============================+
 	// |      ThreadPoolCreation      |
@@ -324,12 +338,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		WriteLine_I("Opened console window that was requested by engine DLL");
 	}
 	
-	//TODO: Add support for other APIs and then add else ifs here
-	if (Platform->startupOptions.renderApi == RenderApi_OpenGL && OPENGL_SUPPORTED)
-	{
-		Platform->renderApi = RenderApi_OpenGL;
-	}
-	else
+	if (!PigGfx_Init(&Platform->mainHeap, Platform->startupOptions.renderApi))
 	{
 		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
 		Win32_InitError("Unsupported win32 render API chosen by the engine");
@@ -343,14 +352,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			Win32_InitError("Failed to create application window through GLFW. This is usually caused by your graphics drivers not supporting the minimum version of OpenGL that we require.");
 		}
-		glfwMakeContextCurrent(newWindow->handle);
+		glfwMakeContextCurrent(newWindow->handle); //TODO: Do we really need to call this anymore? PigGfx_CreateContextInWindow will do it for us
 		Win32_ApplyWindowOptions(newWindow, &Platform->startupOptions.windowOptions[wIndex]);
 		Win32_LoadWindowIcon(newWindow, Platform->startupOptions.numIconFiles, Platform->startupOptions.iconFilePaths);
 		if (wIndex == 0)
 		{
 			Platform->mainWindow = newWindow;
 			newWindow->activeInput.isFocused = true;
-			Win32_GladInit();
+			PigGfx_SetGlfwWindowPntr(newWindow->handle);
+			PigGfx_CreateContextInWindow();
 		}
 	}
 	NotNull(Platform->mainWindow);
@@ -374,36 +384,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PerfSection("LoadingBasicResources");
 	InitPhase = Win32InitPhase_AudioOutputStarted;
 	
-	Win32_LoadBasicResources(&Platform->startupOptions);
-	Win32_InitBasicRendering();
-	Win32_InitOverlays();
+	// Win32_LoadBasicResources(&Platform->startupOptions);
+	// Win32_InitBasicRendering();
+	// Win32_InitOverlays();
 	Platform->loadingPercent = 0.0f;
-	Win32_RenderLoadingScreen(0.0f);
-	
-	// +==============================+
-	// |     SteamInitialization      |
-	// +==============================+
-	PerfSection("SteamInitialization");
-	InitPhase = Win32InitPhase_ResourcesLoaded;
-	
-	Win32_SteamInit();
-	
-	Platform->loadingPercent = 0.5f;
 	// Win32_RenderLoadingScreen(0.0f);
 	
 	// +==================================+
 	// | FileWatchingAndInterfaceFilling  |
 	// +==================================+
 	PerfSection("FileWatchingAndInterfaceFilling");
-	InitPhase = Win32InitPhase_SteamInitialized;
+	InitPhase = Win32InitPhase_ResourcesLoaded;
 	
 	//TODO: Initialize DirectSound or other audio library
 	//TODO: Initialize WinHTTP
 	Win32_InitProcessManagement();
 	Win32_InitFileWatching();
-	#if DEBUG_BUILD
-	Win32_WatchEngineDll(Platform->engineDllPath, Platform->engineDllTempPath, &Platform->engine);
-	#endif
 	
 	Win32_FillPlatformInfo(&Platform->info, initStartTime);
 	Win32_FillPlatformApi(&Platform->api);
@@ -415,7 +411,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	u64 initLocalTimestamp = Win32_GetCurrentTimestamp(true);
 	
 	Platform->loadingPercent = 1.0f;
-	Win32_RenderLoadingScreen(0.0f);
+	// Win32_RenderLoadingScreen(0.0f);
 	
 	// +==============================+
 	// |     EngineInitialization     |
@@ -424,10 +420,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitPhase = Win32InitPhase_EngineInitialization;
 	
 	PerfTime_t initEndTime = Win32_GetPerfTime();
-	PrintLine_N("Calling Pig_Initialize... (Win32 platform took %.1lfms to init)", Win32_GetPerfTimeDiff(&initStartTime, &initEndTime));
-	Platform->callingEngineInitialize = true;
-	Platform->engine.Initialize(&Platform->info, &Platform->api, &Platform->engineMemory, initProgramTime, initUnixTimestamp, initLocalTimestamp);
-	Platform->callingEngineInitialize = false;
+	PrintLine_N("Blank platform took %.1lfms to init", Win32_GetPerfTimeDiff(&initStartTime, &initEndTime));
 	if (Platform->mainWindow == nullptr || Platform->mainWindow->closed || glfwWindowShouldClose(Platform->mainWindow->handle))
 	{
 		WriteLine_E("Exited during initialization");
@@ -501,9 +494,6 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_UpdateRunningProcesses();
 	Win32_UpdateAudio();
 	Win32_UpdateFileWatching();
-	#if STEAM_BUILD
-	Win32_UpdateSteamStuff();
-	#endif
 	Win32_CheckControllerInputs(&Platform->engineActiveInput);
 	
 	Win32_CopyEngineInput(&Platform->enginePreviousInput, &Platform->engineInput);
@@ -527,14 +517,6 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
-	#if PROCMON_SUPPORTED
-	Platform->engineInput.nextProcmonEventId = Platform->nextProcmonEventId;
-	Platform->engineInput.processEntries = Platform->processEntries;
-	Platform->engineInput.touchedFiles = Platform->touchedFiles;
-	#endif
-	#if STEAM_BUILD
-	Win32_UpdateEngineInputSteamInfo(&Platform->enginePreviousInput, &Platform->engineInput);
-	#endif
 	Win32_PassDebugLinesToEngineInput(&Platform->engineInput);
 	Win32_PassCompletedTasksToEngineInput(&Platform->engineInput);
 	#if DEVELOPER_BUILD
@@ -542,18 +524,15 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	#endif
 	Win32_ClearEngineOutput(&Platform->engineOutput);
 	
-	if (InitPhase < Win32InitPhase_PostFirstUpdate) { PrintLine_N("Calling first Pig_Update..."); }
-	Platform->engine.Update(&Platform->info, &Platform->api, &Platform->engineMemory, &Platform->engineInput, &Platform->engineOutput);
-	if (InitPhase < Win32InitPhase_PostFirstUpdate)
 	{
-		PerfTime_t firstUpdateEndTime = Win32_GetPerfTime();
-		PrintLine_N("First Pig_Update Complete! (Took %.1lfms)", Win32_GetPerfTimeDiff(&Platform->firstUpdateStartTime, &firstUpdateEndTime));
+		//TODO: Add some test graphics logic here
 	}
+	
 	Win32_CheckForStableFramerate(Platform->engineInput.uncappedElapsedMs);
 	
 	DestroyStringFifo(&Platform->engineInput.platDebugLines);
 	Win32_ProcessEngineOutput(&Platform->engineOutput);
-	Win32_OverlaysPostUpdateCleanup();
+	// Win32_OverlaysPostUpdateCleanup();
 	
 	#if DEBUG_BUILD
 	if (Platform->audioWaitForFirstUpdateAfterReload)
@@ -583,3 +562,4 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	u64 numMarks = GetNumMarks(TempArena);
 	Assert(numMarks == 0);
 }
+

@@ -13,17 +13,19 @@ Date:   09\14\2021
 #if !defined(PLATFORM_LAYER) && !defined(ENGINE_LAYER) && !defined(PLUGIN_LAYER)
 #error Either PLATFORM_LAYER, ENGINE_LAYER, or PLUGIN_LAYER must be defined before including anything from Common
 #endif
-#if !defined(OPENGL_SUPPORTED)
-#error You must define OPENGL_SUPPORTED in the build options
-#endif
-#if !defined(WEBGL_SUPPORTED)
-#error You must define WEBGL_SUPPORTED in the build options
-#endif
-#if !defined(VULKAN_SUPPORTED)
-#error You must define VULKAN_SUPPORTED in the build options
-#endif
-#if !defined(DIRECTX_SUPPORTED)
-#error You must define DIRECTX_SUPPORTED in the build options
+#ifndef WIN32_GFX_TEST //TODO: Once we move over to pig_graphics.h fully, we should remove these checks from here
+	#if !defined(OPENGL_SUPPORTED)
+	#error You must define OPENGL_SUPPORTED in the build options
+	#endif
+	#if !defined(WEBGL_SUPPORTED)
+	#error You must define WEBGL_SUPPORTED in the build options
+	#endif
+	#if !defined(VULKAN_SUPPORTED)
+	#error You must define VULKAN_SUPPORTED in the build options
+	#endif
+	#if !defined(DIRECTX_SUPPORTED)
+	#error You must define DIRECTX_SUPPORTED in the build options
+	#endif
 #endif
 #if !defined(SLUG_SUPPORTED)
 #error You must define SLUG_SUPPORTED in the build options
@@ -150,11 +152,17 @@ Date:   09\14\2021
 // +--------------------------------------------------------------+
 // |                       Library Includes                       |
 // +--------------------------------------------------------------+
+#ifdef WIN32_GFX_TEST
+#include "graphics/pig_graphics_early_include.h"
+#endif
+
 #if WINDOWS_COMPILATION
-	#define GLFW_EXPOSE_NATIVE_WIN32
-	#if OPENGL_SUPPORTED
-	#include "glad/glad.h"
+	#ifndef WIN32_GFX_TEST
+		#if OPENGL_SUPPORTED
+		#include "glad/glad.h"
+		#endif
 	#endif
+	#define GLFW_EXPOSE_NATIVE_WIN32
 	#include "GLFW/glfw3.h"
 #elif WASM_COMPILATION
 	//TODO: Any platform files we want to include?
@@ -182,6 +190,10 @@ Date:   09\14\2021
 #define GYLIB_LOOKUP_PRIMES_1000
 #define GYLIB_DEFAULT_RANDOM_SERIES_TYPE RandomSeriesType_XoroShiro128
 #include "gylib/gy.h"
+
+#ifdef WIN32_GFX_TEST
+#include "graphics/pig_graphics.h"
+#endif
 
 // +--------------------------------------------------------------+
 // |                      Interface Includes                      |

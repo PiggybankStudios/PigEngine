@@ -1125,7 +1125,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					{
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
-							LogPrintLine_E(log, "Couldn't parse circle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, tStrPrint(ransformProperty->value));
+							LogPrintLine_E(log, "Couldn't parse circle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
 							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);

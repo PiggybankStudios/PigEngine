@@ -599,6 +599,7 @@ bool Win32_LoadGameControllerDbFile(MyStr_t filePath)
 	return result;
 }
 
+#ifndef WIN32_GFX_TEST
 void Win32_GladInit()
 {
 	WriteLine_R("Initializing GLAD...");
@@ -620,7 +621,9 @@ void Win32_GladInit()
 	// PrintLine_D("gladInit took %s", FormattedMilliseconds(gladInitElapsedTime));
 	WriteLine_R("GLAD Init Succeeded!");
 }
+#endif //WIN32_GFX_TEST
 
+#ifndef WIN32_GFX_TEST
 // +==============================+
 // | Win32_GetLoadProcAddressFunc |
 // +==============================+
@@ -629,6 +632,7 @@ PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(Win32_GetLoadProcAddressFunc)
 {
 	return (GLADloadproc)glfwGetProcAddress;
 }
+#endif
 
 // +--------------------------------------------------------------+
 // |                           Cleanup                            |
@@ -1107,7 +1111,9 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 		if (!window->closed)
 		{
 			NotNull(window->handle);
+			#ifndef WIN32_GFX_TEST
 			Win32_DrawOverlays(window);
+			#endif
 			if (wIndex == lastWindowIndex)
 			{
 				//TODO: Make sure this interval is actually the correct value
