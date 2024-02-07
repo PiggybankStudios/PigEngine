@@ -6,7 +6,6 @@ Description:
 	** You probably want to include pig_graphics_early_include.h BEFORE you include this file so you can properly decide the order of includes like glad.h
 	** You must define all the [API]_SUPPORTED defines before including this file!
 	** This file must be included AFTER gy.h has been included. It depends on many things inside gylib
-	** it's behavior based on defines like OPENGL_SUPPORTED, D3D11_SUPPORTED, etc.
 */
 
 #ifndef _PIG_GRAPHICS_H

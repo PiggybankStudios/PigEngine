@@ -20,3 +20,15 @@ const char* GetRenderApiStr(RenderApi_t enumValue)
 		default: return "Unknown";
 	}
 }
+
+const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue)
+{
+	switch (enumValue)
+	{
+		case OpenGlProfile_None:   return "None";
+		case OpenGlProfile_Any:    return "Any";
+		case OpenGlProfile_Core:   return "Core";
+		case OpenGlProfile_Compat: return "Compat";
+		default: return "Unknown";
+	}
+}

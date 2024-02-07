@@ -9,7 +9,11 @@ Description:
 //NOTE: Requesting OpenGL 3.2 or earlier requires us to change the profile type to COMPAT (or ANY)
 #define OPENGL_REQUEST_VERSION_MAJOR   3
 #define OPENGL_REQUEST_VERSION_MINOR   3
+#ifdef WIN32_GFX_TEST
+#define OPENGL_REQUEST_PROFILE         OpenGlProfile_Core
+#else
 #define OPENGL_REQUEST_PROFILE         GLFW_OPENGL_CORE_PROFILE //GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_COMPAT_PROFILE
+#endif
 //NOTE: Setting this to true causes weird texture problems when we run with the Steam Overlay on top.
 //      This setting is supposed to make sure that all deprecated functionality in version 3.0 of OpenGL
 //      are unsupported. Maybe we are using some deprecated features that we shouldn't be?
@@ -664,6 +668,7 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	AssertNullTerm(&options->windowTitle);
 	AssertSingleThreaded();
 	
+	#ifndef WIN32_GFX_TEST
 	if (Platform->renderApi == RenderApi_OpenGL)
 	{
 		PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
@@ -687,6 +692,7 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 		AssertMsg(false, "Unsupported render mode requested when creating window!");
 		return nullptr;
 	}
+	#endif
 	
 	PlatWindow_t* newWindow = LinkedListAdd(&Platform->windows, PlatWindow_t);
 	NotNull(newWindow);
@@ -696,7 +702,9 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	glfwWindowHint(GLFW_RESIZABLE,      options->resizableWindow ? GL_TRUE : GL_FALSE);
 	glfwWindowHint(GLFW_FLOATING,      	options->topmostWindow   ? GL_TRUE : GL_FALSE);
 	glfwWindowHint(GLFW_DECORATED,      options->decoratedWindow ? GL_TRUE : GL_FALSE);
+	glfwWindowHint(GLFW_AUTO_ICONIFY,   options->autoIconify ? GL_TRUE : GL_FALSE);
 	glfwWindowHint(GLFW_FOCUSED,        GL_TRUE);
+	#ifndef WIN32_GFX_TEST
 	glfwWindowHint(GLFW_DOUBLEBUFFER,   GL_TRUE);
 	glfwWindowHint(GLFW_RED_BITS,       8);
 	glfwWindowHint(GLFW_GREEN_BITS,     8);
@@ -705,7 +713,7 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	glfwWindowHint(GLFW_DEPTH_BITS,     8);
 	glfwWindowHint(GLFW_STENCIL_BITS,   8);
 	glfwWindowHint(GLFW_SAMPLES,        (int)options->antialiasingNumSamples);
-	glfwWindowHint(GLFW_AUTO_ICONIFY,   options->autoIconify ? GL_TRUE : GL_FALSE);
+	#endif
 	
 	if (options->fullscreen)
 	{
@@ -1084,7 +1092,11 @@ PLAT_API_CHANGE_WINDOW_TARGET_DEF(Win32_ChangeWindowTarget)
 	if (window == nullptr) { window = Platform->mainWindow; }
 	Assert(IsItemInLinkedList(&Platform->windows, window));
 	NotNull(window);
+	#ifdef WIN32_GFX_TEST
+	PigGfx_SwitchToGlfwWindow(window->handle);
+	#else
 	glfwMakeContextCurrent(window->handle);
+	#endif
 	Platform->currentWindow = (PlatWindow_t*)window;
 }
 
@@ -1103,6 +1115,7 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	
+	//TODO: Setting the swap interval here doesn't actually work like we want. I believe once we set the interval to >= 1 we can never actually get a 0 value to work
 	glfwSwapInterval(0);
 	window = LinkedListFirst(&Platform->windows, PlatWindow_t);
 	for (u64 wIndex = 0; wIndex < Platform->windows.count; wIndex++)

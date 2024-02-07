@@ -246,29 +246,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Platform->startupOptions.scratchArenaSizes = Kilobytes(256);
 		Platform->startupOptions.openDebugConsole = true;
 		Platform->startupOptions.renderApi = WIN32_BLANK_RENDER_API;
-		Platform->startupOptions.numWindows = 1; //u64
+		Platform->startupOptions.numWindows = 1;
 		PlatWindowOptions_t windowOptions = {};
-		windowOptions.create.resizableWindow = true; //bool 
-		windowOptions.create.topmostWindow = false; //bool 
-		windowOptions.create.decoratedWindow = true; //bool 
-		windowOptions.create.antialiasingNumSamples = 4; //u64 
-		windowOptions.create.autoIconify = false; //bool 
-		windowOptions.create.windowTitle = NewStr(PROJECT_NAME); //MyStr_t 
-		windowOptions.create.fullscreen = false; //bool 
-		windowOptions.create.fullscreenMonitor = nullptr; //const PlatMonitorInfo_t* 
-		windowOptions.create.fullscreenVideoMode = nullptr; //const PlatMonitorVideoMode_t* 
-		windowOptions.create.fullscreenFramerateIndex = 0; //u64 
-		windowOptions.create.windowedResolution = NewVec2i(1600, 900); //v2i 
-		windowOptions.create.windowedLocation = NewVec2i(20, 50); //v2i
-		windowOptions.create.windowedMaximized = false; //bool 
-		windowOptions.create.windowedFramerate = 60; //i64 
-		windowOptions.enforceMinSize = true; //bool 
-		windowOptions.minWindowSize = NewVec2i(400, 200); //v2i 
-		windowOptions.enforceMaxSize = false; //bool 
-		windowOptions.maxWindowSize = Vec2i_Zero; //v2i 
-		windowOptions.forceAspectRatio = false; //bool 
-		windowOptions.aspectRatio = NewVec2i(0, 0); //v2i 
-		Platform->startupOptions.windowOptions = &windowOptions; //PlatWindowOptions_t*
+		windowOptions.create.resizableWindow = true;
+		windowOptions.create.topmostWindow = false;
+		windowOptions.create.decoratedWindow = true;
+		windowOptions.create.antialiasingNumSamples = 4;
+		windowOptions.create.autoIconify = false;
+		windowOptions.create.windowTitle = NewStr(PROJECT_NAME);
+		windowOptions.create.fullscreen = false;
+		windowOptions.create.fullscreenMonitor = nullptr;
+		windowOptions.create.fullscreenVideoMode = nullptr;
+		windowOptions.create.fullscreenFramerateIndex = 0;
+		windowOptions.create.windowedResolution = NewVec2i(1600, 900);
+		windowOptions.create.windowedLocation = NewVec2i(20, 50);
+		windowOptions.create.windowedMaximized = false;
+		windowOptions.create.windowedFramerate = 60;
+		windowOptions.enforceMinSize = true;
+		windowOptions.minWindowSize = NewVec2i(400, 200);
+		windowOptions.enforceMaxSize = false;
+		windowOptions.maxWindowSize = Vec2i_Zero;
+		windowOptions.forceAspectRatio = false;
+		windowOptions.aspectRatio = NewVec2i(0, 0);
+		Platform->startupOptions.windowOptions = &windowOptions;
 		MyStr_t iconPaths[6];
 		iconPaths[0] = NewStr("Resources/icon16.png");
 		iconPaths[1] = NewStr("Resources/icon24.png");
@@ -276,24 +276,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		iconPaths[3] = NewStr("Resources/icon64.png");
 		iconPaths[4] = NewStr("Resources/icon120.png");
 		iconPaths[5] = NewStr("Resources/icon256.png");
-		Platform->startupOptions.numIconFiles = ArrayCount(iconPaths); //u64
-		Platform->startupOptions.iconFilePaths = &iconPaths[0]; //MyStr_t
-		Platform->startupOptions.loadingBackgroundColor = White; //Color_t
-		Platform->startupOptions.loadingBarColor = Black; //Color_t
-		Platform->startupOptions.loadingImagePath = NewStr("Resources/Sprites/pig_loading_image.png"); //MyStr_t
-		Platform->startupOptions.loadingBackPath = NewStr("Resources/Textures/pig_checker_blue.png"); //MyStr_t
-		Platform->startupOptions.loadingBackTiling = true; //bool
-		Platform->startupOptions.loadingBackScale = 2.0f; //r32
-		Platform->startupOptions.audioDeviceIndex = 0; //u64
-		Platform->startupOptions.audioOutputFormat; //PlatAudioFormat_t
+		Platform->startupOptions.numIconFiles = ArrayCount(iconPaths);
+		Platform->startupOptions.iconFilePaths = &iconPaths[0];
+		Platform->startupOptions.loadingBackgroundColor = White;
+		Platform->startupOptions.loadingBarColor = Black;
+		Platform->startupOptions.loadingImagePath = NewStr("Resources/Sprites/pig_loading_image.png");
+		Platform->startupOptions.loadingBackPath = NewStr("Resources/Textures/pig_checker_blue.png");
+		Platform->startupOptions.loadingBackTiling = true;
+		Platform->startupOptions.loadingBackScale = 2.0f;
+		Platform->startupOptions.audioDeviceIndex = 0;
+		Platform->startupOptions.audioOutputFormat;
 		Platform->startupOptions.audioOutputFormat.bitsPerSample = 32;
 		Platform->startupOptions.audioOutputFormat.numChannels = 2;
 		Platform->startupOptions.audioOutputFormat.samplesPerSecond = 44100;
-		Platform->startupOptions.threadPoolSize = 0; //u64
-		Platform->startupOptions.threadPoolTempArenasSize = 0; //u64
-		Platform->startupOptions.threadPoolTempArenasNumMarks = 0; //u64
-		Platform->startupOptions.threadPoolScratchArenasMaxSize = 0; //u64
-		Platform->startupOptions.threadPoolScratchArenasNumMarks = 0; //u64
+		Platform->startupOptions.threadPoolSize = 0;
+		Platform->startupOptions.threadPoolTempArenasSize = 0;
+		Platform->startupOptions.threadPoolTempArenasNumMarks = 0;
+		Platform->startupOptions.threadPoolScratchArenasMaxSize = 0;
+		Platform->startupOptions.threadPoolScratchArenasNumMarks = 0;
 	}
 	
 	Platform->renderApi = Platform->startupOptions.renderApi;
@@ -327,6 +327,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	);
 	
 	// +==============================+
+	// |        Graphics Init         |
+	// +==============================+
+	if (!PigGfx_Init(&Platform->mainHeap, Platform->startupOptions.renderApi))
+	{
+		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
+		Win32_InitError("Unsupported win32 render API chosen by the engine");
+	}
+	
+	PigGfxOptions_t gfxOptions = {};
+	PigGfx_FillDefaultOptions(&gfxOptions);
+	gfxOptions.numAntialiasingSamples = 4; //TODO: This should really source from windowOptions.create.antialiasingNumSamples!
+	#if PIG_GFX_OPENGL_SUPPORTED
+	gfxOptions.opengl_RequestVersionMajor = OPENGL_REQUEST_VERSION_MAJOR;
+	gfxOptions.opengl_RequestVersionMinor = OPENGL_REQUEST_VERSION_MINOR;
+	gfxOptions.opengl_RequestProfile = OPENGL_REQUEST_PROFILE;
+	gfxOptions.opengl_RequestForwardCompat = OPENGL_FORCE_FORWARD_COMPAT;
+	gfxOptions.opengl_requestDebugContext = OPENGL_DEBUG_CONTEXT;
+	#endif
+	PigGfx_SetOptions(&gfxOptions);
+	
+	// +==============================+
 	// |        WindowOpening         |
 	// +==============================+
 	PerfSection("WindowOpening");
@@ -338,36 +359,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		WriteLine_I("Opened console window that was requested by engine DLL");
 	}
 	
-	if (!PigGfx_Init(&Platform->mainHeap, Platform->startupOptions.renderApi))
-	{
-		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
-		Win32_InitError("Unsupported win32 render API chosen by the engine");
-	}
-	
 	for (u64 wIndex = 0; wIndex < Platform->startupOptions.numWindows; wIndex++)
 	{
 		NotEmptyStr(&Platform->startupOptions.windowOptions[wIndex].create.windowTitle);
+		PigGfx_SetGlfwWindowHints();
 		PlatWindow_t* newWindow = Win32_GlfwCreateWindow(&Platform->startupOptions.windowOptions[wIndex].create);
 		if (newWindow == nullptr)
 		{
 			Win32_InitError("Failed to create application window through GLFW. This is usually caused by your graphics drivers not supporting the minimum version of OpenGL that we require.");
 		}
-		glfwMakeContextCurrent(newWindow->handle); //TODO: Do we really need to call this anymore? PigGfx_CreateContextInWindow will do it for us
+		PigGfx_SwitchToGlfwWindow(newWindow->handle);
 		Win32_ApplyWindowOptions(newWindow, &Platform->startupOptions.windowOptions[wIndex]);
 		Win32_LoadWindowIcon(newWindow, Platform->startupOptions.numIconFiles, Platform->startupOptions.iconFilePaths);
 		if (wIndex == 0)
 		{
 			Platform->mainWindow = newWindow;
 			newWindow->activeInput.isFocused = true;
-			PigGfx_SetGlfwWindowPntr(newWindow->handle);
-			PigGfx_CreateContextInWindow();
+			Platform->gfxContext = PigGfx_CreateContext();
+			if (Platform->gfxContext == nullptr)
+			{
+				Win32_InitError("Failed to create graphics context after window creation!");
+			}
+			#if PIG_GFX_OPENGL_SUPPORTED
+			if (Platform->gfxContext->renderApi == RenderApi_OpenGL)
+			{
+				PrintLine_I("Successfully created %s v%d.%d graphics context!", GetRenderApiStr(Platform->gfxContext->renderApi), Platform->gfxContext->openglVersionMajor, Platform->gfxContext->openglVersionMinor);
+			}
+			#endif
+			if (Platform->gfxContext->renderApi != RenderApi_OpenGL)
+			{
+				PrintLine_I("Successfully created %s graphics context!", GetRenderApiStr(Platform->gfxContext->renderApi));
+			}
 		}
 	}
 	NotNull(Platform->mainWindow);
-	glfwMakeContextCurrent(Platform->mainWindow->handle);
+	PigGfx_SwitchToGlfwWindow(Platform->mainWindow->handle);
 	
 	Win32_GetContextAndWindowHandles();
-	// Win32_LoadIcon();
 	Win32_LoadCursors();
 	
 	// +==============================+
@@ -396,8 +424,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PerfSection("FileWatchingAndInterfaceFilling");
 	InitPhase = Win32InitPhase_ResourcesLoaded;
 	
-	//TODO: Initialize DirectSound or other audio library
-	//TODO: Initialize WinHTTP
 	Win32_InitProcessManagement();
 	Win32_InitFileWatching();
 	
@@ -525,7 +551,10 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_ClearEngineOutput(&Platform->engineOutput);
 	
 	{
+		// void PigGfx_BeginRendering(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, r32 clearStencilValue)
+		PigGfx_BeginRendering(true, MonokaiBack, true, 1.0f, true, 0);
 		//TODO: Add some test graphics logic here
+		Win32_SwapBuffers();
 	}
 	
 	Win32_CheckForStableFramerate(Platform->engineInput.uncappedElapsedMs);

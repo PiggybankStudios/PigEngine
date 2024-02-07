@@ -7,9 +7,12 @@ Date:   02\05\2024
 #ifndef _PIG_GRAPHICS_OPENGL_H
 #define _PIG_GRAPHICS_OPENGL_H
 
-typedef GLADloadproc GlLoadProc_f;
-
 bool PigGfx_Init_OpenGL();
-bool PigGfx_CreateContextInWindow_OpenGL();
+#if PIG_GFX_GLFW_SUPPORTED
+void PigGfx_SetGlfwWindowHints_OpenGL();
+#endif;
+GraphicsContext_t* PigGfx_CreateContext_OpenGL();
+
+void PigGfx_BeginRendering_OpenGL(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, int clearStencilValue);
 
 #endif //  _PIG_GRAPHICS_OPENGL_H

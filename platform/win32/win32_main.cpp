@@ -357,7 +357,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	glfwMakeContextCurrent(Platform->mainWindow->handle);
 	
 	Win32_GetContextAndWindowHandles();
-	// Win32_LoadIcon();
 	Win32_LoadCursors();
 	
 	// +==============================+

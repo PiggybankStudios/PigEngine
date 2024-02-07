@@ -44,6 +44,9 @@ struct Win32PlatformState_t
 	
 	RenderApi_t renderApi;
 	GlfwVersion_t glfwVersion;
+	#ifdef WIN32_GFX_TEST
+	GraphicsContext_t* gfxContext;
+	#endif
 	
 	u64 nextMonitorId;
 	u64 nextMonitorVideoModeId;
