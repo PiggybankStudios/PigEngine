@@ -14,6 +14,7 @@ Description:
 #include "graphics/pig_graphics_early_include.h"
 
 #include "graphics/pig_graphics_types.h"
+#include "graphics/pig_graphics_debug.h"
 
 #if PIG_GFX_OPENGL_SUPPORTED
 #include "graphics/pig_graphics_opengl.h"

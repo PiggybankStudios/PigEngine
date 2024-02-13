@@ -7,6 +7,20 @@ Date:   02\06\2024
 #ifndef _PIG_GRAPHICS_TYPES_H
 #define _PIG_GRAPHICS_TYPES_H
 
+#define PIG_GFX_DEBUG_OUTPUT_DEF(functionName) void functionName(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
+typedef PIG_GFX_DEBUG_OUTPUT_DEF(PigGfxDebugOutput_f);
+#define PIG_GFX_DEBUG_PRINT_DEF(functionName) void functionName(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* formatString, ...)
+typedef PIG_GFX_DEBUG_PRINT_DEF(PigGfxDebugPrint_f);
+#define PIG_GFX_INIT_FAILURE_DEF(functionName) void functionName(const char* message)
+typedef PIG_GFX_INIT_FAILURE_DEF(PigGfxInitFailure_f);
+
+struct PigGfxContext_t
+{
+	PigGfxInitFailure_f* InitFailure;
+	PigGfxDebugOutput_f* DebugOutput;
+	PigGfxDebugPrint_f* DebugPrint;
+};
+
 enum RenderApi_t
 {
 	RenderApi_None = 0,
@@ -32,7 +46,9 @@ enum OpenGlProfile_t
 const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue);
 #endif
 
+#if PIG_GFX_OPENGL_SUPPORTED
 typedef GLADloadproc GlLoadProc_f;
+#endif
 
 struct PigGfxOptions_t
 {
@@ -52,6 +68,15 @@ struct PigGfxOptions_t
 	bool opengl_RequestForwardCompat;
 	bool opengl_requestDebugContext;
 	#endif
+	
+	#if PIG_GFX_VULKAN_SUPPORTED
+	const char* vulkan_ApplicationName;
+	u32 vulkan_ApplicationVersionInt;
+	const char* vulkan_EngineName;
+	u32 vulkan_EngineVersionInt;
+	int vulkan_RequestVersionMajor;
+	int vulkan_RequestVersionMinor;
+	#endif
 };
 
 struct GraphicsContext_t
@@ -60,6 +85,17 @@ struct GraphicsContext_t
 	#if PIG_GFX_OPENGL_SUPPORTED
 	int openglVersionMajor;
 	int openglVersionMinor;
+	#endif
+	#if PIG_GFX_VULKAN_SUPPORTED
+	VkInstance vkInstance;
+	VkSurfaceKHR vkSurface;
+	VkPhysicalDevice vkPhysicalDevice;
+	VkDevice vkDevice;
+	VkQueue vkQueue;
+	VkSwapchainKHR vkSwapchain;
+	u64 vkSwapImageCount;
+	VkImage* vkSwapImages;
+	VkImageView* vkSwapImageViews;
 	#endif
 };
 

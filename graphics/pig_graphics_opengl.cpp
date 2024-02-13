@@ -16,7 +16,7 @@ static bool _PigGfx_GladInit()
 	Assert(gfx->options.opengl_loadProcFunction != nullptr);
 	if (!gladLoadGLLoader((GLADloadproc)gfx->options.opengl_loadProcFunction))
 	{
-		// Win32_InitError("Could not initialize GLAD. gladLoadGLLoader failed"); //TODO: Put this error code somewhere?
+		PigGfx_InitFailure("Could not initialize GLAD. gladLoadGLLoader failed");
 		return false;
 	}
 	

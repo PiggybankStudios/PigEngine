@@ -21,6 +21,7 @@ const char* GetRenderApiStr(RenderApi_t enumValue)
 	}
 }
 
+#if PIG_GFX_OPENGL_SUPPORTED
 const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue)
 {
 	switch (enumValue)
@@ -32,3 +33,4 @@ const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue)
 		default: return "Unknown";
 	}
 }
+#endif

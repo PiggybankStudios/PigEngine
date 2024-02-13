@@ -162,6 +162,11 @@ Date:   09\14\2021
 		#include "glad/glad.h"
 		#endif
 	#endif
+	#ifdef WIN32_GFX_TEST
+		#if PIG_GFX_VULKAN_SUPPORTED
+		#define GLFW_INCLUDE_VULKAN
+		#endif
+	#endif
 	#define GLFW_EXPOSE_NATIVE_WIN32
 	#include "GLFW/glfw3.h"
 #elif WASM_COMPILATION

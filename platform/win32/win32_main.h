@@ -66,7 +66,7 @@ struct Win32PlatformState_t
 	u64 nextInputEventId;
 	
 	HDC winDeviceContext;
-	HGLRC winGraphicsContext;
+	HGLRC winGraphicsContext; //Only filled for OpenGL based rendering
 	HWND windowHandle; //TODO: Should we have one for each window we create?
 	HANDLE processHandle;
 	

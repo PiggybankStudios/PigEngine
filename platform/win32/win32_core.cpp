@@ -261,11 +261,13 @@ void Win32_ChooseDefaultDirectory()
 
 void Win32_GetContextAndWindowHandles()
 {
-	//TODO: Does this need to change based off which render API we are using?
-	Platform->winGraphicsContext = wglGetCurrentContext();
-	if (Platform->winGraphicsContext == NULL)
+	if (Platform->renderApi == RenderApi_OpenGL)
 	{
-		Win32_InitError("Failed to get the Windows graphics context created by GLFW");
+		Platform->winGraphicsContext = wglGetCurrentContext();
+		if (Platform->winGraphicsContext == NULL)
+		{
+			Win32_InitError("Failed to get the Windows graphics context created by GLFW");
+		}
 	}
 	
 	//TODO: Should we do this for each window we create?

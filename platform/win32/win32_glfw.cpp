@@ -792,7 +792,7 @@ void Win32_ApplyWindowOptions(PlatWindow_t* window, PlatWindowOptions_t* options
 	
 	//TODO: Calculate the swap interval based off framerate options passed to us by the
 	//      engine DLL and information about the monitor we are rendering through
-	glfwSwapInterval(1);
+	if (Platform->renderApi == RenderApi_OpenGL) { glfwSwapInterval(1); }
 }
 
 void Win32_PollEventsAndCheckWindows()
@@ -1116,7 +1116,7 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 	}
 	
 	//TODO: Setting the swap interval here doesn't actually work like we want. I believe once we set the interval to >= 1 we can never actually get a 0 value to work
-	glfwSwapInterval(0);
+	if (Platform->renderApi == RenderApi_OpenGL) { glfwSwapInterval(0); }
 	window = LinkedListFirst(&Platform->windows, PlatWindow_t);
 	for (u64 wIndex = 0; wIndex < Platform->windows.count; wIndex++)
 	{
@@ -1130,12 +1130,12 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 			if (wIndex == lastWindowIndex)
 			{
 				//TODO: Make sure this interval is actually the correct value
-				glfwSwapInterval(1);
+				if (Platform->renderApi == RenderApi_OpenGL) { glfwSwapInterval(1); }
 			}
 			
 			// r64 timeBeforeSwap = glfwGetTime() * 1000.0;
 			PerfTime_t timeBeforeSwap = Win32_GetPerfTime();
-			glfwSwapBuffers(window->handle);
+			if (Platform->renderApi == RenderApi_OpenGL) { glfwSwapBuffers(window->handle); }
 			// r64 timeAfterSwap = glfwGetTime() * 1000.0;
 			PerfTime_t timeAfterSwap = Win32_GetPerfTime();
 			Platform->timeSpentOnSwapBuffers += Win32_GetPerfTimeDiff(&timeBeforeSwap, &timeAfterSwap);

@@ -35,15 +35,19 @@ u64 PigGfx_GetSupportedRenderApis(MemArena_t* memArena, RenderApi_t** apisOut)
 	return resultCount;
 }
 
-bool PigGfx_Init(MemArena_t* pigGraphicsStateAllocArena, RenderApi_t renderApi)
+bool PigGfx_Init(const PigGfxContext_t* context, MemArena_t* stateAllocArena, MemArena_t* mainAllocArena, RenderApi_t renderApi)
 {
-	NotNull(pigGraphicsStateAllocArena);
+	NotNull(context);
+	NotNull(stateAllocArena);
 	
-	gfx = AllocStruct(pigGraphicsStateAllocArena, PigGfxState_t);
+	gfx = AllocStruct(stateAllocArena, PigGfxState_t);
 	NotNull(gfx);
 	ClearPointer(gfx);
 	gfx->renderApi = renderApi;
+	gfx->mainArena = mainAllocArena;
 	gfx->initialized = true;
+	
+	MyMemCopy(&gfx->ctx, context, sizeof(PigGfxContext_t));
 	
 	switch (renderApi)
 	{
@@ -78,6 +82,7 @@ void PigGfx_FillDefaultOptions(PigGfxOptions_t* optionsOut)
 	optionsOut->depthBufferBitDepth = 8;
 	optionsOut->stencilBufferBitDepth = 8;
 	optionsOut->numAntialiasingSamples = 4;
+	
 	#if PIG_GFX_OPENGL_SUPPORTED
 	#if PIG_GFX_GLFW_SUPPORTED
 	optionsOut->opengl_loadProcFunction = (GlLoadProc_f)glfwGetProcAddress;
@@ -87,6 +92,15 @@ void PigGfx_FillDefaultOptions(PigGfxOptions_t* optionsOut)
 	optionsOut->opengl_RequestProfile = OpenGlProfile_Core;
 	optionsOut->opengl_RequestForwardCompat = true;
 	optionsOut->opengl_requestDebugContext = false;
+	#endif
+	
+	#if PIG_GFX_VULKAN_SUPPORTED
+	optionsOut->vulkan_ApplicationName = "PigEngineGame";
+	optionsOut->vulkan_ApplicationVersionInt = 1;
+	optionsOut->vulkan_EngineName = "PigEngine";
+	optionsOut->vulkan_EngineVersionInt = 1;
+	optionsOut->vulkan_RequestVersionMajor = 1;
+	optionsOut->vulkan_RequestVersionMinor = 0;
 	#endif
 }
 
@@ -114,19 +128,19 @@ void PigGfx_SetGlfwWindowHints()
 		case RenderApi_OpenGL: PigGfx_SetGlfwWindowHints_OpenGL(); break;
 		#endif
 		#if PIG_GFX_WEBGL_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_SetGlfwWindowHints_WebGL();
+		case RenderApi_WebGL: return PigGfx_SetGlfwWindowHints_WebGL();
 		#endif
 		#if PIG_GFX_VULKAN_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_SetGlfwWindowHints_Vulkan();
+		case RenderApi_Vulkan: return PigGfx_SetGlfwWindowHints_Vulkan();
 		#endif
 		#if PIG_GFX_D3D11_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_SetGlfwWindowHints_D3D11();
+		case RenderApi_D3D11: return PigGfx_SetGlfwWindowHints_D3D11();
 		#endif
 		#if PIG_GFX_D3D12_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_SetGlfwWindowHints_D3D12();
+		case RenderApi_D3D12: return PigGfx_SetGlfwWindowHints_D3D12();
 		#endif
 		#if PIG_GFX_METAL_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_SetGlfwWindowHints_Metal();
+		case RenderApi_Metal: return PigGfx_SetGlfwWindowHints_Metal();
 		#endif
 		default: AssertMsg(false, "Unsupported renderApi in PigGfx_SetGlfwWindowHints!"); break;
 	}
@@ -171,19 +185,19 @@ GraphicsContext_t* PigGfx_CreateContext()
 		case RenderApi_OpenGL: return PigGfx_CreateContext_OpenGL();
 		#endif
 		#if PIG_GFX_WEBGL_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_WebGL();
+		case RenderApi_WebGL: return PigGfx_CreateContext_WebGL();
 		#endif
 		#if PIG_GFX_VULKAN_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_Vulkan();
+		case RenderApi_Vulkan: return PigGfx_CreateContext_Vulkan();
 		#endif
 		#if PIG_GFX_D3D11_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_D3D11();
+		case RenderApi_D3D11: return PigGfx_CreateContext_D3D11();
 		#endif
 		#if PIG_GFX_D3D12_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_D3D12();
+		case RenderApi_D3D12: return PigGfx_CreateContext_D3D12();
 		#endif
 		#if PIG_GFX_METAL_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_Metal();
+		case RenderApi_Metal: return PigGfx_CreateContext_Metal();
 		#endif
 		default: return false;
 	}
@@ -203,19 +217,19 @@ void PigGfx_BeginRendering(bool doClearColor, Color_t clearColor, bool doClearDe
 		case RenderApi_OpenGL: PigGfx_BeginRendering_OpenGL(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		#if PIG_GFX_WEBGL_SUPPORTED
-		case RenderApi_OpenGL: PigGfx_BeginRendering_WebGL(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
+		case RenderApi_WebGL: PigGfx_BeginRendering_WebGL(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		#if PIG_GFX_VULKAN_SUPPORTED
-		case RenderApi_OpenGL: PigGfx_BeginRendering_Vulkan(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
+		case RenderApi_Vulkan: PigGfx_BeginRendering_Vulkan(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		#if PIG_GFX_D3D11_SUPPORTED
-		case RenderApi_OpenGL: PigGfx_BeginRendering_D3D11(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
+		case RenderApi_D3D11: PigGfx_BeginRendering_D3D11(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		#if PIG_GFX_D3D12_SUPPORTED
-		case RenderApi_OpenGL: PigGfx_BeginRendering_D3D12(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
+		case RenderApi_D3D12: PigGfx_BeginRendering_D3D12(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		#if PIG_GFX_METAL_SUPPORTED
-		case RenderApi_OpenGL: PigGfx_BeginRendering_Metal(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
+		case RenderApi_Metal: PigGfx_BeginRendering_Metal(doClearColor, clearColor, doClearDepth, clearDepth, doClearStencil, clearStencilValue); break;
 		#endif
 		default: AssertMsg(false, "Unsupported renderApi in PigGfx_BeginRendering!"); break;
 	}

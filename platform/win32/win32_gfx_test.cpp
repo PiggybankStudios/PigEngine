@@ -11,13 +11,13 @@ Description:
 */
 
 #define WIN32_GFX_TEST //TODO: Once we fully move over to pig_graphics, we should remove this #define and simplify all the places that check it
-#define WIN32_BLANK_RENDER_API RenderApi_OpenGL
+#define WIN32_BLANK_RENDER_API RenderApi_Vulkan
 
 #define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
 
-#define PIG_GFX_OPENGL_SUPPORTED 1
+#define PIG_GFX_OPENGL_SUPPORTED 0
 #define PIG_GFX_WEBGL_SUPPORTED  0
-#define PIG_GFX_VULKAN_SUPPORTED 0
+#define PIG_GFX_VULKAN_SUPPORTED 1
 #define PIG_GFX_D3D11_SUPPORTED  0
 #define PIG_GFX_D3D12_SUPPORTED  0
 #define PIG_GFX_METAL_SUPPORTED  0
@@ -118,6 +118,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 // #include "win32/win32_loading.cpp"
 #include "win32/win32_assert.cpp"
 
+#include "win32/win32_gfx_callbacks.cpp"
 #include "win32/win32_interface_filling.cpp"
 #include "win32/win32_engine_output.cpp"
 
@@ -329,7 +330,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// +==============================+
 	// |        Graphics Init         |
 	// +==============================+
-	if (!PigGfx_Init(&Platform->mainHeap, Platform->startupOptions.renderApi))
+	PigGfxContext_t pigGfxContext = {};
+	pigGfxContext.InitFailure = Win32_PigGfxInitFailure;
+	pigGfxContext.DebugOutput = Win32_PigGfxDebugOutput;
+	pigGfxContext.DebugPrint = Win32_PigGfxDebugPrint;
+	if (!PigGfx_Init(&pigGfxContext, &Platform->mainHeap, &Platform->mainHeap, Platform->startupOptions.renderApi))
 	{
 		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
 		Win32_InitError("Unsupported win32 render API chosen by the engine");
@@ -344,6 +349,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	gfxOptions.opengl_RequestProfile = OPENGL_REQUEST_PROFILE;
 	gfxOptions.opengl_RequestForwardCompat = OPENGL_FORCE_FORWARD_COMPAT;
 	gfxOptions.opengl_requestDebugContext = OPENGL_DEBUG_CONTEXT;
+	#endif
+	#if PIG_GFX_VULKAN_SUPPORTED
+	gfxOptions.vulkan_ApplicationName = PROJECT_NAME_SAFE;
+	gfxOptions.vulkan_ApplicationVersionInt = VK_MAKE_VERSION(1, 0, 0);
+	gfxOptions.vulkan_EngineName = "PigEngineWin32";
+	gfxOptions.vulkan_EngineVersionInt = VK_MAKE_VERSION(WIN32_VERSION_MAJOR, WIN32_VERSION_MINOR, WIN32_VERSION_BUILD);
+	gfxOptions.vulkan_RequestVersionMajor = 1;
+	gfxOptions.vulkan_RequestVersionMinor = 3;
 	#endif
 	PigGfx_SetOptions(&gfxOptions);
 	
