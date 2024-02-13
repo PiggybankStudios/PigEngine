@@ -87,13 +87,17 @@ struct GraphicsContext_t
 	int openglVersionMinor;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
+	VkAllocationCallbacks* vkAllocator;
 	VkInstance vkInstance;
+	VkSurfaceFormatKHR vkSurfaceFormat;
 	VkSurfaceKHR vkSurface;
 	VkPhysicalDevice vkPhysicalDevice;
+	u32 queueFamilyIndex;
+	VkExtent2D swapExtent;
 	VkDevice vkDevice;
 	VkQueue vkQueue;
 	VkSwapchainKHR vkSwapchain;
-	u64 vkSwapImageCount;
+	u32 vkSwapImageCount;
 	VkImage* vkSwapImages;
 	VkImageView* vkSwapImageViews;
 	#endif

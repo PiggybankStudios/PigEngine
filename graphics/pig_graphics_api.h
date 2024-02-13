@@ -7,8 +7,6 @@ Date:   02\06\2024
 #ifndef _PIG_GRAPHICS_API_H
 #define _PIG_GRAPHICS_API_H
 
-#define VULKAN_IN_FLIGHT_IMAGE_COUNT 2 //TODO: Remove me?
-
 struct PigGfxState_t
 {
 	bool initialized;
@@ -28,23 +26,7 @@ struct PigGfxState_t
 	GraphicsContext_t context;
 	
 	#if PIG_GFX_VULKAN_SUPPORTED
-	VkDeviceMemory vkTestBufferMem;
-	VkBuffer vkTestBuffer;
-	VkRenderPass vkRenderPass;
-	VkShaderModule vkVertShader;
-	VkShaderModule vkFragShader;
-	VkPipelineLayout vkPipelineLayout;
-	VkPipeline vkPipeline;
-	u32 vkNumFramebuffers;
-	VkFramebuffer* vkFramebuffers;
-	VkCommandPool vkCommandPool;
-	u32 vkNumCommandBuffers;
-	VkCommandBuffer* vkCommandBuffers;
-	VkSemaphore vkImageAvailableSemaphores[VULKAN_IN_FLIGHT_IMAGE_COUNT];
-	VkSemaphore vkRenderFinishedSemaphores[VULKAN_IN_FLIGHT_IMAGE_COUNT];
-	VkFence vkSwapImagesFences[VULKAN_IN_FLIGHT_IMAGE_COUNT];
-	VkFence vkActiveFences[VULKAN_IN_FLIGHT_IMAGE_COUNT];
-	u32 activeSyncIndex;
+	VkTestContent_t vkTest;
 	#endif
 };
 
