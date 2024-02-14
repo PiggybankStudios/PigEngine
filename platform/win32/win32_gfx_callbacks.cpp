@@ -3,7 +3,7 @@ File:   win32_gfx_callbacks.cpp
 Author: Taylor Robbins
 Date:   02\11\2024
 Description: 
-	** Holds functions that Pig Gfx calls back to us through (passed in PigGfxContext_t to PigGfx_Init)
+	** Holds functions that Pig Gfx calls back to us through (passed in PigGfxCallbacks_t to PigGfx_Init)
 */
 
 // +==============================+

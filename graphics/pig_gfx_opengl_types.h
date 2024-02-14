@@ -29,7 +29,7 @@ struct PigGfxOptions_OpenGL_t
 	bool requestDebugContext;
 };
 
-struct GraphicsContext_OpenGL_t
+struct PigGfxContext_OpenGL_t
 {
 	int versionMajor;
 	int versionMinor;

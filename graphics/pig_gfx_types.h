@@ -14,7 +14,7 @@ typedef PIG_GFX_DEBUG_PRINT_DEF(PigGfxDebugPrint_f);
 #define PIG_GFX_INIT_FAILURE_DEF(functionName) void functionName(const char* message)
 typedef PIG_GFX_INIT_FAILURE_DEF(PigGfxInitFailure_f);
 
-struct PigGfxContext_t
+struct PigGfxCallbacks_t
 {
 	PigGfxInitFailure_f* InitFailure;
 	PigGfxDebugOutput_f* DebugOutput;
@@ -55,15 +55,15 @@ struct PigGfxOptions_t
 	#endif
 };
 
-struct GraphicsContext_t
+struct PigGfxContext_t
 {
 	RenderApi_t renderApi;
 	MemArena_t* allocArena;
 	#if PIG_GFX_OPENGL_SUPPORTED
-	GraphicsContext_OpenGL_t gl;
+	PigGfxContext_OpenGL_t gl;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
-	GraphicsContext_Vulkan_t vk;
+	PigGfxContext_Vulkan_t vk;
 	#endif
 };
 
@@ -76,8 +76,8 @@ struct PigGfxState_t
 	RenderApi_t renderApi;
 	MemArena_t* mainArena;
 	
-	bool ctxSet;
-	PigGfxContext_t ctx;
+	bool callbacksSet;
+	PigGfxCallbacks_t callbacks;
 	bool optionsSet;
 	PigGfxOptions_t options;
 	
@@ -86,7 +86,7 @@ struct PigGfxState_t
 	#endif
 	
 	bool contextCreated;
-	GraphicsContext_t context;
+	PigGfxContext_t context;
 	
 	#if PIG_GFX_VULKAN_SUPPORTED
 	VkTestContent_t vkTest;

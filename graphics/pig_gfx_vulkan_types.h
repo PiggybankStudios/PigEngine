@@ -23,7 +23,7 @@ struct PigGfxOptions_Vulkan_t
 	int requestVersionMinor;
 };
 
-struct GraphicsContext_Vulkan_t
+struct PigGfxContext_Vulkan_t
 {
 	VkAllocationCallbacks allocatorStruct;
 	VkAllocationCallbacks* allocator;

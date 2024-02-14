@@ -330,11 +330,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// +==============================+
 	// |        Graphics Init         |
 	// +==============================+
-	PigGfxContext_t pigGfxContext = {};
-	pigGfxContext.InitFailure = Win32_PigGfxInitFailure;
-	pigGfxContext.DebugOutput = Win32_PigGfxDebugOutput;
-	pigGfxContext.DebugPrint = Win32_PigGfxDebugPrint;
-	if (!PigGfx_Init(&pigGfxContext, &Platform->mainHeap, &Platform->mainHeap, Platform->startupOptions.renderApi))
+	PigGfxCallbacks_t pigGfxCallbacks = {};
+	pigGfxCallbacks.InitFailure = Win32_PigGfxInitFailure;
+	pigGfxCallbacks.DebugOutput = Win32_PigGfxDebugOutput;
+	pigGfxCallbacks.DebugPrint = Win32_PigGfxDebugPrint;
+	if (!PigGfx_Init(&pigGfxCallbacks, &Platform->mainHeap, &Platform->mainHeap, Platform->startupOptions.renderApi))
 	{
 		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
 		Win32_InitError("Unsupported win32 render API chosen by the engine");

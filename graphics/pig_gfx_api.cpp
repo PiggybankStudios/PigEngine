@@ -35,9 +35,8 @@ u64 PigGfx_GetSupportedRenderApis(MemArena_t* memArena, RenderApi_t** apisOut)
 	return resultCount;
 }
 
-bool PigGfx_Init(const PigGfxContext_t* context, MemArena_t* stateAllocArena, MemArena_t* mainAllocArena, RenderApi_t renderApi)
+bool PigGfx_Init(const PigGfxCallbacks_t* callbacks, MemArena_t* stateAllocArena, MemArena_t* mainAllocArena, RenderApi_t renderApi)
 {
-	NotNull(context);
 	NotNull(stateAllocArena);
 	
 	gfx = AllocStruct(stateAllocArena, PigGfxState_t);
@@ -47,7 +46,16 @@ bool PigGfx_Init(const PigGfxContext_t* context, MemArena_t* stateAllocArena, Me
 	gfx->mainArena = mainAllocArena;
 	gfx->initialized = true;
 	
-	MyMemCopy(&gfx->ctx, context, sizeof(PigGfxContext_t));
+	if (callbacks != nullptr)
+	{
+		MyMemCopy(&gfx->callbacks, callbacks, sizeof(PigGfxCallbacks_t));
+		gfx->callbacksSet = true;
+	}
+	else
+	{
+		ClearStruct(gfx->callbacks);
+		gfx->callbacksSet = false;
+	}
 	
 	switch (renderApi)
 	{
@@ -175,7 +183,7 @@ void PigGfx_SwitchToGlfwWindow(GLFWwindow* glfwWindowPntr)
 }
 #endif
 
-void PigGfx_DestroyContext(GraphicsContext_t* context)
+void PigGfx_DestroyContext(PigGfxContext_t* context)
 {
 	NotNull(context);
 	switch (context->renderApi)
@@ -202,7 +210,7 @@ void PigGfx_DestroyContext(GraphicsContext_t* context)
 	ClearPointer(context);
 }
 
-GraphicsContext_t* PigGfx_CreateContext(MemArena_t* memArena)
+PigGfxContext_t* PigGfx_CreateContext(MemArena_t* memArena)
 {
 	NotNull(gfx);
 	Assert(gfx->initialized);

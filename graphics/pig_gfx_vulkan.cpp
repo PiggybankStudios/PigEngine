@@ -108,7 +108,7 @@ void PigGfx_SetGlfwWindowHints_Vulkan()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
 
-void _DestroyVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
+void _DestroyVkTestContent(PigGfxContext_t* context, VkTestContent_t* content)
 {
 	vkFreeCommandBuffers(context->vk.device, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
 	if (content->commandBuffers != nullptr) { FreeMem(content->allocArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount); }
@@ -128,7 +128,7 @@ void _DestroyVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 	ClearPointer(content);
 }
 
-bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, MemArena_t* memArena)
+bool _CreateVkTestContent(PigGfxContext_t* context, VkTestContent_t* content, MemArena_t* memArena)
 {
 	ClearPointer(content);
 	content->allocArena = memArena;
@@ -514,7 +514,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	return true;
 }
 
-void PigGfx_DestroyContext_Vulkan(GraphicsContext_t* context)
+void PigGfx_DestroyContext_Vulkan(PigGfxContext_t* context)
 {
 	NotNull(context->allocArena);
 	for (u32 iIndex = 0; iIndex < context->vk.swapImageCount; iIndex++) { vkDestroyImageView(context->vk.device, context->vk.swapImageViews[iIndex], context->vk.allocator); }
@@ -526,7 +526,7 @@ void PigGfx_DestroyContext_Vulkan(GraphicsContext_t* context)
 	ClearPointer(context);
 }
 
-GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
+PigGfxContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 {
 	NotNull(gfx);
 	Assert(!gfx->contextCreated);
@@ -534,7 +534,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	NotNull(gfx->currentGlfwWindow);
 	NotNull(memArena);
 	
-	GraphicsContext_t* context = &gfx->context;
+	PigGfxContext_t* context = &gfx->context;
 	ClearPointer(context);
 	context->allocArena = memArena;
 	//TODO: Implement this!
@@ -778,7 +778,7 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 {
 	NotNull(gfx);
 	Assert(gfx->contextCreated);
-	GraphicsContext_t* context = &gfx->context;
+	PigGfxContext_t* context = &gfx->context;
 	VkTestContent_t* content = &gfx->vkTest;
 	
 	vkWaitForFences(context->vk.device, 1, &content->activeFences[content->activeSyncIndex], VK_TRUE, UINT64_MAX);
