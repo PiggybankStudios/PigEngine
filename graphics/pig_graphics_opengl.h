@@ -11,7 +11,8 @@ bool PigGfx_Init_OpenGL();
 #if PIG_GFX_GLFW_SUPPORTED
 void PigGfx_SetGlfwWindowHints_OpenGL();
 #endif;
-GraphicsContext_t* PigGfx_CreateContext_OpenGL();
+void PigGfx_DestroyContext_OpenGL(GraphicsContext_t* context);
+GraphicsContext_t* PigGfx_CreateContext_OpenGL(MemArena_t* memArena);
 
 void PigGfx_BeginRendering_OpenGL(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, int clearStencilValue);
 

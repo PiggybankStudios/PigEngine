@@ -175,29 +175,56 @@ void PigGfx_SwitchToGlfwWindow(GLFWwindow* glfwWindowPntr)
 }
 #endif
 
-GraphicsContext_t* PigGfx_CreateContext()
+void PigGfx_DestroyContext(GraphicsContext_t* context)
+{
+	NotNull(context);
+	switch (context->renderApi)
+	{
+		#if PIG_GFX_OPENGL_SUPPORTED
+		case RenderApi_OpenGL: return PigGfx_DestroyContext_OpenGL(context);
+		#endif
+		#if PIG_GFX_WEBGL_SUPPORTED
+		case RenderApi_WebGL: return PigGfx_DestroyContext_WebGL(context);
+		#endif
+		#if PIG_GFX_VULKAN_SUPPORTED
+		case RenderApi_Vulkan: return PigGfx_DestroyContext_Vulkan(context);
+		#endif
+		#if PIG_GFX_D3D11_SUPPORTED
+		case RenderApi_D3D11: return PigGfx_DestroyContext_D3D11(context);
+		#endif
+		#if PIG_GFX_D3D12_SUPPORTED
+		case RenderApi_D3D12: return PigGfx_DestroyContext_D3D12(context);
+		#endif
+		#if PIG_GFX_METAL_SUPPORTED
+		case RenderApi_Metal: return PigGfx_DestroyContext_Metal(context);
+		#endif
+	}
+	ClearPointer(context);
+}
+
+GraphicsContext_t* PigGfx_CreateContext(MemArena_t* memArena)
 {
 	NotNull(gfx);
 	Assert(gfx->initialized);
 	switch (gfx->renderApi)
 	{
 		#if PIG_GFX_OPENGL_SUPPORTED
-		case RenderApi_OpenGL: return PigGfx_CreateContext_OpenGL();
+		case RenderApi_OpenGL: return PigGfx_CreateContext_OpenGL(memArena);
 		#endif
 		#if PIG_GFX_WEBGL_SUPPORTED
-		case RenderApi_WebGL: return PigGfx_CreateContext_WebGL();
+		case RenderApi_WebGL: return PigGfx_CreateContext_WebGL(memArena);
 		#endif
 		#if PIG_GFX_VULKAN_SUPPORTED
-		case RenderApi_Vulkan: return PigGfx_CreateContext_Vulkan();
+		case RenderApi_Vulkan: return PigGfx_CreateContext_Vulkan(memArena);
 		#endif
 		#if PIG_GFX_D3D11_SUPPORTED
-		case RenderApi_D3D11: return PigGfx_CreateContext_D3D11();
+		case RenderApi_D3D11: return PigGfx_CreateContext_D3D11(memArena);
 		#endif
 		#if PIG_GFX_D3D12_SUPPORTED
-		case RenderApi_D3D12: return PigGfx_CreateContext_D3D12();
+		case RenderApi_D3D12: return PigGfx_CreateContext_D3D12(memArena);
 		#endif
 		#if PIG_GFX_METAL_SUPPORTED
-		case RenderApi_Metal: return PigGfx_CreateContext_Metal();
+		case RenderApi_Metal: return PigGfx_CreateContext_Metal(memArena);
 		#endif
 		default: return false;
 	}

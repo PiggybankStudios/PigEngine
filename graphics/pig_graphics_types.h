@@ -82,11 +82,13 @@ struct PigGfxOptions_t
 struct GraphicsContext_t
 {
 	RenderApi_t renderApi;
+	MemArena_t* allocArena;
 	#if PIG_GFX_OPENGL_SUPPORTED
 	int openglVersionMajor;
 	int openglVersionMinor;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
+	VkAllocationCallbacks vkAllocatorStruct;
 	VkAllocationCallbacks* vkAllocator;
 	VkInstance vkInstance;
 	VkSurfaceFormatKHR vkSurfaceFormat;
@@ -98,7 +100,6 @@ struct GraphicsContext_t
 	VkQueue vkQueue;
 	VkSwapchainKHR vkSwapchain;
 	u32 vkSwapImageCount;
-	VkImage* vkSwapImages;
 	VkImageView* vkSwapImageViews;
 	#endif
 };

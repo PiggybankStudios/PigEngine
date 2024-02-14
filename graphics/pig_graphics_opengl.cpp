@@ -63,7 +63,13 @@ void PigGfx_SetGlfwWindowHints_OpenGL()
 }
 #endif
 
-GraphicsContext_t* PigGfx_CreateContext_OpenGL()
+void PigGfx_DestroyContext_OpenGL(GraphicsContext_t* context)
+{
+	//TODO: Implement me!
+	ClearPointer(context);
+}
+
+GraphicsContext_t* PigGfx_CreateContext_OpenGL(MemArena_t* memArena)
 {
 	Assert(!gfx->contextCreated);
 	if (!_PigGfx_GladInit()) { return nullptr; }

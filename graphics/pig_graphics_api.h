@@ -40,7 +40,8 @@ void PigGfx_SetOptions(const PigGfxOptions_t* options);
 void PigGfx_SetGlfwWindowHints();
 void PigGfx_SwitchToGlfwWindow(GLFWwindow* glfwWindowPntr);
 #endif
-GraphicsContext_t* PigGfx_CreateContext();
+void PigGfx_DestroyContext(GraphicsContext_t* context);
+GraphicsContext_t* PigGfx_CreateContext(MemArena_t* memArena);
 
 // +==============================+
 // |       Render Functions       |

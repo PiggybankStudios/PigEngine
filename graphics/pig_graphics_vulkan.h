@@ -15,6 +15,7 @@ Date:   02\05\2024
 
 struct VkTestContent_t
 {
+	MemArena_t* allocArena;
 	VkDeviceMemory vertBufferMem;
 	VkBuffer vertBuffer;
 	VkRenderPass renderPass;
@@ -36,7 +37,8 @@ struct VkTestContent_t
 
 bool PigGfx_Init_Vulkan();
 void PigGfx_SetGlfwWindowHints_Vulkan();
-GraphicsContext_t* PigGfx_CreateContext_Vulkan();
+void PigGfx_DestroyContext_Vulkan(GraphicsContext_t* context);
+GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena);
 
 void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, int clearStencilValue);
 

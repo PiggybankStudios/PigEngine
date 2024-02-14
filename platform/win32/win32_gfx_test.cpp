@@ -388,7 +388,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			Platform->mainWindow = newWindow;
 			newWindow->activeInput.isFocused = true;
-			Platform->gfxContext = PigGfx_CreateContext();
+			Platform->gfxContext = PigGfx_CreateContext(&Platform->mainHeap);
 			if (Platform->gfxContext == nullptr)
 			{
 				Win32_InitError("Failed to create graphics context after window creation!");

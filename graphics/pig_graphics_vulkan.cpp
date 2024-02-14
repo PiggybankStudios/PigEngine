@@ -16,6 +16,7 @@ bool _FindQueueFamilyThatSupportsPresent(VkPhysicalDevice* device, VkSurfaceKHR*
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, nullptr);
 	if (queueFamilyCount == 0) { return false; }
 	
+	//TODO: Move this allocation into scratch arena!
 	VkQueueFamilyProperties* queueFamilies = AllocArray(gfx->mainArena, VkQueueFamilyProperties, queueFamilyCount);
 	NotNull(queueFamilies);
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, queueFamilies);
@@ -74,8 +75,31 @@ void PigGfx_SetGlfwWindowHints_Vulkan()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
 
-bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
+void _DestroyVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 {
+	vkFreeCommandBuffers(context->vkDevice, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
+	if (content->commandBuffers != nullptr) { FreeMem(content->allocArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount); }
+	vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
+	if (content->framebuffers != nullptr)
+	{
+		for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
+		FreeMem(content->allocArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
+	}
+	vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
+	vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
+	vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
+	vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
+	vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
+	vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
+	vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+	ClearPointer(content);
+}
+
+bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, MemArena_t* memArena)
+{
+	ClearPointer(content);
+	content->allocArena = memArena;
+	
 	// +==================================+
 	// | vkTestBufferMem and vkTestBuffer |
 	// +==================================+
@@ -101,6 +125,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreateBuffer(context->vkDevice, &bufferCreateInfo, context->vkAllocator, &content->vertBuffer) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer creation failed!");
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -118,7 +143,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkAllocateMemory(context->vkDevice, &vkAllocInfo, context->vkAllocator, &content->vertBufferMem) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer memory allocation failed!");
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -128,8 +153,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkMapMemory(context->vkDevice, content->vertBufferMem, 0, VK_WHOLE_SIZE, 0, &testBufferPntr) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer memory map failed!");
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -201,8 +225,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreateRenderPass(context->vkDevice, &renderPassCreateInfo, context->vkAllocator, &content->renderPass) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan renderpass creation failed!");
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -215,9 +238,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (!Win32_ReadFileContents(NewStr("Resources/Shaders/vulkan_basic.vert.spv"), &vertFile))
 		{
 			PigGfx_InitFailure("Failed to open/read basic vert shader SPIR-V code from file!");
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		PlatFileContents_t fragFile;
@@ -225,9 +246,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		{
 			PigGfx_InitFailure("Failed to open/read basic frag shader SPIR-V code from file!");
 			Win32_FreeFileContents(&vertFile);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -244,9 +263,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 			PigGfx_InitFailure("Vulkan vert shader module creation failed!");
 			Win32_FreeFileContents(&vertFile);
 			Win32_FreeFileContents(&fragFile);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -261,12 +278,9 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreateShaderModule(context->vkDevice, &fragCreateInfo, context->vkAllocator, &content->fragShader) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan frag shader module creation failed!");
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
 			Win32_FreeFileContents(&vertFile);
 			Win32_FreeFileContents(&fragFile);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
@@ -291,11 +305,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreatePipelineLayout(context->vkDevice, &layoutCreateInfo, context->vkAllocator, &content->pipelineLayout) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan pipeline layout creation failed!");
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -466,12 +476,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreateGraphicsPipelines(context->vkDevice, VK_NULL_HANDLE, 1, &pipelineCreateInfo, context->vkAllocator, &content->pipeline) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan pipeline creation failed!");
-			vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -481,8 +486,9 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 	// +==============================+
 	{
 		content->framebufferCount = context->vkSwapImageCount;
-		content->framebuffers = AllocArray(gfx->mainArena, VkFramebuffer, content->framebufferCount);
+		content->framebuffers = AllocArray(content->allocArena, VkFramebuffer, content->framebufferCount);
 		NotNull(content->framebuffers);
+		MyMemSet(content->framebuffers, 0x00, sizeof(VkFramebuffer) * content->framebufferCount);
 		
 		VkFramebufferCreateInfo framebufferCreateInfo;
 		{
@@ -503,15 +509,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 			if (vkCreateFramebuffer(context->vkDevice, &framebufferCreateInfo, context->vkAllocator, &content->framebuffers[fIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan framebuffer creation failed!");
-				for (u32 fIndex2 = 0; fIndex2 < fIndex; fIndex2++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex2], context->vkAllocator); }
-				FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-				vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-				vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-				vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-				vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-				vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-				vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-				vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+				_DestroyVkTestContent(context, content);
 				return false;
 			}
 		}
@@ -532,15 +530,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkCreateCommandPool(context->vkDevice, &poolCreateInfo, context->vkAllocator, &content->commandPool) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan command pool creation failed!");
-			for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
-			FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-			vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-			vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -550,8 +540,9 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 	// +==============================+
 	{
 		content->commandBufferCount = context->vkSwapImageCount;
-		content->commandBuffers = AllocArray(gfx->mainArena, VkCommandBuffer, content->commandBufferCount);
+		content->commandBuffers = AllocArray(content->allocArena, VkCommandBuffer, content->commandBufferCount);
 		NotNull(content->commandBuffers);
+		MyMemSet(content->commandBuffers, 0x00, sizeof(VkCommandBuffer) * content->commandBufferCount);
 		
 		VkCommandBufferAllocateInfo allocInfo;
 		{
@@ -566,17 +557,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkAllocateCommandBuffers(context->vkDevice, &allocInfo, &content->commandBuffers[0]) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan command buffer allocation failed!");
-			FreeMem(gfx->mainArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount);
-			vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
-			for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
-			FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-			vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-			vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -597,18 +578,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkBeginCommandBuffer(content->commandBuffers[bIndex], &beginInfo) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Failed to begin command buffer!");
-			vkFreeCommandBuffers(context->vkDevice, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
-			FreeMem(gfx->mainArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount);
-			vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
-			for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
-			FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-			vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-			vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -653,18 +623,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 		if (vkEndCommandBuffer(content->commandBuffers[bIndex]) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Failed to end command buffer!");
-			vkFreeCommandBuffers(context->vkDevice, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
-			FreeMem(gfx->mainArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount);
-			vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
-			for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
-			FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-			vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-			vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-			vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-			vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-			vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-			vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+			_DestroyVkTestContent(context, content);
 			return false;
 		}
 	}
@@ -695,18 +654,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 				vkCreateFence(context->vkDevice, &fenceCreateInfo, context->vkAllocator, &content->activeFences[iIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan semaphore/fence creation failed!");
-				vkFreeCommandBuffers(context->vkDevice, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
-				FreeMem(gfx->mainArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount);
-				vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
-				for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
-				FreeMem(gfx->mainArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
-				vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-				vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-				vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-				vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-				vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-				vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-				vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+				_DestroyVkTestContent(context, content);
 				return false;
 			}
 		}
@@ -717,18 +665,35 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 	return true;
 }
 
-GraphicsContext_t* PigGfx_CreateContext_Vulkan()
+void PigGfx_DestroyContext_Vulkan(GraphicsContext_t* context)
+{
+	NotNull(context->allocArena);
+	for (u32 iIndex = 0; iIndex < gfx->context.vkSwapImageCount; iIndex++) { vkDestroyImageView(context->vkDevice, context->vkSwapImageViews[iIndex], context->vkAllocator); }
+	if (context->vkSwapImageViews != nullptr) { FreeMem(context->allocArena, context->vkSwapImageViews, sizeof(VkImageView) * context->vkSwapImageCount); }
+	vkDestroySwapchainKHR(context->vkDevice, context->vkSwapchain, context->vkAllocator);
+	vkDestroyDevice(context->vkDevice, context->vkAllocator);
+	vkDestroySurfaceKHR(context->vkInstance, context->vkSurface, context->vkAllocator);
+	vkDestroyInstance(context->vkInstance, context->vkAllocator);
+	ClearPointer(context);
+}
+
+GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 {
 	NotNull(gfx);
 	Assert(!gfx->contextCreated);
 	Assert(gfx->optionsSet);
 	NotNull(gfx->currentGlfwWindow);
-	NotNull(gfx->mainArena);
+	NotNull(memArena);
 	
+	GraphicsContext_t* context = &gfx->context;
+	ClearPointer(context);
+	context->allocArena = memArena;
 	//TODO: Implement this!
-	VkAllocationCallbacks* vkAllocator = nullptr;
+	context->vkAllocator = nullptr;
 	
-	VkInstance vkInstance;
+	// +==============================+
+	// |      Create vkInstance       |
+	// +==============================+
 	{
 		u32 instanceCreationExtensionCount = 0;
 		const char** instanceCreationExtensions = glfwGetRequiredInstanceExtensions(&instanceCreationExtensionCount);
@@ -754,59 +719,66 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 		createInfo.enabledExtensionCount = instanceCreationExtensionCount;
 		createInfo.ppEnabledExtensionNames = instanceCreationExtensions;
 		
-		if (vkCreateInstance(&createInfo, vkAllocator, &vkInstance) != VK_SUCCESS) { PigGfx_InitFailure("Vulkan instance creation failed!"); return nullptr; }
+		if (vkCreateInstance(&createInfo, context->vkAllocator, &context->vkInstance) != VK_SUCCESS)
+		{
+			PigGfx_InitFailure("Vulkan instance creation failed!");
+			PigGfx_DestroyContext_Vulkan(context);
+			return nullptr;
+		}
 	}
 	
-	VkSurfaceKHR vkSurface = {};
-	if (glfwCreateWindowSurface(vkInstance, gfx->currentGlfwWindow, vkAllocator, &vkSurface) != VK_SUCCESS)
+	// +==============================+
+	// |       Create vkSurface       |
+	// +==============================+
+	if (glfwCreateWindowSurface(context->vkInstance, gfx->currentGlfwWindow, context->vkAllocator, &context->vkSurface) != VK_SUCCESS)
 	{
 		PigGfx_InitFailure("Vulkan window surface creation failed!");
-		vkDestroyInstance(vkInstance, vkAllocator);
+		PigGfx_DestroyContext_Vulkan(context);
 		return nullptr;
 	}
 	
-	VkPhysicalDevice vkPhysicalDevice = {};
-	u32 queueFamilyIndex = 0;
+	// +==============================+
+	// |   Create vkPhysicalDevice    |
+	// +==============================+
 	{
 		u32 deviceCount;
-		vkEnumeratePhysicalDevices(vkInstance, &deviceCount, nullptr);
+		vkEnumeratePhysicalDevices(context->vkInstance, &deviceCount, nullptr);
 		if (deviceCount == 0)
 		{
 			PigGfx_InitFailure("Vulkan physical device enumeration failed");
-			vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-			vkDestroyInstance(vkInstance, vkAllocator);
+			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 		
-		VkPhysicalDevice* allDevices = AllocArray(gfx->mainArena, VkPhysicalDevice, deviceCount);
+		VkPhysicalDevice* allDevices = AllocArray(memArena, VkPhysicalDevice, deviceCount);
 		NotNull(allDevices);
-		vkEnumeratePhysicalDevices(vkInstance, &deviceCount, allDevices);
+		vkEnumeratePhysicalDevices(context->vkInstance, &deviceCount, allDevices);
 		
 		bool foundDeviceWithQueue = false;
 		for (u32 dIndex = 0; dIndex < deviceCount; dIndex++)
 		{
 			VkPhysicalDevice* device = &allDevices[dIndex];
-			if (_FindQueueFamilyThatSupportsPresent(device, &vkSurface, &queueFamilyIndex))
+			if (_FindQueueFamilyThatSupportsPresent(device, &context->vkSurface, &context->queueFamilyIndex))
 			{
-				vkPhysicalDevice = *device;
+				context->vkPhysicalDevice = *device;
 				foundDeviceWithQueue = true;
 				break;
 			}
 		}
 		
-		FreeMem(gfx->mainArena, allDevices, sizeof(VkPhysicalDevice) * deviceCount);
+		FreeMem(memArena, allDevices, sizeof(VkPhysicalDevice) * deviceCount);
 		
 		if (!foundDeviceWithQueue)
 		{
 			PigGfx_InitFailure("Couldn't find physical device with appropriate queue capabilities (enumerating in Vulkan)");
-			vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-			vkDestroyInstance(vkInstance, vkAllocator);
+			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 	}
 	
-	VkDevice vkDevice;
-	VkQueue vkQueue;
+	// +==============================+
+	// | Create vkDevice and vkQueue  |
+	// +==============================+
 	{
 		r32 queuePriority = 1.0f;
 		VkDeviceQueueCreateInfo queueCreateInfo;
@@ -814,7 +786,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			queueCreateInfo.pNext = nullptr;
 			queueCreateInfo.flags = 0;
-			queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+			queueCreateInfo.queueFamilyIndex = context->queueFamilyIndex;
 			queueCreateInfo.queueCount = 1;
 			queueCreateInfo.pQueuePriorities = &queuePriority;
 		}
@@ -835,37 +807,37 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			deviceCreateInfo.ppEnabledLayerNames = &enabledLayerNames[0];
 		}
 		
-		if (vkCreateDevice(vkPhysicalDevice, &deviceCreateInfo, vkAllocator, &vkDevice) != VK_SUCCESS)
+		if (vkCreateDevice(context->vkPhysicalDevice, &deviceCreateInfo, context->vkAllocator, &context->vkDevice) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan device creation failed!");
-			vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-			vkDestroyInstance(vkInstance, vkAllocator);
+			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 		
-		vkGetDeviceQueue(vkDevice, queueFamilyIndex, 0, &vkQueue);
+		vkGetDeviceQueue(context->vkDevice, context->queueFamilyIndex, 0, &context->vkQueue);
 	}
 	
 	int windowWidth, windowHeight;
 	glfwGetWindowSize(gfx->currentGlfwWindow, &windowWidth, &windowHeight);
-	VkExtent2D swapExtent = { (u32)windowWidth, (u32)windowHeight };
+	context->swapExtent = { (u32)windowWidth, (u32)windowHeight };
 	
-	VkSurfaceFormatKHR vkSurfaceFormat = {};
-	VkSwapchainKHR vkSwapchain;
+	// +========================================+
+	// | Create vkSurfaceFormat and vkSwapchain |
+	// +========================================+
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, vkSurface, &surfaceCapabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context->vkPhysicalDevice, context->vkSurface, &surfaceCapabilities);
 		if (surfaceCapabilities.currentExtent.width != UINT32_MAX)
 		{
-			swapExtent = surfaceCapabilities.currentExtent;
+			context->swapExtent = surfaceCapabilities.currentExtent;
 		}
 		
 		u32 formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurface, &formatCount, nullptr);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vkPhysicalDevice, context->vkSurface, &formatCount, nullptr);
 		Assert(formatCount > 0);
-		VkSurfaceFormatKHR* allFormats = AllocArray(gfx->mainArena, VkSurfaceFormatKHR, formatCount);
+		VkSurfaceFormatKHR* allFormats = AllocArray(memArena, VkSurfaceFormatKHR, formatCount);
 		NotNull(allFormats);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurface, &formatCount, &allFormats[0]);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vkPhysicalDevice, context->vkSurface, &formatCount, &allFormats[0]);
 		
 		bool foundDesiredFormat = false;
 		for (u32 fIndex = 0; fIndex < formatCount; fIndex++)
@@ -873,20 +845,18 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			VkSurfaceFormatKHR* format = &allFormats[fIndex];
 			if (format->format == VK_FORMAT_B8G8R8A8_SRGB && format->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			{
-				vkSurfaceFormat = *format;
+				context->vkSurfaceFormat = *format;
 				foundDesiredFormat = true;
 				break;
 			}
 		}
 		
-		FreeMem(gfx->mainArena, allFormats, sizeof(VkSurfaceFormatKHR) * formatCount);
+		FreeMem(memArena, allFormats, sizeof(VkSurfaceFormatKHR) * formatCount);
 		
 		if (!foundDesiredFormat)
 		{
 			PigGfx_InitFailure("Couldn't find a supported surface format on the (physical device chosen) that matches the format we expect");
-			vkDestroyDevice(vkDevice, vkAllocator);
-			vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-			vkDestroyInstance(vkInstance, vkAllocator);
+			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 		
@@ -895,11 +865,11 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 			swapchainCreateInfo.pNext = nullptr;
 			swapchainCreateInfo.flags = 0;
-			swapchainCreateInfo.surface = vkSurface;
+			swapchainCreateInfo.surface = context->vkSurface;
 			swapchainCreateInfo.minImageCount = surfaceCapabilities.minImageCount + 1;
-			swapchainCreateInfo.imageFormat = vkSurfaceFormat.format;
-			swapchainCreateInfo.imageColorSpace = vkSurfaceFormat.colorSpace;
-			swapchainCreateInfo.imageExtent = swapExtent;
+			swapchainCreateInfo.imageFormat = context->vkSurfaceFormat.format;
+			swapchainCreateInfo.imageColorSpace = context->vkSurfaceFormat.colorSpace;
+			swapchainCreateInfo.imageExtent = context->swapExtent;
 			swapchainCreateInfo.imageArrayLayers = 1;
 			swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 			swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -912,28 +882,27 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 		}
 		
-		if (vkCreateSwapchainKHR(vkDevice, &swapchainCreateInfo, vkAllocator, &vkSwapchain) != VK_SUCCESS)
+		if (vkCreateSwapchainKHR(context->vkDevice, &swapchainCreateInfo, context->vkAllocator, &context->vkSwapchain) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan swapchain creation failed!");
-			vkDestroyDevice(vkDevice, vkAllocator);
-			vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-			vkDestroyInstance(vkInstance, vkAllocator);
+			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 	}
 	
-	u32 vkSwapImageCount = 0;
-	VkImage* vkSwapImages = nullptr;
-	VkImageView* vkSwapImageViews = nullptr;
+	// +==============================+
+	// |   Create vkSwapImageViews    |
+	// +==============================+
 	{
-		vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapImageCount, nullptr);
-		Assert(vkSwapImageCount > 0);
-		vkSwapImages = AllocArray(gfx->mainArena, VkImage, vkSwapImageCount);
+		vkGetSwapchainImagesKHR(context->vkDevice, context->vkSwapchain, &context->vkSwapImageCount, nullptr);
+		Assert(context->vkSwapImageCount > 0);
+		VkImage* vkSwapImages = AllocArray(memArena, VkImage, context->vkSwapImageCount);
 		NotNull(vkSwapImages);
-		vkGetSwapchainImagesKHR(vkDevice, vkSwapchain, &vkSwapImageCount, vkSwapImages);
+		vkGetSwapchainImagesKHR(context->vkDevice, context->vkSwapchain, &context->vkSwapImageCount, vkSwapImages);
 		
-		vkSwapImageViews = AllocArray(gfx->mainArena, VkImageView, vkSwapImageCount);
-		NotNull(vkSwapImageViews);
+		context->vkSwapImageViews = AllocArray(memArena, VkImageView, context->vkSwapImageCount);
+		NotNull(context->vkSwapImageViews);
+		MyMemSet(context->vkSwapImageViews, 0x00, sizeof(VkImageView) * context->vkSwapImageCount);
 		
 		VkImageViewCreateInfo imageViewCreateInfo;
 		{
@@ -941,7 +910,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			imageViewCreateInfo.pNext = nullptr;
 			imageViewCreateInfo.flags = 0;
 			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageViewCreateInfo.format = vkSurfaceFormat.format;
+			imageViewCreateInfo.format = context->vkSurfaceFormat.format;
 			imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -953,50 +922,29 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan()
 			imageViewCreateInfo.subresourceRange.layerCount = 1;
 		}
 		
-		for (u32 iIndex = 0; iIndex < vkSwapImageCount; iIndex++)
+		for (u32 iIndex = 0; iIndex < context->vkSwapImageCount; iIndex++)
 		{
 			imageViewCreateInfo.image = vkSwapImages[iIndex];
-			if (vkCreateImageView(vkDevice, &imageViewCreateInfo, vkAllocator, &vkSwapImageViews[iIndex]) != VK_SUCCESS)
+			if (vkCreateImageView(context->vkDevice, &imageViewCreateInfo, context->vkAllocator, &context->vkSwapImageViews[iIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan swap imageview creation failed!");
-				FreeMem(gfx->mainArena, vkSwapImageViews, sizeof(VkImageView) * vkSwapImageCount);
-				FreeMem(gfx->mainArena, vkSwapImages, sizeof(VkImage) * vkSwapImageCount);
-				vkDestroySwapchainKHR(vkDevice, vkSwapchain, vkAllocator);
-				vkDestroyDevice(vkDevice, vkAllocator);
-				vkDestroySurfaceKHR(vkInstance, vkSurface, vkAllocator);
-				vkDestroyInstance(vkInstance, vkAllocator);
+				FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vkSwapImageCount);
+				PigGfx_DestroyContext_Vulkan(context);
 				return nullptr;
 			}
 		}
 		
-		FreeMem(gfx->mainArena, vkSwapImages, sizeof(VkImage) * vkSwapImageCount);
+		FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vkSwapImageCount);
 	}
 	
-	ClearStruct(gfx->context);
-	gfx->context.renderApi = RenderApi_Vulkan;
-	gfx->context.vkInstance = vkInstance;
-	gfx->context.vkSurfaceFormat = vkSurfaceFormat;
-	gfx->context.vkSurface = vkSurface;
-	gfx->context.vkPhysicalDevice = vkPhysicalDevice;
-	gfx->context.queueFamilyIndex = queueFamilyIndex;
-	gfx->context.swapExtent = swapExtent;
-	gfx->context.vkDevice = vkDevice;
-	gfx->context.vkQueue = vkQueue;
-	gfx->context.vkSwapchain = vkSwapchain;
-	gfx->context.vkSwapImageCount = vkSwapImageCount;
-	gfx->context.vkSwapImages = vkSwapImages;
-	gfx->context.vkSwapImageViews = vkSwapImageViews;
 	gfx->contextCreated = true;
 	
 	//TODO: Get rid of this:
-	if (!_CreateVkTestContent(&gfx->context, &gfx->vkTest))
+	if (!_CreateVkTestContent(&gfx->context, &gfx->vkTest, memArena))
 	{
-		for (u32 iIndex = 0; iIndex < gfx->context.vkSwapImageCount; iIndex++) { vkDestroyImageView(gfx->context.vkDevice, gfx->context.vkSwapImageViews[iIndex], gfx->context.vkAllocator); }
-		FreeMem(gfx->mainArena, gfx->context.vkSwapImageViews, sizeof(VkImageView) * gfx->context.vkSwapImageCount);
-		vkDestroySwapchainKHR(gfx->context.vkDevice, gfx->context.vkSwapchain, gfx->context.vkAllocator);
-		vkDestroyDevice(gfx->context.vkDevice, gfx->context.vkAllocator);
-		vkDestroySurfaceKHR(gfx->context.vkInstance, gfx->context.vkSurface, gfx->context.vkAllocator);
-		vkDestroyInstance(gfx->context.vkInstance, gfx->context.vkAllocator);
+		PigGfx_DestroyContext_Vulkan(context);
+		gfx->contextCreated = false;
+		return nullptr;
 	}
 	
 	return &gfx->context;
