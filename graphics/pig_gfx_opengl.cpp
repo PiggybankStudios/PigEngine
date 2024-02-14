@@ -1,5 +1,5 @@
 /*
-File:   pig_graphics_opengl.cpp
+File:   pig_gfx_opengl.cpp
 Author: Taylor Robbins
 Date:   02\06\2024
 Description: 
@@ -51,13 +51,13 @@ bool PigGfx_Init_OpenGL()
 #if PIG_GFX_GLFW_SUPPORTED
 void PigGfx_SetGlfwWindowHints_OpenGL()
 {
-	// PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
-	// 	gfx->options.gl.requestVersionMajor,
-	// 	gfx->options.gl.requestVersionMinor,
-	// 	GetOpenGlProfileStr(gfx->options.gl.requestProfile),
-	// 	gfx->options.gl.requestForwardCompat ? "true" : "false",
-	// 	gfx->options.gl.requestDebugContext ? "true" : "false"
-	// ); //TODO: Re-enable me once we have debug output in pig_graphics
+	PigGfx_PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
+		gfx->options.gl.requestVersionMajor,
+		gfx->options.gl.requestVersionMinor,
+		GetOpenGlProfileStr(gfx->options.gl.requestProfile),
+		gfx->options.gl.requestForwardCompat ? "true" : "false",
+		gfx->options.gl.requestDebugContext ? "true" : "false"
+	);
 	int requestProfileGlfwValue = GLFW_OPENGL_ANY_PROFILE;
 	switch (gfx->options.gl.requestProfile)
 	{

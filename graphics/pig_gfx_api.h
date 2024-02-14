@@ -1,11 +1,11 @@
 /*
-File:   pig_graphics_api.h
+File:   pig_gfx_api.h
 Author: Taylor Robbins
 Date:   02\06\2024
 */
 
-#ifndef _PIG_GRAPHICS_API_H
-#define _PIG_GRAPHICS_API_H
+#ifndef _PIG_GFX_API_H
+#define _PIG_GFX_API_H
 
 u64 PigGfx_GetSupportedRenderApis(MemArena_t* memArena, RenderApi_t** apisOut);
 bool PigGfx_Init(const PigGfxContext_t* context, MemArena_t* stateAllocArena, MemArena_t* mainAllocArena, RenderApi_t renderApi);
@@ -23,4 +23,4 @@ GraphicsContext_t* PigGfx_CreateContext(MemArena_t* memArena);
 // +==============================+
 void PigGfx_BeginRendering(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, int clearStencilValue);
 
-#endif //  _PIG_GRAPHICS_API_H
+#endif //  _PIG_GFX_API_H

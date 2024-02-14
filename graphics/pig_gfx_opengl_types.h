@@ -1,11 +1,11 @@
 /*
-File:   pig_graphics_types_opengl.h
+File:   pig_gfx_opengl_types.h
 Author: Taylor Robbins
 Date:   02\13\2024
 */
 
-#ifndef _PIG_GRAPHICS_TYPES_OPENGL_H
-#define _PIG_GRAPHICS_TYPES_OPENGL_H
+#ifndef _PIG_GFX_OPENGL_TYPES_H
+#define _PIG_GFX_OPENGL_TYPES_H
 
 enum OpenGlProfile_t
 {
@@ -35,4 +35,4 @@ struct GraphicsContext_OpenGL_t
 	int versionMinor;
 };
 
-#endif //  _PIG_GRAPHICS_TYPES_OPENGL_H
+#endif //  _PIG_GFX_OPENGL_TYPES_H

@@ -1,11 +1,11 @@
 /*
-File:   pig_graphics_types_vulkan.h
+File:   pig_gfx_vulkan_types.h
 Author: Taylor Robbins
 Date:   02\13\2024
 */
 
-#ifndef _PIG_GRAPHICS_TYPES_VULKAN_H
-#define _PIG_GRAPHICS_TYPES_VULKAN_H
+#ifndef _PIG_GFX_VULKAN_TYPES_H
+#define _PIG_GFX_VULKAN_TYPES_H
 
 #if !PIG_GFX_GLFW_SUPPORTED
 #error Vulkan support is (currently) dependent upon GLFW being used. Please set PIG_GFX_GLFW_SUPPORTED to 1
@@ -62,4 +62,4 @@ struct VkTestContent_t
 	u32 activeSyncIndex;
 };
 
-#endif //  _PIG_GRAPHICS_TYPES_VULKAN_H
+#endif //  _PIG_GFX_VULKAN_TYPES_H

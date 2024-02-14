@@ -1,11 +1,11 @@
 /*
-File:   pig_graphics_types.h
+File:   pig_gfx_types.h
 Author: Taylor Robbins
 Date:   02\06\2024
 */
 
-#ifndef _PIG_GRAPHICS_TYPES_H
-#define _PIG_GRAPHICS_TYPES_H
+#ifndef _PIG_GFX_TYPES_H
+#define _PIG_GFX_TYPES_H
 
 #define PIG_GFX_DEBUG_OUTPUT_DEF(functionName) void functionName(const char* filePath, u32 lineNumber, const char* funcName, DbgLevel_t level, bool newLine, const char* message)
 typedef PIG_GFX_DEBUG_OUTPUT_DEF(PigGfxDebugOutput_f);
@@ -95,4 +95,4 @@ struct PigGfxState_t
 
 extern PigGfxState_t* gfx;
 
-#endif //  _PIG_GRAPHICS_TYPES_H
+#endif //  _PIG_GFX_TYPES_H

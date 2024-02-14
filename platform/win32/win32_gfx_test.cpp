@@ -10,7 +10,7 @@ Description:
 	**   difference will check #ifdef Win32_GFX_TEST, which is #defined at the top here
 */
 
-#define WIN32_GFX_TEST //TODO: Once we fully move over to pig_graphics, we should remove this #define and simplify all the places that check it
+#define WIN32_GFX_TEST //TODO: Once we fully move over to pig_gfx, we should remove this #define and simplify all the places that check it
 #define WIN32_BLANK_RENDER_API RenderApi_Vulkan
 
 #define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
@@ -48,7 +48,7 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 // +--------------------------------------------------------------+
 // |                Personal Library Source Files                 |
 // +--------------------------------------------------------------+
-#include "graphics/pig_graphics.cpp"
+#include "graphics/pig_gfx.cpp"
 #include "gylib/gy_temp_memory.cpp"
 #include "gylib/gy_scratch_arenas.cpp"
 
