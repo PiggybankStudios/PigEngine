@@ -13,6 +13,25 @@ Description:
 
 #include "graphics/pig_graphics_early_include.h"
 
+#if PIG_GFX_OPENGL_SUPPORTED
+#include "graphics/pig_graphics_types_opengl.h"
+#endif
+#if PIG_GFX_WEBGL_SUPPORTED
+#include "graphics/pig_graphics_types_webgl.h"
+#endif
+#if PIG_GFX_VULKAN_SUPPORTED
+#include "graphics/pig_graphics_types_vulkan.h"
+#endif
+#if PIG_GFX_D3D11_SUPPORTED
+#include "graphics/pig_graphics_types_d3d11.h"
+#endif
+#if PIG_GFX_D3D12_SUPPORTED
+#include "graphics/pig_graphics_types_d3d12.h"
+#endif
+#if PIG_GFX_METAL_SUPPORTED
+#include "graphics/pig_graphics_types_metal.h"
+#endif
+
 #include "graphics/pig_graphics_types.h"
 #include "graphics/pig_graphics_debug.h"
 

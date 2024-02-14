@@ -85,22 +85,22 @@ void PigGfx_FillDefaultOptions(PigGfxOptions_t* optionsOut)
 	
 	#if PIG_GFX_OPENGL_SUPPORTED
 	#if PIG_GFX_GLFW_SUPPORTED
-	optionsOut->opengl_loadProcFunction = (GlLoadProc_f)glfwGetProcAddress;
+	optionsOut->gl.loadProcFunction = (GlLoadProc_f)glfwGetProcAddress;
 	#endif
-	optionsOut->opengl_RequestVersionMajor = 3;
-	optionsOut->opengl_RequestVersionMinor = 3;
-	optionsOut->opengl_RequestProfile = OpenGlProfile_Core;
-	optionsOut->opengl_RequestForwardCompat = true;
-	optionsOut->opengl_requestDebugContext = false;
+	optionsOut->gl.requestVersionMajor = 3;
+	optionsOut->gl.requestVersionMinor = 3;
+	optionsOut->gl.requestProfile = OpenGlProfile_Core;
+	optionsOut->gl.requestForwardCompat = true;
+	optionsOut->gl.requestDebugContext = false;
 	#endif
 	
 	#if PIG_GFX_VULKAN_SUPPORTED
-	optionsOut->vulkan_ApplicationName = "PigEngineGame";
-	optionsOut->vulkan_ApplicationVersionInt = 1;
-	optionsOut->vulkan_EngineName = "PigEngine";
-	optionsOut->vulkan_EngineVersionInt = 1;
-	optionsOut->vulkan_RequestVersionMajor = 1;
-	optionsOut->vulkan_RequestVersionMinor = 0;
+	optionsOut->vk.applicationName = "PigEngineGame";
+	optionsOut->vk.applicationVersionInt = 1;
+	optionsOut->vk.engineName = "PigEngine";
+	optionsOut->vk.engineVersionInt = 1;
+	optionsOut->vk.requestVersionMajor = 1;
+	optionsOut->vk.requestVersionMinor = 0;
 	#endif
 }
 

@@ -8,13 +8,25 @@ Description:
 
 #include "glad/glad.c"
 
+const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue)
+{
+	switch (enumValue)
+	{
+		case OpenGlProfile_None:   return "None";
+		case OpenGlProfile_Any:    return "Any";
+		case OpenGlProfile_Core:   return "Core";
+		case OpenGlProfile_Compat: return "Compat";
+		default: return "Unknown";
+	}
+}
+
 static bool _PigGfx_GladInit()
 {
 	// WriteLine_R("Initializing GLAD..."); //TODO: Re-Enable me!
 	
 	Assert(gfx->optionsSet);
-	Assert(gfx->options.opengl_loadProcFunction != nullptr);
-	if (!gladLoadGLLoader((GLADloadproc)gfx->options.opengl_loadProcFunction))
+	Assert(gfx->options.gl.loadProcFunction != nullptr);
+	if (!gladLoadGLLoader((GLADloadproc)gfx->options.gl.loadProcFunction))
 	{
 		PigGfx_InitFailure("Could not initialize GLAD. gladLoadGLLoader failed");
 		return false;
@@ -40,14 +52,14 @@ bool PigGfx_Init_OpenGL()
 void PigGfx_SetGlfwWindowHints_OpenGL()
 {
 	// PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
-	// 	gfx->options.opengl_RequestVersionMajor,
-	// 	gfx->options.opengl_RequestVersionMinor,
-	// 	GetOpenGlProfileStr(gfx->options.opengl_RequestProfile),
-	// 	gfx->options.opengl_RequestForwardCompat ? "true" : "false",
-	// 	gfx->options.opengl_requestDebugContext ? "true" : "false"
+	// 	gfx->options.gl.requestVersionMajor,
+	// 	gfx->options.gl.requestVersionMinor,
+	// 	GetOpenGlProfileStr(gfx->options.gl.requestProfile),
+	// 	gfx->options.gl.requestForwardCompat ? "true" : "false",
+	// 	gfx->options.gl.requestDebugContext ? "true" : "false"
 	// ); //TODO: Re-enable me once we have debug output in pig_graphics
 	int requestProfileGlfwValue = GLFW_OPENGL_ANY_PROFILE;
-	switch (gfx->options.opengl_RequestProfile)
+	switch (gfx->options.gl.requestProfile)
 	{
 		case OpenGlProfile_Any: requestProfileGlfwValue = GLFW_OPENGL_ANY_PROFILE; break;
 		case OpenGlProfile_Core: requestProfileGlfwValue = GLFW_OPENGL_CORE_PROFILE; break;
@@ -55,10 +67,10 @@ void PigGfx_SetGlfwWindowHints_OpenGL()
 		default: AssertMsg(false, "Unsupported value passed for opengl_RequestProfile in PigGfx_SetOptions!"); break;
 	}
 	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gfx->options.opengl_RequestVersionMajor);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gfx->options.opengl_RequestVersionMinor);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, gfx->options.opengl_RequestForwardCompat ? GLFW_TRUE : GLFW_FALSE); //Makes MacOSX happy?
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,  gfx->options.opengl_requestDebugContext ? GLFW_TRUE : GLFW_FALSE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gfx->options.gl.requestVersionMajor);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gfx->options.gl.requestVersionMinor);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, gfx->options.gl.requestForwardCompat ? GLFW_TRUE : GLFW_FALSE); //Makes MacOSX happy?
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,  gfx->options.gl.requestDebugContext ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE,        requestProfileGlfwValue);
 }
 #endif
@@ -78,8 +90,8 @@ GraphicsContext_t* PigGfx_CreateContext_OpenGL(MemArena_t* memArena)
 	
 	ClearStruct(gfx->context);
 	gfx->context.renderApi = RenderApi_OpenGL;
-	gfx->context.openglVersionMajor = GLVersion.major;
-	gfx->context.openglVersionMinor = GLVersion.minor;
+	gfx->context.gl.versionMajor = GLVersion.major;
+	gfx->context.gl.versionMinor = GLVersion.minor;
 	return &gfx->context;
 }
 

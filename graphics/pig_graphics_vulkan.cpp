@@ -110,21 +110,21 @@ void PigGfx_SetGlfwWindowHints_Vulkan()
 
 void _DestroyVkTestContent(GraphicsContext_t* context, VkTestContent_t* content)
 {
-	vkFreeCommandBuffers(context->vkDevice, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
+	vkFreeCommandBuffers(context->vk.device, content->commandPool, content->commandBufferCount, &content->commandBuffers[0]);
 	if (content->commandBuffers != nullptr) { FreeMem(content->allocArena, content->commandBuffers, sizeof(VkCommandBuffer) * content->commandBufferCount); }
-	vkDestroyCommandPool(context->vkDevice, content->commandPool, context->vkAllocator);
+	vkDestroyCommandPool(context->vk.device, content->commandPool, context->vk.allocator);
 	if (content->framebuffers != nullptr)
 	{
-		for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vkDevice, content->framebuffers[fIndex], context->vkAllocator); }
+		for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++) { vkDestroyFramebuffer(context->vk.device, content->framebuffers[fIndex], context->vk.allocator); }
 		FreeMem(content->allocArena, content->framebuffers, sizeof(VkFramebuffer) * content->framebufferCount);
 	}
-	vkDestroyPipeline(context->vkDevice, content->pipeline, context->vkAllocator);
-	vkDestroyPipelineLayout(context->vkDevice, content->pipelineLayout, context->vkAllocator);
-	vkDestroyShaderModule(context->vkDevice, content->fragShader, context->vkAllocator);
-	vkDestroyShaderModule(context->vkDevice, content->vertShader, context->vkAllocator);
-	vkDestroyRenderPass(context->vkDevice, content->renderPass, context->vkAllocator);
-	vkFreeMemory(context->vkDevice, content->vertBufferMem, context->vkAllocator);
-	vkDestroyBuffer(context->vkDevice, content->vertBuffer, context->vkAllocator);
+	vkDestroyPipeline(context->vk.device, content->pipeline, context->vk.allocator);
+	vkDestroyPipelineLayout(context->vk.device, content->pipelineLayout, context->vk.allocator);
+	vkDestroyShaderModule(context->vk.device, content->fragShader, context->vk.allocator);
+	vkDestroyShaderModule(context->vk.device, content->vertShader, context->vk.allocator);
+	vkDestroyRenderPass(context->vk.device, content->renderPass, context->vk.allocator);
+	vkFreeMemory(context->vk.device, content->vertBufferMem, context->vk.allocator);
+	vkDestroyBuffer(context->vk.device, content->vertBuffer, context->vk.allocator);
 	ClearPointer(content);
 }
 
@@ -149,7 +149,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkCreateBufferParams.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		vkCreateBufferParams.queueFamilyIndexCount = 0;
 		vkCreateBufferParams.pQueueFamilyIndices = nullptr;
-		if (vkCreateBuffer(context->vkDevice, &vkCreateBufferParams, context->vkAllocator, &content->vertBuffer) != VK_SUCCESS)
+		if (vkCreateBuffer(context->vk.device, &vkCreateBufferParams, context->vk.allocator, &content->vertBuffer) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer creation failed!");
 			_DestroyVkTestContent(context, content);
@@ -157,23 +157,23 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		}
 		
 		VkMemoryRequirements testBufferMemReqs;
-		vkGetBufferMemoryRequirements(context->vkDevice, content->vertBuffer, &testBufferMemReqs);
-		u32 memoryTypeIndex = _FindMemoryType(context->vkPhysicalDevice, testBufferMemReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		vkGetBufferMemoryRequirements(context->vk.device, content->vertBuffer, &testBufferMemReqs);
+		u32 memoryTypeIndex = _FindMemoryType(context->vk.physicalDevice, testBufferMemReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 		
 		DeclareVkMemoryAllocateInfo(vkAllocateMemoryParams);
 		vkAllocateMemoryParams.allocationSize = testBufferMemReqs.size;
 		vkAllocateMemoryParams.memoryTypeIndex = memoryTypeIndex;
-		if (vkAllocateMemory(context->vkDevice, &vkAllocateMemoryParams, context->vkAllocator, &content->vertBufferMem) != VK_SUCCESS)
+		if (vkAllocateMemory(context->vk.device, &vkAllocateMemoryParams, context->vk.allocator, &content->vertBufferMem) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer memory allocation failed!");
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
 		
-		vkBindBufferMemory(context->vkDevice, content->vertBuffer, content->vertBufferMem, 0);
+		vkBindBufferMemory(context->vk.device, content->vertBuffer, content->vertBufferMem, 0);
 		
 		void* testBufferPntr;
-		if (vkMapMemory(context->vkDevice, content->vertBufferMem, 0, VK_WHOLE_SIZE, 0, &testBufferPntr) != VK_SUCCESS)
+		if (vkMapMemory(context->vk.device, content->vertBufferMem, 0, VK_WHOLE_SIZE, 0, &testBufferPntr) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan buffer memory map failed!");
 			_DestroyVkTestContent(context, content);
@@ -186,9 +186,9 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkFlushMappedMemoryRangesParams.memory = content->vertBufferMem;
 		vkFlushMappedMemoryRangesParams.offset = 0;
 		vkFlushMappedMemoryRangesParams.size = VK_WHOLE_SIZE;
-		vkFlushMappedMemoryRanges(context->vkDevice, 1, &vkFlushMappedMemoryRangesParams);
+		vkFlushMappedMemoryRanges(context->vk.device, 1, &vkFlushMappedMemoryRangesParams);
 		
-		vkUnmapMemory(context->vkDevice, content->vertBufferMem);
+		vkUnmapMemory(context->vk.device, content->vertBufferMem);
 	}
 	
 	// +==============================+
@@ -197,7 +197,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	{
 		VkAttachmentDescription colorAttachment = {};
 		colorAttachment.flags = 0;
-		colorAttachment.format = context->vkSurfaceFormat.format;
+		colorAttachment.format = context->vk.surfaceFormat.format;
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -229,7 +229,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkCreateRenderPassParams.pSubpasses = &subpassDesc;
 		vkCreateRenderPassParams.dependencyCount = 0;
 		vkCreateRenderPassParams.pDependencies = nullptr;
-		if (vkCreateRenderPass(context->vkDevice, &vkCreateRenderPassParams, context->vkAllocator, &content->renderPass) != VK_SUCCESS)
+		if (vkCreateRenderPass(context->vk.device, &vkCreateRenderPassParams, context->vk.allocator, &content->renderPass) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan renderpass creation failed!");
 			_DestroyVkTestContent(context, content);
@@ -260,7 +260,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		DeclareVkShaderModuleCreateInfo(vkCreateShaderModuleVertParams);
 		vkCreateShaderModuleVertParams.codeSize = vertFile.size;
 		vkCreateShaderModuleVertParams.pCode = (u32*)vertFile.data;
-		if (vkCreateShaderModule(context->vkDevice, &vkCreateShaderModuleVertParams, context->vkAllocator, &content->vertShader) != VK_SUCCESS)
+		if (vkCreateShaderModule(context->vk.device, &vkCreateShaderModuleVertParams, context->vk.allocator, &content->vertShader) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan vert shader module creation failed!");
 			Win32_FreeFileContents(&vertFile);
@@ -272,7 +272,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		DeclareVkShaderModuleCreateInfo(vkCreateShaderModuleFragParams);
 		vkCreateShaderModuleFragParams.codeSize = fragFile.size;
 		vkCreateShaderModuleFragParams.pCode = (u32*)fragFile.data;
-		if (vkCreateShaderModule(context->vkDevice, &vkCreateShaderModuleFragParams, context->vkAllocator, &content->fragShader) != VK_SUCCESS)
+		if (vkCreateShaderModule(context->vk.device, &vkCreateShaderModuleFragParams, context->vk.allocator, &content->fragShader) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan frag shader module creation failed!");
 			Win32_FreeFileContents(&vertFile);
@@ -293,7 +293,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkCreatePipelineLayoutParams.setLayoutCount = 0;
 		vkCreatePipelineLayoutParams.pSetLayouts = nullptr;
 		vkCreatePipelineLayoutParams.pushConstantRangeCount = 0;
-		if (vkCreatePipelineLayout(context->vkDevice, &vkCreatePipelineLayoutParams, context->vkAllocator, &content->pipelineLayout) != VK_SUCCESS)
+		if (vkCreatePipelineLayout(context->vk.device, &vkCreatePipelineLayoutParams, context->vk.allocator, &content->pipelineLayout) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan pipeline layout creation failed!");
 			_DestroyVkTestContent(context, content);
@@ -343,14 +343,14 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)context->swapExtent.width;
-		viewport.height = (float)context->swapExtent.height;
+		viewport.width = (float)context->vk.swapExtent.width;
+		viewport.height = (float)context->vk.swapExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		
 		VkRect2D scissor = {};
 		scissor.offset = { 0, 0 };
-		scissor.extent = context->swapExtent;
+		scissor.extent = context->vk.swapExtent;
 		
 		DeclareVkPipelineViewportStateCreateInfo(viewportCreateInfo);
 		viewportCreateInfo.viewportCount = 1;
@@ -415,7 +415,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkCreateGraphicsPipelinesParams.subpass = 0;
 		vkCreateGraphicsPipelinesParams.basePipelineHandle = VK_NULL_HANDLE;
 		vkCreateGraphicsPipelinesParams.basePipelineIndex = 0;
-		if (vkCreateGraphicsPipelines(context->vkDevice, VK_NULL_HANDLE, 1, &vkCreateGraphicsPipelinesParams, context->vkAllocator, &content->pipeline) != VK_SUCCESS)
+		if (vkCreateGraphicsPipelines(context->vk.device, VK_NULL_HANDLE, 1, &vkCreateGraphicsPipelinesParams, context->vk.allocator, &content->pipeline) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan pipeline creation failed!");
 			_DestroyVkTestContent(context, content);
@@ -427,7 +427,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	// |    Create vkFramebuffers     |
 	// +==============================+
 	{
-		content->framebufferCount = context->vkSwapImageCount;
+		content->framebufferCount = context->vk.swapImageCount;
 		content->framebuffers = AllocArray(content->allocArena, VkFramebuffer, content->framebufferCount);
 		NotNull(content->framebuffers);
 		MyMemSet(content->framebuffers, 0x00, sizeof(VkFramebuffer) * content->framebufferCount);
@@ -436,14 +436,14 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkCreateFramebufferParams.renderPass = content->renderPass;
 		vkCreateFramebufferParams.attachmentCount = 1;
 		vkCreateFramebufferParams.pAttachments = nullptr; // Set in the loop below
-		vkCreateFramebufferParams.width = context->swapExtent.width;
-		vkCreateFramebufferParams.height = context->swapExtent.height;
+		vkCreateFramebufferParams.width = context->vk.swapExtent.width;
+		vkCreateFramebufferParams.height = context->vk.swapExtent.height;
 		vkCreateFramebufferParams.layers = 1;
 		
 		for (u32 fIndex = 0; fIndex < content->framebufferCount; fIndex++)
 		{
-			vkCreateFramebufferParams.pAttachments = &context->vkSwapImageViews[fIndex];
-			if (vkCreateFramebuffer(context->vkDevice, &vkCreateFramebufferParams, context->vkAllocator, &content->framebuffers[fIndex]) != VK_SUCCESS)
+			vkCreateFramebufferParams.pAttachments = &context->vk.swapImageViews[fIndex];
+			if (vkCreateFramebuffer(context->vk.device, &vkCreateFramebufferParams, context->vk.allocator, &content->framebuffers[fIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan framebuffer creation failed!");
 				_DestroyVkTestContent(context, content);
@@ -457,8 +457,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	// +==============================+
 	{
 		DeclareVkCommandPoolCreateInfo(vkCreateCommandPoolParams);
-		vkCreateCommandPoolParams.queueFamilyIndex = context->queueFamilyIndex;
-		if (vkCreateCommandPool(context->vkDevice, &vkCreateCommandPoolParams, context->vkAllocator, &content->commandPool) != VK_SUCCESS)
+		vkCreateCommandPoolParams.queueFamilyIndex = context->vk.queueFamilyIndex;
+		if (vkCreateCommandPool(context->vk.device, &vkCreateCommandPoolParams, context->vk.allocator, &content->commandPool) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan command pool creation failed!");
 			_DestroyVkTestContent(context, content);
@@ -470,7 +470,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	// |   Create vkCommandBuffers    |
 	// +==============================+
 	{
-		content->commandBufferCount = context->vkSwapImageCount;
+		content->commandBufferCount = context->vk.swapImageCount;
 		content->commandBuffers = AllocArray(content->allocArena, VkCommandBuffer, content->commandBufferCount);
 		NotNull(content->commandBuffers);
 		MyMemSet(content->commandBuffers, 0x00, sizeof(VkCommandBuffer) * content->commandBufferCount);
@@ -479,7 +479,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		vkAllocateCommandBuffersParams.commandPool = content->commandPool;
 		vkAllocateCommandBuffersParams.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		vkAllocateCommandBuffersParams.commandBufferCount = content->commandBufferCount;
-		if (vkAllocateCommandBuffers(context->vkDevice, &vkAllocateCommandBuffersParams, &content->commandBuffers[0]) != VK_SUCCESS)
+		if (vkAllocateCommandBuffers(context->vk.device, &vkAllocateCommandBuffersParams, &content->commandBuffers[0]) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan command buffer allocation failed!");
 			_DestroyVkTestContent(context, content);
@@ -498,9 +498,9 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		for (u32 iIndex = 0; iIndex < VULKAN_IN_FLIGHT_IMAGE_COUNT; iIndex++)
 		{
 			content->swapImagesFences[iIndex] = VK_NULL_HANDLE;
-			if (vkCreateSemaphore(context->vkDevice, &vkCreateSemaphoreParams, context->vkAllocator, &content->imageAvailableSemaphores[iIndex]) != VK_SUCCESS ||
-				vkCreateSemaphore(context->vkDevice, &vkCreateSemaphoreParams, context->vkAllocator, &content->renderFinishedSemaphores[iIndex]) != VK_SUCCESS ||
-				vkCreateFence(context->vkDevice, &vkCreateFenceParams, context->vkAllocator, &content->activeFences[iIndex]) != VK_SUCCESS)
+			if (vkCreateSemaphore(context->vk.device, &vkCreateSemaphoreParams, context->vk.allocator, &content->imageAvailableSemaphores[iIndex]) != VK_SUCCESS ||
+				vkCreateSemaphore(context->vk.device, &vkCreateSemaphoreParams, context->vk.allocator, &content->renderFinishedSemaphores[iIndex]) != VK_SUCCESS ||
+				vkCreateFence(context->vk.device, &vkCreateFenceParams, context->vk.allocator, &content->activeFences[iIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan semaphore/fence creation failed!");
 				_DestroyVkTestContent(context, content);
@@ -517,12 +517,12 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 void PigGfx_DestroyContext_Vulkan(GraphicsContext_t* context)
 {
 	NotNull(context->allocArena);
-	for (u32 iIndex = 0; iIndex < gfx->context.vkSwapImageCount; iIndex++) { vkDestroyImageView(context->vkDevice, context->vkSwapImageViews[iIndex], context->vkAllocator); }
-	if (context->vkSwapImageViews != nullptr) { FreeMem(context->allocArena, context->vkSwapImageViews, sizeof(VkImageView) * context->vkSwapImageCount); }
-	vkDestroySwapchainKHR(context->vkDevice, context->vkSwapchain, context->vkAllocator);
-	vkDestroyDevice(context->vkDevice, context->vkAllocator);
-	vkDestroySurfaceKHR(context->vkInstance, context->vkSurface, context->vkAllocator);
-	vkDestroyInstance(context->vkInstance, context->vkAllocator);
+	for (u32 iIndex = 0; iIndex < context->vk.swapImageCount; iIndex++) { vkDestroyImageView(context->vk.device, context->vk.swapImageViews[iIndex], context->vk.allocator); }
+	if (context->vk.swapImageViews != nullptr) { FreeMem(context->allocArena, context->vk.swapImageViews, sizeof(VkImageView) * context->vk.swapImageCount); }
+	vkDestroySwapchainKHR(context->vk.device, context->vk.swapchain, context->vk.allocator);
+	vkDestroyDevice(context->vk.device, context->vk.allocator);
+	vkDestroySurfaceKHR(context->vk.instance, context->vk.surface, context->vk.allocator);
+	vkDestroyInstance(context->vk.instance, context->vk.allocator);
 	ClearPointer(context);
 }
 
@@ -538,7 +538,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	ClearPointer(context);
 	context->allocArena = memArena;
 	//TODO: Implement this!
-	context->vkAllocator = nullptr;
+	context->vk.allocator = nullptr;
 	
 	// +==============================+
 	// |      Create vkInstance       |
@@ -549,11 +549,11 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		Assert(instanceCreationExtensions != nullptr);
 		
 		DeclareVkApplicationInfo(applicationInfo);
-		applicationInfo.pApplicationName = gfx->options.vulkan_ApplicationName;
-		applicationInfo.applicationVersion = gfx->options.vulkan_ApplicationVersionInt;
-		applicationInfo.pEngineName = gfx->options.vulkan_EngineName;
-		applicationInfo.engineVersion = gfx->options.vulkan_EngineVersionInt;
-		applicationInfo.apiVersion = VK_MAKE_API_VERSION(0, gfx->options.vulkan_RequestVersionMajor, gfx->options.vulkan_RequestVersionMinor, 0);
+		applicationInfo.pApplicationName = gfx->options.vk.applicationName;
+		applicationInfo.applicationVersion = gfx->options.vk.applicationVersionInt;
+		applicationInfo.pEngineName = gfx->options.vk.engineName;
+		applicationInfo.engineVersion = gfx->options.vk.engineVersionInt;
+		applicationInfo.apiVersion = VK_MAKE_API_VERSION(0, gfx->options.vk.requestVersionMajor, gfx->options.vk.requestVersionMinor, 0);
 		
 		DeclareVkInstanceCreateInfo(vkCreateInstanceParams);
 		vkCreateInstanceParams.pApplicationInfo = &applicationInfo;
@@ -562,7 +562,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		vkCreateInstanceParams.ppEnabledLayerNames = (ArrayCount(vulkanLayers) > 0) ? &vulkanLayers[0] : nullptr;
 		vkCreateInstanceParams.enabledExtensionCount = instanceCreationExtensionCount;
 		vkCreateInstanceParams.ppEnabledExtensionNames = instanceCreationExtensions;
-		if (vkCreateInstance(&vkCreateInstanceParams, context->vkAllocator, &context->vkInstance) != VK_SUCCESS)
+		if (vkCreateInstance(&vkCreateInstanceParams, context->vk.allocator, &context->vk.instance) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan instance creation failed!");
 			PigGfx_DestroyContext_Vulkan(context);
@@ -573,7 +573,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	// +==============================+
 	// |       Create vkSurface       |
 	// +==============================+
-	if (glfwCreateWindowSurface(context->vkInstance, gfx->currentGlfwWindow, context->vkAllocator, &context->vkSurface) != VK_SUCCESS)
+	if (glfwCreateWindowSurface(context->vk.instance, gfx->currentGlfwWindow, context->vk.allocator, &context->vk.surface) != VK_SUCCESS)
 	{
 		PigGfx_InitFailure("Vulkan window surface creation failed!");
 		PigGfx_DestroyContext_Vulkan(context);
@@ -585,7 +585,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	// +==============================+
 	{
 		u32 deviceCount;
-		vkEnumeratePhysicalDevices(context->vkInstance, &deviceCount, nullptr);
+		vkEnumeratePhysicalDevices(context->vk.instance, &deviceCount, nullptr);
 		if (deviceCount == 0)
 		{
 			PigGfx_InitFailure("Vulkan physical device enumeration failed");
@@ -595,15 +595,15 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		
 		VkPhysicalDevice* allDevices = AllocArray(memArena, VkPhysicalDevice, deviceCount);
 		NotNull(allDevices);
-		vkEnumeratePhysicalDevices(context->vkInstance, &deviceCount, allDevices);
+		vkEnumeratePhysicalDevices(context->vk.instance, &deviceCount, allDevices);
 		
 		bool foundDeviceWithQueue = false;
 		for (u32 dIndex = 0; dIndex < deviceCount; dIndex++)
 		{
 			VkPhysicalDevice* device = &allDevices[dIndex];
-			if (_FindQueueFamilyThatSupportsPresent(device, &context->vkSurface, &context->queueFamilyIndex))
+			if (_FindQueueFamilyThatSupportsPresent(device, &context->vk.surface, &context->vk.queueFamilyIndex))
 			{
-				context->vkPhysicalDevice = *device;
+				context->vk.physicalDevice = *device;
 				foundDeviceWithQueue = true;
 				break;
 			}
@@ -624,7 +624,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	// +==============================+
 	{
 		DeclareVkDeviceQueueCreateInfo(deviceQueueCreateInfo);
-		deviceQueueCreateInfo.queueFamilyIndex = context->queueFamilyIndex;
+		deviceQueueCreateInfo.queueFamilyIndex = context->vk.queueFamilyIndex;
 		deviceQueueCreateInfo.queueCount = 1;
 		r32 queuePriority = 1.0f;
 		deviceQueueCreateInfo.pQueuePriorities = &queuePriority;
@@ -639,37 +639,37 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		const char* enabledLayerNames[] = { "VK_LAYER_KHRONOS_validation" };
 		vkCreateDeviceParams.enabledLayerCount = ArrayCount(enabledLayerNames);
 		vkCreateDeviceParams.ppEnabledLayerNames = &enabledLayerNames[0];
-		if (vkCreateDevice(context->vkPhysicalDevice, &vkCreateDeviceParams, context->vkAllocator, &context->vkDevice) != VK_SUCCESS)
+		if (vkCreateDevice(context->vk.physicalDevice, &vkCreateDeviceParams, context->vk.allocator, &context->vk.device) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan device creation failed!");
 			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
 		
-		vkGetDeviceQueue(context->vkDevice, context->queueFamilyIndex, 0, &context->vkQueue);
+		vkGetDeviceQueue(context->vk.device, context->vk.queueFamilyIndex, 0, &context->vk.queue);
 	}
 	
 	int windowWidth, windowHeight;
 	glfwGetWindowSize(gfx->currentGlfwWindow, &windowWidth, &windowHeight);
-	context->swapExtent = { (u32)windowWidth, (u32)windowHeight };
+	context->vk.swapExtent = { (u32)windowWidth, (u32)windowHeight };
 	
 	// +========================================+
 	// | Create vkSurfaceFormat and vkSwapchain |
 	// +========================================+
 	{
 		VkSurfaceCapabilitiesKHR surfaceCapabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context->vkPhysicalDevice, context->vkSurface, &surfaceCapabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context->vk.physicalDevice, context->vk.surface, &surfaceCapabilities);
 		if (surfaceCapabilities.currentExtent.width != UINT32_MAX)
 		{
-			context->swapExtent = surfaceCapabilities.currentExtent;
+			context->vk.swapExtent = surfaceCapabilities.currentExtent;
 		}
 		
 		u32 formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vkPhysicalDevice, context->vkSurface, &formatCount, nullptr);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vk.physicalDevice, context->vk.surface, &formatCount, nullptr);
 		Assert(formatCount > 0);
 		VkSurfaceFormatKHR* allFormats = AllocArray(memArena, VkSurfaceFormatKHR, formatCount);
 		NotNull(allFormats);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vkPhysicalDevice, context->vkSurface, &formatCount, &allFormats[0]);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(context->vk.physicalDevice, context->vk.surface, &formatCount, &allFormats[0]);
 		
 		bool foundDesiredFormat = false;
 		for (u32 fIndex = 0; fIndex < formatCount; fIndex++)
@@ -677,7 +677,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 			VkSurfaceFormatKHR* format = &allFormats[fIndex];
 			if (format->format == VK_FORMAT_B8G8R8A8_SRGB && format->colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			{
-				context->vkSurfaceFormat = *format;
+				context->vk.surfaceFormat = *format;
 				foundDesiredFormat = true;
 				break;
 			}
@@ -693,11 +693,11 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		}
 		
 		DeclareVkSwapchainCreateInfoKHR(vkCreateSwapchainParams);
-		vkCreateSwapchainParams.surface = context->vkSurface;
+		vkCreateSwapchainParams.surface = context->vk.surface;
 		vkCreateSwapchainParams.minImageCount = surfaceCapabilities.minImageCount + 1;
-		vkCreateSwapchainParams.imageFormat = context->vkSurfaceFormat.format;
-		vkCreateSwapchainParams.imageColorSpace = context->vkSurfaceFormat.colorSpace;
-		vkCreateSwapchainParams.imageExtent = context->swapExtent;
+		vkCreateSwapchainParams.imageFormat = context->vk.surfaceFormat.format;
+		vkCreateSwapchainParams.imageColorSpace = context->vk.surfaceFormat.colorSpace;
+		vkCreateSwapchainParams.imageExtent = context->vk.swapExtent;
 		vkCreateSwapchainParams.imageArrayLayers = 1;
 		vkCreateSwapchainParams.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		vkCreateSwapchainParams.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -708,7 +708,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		vkCreateSwapchainParams.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 		vkCreateSwapchainParams.clipped = VK_TRUE;
 		vkCreateSwapchainParams.oldSwapchain = VK_NULL_HANDLE;
-		if (vkCreateSwapchainKHR(context->vkDevice, &vkCreateSwapchainParams, context->vkAllocator, &context->vkSwapchain) != VK_SUCCESS)
+		if (vkCreateSwapchainKHR(context->vk.device, &vkCreateSwapchainParams, context->vk.allocator, &context->vk.swapchain) != VK_SUCCESS)
 		{
 			PigGfx_InitFailure("Vulkan swapchain creation failed!");
 			PigGfx_DestroyContext_Vulkan(context);
@@ -720,19 +720,19 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	// |   Create vkSwapImageViews    |
 	// +==============================+
 	{
-		vkGetSwapchainImagesKHR(context->vkDevice, context->vkSwapchain, &context->vkSwapImageCount, nullptr);
-		Assert(context->vkSwapImageCount > 0);
-		VkImage* vkSwapImages = AllocArray(memArena, VkImage, context->vkSwapImageCount);
+		vkGetSwapchainImagesKHR(context->vk.device, context->vk.swapchain, &context->vk.swapImageCount, nullptr);
+		Assert(context->vk.swapImageCount > 0);
+		VkImage* vkSwapImages = AllocArray(memArena, VkImage, context->vk.swapImageCount);
 		NotNull(vkSwapImages);
-		vkGetSwapchainImagesKHR(context->vkDevice, context->vkSwapchain, &context->vkSwapImageCount, vkSwapImages);
+		vkGetSwapchainImagesKHR(context->vk.device, context->vk.swapchain, &context->vk.swapImageCount, vkSwapImages);
 		
-		context->vkSwapImageViews = AllocArray(memArena, VkImageView, context->vkSwapImageCount);
-		NotNull(context->vkSwapImageViews);
-		MyMemSet(context->vkSwapImageViews, 0x00, sizeof(VkImageView) * context->vkSwapImageCount);
+		context->vk.swapImageViews = AllocArray(memArena, VkImageView, context->vk.swapImageCount);
+		NotNull(context->vk.swapImageViews);
+		MyMemSet(context->vk.swapImageViews, 0x00, sizeof(VkImageView) * context->vk.swapImageCount);
 		
 		DeclareVkImageViewCreateInfo(vkCreateImageViewParams);
 		vkCreateImageViewParams.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		vkCreateImageViewParams.format = context->vkSurfaceFormat.format;
+		vkCreateImageViewParams.format = context->vk.surfaceFormat.format;
 		vkCreateImageViewParams.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		vkCreateImageViewParams.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		vkCreateImageViewParams.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -743,19 +743,19 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		vkCreateImageViewParams.subresourceRange.baseArrayLayer = 0;
 		vkCreateImageViewParams.subresourceRange.layerCount = 1;
 		
-		for (u32 iIndex = 0; iIndex < context->vkSwapImageCount; iIndex++)
+		for (u32 iIndex = 0; iIndex < context->vk.swapImageCount; iIndex++)
 		{
 			vkCreateImageViewParams.image = vkSwapImages[iIndex];
-			if (vkCreateImageView(context->vkDevice, &vkCreateImageViewParams, context->vkAllocator, &context->vkSwapImageViews[iIndex]) != VK_SUCCESS)
+			if (vkCreateImageView(context->vk.device, &vkCreateImageViewParams, context->vk.allocator, &context->vk.swapImageViews[iIndex]) != VK_SUCCESS)
 			{
 				PigGfx_InitFailure("Vulkan swap imageview creation failed!");
-				FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vkSwapImageCount);
+				FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vk.swapImageCount);
 				PigGfx_DestroyContext_Vulkan(context);
 				return nullptr;
 			}
 		}
 		
-		FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vkSwapImageCount);
+		FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vk.swapImageCount);
 	}
 	
 	gfx->contextCreated = true;
@@ -781,21 +781,21 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	GraphicsContext_t* context = &gfx->context;
 	VkTestContent_t* content = &gfx->vkTest;
 	
-	vkWaitForFences(context->vkDevice, 1, &content->activeFences[content->activeSyncIndex], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(context->vk.device, 1, &content->activeFences[content->activeSyncIndex], VK_TRUE, UINT64_MAX);
 	
 	u32 imageIndex = 0;
-	vkAcquireNextImageKHR(context->vkDevice, context->vkSwapchain, UINT64_MAX, content->imageAvailableSemaphores[content->activeSyncIndex], VK_NULL_HANDLE, &imageIndex);
+	vkAcquireNextImageKHR(context->vk.device, context->vk.swapchain, UINT64_MAX, content->imageAvailableSemaphores[content->activeSyncIndex], VK_NULL_HANDLE, &imageIndex);
 	
 	if (content->swapImagesFences[imageIndex] != VK_NULL_HANDLE)
 	{
-		vkWaitForFences(context->vkDevice, 1, &content->swapImagesFences[imageIndex], VK_TRUE, UINT64_MAX);
+		vkWaitForFences(context->vk.device, 1, &content->swapImagesFences[imageIndex], VK_TRUE, UINT64_MAX);
 	}
 	content->swapImagesFences[imageIndex] = content->activeFences[content->activeSyncIndex];
 	
 	VkSemaphore waitSemaphore = content->imageAvailableSemaphores[content->activeSyncIndex];
 	VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	VkSemaphore signalSemaphore = content->renderFinishedSemaphores[content->activeSyncIndex];
-	vkResetFences(context->vkDevice, 1, &content->activeFences[content->activeSyncIndex]);
+	vkResetFences(context->vk.device, 1, &content->activeFences[content->activeSyncIndex]);
 	
 	// +==============================+
 	// |     Test Render Triangle     |
@@ -811,7 +811,7 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 			vkCmdBeginRenderPassParams.renderPass = content->renderPass;
 			vkCmdBeginRenderPassParams.framebuffer = content->framebuffers[imageIndex];
 			vkCmdBeginRenderPassParams.renderArea.offset = { 0, 0 };
-			vkCmdBeginRenderPassParams.renderArea.extent = { (u32)context->swapExtent.width, (u32)context->swapExtent.height };
+			vkCmdBeginRenderPassParams.renderArea.extent = { (u32)context->vk.swapExtent.width, (u32)context->vk.swapExtent.height };
 			vkCmdBeginRenderPassParams.clearValueCount = 1;
 			v4 colorVec = ToVec4(clearColor);
 			VkClearValue vkClearColor = {{{ colorVec.r, colorVec.g, colorVec.b, colorVec.a }}};
@@ -844,7 +844,7 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	vkQueueSubmitParams.pCommandBuffers = &content->commandBuffers[imageIndex];
 	vkQueueSubmitParams.signalSemaphoreCount = 1;
 	vkQueueSubmitParams.pSignalSemaphores = &signalSemaphore;
-	if (vkQueueSubmit(context->vkQueue, 1, &vkQueueSubmitParams, content->activeFences[content->activeSyncIndex]) != VK_SUCCESS)
+	if (vkQueueSubmit(context->vk.queue, 1, &vkQueueSubmitParams, content->activeFences[content->activeSyncIndex]) != VK_SUCCESS)
 	{
 		AssertMsg(false, "Failed to submit Vulkan queue!");
 	}
@@ -853,10 +853,10 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	vkQueuePresentParams.waitSemaphoreCount = 1;
 	vkQueuePresentParams.pWaitSemaphores = &signalSemaphore;
 	vkQueuePresentParams.swapchainCount = 1;
-	vkQueuePresentParams.pSwapchains = &context->vkSwapchain;
+	vkQueuePresentParams.pSwapchains = &context->vk.swapchain;
 	vkQueuePresentParams.pImageIndices = &imageIndex;
 	vkQueuePresentParams.pResults = nullptr;
-	vkQueuePresentKHR(context->vkQueue, &vkQueuePresentParams);
+	vkQueuePresentKHR(context->vk.queue, &vkQueuePresentParams);
 	
 	content->activeSyncIndex = (content->activeSyncIndex + 1) % VULKAN_IN_FLIGHT_IMAGE_COUNT;
 	

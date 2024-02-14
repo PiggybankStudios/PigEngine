@@ -15,7 +15,7 @@ Description:
 
 #define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
 
-#define PIG_GFX_OPENGL_SUPPORTED 0
+#define PIG_GFX_OPENGL_SUPPORTED 1
 #define PIG_GFX_WEBGL_SUPPORTED  0
 #define PIG_GFX_VULKAN_SUPPORTED 1
 #define PIG_GFX_D3D11_SUPPORTED  0
@@ -344,19 +344,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PigGfx_FillDefaultOptions(&gfxOptions);
 	gfxOptions.numAntialiasingSamples = 4; //TODO: This should really source from windowOptions.create.antialiasingNumSamples!
 	#if PIG_GFX_OPENGL_SUPPORTED
-	gfxOptions.opengl_RequestVersionMajor = OPENGL_REQUEST_VERSION_MAJOR;
-	gfxOptions.opengl_RequestVersionMinor = OPENGL_REQUEST_VERSION_MINOR;
-	gfxOptions.opengl_RequestProfile = OPENGL_REQUEST_PROFILE;
-	gfxOptions.opengl_RequestForwardCompat = OPENGL_FORCE_FORWARD_COMPAT;
-	gfxOptions.opengl_requestDebugContext = OPENGL_DEBUG_CONTEXT;
+	gfxOptions.gl.requestVersionMajor = OPENGL_REQUEST_VERSION_MAJOR;
+	gfxOptions.gl.requestVersionMinor = OPENGL_REQUEST_VERSION_MINOR;
+	gfxOptions.gl.requestProfile = OPENGL_REQUEST_PROFILE;
+	gfxOptions.gl.requestForwardCompat = OPENGL_FORCE_FORWARD_COMPAT;
+	gfxOptions.gl.requestDebugContext = OPENGL_DEBUG_CONTEXT;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
-	gfxOptions.vulkan_ApplicationName = PROJECT_NAME_SAFE;
-	gfxOptions.vulkan_ApplicationVersionInt = VK_MAKE_VERSION(1, 0, 0);
-	gfxOptions.vulkan_EngineName = "PigEngineWin32";
-	gfxOptions.vulkan_EngineVersionInt = VK_MAKE_VERSION(WIN32_VERSION_MAJOR, WIN32_VERSION_MINOR, WIN32_VERSION_BUILD);
-	gfxOptions.vulkan_RequestVersionMajor = 1;
-	gfxOptions.vulkan_RequestVersionMinor = 3;
+	gfxOptions.vk.applicationName = PROJECT_NAME_SAFE;
+	gfxOptions.vk.applicationVersionInt = VK_MAKE_VERSION(1, 0, 0);
+	gfxOptions.vk.engineName = "PigEngineWin32";
+	gfxOptions.vk.engineVersionInt = VK_MAKE_VERSION(WIN32_VERSION_MAJOR, WIN32_VERSION_MINOR, WIN32_VERSION_BUILD);
+	gfxOptions.vk.requestVersionMajor = 1;
+	gfxOptions.vk.requestVersionMinor = 3;
 	#endif
 	PigGfx_SetOptions(&gfxOptions);
 	
@@ -396,7 +396,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			#if PIG_GFX_OPENGL_SUPPORTED
 			if (Platform->gfxContext->renderApi == RenderApi_OpenGL)
 			{
-				PrintLine_I("Successfully created %s v%d.%d graphics context!", GetRenderApiStr(Platform->gfxContext->renderApi), Platform->gfxContext->openglVersionMajor, Platform->gfxContext->openglVersionMinor);
+				PrintLine_I("Successfully created %s v%d.%d graphics context!", GetRenderApiStr(Platform->gfxContext->renderApi), Platform->gfxContext->gl.versionMajor, Platform->gfxContext->gl.versionMinor);
 			}
 			#endif
 			if (Platform->gfxContext->renderApi != RenderApi_OpenGL)

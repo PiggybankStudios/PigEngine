@@ -34,22 +34,9 @@ enum RenderApi_t
 };
 const char* GetRenderApiStr(RenderApi_t enumValue);
 
-#if PIG_GFX_OPENGL_SUPPORTED
-enum OpenGlProfile_t
-{
-	OpenGlProfile_None = 0,
-	OpenGlProfile_Any,
-	OpenGlProfile_Core,
-	OpenGlProfile_Compat,
-	OpenGlProfile_NumTypes,
-};
-const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue);
-#endif
-
-#if PIG_GFX_OPENGL_SUPPORTED
-typedef GLADloadproc GlLoadProc_f;
-#endif
-
+// +--------------------------------------------------------------+
+// |                     API Dependent Types                      |
+// +--------------------------------------------------------------+
 struct PigGfxOptions_t
 {
 	//TODO: These options COULD be different per-window, so they aren't really like "global" options like the request versions and whatnot below.
@@ -61,21 +48,10 @@ struct PigGfxOptions_t
 	u8 numAntialiasingSamples;
 	
 	#if PIG_GFX_OPENGL_SUPPORTED
-	GlLoadProc_f opengl_loadProcFunction;
-	int opengl_RequestVersionMajor;
-	int opengl_RequestVersionMinor;
-	OpenGlProfile_t opengl_RequestProfile;
-	bool opengl_RequestForwardCompat;
-	bool opengl_requestDebugContext;
+	PigGfxOptions_OpenGL_t gl;
 	#endif
-	
 	#if PIG_GFX_VULKAN_SUPPORTED
-	const char* vulkan_ApplicationName;
-	u32 vulkan_ApplicationVersionInt;
-	const char* vulkan_EngineName;
-	u32 vulkan_EngineVersionInt;
-	int vulkan_RequestVersionMajor;
-	int vulkan_RequestVersionMinor;
+	PigGfxOptions_Vulkan_t vk;
 	#endif
 };
 
@@ -84,24 +60,39 @@ struct GraphicsContext_t
 	RenderApi_t renderApi;
 	MemArena_t* allocArena;
 	#if PIG_GFX_OPENGL_SUPPORTED
-	int openglVersionMajor;
-	int openglVersionMinor;
+	GraphicsContext_OpenGL_t gl;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
-	VkAllocationCallbacks vkAllocatorStruct;
-	VkAllocationCallbacks* vkAllocator;
-	VkInstance vkInstance;
-	VkSurfaceFormatKHR vkSurfaceFormat;
-	VkSurfaceKHR vkSurface;
-	VkPhysicalDevice vkPhysicalDevice;
-	u32 queueFamilyIndex;
-	VkExtent2D swapExtent;
-	VkDevice vkDevice;
-	VkQueue vkQueue;
-	VkSwapchainKHR vkSwapchain;
-	u32 vkSwapImageCount;
-	VkImageView* vkSwapImageViews;
+	GraphicsContext_Vulkan_t vk;
 	#endif
 };
+
+// +--------------------------------------------------------------+
+// |                      Main State Global                       |
+// +--------------------------------------------------------------+
+struct PigGfxState_t
+{
+	bool initialized;
+	RenderApi_t renderApi;
+	MemArena_t* mainArena;
+	
+	bool ctxSet;
+	PigGfxContext_t ctx;
+	bool optionsSet;
+	PigGfxOptions_t options;
+	
+	#if PIG_GFX_GLFW_SUPPORTED
+	GLFWwindow* currentGlfwWindow;
+	#endif
+	
+	bool contextCreated;
+	GraphicsContext_t context;
+	
+	#if PIG_GFX_VULKAN_SUPPORTED
+	VkTestContent_t vkTest;
+	#endif
+};
+
+extern PigGfxState_t* gfx;
 
 #endif //  _PIG_GRAPHICS_TYPES_H
