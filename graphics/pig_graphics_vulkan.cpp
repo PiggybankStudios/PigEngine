@@ -10,6 +10,39 @@ bool Win32_ReadFileContents(MyStr_t filePath, PlatFileContents_t* contentsOut); 
 void Win32_FreeFileContents(PlatFileContents_t* contents); //TODO: Remove me once we are no longer responsible for loading files directly!
 void Win32_SleepForMs(u64 milliseconds); //TODO: Remove me once we are no longer responsible for loading files directly!
 
+#define DeclareVkStruct(type, varName, typeEnum) type varName = {}; varName.sType = typeEnum; varName.pNext = nullptr; varName.flags = 0
+#define DeclareVkStructNoFlags(type, varName, typeEnum) type varName = {}; varName.sType = typeEnum; varName.pNext = nullptr
+
+#define DeclareVkBufferCreateInfo(varName)                     DeclareVkStruct(VkBufferCreateInfo,                     varName, VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO)
+#define DeclareVkMemoryAllocateInfo(varName)                   DeclareVkStructNoFlags(VkMemoryAllocateInfo,            varName, VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO)
+#define DeclareVkMappedMemoryRange(varName)                    DeclareVkStructNoFlags(VkMappedMemoryRange,             varName, VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE)
+#define DeclareVkRenderPassCreateInfo(varName)                 DeclareVkStruct(VkRenderPassCreateInfo,                 varName, VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO)
+#define DeclareVkShaderModuleCreateInfo(varName)               DeclareVkStruct(VkShaderModuleCreateInfo,               varName, VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
+#define DeclareVkPipelineLayoutCreateInfo(varName)             DeclareVkStruct(VkPipelineLayoutCreateInfo,             varName, VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO)
+#define DeclareVkPipelineShaderStageCreateInfo(varName)        DeclareVkStruct(VkPipelineShaderStageCreateInfo,        varName, VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO)
+#define DeclareVkFramebufferCreateInfo(varName)                DeclareVkStruct(VkFramebufferCreateInfo,                varName, VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO)
+#define DeclareVkCommandPoolCreateInfo(varName)                DeclareVkStruct(VkCommandPoolCreateInfo,                varName, VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
+#define DeclareVkCommandBufferAllocateInfo(varName)            DeclareVkStructNoFlags(VkCommandBufferAllocateInfo,     varName, VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
+#define DeclareVkSemaphoreCreateInfo(varName)                  DeclareVkStruct(VkSemaphoreCreateInfo,                  varName, VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
+#define DeclareVkFenceCreateInfo(varName)                      DeclareVkStruct(VkFenceCreateInfo,                      varName, VK_STRUCTURE_TYPE_FENCE_CREATE_INFO)
+#define DeclareVkApplicationInfo(varName)                      DeclareVkStructNoFlags(VkApplicationInfo,               varName, VK_STRUCTURE_TYPE_APPLICATION_INFO)
+#define DeclareVkDeviceQueueCreateInfo(varName)                DeclareVkStruct(VkDeviceQueueCreateInfo,                varName, VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+#define DeclareVkSwapchainCreateInfoKHR(varName)               DeclareVkStruct(VkSwapchainCreateInfoKHR,               varName, VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
+#define DeclareVkImageViewCreateInfo(varName)                  DeclareVkStruct(VkImageViewCreateInfo,                  varName, VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
+#define DeclareVkSubmitInfo(varName)                           DeclareVkStructNoFlags(VkSubmitInfo,                    varName, VK_STRUCTURE_TYPE_SUBMIT_INFO)
+#define DeclareVkCommandBufferBeginInfo(varName)               DeclareVkStruct(VkCommandBufferBeginInfo,               varName, VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO)
+#define DeclareVkRenderPassBeginInfo(varName)                  DeclareVkStructNoFlags(VkRenderPassBeginInfo,           varName, VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO)
+#define DeclareVkPresentInfoKHR(varName)                       DeclareVkStructNoFlags(VkPresentInfoKHR,                varName, VK_STRUCTURE_TYPE_PRESENT_INFO_KHR)
+#define DeclareVkPipelineVertexInputStateCreateInfo(varName)   DeclareVkStruct(VkPipelineVertexInputStateCreateInfo,   varName, VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO)
+#define DeclareVkPipelineInputAssemblyStateCreateInfo(varName) DeclareVkStruct(VkPipelineInputAssemblyStateCreateInfo, varName, VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO)
+#define DeclareVkPipelineViewportStateCreateInfo(varName)      DeclareVkStruct(VkPipelineViewportStateCreateInfo,      varName, VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO)
+#define DeclareVkPipelineRasterizationStateCreateInfo(varName) DeclareVkStruct(VkPipelineRasterizationStateCreateInfo, varName, VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO)
+#define DeclareVkPipelineMultisampleStateCreateInfo(varName)   DeclareVkStruct(VkPipelineMultisampleStateCreateInfo,   varName, VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO)
+#define DeclareVkPipelineColorBlendStateCreateInfo(varName)    DeclareVkStruct(VkPipelineColorBlendStateCreateInfo,    varName, VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO)
+#define DeclareVkGraphicsPipelineCreateInfo(varName)           DeclareVkStruct(VkGraphicsPipelineCreateInfo,           varName, VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO)
+#define DeclareVkInstanceCreateInfo(varName)                   DeclareVkStruct(VkInstanceCreateInfo,                   varName, VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
+#define DeclareVkDeviceCreateInfo(varName)                     DeclareVkStruct(VkDeviceCreateInfo,                     varName, VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
+
 bool _FindQueueFamilyThatSupportsPresent(VkPhysicalDevice* device, VkSurfaceKHR* surface, u32* familyIndexOut)
 {
 	u32 queueFamilyCount = 0;
@@ -110,11 +143,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			-0.5f,  0.5f,
 		};
 		
-		VkBufferCreateInfo bufferCreateInfo;
+		DeclareVkBufferCreateInfo(bufferCreateInfo);
 		{
-			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferCreateInfo.pNext = nullptr;
-			bufferCreateInfo.flags = 0;
 			bufferCreateInfo.size = sizeof(float) * ArrayCount(vertices);
 			bufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 			bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -132,10 +162,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		VkMemoryRequirements testBufferMemReqs;
 		vkGetBufferMemoryRequirements(context->vkDevice, content->vertBuffer, &testBufferMemReqs);
 		u32 memoryTypeIndex = _FindMemoryType(context->vkPhysicalDevice, testBufferMemReqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-		VkMemoryAllocateInfo vkAllocInfo;
+		DeclareVkMemoryAllocateInfo(vkAllocInfo);
 		{
-			vkAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-			vkAllocInfo.pNext = nullptr;
 			vkAllocInfo.allocationSize = testBufferMemReqs.size;
 			vkAllocInfo.memoryTypeIndex = memoryTypeIndex;
 		}
@@ -159,10 +187,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		
 		MyMemCopy(testBufferPntr, &vertices[0], sizeof(float) * ArrayCount(vertices));
 		
-		VkMappedMemoryRange memoryRange;
+		DeclareVkMappedMemoryRange(memoryRange);
 		{
-			memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-			memoryRange.pNext = nullptr;
 			memoryRange.memory = content->vertBufferMem;
 			memoryRange.offset = 0;
 			memoryRange.size = VK_WHOLE_SIZE;
@@ -209,11 +235,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			subpassDesc.pPreserveAttachments = nullptr;
 		}
 		
-		VkRenderPassCreateInfo renderPassCreateInfo;
+		DeclareVkRenderPassCreateInfo(renderPassCreateInfo);
 		{
-			renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			renderPassCreateInfo.pNext = nullptr;
-			renderPassCreateInfo.flags = 0;
 			renderPassCreateInfo.attachmentCount = 1;
 			renderPassCreateInfo.pAttachments = &colorAttachment;
 			renderPassCreateInfo.subpassCount = 1;
@@ -228,6 +251,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
+		
 	}
 	
 	// +===============================+
@@ -250,11 +274,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			return false;
 		}
 		
-		VkShaderModuleCreateInfo vertCreateInfo;
+		DeclareVkShaderModuleCreateInfo(vertCreateInfo);
 		{
-			vertCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			vertCreateInfo.pNext = nullptr;
-			vertCreateInfo.flags = 0;
 			vertCreateInfo.codeSize = vertFile.size;
 			vertCreateInfo.pCode = (u32*)vertFile.data;
 		}
@@ -267,11 +288,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			return false;
 		}
 		
-		VkShaderModuleCreateInfo fragCreateInfo;
+		DeclareVkShaderModuleCreateInfo(fragCreateInfo);
 		{
-			fragCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-			fragCreateInfo.pNext = nullptr;
-			fragCreateInfo.flags = 0;
 			fragCreateInfo.codeSize = fragFile.size;
 			fragCreateInfo.pCode = (u32*)fragFile.data;
 		}
@@ -286,17 +304,15 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		
 		Win32_FreeFileContents(&vertFile);
 		Win32_FreeFileContents(&fragFile);
+		
 	}
 	
 	// +==============================+
 	// |       vkPipelineLayout       |
 	// +==============================+
 	{
-		VkPipelineLayoutCreateInfo layoutCreateInfo;
+		DeclareVkPipelineLayoutCreateInfo(layoutCreateInfo);
 		{
-			layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-			layoutCreateInfo.pNext = nullptr;
-			layoutCreateInfo.flags = 0;
 			layoutCreateInfo.setLayoutCount = 0;
 			layoutCreateInfo.pSetLayouts = nullptr;
 			layoutCreateInfo.pushConstantRangeCount = 0;
@@ -308,27 +324,22 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
+		
 	}
 	
 	// +==============================+
 	// |          vkPipeline          |
 	// +==============================+
 	{
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo;
+		DeclareVkPipelineShaderStageCreateInfo(vertShaderStageInfo);
 		{
-			vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			vertShaderStageInfo.pNext = nullptr;
-			vertShaderStageInfo.flags = 0;
 			vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 			vertShaderStageInfo.module = content->vertShader;
 			vertShaderStageInfo.pName = "main";
 			vertShaderStageInfo.pSpecializationInfo = nullptr;
 		}
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo;
+		DeclareVkPipelineShaderStageCreateInfo(fragShaderStageInfo);
 		{
-			fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			fragShaderStageInfo.pNext = nullptr;
-			fragShaderStageInfo.flags = 0;
 			fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 			fragShaderStageInfo.module = content->fragShader;
 			fragShaderStageInfo.pName = "main";
@@ -349,22 +360,16 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			positionVertAttribDesc.format = VK_FORMAT_R32G32_SFLOAT;
 			positionVertAttribDesc.offset = 0;
 		}
-		VkPipelineVertexInputStateCreateInfo vertexInputInfo;
+		DeclareVkPipelineVertexInputStateCreateInfo(vertexInputInfo);
 		{
-			vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-			vertexInputInfo.pNext = nullptr;
-			vertexInputInfo.flags = 0;
 			vertexInputInfo.vertexBindingDescriptionCount = 1;
 			vertexInputInfo.pVertexBindingDescriptions = &v2VertexBinding;
 			vertexInputInfo.vertexAttributeDescriptionCount = 1;
 			vertexInputInfo.pVertexAttributeDescriptions = &positionVertAttribDesc;
 		}
 		
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+		DeclareVkPipelineInputAssemblyStateCreateInfo(inputAssemblyInfo);
 		{
-			inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-			inputAssemblyInfo.pNext = nullptr;
-			inputAssemblyInfo.flags = 0;
 			inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 			inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 		}
@@ -383,22 +388,16 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			scissor.offset = { 0, 0 };
 			scissor.extent = context->swapExtent;
 		}
-		VkPipelineViewportStateCreateInfo viewportCreateInfo;
+		DeclareVkPipelineViewportStateCreateInfo(viewportCreateInfo);
 		{
-			viewportCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-			viewportCreateInfo.pNext = nullptr;
-			viewportCreateInfo.flags = 0;
 			viewportCreateInfo.viewportCount = 1;
 			viewportCreateInfo.pViewports = &viewport;
 			viewportCreateInfo.scissorCount = 1;
 			viewportCreateInfo.pScissors = &scissor;
 		}
 		
-		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo;
+		DeclareVkPipelineRasterizationStateCreateInfo(rasterizerCreateInfo);
 		{
-			rasterizerCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-			rasterizerCreateInfo.pNext = nullptr;
-			rasterizerCreateInfo.flags = 0;
 			rasterizerCreateInfo.depthClampEnable = VK_FALSE;
 			rasterizerCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 			rasterizerCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
@@ -411,11 +410,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			rasterizerCreateInfo.lineWidth = 1.0f;
 		}
 		
-		VkPipelineMultisampleStateCreateInfo multisamplingCreateInfo;
+		DeclareVkPipelineMultisampleStateCreateInfo(multisamplingCreateInfo);
 		{
-			multisamplingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-			multisamplingCreateInfo.pNext = nullptr;
-			multisamplingCreateInfo.flags = 0;
 			multisamplingCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 			multisamplingCreateInfo.sampleShadingEnable = VK_FALSE;
 			multisamplingCreateInfo.minSampleShading = 0.0f;
@@ -435,11 +431,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 			colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		}
-		VkPipelineColorBlendStateCreateInfo colorBlendCreateInfo;
+		DeclareVkPipelineColorBlendStateCreateInfo(colorBlendCreateInfo);
 		{
-			colorBlendCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-			colorBlendCreateInfo.pNext = nullptr;
-			colorBlendCreateInfo.flags = 0;
 			colorBlendCreateInfo.logicOpEnable = VK_FALSE;
 			colorBlendCreateInfo.logicOp = VK_LOGIC_OP_COPY;
 			colorBlendCreateInfo.attachmentCount = 1;
@@ -450,11 +443,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			colorBlendCreateInfo.blendConstants[3] = 0.0f;
 		}
 		
-		VkGraphicsPipelineCreateInfo pipelineCreateInfo;
+		DeclareVkGraphicsPipelineCreateInfo(pipelineCreateInfo);
 		{
-			pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-			pipelineCreateInfo.pNext = nullptr;
-			pipelineCreateInfo.flags = 0;
 			pipelineCreateInfo.stageCount = ArrayCount(shaderStageCreateInfos);
 			pipelineCreateInfo.pStages = &shaderStageCreateInfos[0];
 			pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
@@ -479,6 +469,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
+		
 	}
 	
 	// +==============================+
@@ -490,11 +481,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		NotNull(content->framebuffers);
 		MyMemSet(content->framebuffers, 0x00, sizeof(VkFramebuffer) * content->framebufferCount);
 		
-		VkFramebufferCreateInfo framebufferCreateInfo;
+		DeclareVkFramebufferCreateInfo(framebufferCreateInfo);
 		{
-			framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferCreateInfo.pNext = nullptr;
-			framebufferCreateInfo.flags = 0;
 			framebufferCreateInfo.renderPass = content->renderPass;
 			framebufferCreateInfo.attachmentCount = 1;
 			framebufferCreateInfo.pAttachments = nullptr; // Set in the loop below
@@ -513,19 +501,15 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 				return false;
 			}
 		}
+		
 	}
 	
 	// +==============================+
 	// |        vkCommandPool         |
 	// +==============================+
 	{
-		VkCommandPoolCreateInfo poolCreateInfo;
-		{
-			poolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			poolCreateInfo.pNext = nullptr;
-			poolCreateInfo.flags = 0;
-			poolCreateInfo.queueFamilyIndex = context->queueFamilyIndex;
-		}
+		DeclareVkCommandPoolCreateInfo(poolCreateInfo);
+		poolCreateInfo.queueFamilyIndex = context->queueFamilyIndex;
 		
 		if (vkCreateCommandPool(context->vkDevice, &poolCreateInfo, context->vkAllocator, &content->commandPool) != VK_SUCCESS)
 		{
@@ -533,6 +517,7 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
+		
 	}
 	
 	// +==============================+
@@ -544,11 +529,8 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 		NotNull(content->commandBuffers);
 		MyMemSet(content->commandBuffers, 0x00, sizeof(VkCommandBuffer) * content->commandBufferCount);
 		
-		VkCommandBufferAllocateInfo allocInfo;
+		DeclareVkCommandBufferAllocateInfo(allocInfo);
 		{
-			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			allocInfo.pNext = nullptr;
-			// allocInfo.flags = 0; //TODO: there is no flags on this struct???
 			allocInfo.commandPool = content->commandPool;
 			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			allocInfo.commandBufferCount = content->commandBufferCount;
@@ -560,25 +542,16 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 			_DestroyVkTestContent(context, content);
 			return false;
 		}
+		
 	}
 	
 	// +==============================+
 	// |    Semaphores and Fences     |
 	// +==============================+
 	{
-		VkSemaphoreCreateInfo semaphoreCreateInfo;
-		{
-			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-			semaphoreCreateInfo.pNext = nullptr;
-			semaphoreCreateInfo.flags = 0;
-		}
-		
-		VkFenceCreateInfo fenceCreateInfo;
-		{
-			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-			fenceCreateInfo.pNext = nullptr;
-			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		}
+		DeclareVkSemaphoreCreateInfo(semaphoreCreateInfo);
+		DeclareVkFenceCreateInfo(fenceCreateInfo);
+		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		
 		for (u32 iIndex = 0; iIndex < VULKAN_IN_FLIGHT_IMAGE_COUNT; iIndex++)
 		{
@@ -633,19 +606,14 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		const char** instanceCreationExtensions = glfwGetRequiredInstanceExtensions(&instanceCreationExtensionCount);
 		Assert(instanceCreationExtensions != nullptr);
 		
-		VkApplicationInfo applicationInfo = {};
-		applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		applicationInfo.pNext = nullptr;
+		DeclareVkApplicationInfo(applicationInfo);
 		applicationInfo.pApplicationName = gfx->options.vulkan_ApplicationName;
 		applicationInfo.applicationVersion = gfx->options.vulkan_ApplicationVersionInt;
 		applicationInfo.pEngineName = gfx->options.vulkan_EngineName;
 		applicationInfo.engineVersion = gfx->options.vulkan_EngineVersionInt;
 		applicationInfo.apiVersion = VK_MAKE_API_VERSION(0, gfx->options.vulkan_RequestVersionMajor, gfx->options.vulkan_RequestVersionMinor, 0);
 		
-		VkInstanceCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pNext = nullptr;
-		createInfo.flags = 0;
+		DeclareVkInstanceCreateInfo(createInfo);
 		createInfo.pApplicationInfo = &applicationInfo;
 		const char* vulkanLayers[] = { "VK_LAYER_KHRONOS_validation" };
 		createInfo.enabledLayerCount = ArrayCount(vulkanLayers);
@@ -659,6 +627,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
+		
 	}
 	
 	// +==============================+
@@ -715,21 +684,15 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 	// +==============================+
 	{
 		r32 queuePriority = 1.0f;
-		VkDeviceQueueCreateInfo queueCreateInfo;
+		DeclareVkDeviceQueueCreateInfo(queueCreateInfo);
 		{
-			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queueCreateInfo.pNext = nullptr;
-			queueCreateInfo.flags = 0;
 			queueCreateInfo.queueFamilyIndex = context->queueFamilyIndex;
 			queueCreateInfo.queueCount = 1;
 			queueCreateInfo.pQueuePriorities = &queuePriority;
 		}
 		
-		VkDeviceCreateInfo deviceCreateInfo;
+		DeclareVkDeviceCreateInfo(deviceCreateInfo);
 		{
-			deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-			deviceCreateInfo.pNext = nullptr;
-			deviceCreateInfo.flags = 0;
 			deviceCreateInfo.queueCreateInfoCount = 1;
 			deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 			deviceCreateInfo.pEnabledFeatures = nullptr;
@@ -749,6 +712,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		}
 		
 		vkGetDeviceQueue(context->vkDevice, context->queueFamilyIndex, 0, &context->vkQueue);
+		
 	}
 	
 	int windowWidth, windowHeight;
@@ -794,11 +758,8 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 			return nullptr;
 		}
 		
-		VkSwapchainCreateInfoKHR swapchainCreateInfo;
+		DeclareVkSwapchainCreateInfoKHR(swapchainCreateInfo);
 		{
-			swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-			swapchainCreateInfo.pNext = nullptr;
-			swapchainCreateInfo.flags = 0;
 			swapchainCreateInfo.surface = context->vkSurface;
 			swapchainCreateInfo.minImageCount = surfaceCapabilities.minImageCount + 1;
 			swapchainCreateInfo.imageFormat = context->vkSurfaceFormat.format;
@@ -822,6 +783,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 			PigGfx_DestroyContext_Vulkan(context);
 			return nullptr;
 		}
+		
 	}
 	
 	// +==============================+
@@ -838,11 +800,8 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		NotNull(context->vkSwapImageViews);
 		MyMemSet(context->vkSwapImageViews, 0x00, sizeof(VkImageView) * context->vkSwapImageCount);
 		
-		VkImageViewCreateInfo imageViewCreateInfo;
+		DeclareVkImageViewCreateInfo(imageViewCreateInfo);
 		{
-			imageViewCreateInfo.sType= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			imageViewCreateInfo.pNext = nullptr;
-			imageViewCreateInfo.flags = 0;
 			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			imageViewCreateInfo.format = context->vkSurfaceFormat.format;
 			imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -869,6 +828,7 @@ GraphicsContext_t* PigGfx_CreateContext_Vulkan(MemArena_t* memArena)
 		}
 		
 		FreeMem(memArena, vkSwapImages, sizeof(VkImage) * context->vkSwapImageCount);
+		
 	}
 	
 	gfx->contextCreated = true;
@@ -905,10 +865,8 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	VkSemaphore waitSemaphore = content->imageAvailableSemaphores[content->activeSyncIndex];
 	VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	VkSemaphore signalSemaphore = content->renderFinishedSemaphores[content->activeSyncIndex];
-	VkSubmitInfo submitInfo;
+	DeclareVkSubmitInfo(submitInfo);
 	{
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.pNext = nullptr;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &waitSemaphore;
 		submitInfo.pWaitDstStageMask = &waitStages;
@@ -925,21 +883,14 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	{
 		VkCommandBuffer cmdBuffer = content->commandBuffers[imageIndex];
 		
-		VkCommandBufferBeginInfo beginInfo;
-		{
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			beginInfo.pNext = nullptr;
-			beginInfo.flags = 0;
-			beginInfo.pInheritanceInfo = nullptr;
-		}
+		DeclareVkCommandBufferBeginInfo(beginInfo);
+		beginInfo.pInheritanceInfo = nullptr;
 		if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS)
 		{
 			v4 colorVec = ToVec4(clearColor);
 			VkClearValue vkClearColor = {{{ colorVec.r, colorVec.g, colorVec.b, colorVec.a }}};
-			VkRenderPassBeginInfo renderPassInfo;
+			DeclareVkRenderPassBeginInfo(renderPassInfo);
 			{
-				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassInfo.pNext = nullptr;
 				renderPassInfo.renderPass = content->renderPass;
 				renderPassInfo.framebuffer = content->framebuffers[imageIndex];
 				renderPassInfo.renderArea.offset = { 0, 0 };
@@ -972,10 +923,8 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 		AssertMsg(false, "Failed to submit Vulkan queue!");
 	}
 	
-	VkPresentInfoKHR presentInfo;
+	DeclareVkPresentInfoKHR(presentInfo);
 	{
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.pNext = nullptr;
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &signalSemaphore;
 		presentInfo.swapchainCount = 1;
