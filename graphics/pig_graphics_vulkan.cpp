@@ -563,72 +563,6 @@ bool _CreateVkTestContent(GraphicsContext_t* context, VkTestContent_t* content, 
 	}
 	
 	// +==============================+
-	// |    Begin Command Buffers     |
-	// +==============================+
-	for (u32 bIndex = 0; bIndex < content->commandBufferCount; bIndex++)
-	{
-		VkCommandBufferBeginInfo beginInfo;
-		{
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			beginInfo.pNext = nullptr;
-			beginInfo.flags = 0;
-			beginInfo.pInheritanceInfo = nullptr;
-		}
-		
-		if (vkBeginCommandBuffer(content->commandBuffers[bIndex], &beginInfo) != VK_SUCCESS)
-		{
-			PigGfx_InitFailure("Failed to begin command buffer!");
-			_DestroyVkTestContent(context, content);
-			return false;
-		}
-	}
-	
-	// +==============================+
-	// |     Fill Command Buffers     |
-	// +==============================+
-	for (u32 bIndex = 0; bIndex < content->commandBufferCount; bIndex++)
-	{
-		VkCommandBuffer cmdBuffer = content->commandBuffers[bIndex];
-		
-		VkClearValue clearColor = {{{ 0.0f, 0.0f, 0.0f, 1.0f }}};
-		VkRenderPassBeginInfo renderPassInfo;
-		{
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.pNext = nullptr;
-			renderPassInfo.renderPass = content->renderPass;
-			renderPassInfo.framebuffer = content->framebuffers[bIndex];
-			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = { (u32)context->swapExtent.width, (u32)context->swapExtent.height };
-			renderPassInfo.clearValueCount = 1;
-			renderPassInfo.pClearValues = &clearColor;
-		}
-		
-		vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, content->pipeline);
-		
-		VkDeviceSize bufferOffset = 0;
-		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &content->vertBuffer, &bufferOffset);
-		
-		vkCmdDraw(cmdBuffer, 3, 1, 0, bIndex);
-		
-		vkCmdEndRenderPass(cmdBuffer);
-	}
-	
-	// +==============================+
-	// |     End Command Buffers      |
-	// +==============================+
-	for (u32 bIndex = 0; bIndex < content->commandBufferCount; bIndex++)
-	{
-		if (vkEndCommandBuffer(content->commandBuffers[bIndex]) != VK_SUCCESS)
-		{
-			PigGfx_InitFailure("Failed to end command buffer!");
-			_DestroyVkTestContent(context, content);
-			return false;
-		}
-	}
-	
-	// +==============================+
 	// |    Semaphores and Fences     |
 	// +==============================+
 	{
@@ -971,7 +905,6 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 	VkSemaphore waitSemaphore = content->imageAvailableSemaphores[content->activeSyncIndex];
 	VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	VkSemaphore signalSemaphore = content->renderFinishedSemaphores[content->activeSyncIndex];
-	
 	VkSubmitInfo submitInfo;
 	{
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -984,8 +917,55 @@ void PigGfx_BeginRendering_Vulkan(bool doClearColor, Color_t clearColor, bool do
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &signalSemaphore;
 	}
-	
 	vkResetFences(context->vkDevice, 1, &content->activeFences[content->activeSyncIndex]);
+	
+	// +==============================+
+	// |     Test Render Triangle     |
+	// +==============================+
+	{
+		VkCommandBuffer cmdBuffer = content->commandBuffers[imageIndex];
+		
+		VkCommandBufferBeginInfo beginInfo;
+		{
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.pNext = nullptr;
+			beginInfo.flags = 0;
+			beginInfo.pInheritanceInfo = nullptr;
+		}
+		if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS)
+		{
+			v4 colorVec = ToVec4(clearColor);
+			VkClearValue vkClearColor = {{{ colorVec.r, colorVec.g, colorVec.b, colorVec.a }}};
+			VkRenderPassBeginInfo renderPassInfo;
+			{
+				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassInfo.pNext = nullptr;
+				renderPassInfo.renderPass = content->renderPass;
+				renderPassInfo.framebuffer = content->framebuffers[imageIndex];
+				renderPassInfo.renderArea.offset = { 0, 0 };
+				renderPassInfo.renderArea.extent = { (u32)context->swapExtent.width, (u32)context->swapExtent.height };
+				renderPassInfo.clearValueCount = 1;
+				renderPassInfo.pClearValues = &vkClearColor;
+			}
+			vkCmdBeginRenderPass(cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+			
+			vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, content->pipeline);
+			
+			VkDeviceSize bufferOffset = 0;
+			vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &content->vertBuffer, &bufferOffset);
+			
+			vkCmdDraw(cmdBuffer, 3, 1, 0, imageIndex);
+			
+			vkCmdEndRenderPass(cmdBuffer);
+			
+			int endSuccess = vkEndCommandBuffer(cmdBuffer);
+			Assert(endSuccess == VK_SUCCESS);
+		}
+		else
+		{
+			DebugAssertMsg(false, "vkBeginCommandBuffer failed!");
+		}
+	}
 	
 	if (vkQueueSubmit(context->vkQueue, 1, &submitInfo, content->activeFences[content->activeSyncIndex]) != VK_SUCCESS)
 	{

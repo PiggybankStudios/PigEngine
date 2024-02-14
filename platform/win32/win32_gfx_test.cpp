@@ -564,10 +564,12 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Win32_ClearEngineOutput(&Platform->engineOutput);
 	
 	{
-		// void PigGfx_BeginRendering(bool doClearColor, Color_t clearColor, bool doClearDepth, r32 clearDepth, bool doClearStencil, r32 clearStencilValue)
-		PigGfx_BeginRendering(true, MonokaiBack, true, 1.0f, true, 0);
+		static u64 simpleTime = 0;
+		Color_t clearColor = ColorLerp(MonokaiPurple, MonokaiOrange, OscillateBy(simpleTime, 0, 1, 5000));
+		PigGfx_BeginRendering(true, clearColor, true, 1.0f, true, 0);
 		//TODO: Add some test graphics logic here
 		Win32_SwapBuffers();
+		simpleTime += 16;
 	}
 	
 	Win32_CheckForStableFramerate(Platform->engineInput.uncappedElapsedMs);
