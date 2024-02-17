@@ -702,8 +702,8 @@ PLAT_API_CLOSE_FILE_DEFINITION(Win32_CloseFile)
 // void Win32_FreeReadFileStream(Stream_t* stream)
 STREAM_FREE_CALLBACK_DEF(Win32_FreeReadFileStream)
 {
-	NotNull2(stream, stream->mainPntr);
-	PlatFileContents_t* fileContents = (PlatFileContents_t*)stream->mainPntr;
+	NotNull2(stream, stream->otherPntr);
+	PlatFileContents_t* fileContents = (PlatFileContents_t*)stream->otherPntr;
 	Win32_FreeFileContents(fileContents);
 	FreeMem(stream->allocArena, fileContents, sizeof(PlatFileContents_t));
 }
@@ -794,7 +794,7 @@ STREAM_MOVE_CALLBACK_DEF(Win32_MoveFileStream)
 	NotNull2(stream, stream->mainPntr);
 	PlatOpenFile_t* openFile = (PlatOpenFile_t*)stream->mainPntr;
 	bool moveSuccess = Win32_MoveFileCursor(openFile, offset);
-	DebugAssert(moveSuccess);
+	DebugAssertAndUnused(moveSuccess, moveSuccess);
 	stream->readIndex += offset;
 }
 
@@ -813,9 +813,12 @@ PLAT_API_READ_FILE_CONTENTS_STREAM_DEFINITION(Win32_ReadFileContentsStream)
 		DebugAssert(stream.callbacks.Free == nullptr);
 		stream.callbacks.Free = Win32_FreeReadFileStream;
 		stream.source = StreamSource_EntireFile;
+		stream.allocArena = memArena;
+		stream.filePath = AllocString(memArena, &filePath);
 		PlatFileContents_t* fileContentsPntr = AllocStruct(memArena, PlatFileContents_t);
 		MyMemCopy(fileContentsPntr, &fileContents, sizeof(PlatFileContents_t));
-		stream.mainPntr = (void*)fileContentsPntr;
+		DebugAssert(stream.otherPntr == nullptr);
+		stream.otherPntr = (void*)fileContentsPntr;
 		stream.convertNewLines = convertNewLines;
 		return stream;
 	}
