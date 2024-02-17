@@ -196,7 +196,7 @@ bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textur
 	if (StrEndsWith(filePath, ".obj", true))
 	{
 		PlatFileContents_t objFile = {};
-		if (plat->ReadFileContents(filePath, &objFile))
+		if (plat->ReadFileContents(filePath, nullptr, true, &objFile))
 		{
 			MyStr_t objFileContentsStr = NewStr(objFile.length, objFile.chars);
 			MyStr_t folderPath = GetDirectoryPart(filePath);

@@ -479,7 +479,7 @@ bool PigTryLoadDebugBindings(MyStr_t filePath, ProcessLog_t* log, PigDebugBindin
 	SetProcessLogFilePath(log, filePath);
 	
 	PlatFileContents_t bindingsFile = {};
-	if (plat->ReadFileContents(filePath, &bindingsFile))
+	if (plat->ReadFileContents(filePath, nullptr, true, &bindingsFile))
 	{
 		result = PigTryDeserDebugBindings(NewStr(bindingsFile.size, bindingsFile.chars), log, bindingsOut);
 		plat->FreeFileContents(&bindingsFile);

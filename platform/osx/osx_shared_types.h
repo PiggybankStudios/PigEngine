@@ -12,6 +12,7 @@ Date:   10\02\2021
 // +--------------------------------------------------------------+
 struct PlatFileContents_t
 {
+	MemArena_t* allocArena;
 	u64 id;
 	MyStr_t path;
 	union

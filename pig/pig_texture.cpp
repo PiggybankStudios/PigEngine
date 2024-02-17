@@ -196,7 +196,7 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	ClearPointer(textureOut);
 	
 	PlatFileContents_t textureFile;
-	if (!plat->ReadFileContents(filePath, &textureFile))
+	if (!plat->ReadFileContents(filePath, nullptr, false, &textureFile))
 	{
 		textureOut->error = TextureError_CouldntOpenFile;
 		return false;

@@ -47,7 +47,7 @@ void Win32_LoadBasicResources(const StartupOptions_t* options)
 	Platform->squareBuffer = Win32_CreateVertBuffer(false, ArrayCount(squareVerts), &squareVerts[0]);
 	
 	PlatFileContents_t fontFile;
-	if (Win32_ReadPlatformFont(NewStr("Consolas"), 12, false, false, &fontFile))
+	if (Win32_ReadPlatformFont(NewStr("Consolas"), 12, false, false, nullptr, &fontFile))
 	{
 		PlatFontData_t fontData;
 		

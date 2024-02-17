@@ -229,13 +229,15 @@ PLAT_API_CREATE_FOLDER(Win32_CreateFolder)
 // |    Win32_ReadFileContents    |
 // +==============================+
 // This function will automatically add a null-term char at the end of the file in case you want to read it as a string
-// bool ReadFileContents(MyStr_t filePath, PlatFileContents_t* contentsOut)
+// bool ReadFileContents(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines, PlatFileContents_t* contentsOut)
 PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 {
 	//NOTE: This function should be multi-thread safe!
+	NotNull(Platform);
 	NotEmptyStr(&filePath);
 	NotNull(contentsOut);
 	ClearPointer(contentsOut);
+	if (memArena == nullptr) { memArena = &Platform->stdHeap; }
 	
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
@@ -295,7 +297,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 	}
 	
 	contentsOut->size = fileSize.QuadPart;
-	void* resultData = AllocArray(&Platform->stdHeap, u8, contentsOut->size+1); //+1 for null-term
+	void* resultData = AllocArray(memArena, u8, contentsOut->size+1); //+1 for null-term
 	NotNullMsg(resultData, "Failed to allocate space to hold file contents. The application probably tried to open a massive file");
 	
 	if (contentsOut->size > 0)
@@ -304,7 +306,7 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 		DWORD bytesRead = 0;
 		BOOL readFileResult = ReadFile(
 			fileHandle,               //hFile
-			resultData, //lpBuffer
+			resultData,               //lpBuffer
 			(DWORD)contentsOut->size, //nNumberOfBytesToRead
 			&bytesRead,               //lpNumberOfBytesRead
 			NULL                      //lpOverlapped
@@ -323,20 +325,32 @@ PLAT_API_READ_FILE_CONTENTS_DEF(Win32_ReadFileContents)
 		{
 			contentsOut->readSuccess = false;
 			contentsOut->errorCode = GetLastError();
-			PrintLine_E("Failed to all of the file at \"%.*s\". Error code: %s. Read %u/%llu bytes", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true), bytesRead, contentsOut->size);
+			PrintLine_E("Failed to read all of the file at \"%.*s\". Error code: %s. Read %u/%llu bytes", StrPrint(fullPath), Win32_GetErrorCodeStr(contentsOut->errorCode, true), bytesRead, contentsOut->size);
 			FreeMem(&Platform->stdHeap, resultData);
 			TempPopMark();
 			CloseHandle(fileHandle);
 			return false;
+		}
+		
+		if (convertNewLines)
+		{
+			u64 numNewLinesReplaced = StrReplaceInPlace(NewStr(contentsOut->size, (char*)resultData), "\r\n", "\n", false, true);
+			if (numNewLinesReplaced > 0)
+			{
+				Assert(contentsOut->size > numNewLinesReplaced);
+				ShrinkMem(memArena, resultData, contentsOut->size+1, contentsOut->size+1 - numNewLinesReplaced);
+				contentsOut->size -= numNewLinesReplaced;  //1 byte smaller for each "\r\n" pair to "\n"
+			}
 		}
 	}
 	
 	TempPopMark();
 	CloseHandle(fileHandle);
 	
+	contentsOut->allocArena = memArena;
 	contentsOut->data = (u8*)resultData;
 	contentsOut->data[contentsOut->size] = '\0'; //add null-term
-	contentsOut->path = AllocString(&Platform->stdHeap, &filePath);
+	contentsOut->path = AllocString(memArena, &filePath);
 	NotNullStr(&contentsOut->path);
 	
 	//TODO: Make this thread safe!
@@ -357,12 +371,14 @@ PLAT_API_FREE_FILE_CONTENTS_DEF(Win32_FreeFileContents)
 	NotNull(fileContents);
 	if (fileContents->data != nullptr)
 	{
+		NotNull(fileContents->allocArena);
 		AssertMsg(fileContents->size > 0, "PlatFileContents_t.size was 0 when calling Win32_FreeFileContents");
-		FreeMem(&Platform->stdHeap, fileContents->data, fileContents->size+1);
+		FreeMem(fileContents->allocArena, fileContents->data, fileContents->size+1);
 	}
 	if (fileContents->path.pntr != nullptr)
 	{
-		FreeString(&Platform->stdHeap, &fileContents->path);
+		NotNull(fileContents->allocArena);
+		FreeString(fileContents->allocArena, &fileContents->path);
 	}
 	ClearPointer(fileContents);
 }
@@ -423,7 +439,7 @@ WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
 // +==============================+
 // |        Win32_OpenFile        |
 // +==============================+
-// bool OpenFile(MyStr_t filePath, bool forWriting, PlatOpenFile_t* openFileOut)
+// bool OpenFile(MyStr_t filePath, bool forWriting, bool calculateSize, PlatOpenFile_t* openFileOut)
 PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 {
 	NotNullStr(&filePath);
@@ -448,37 +464,42 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 		return false;
 	}
 	
-	//TODO: Seems like this seek to end and back stuff was assuming that we were opening a file for appending when doing writing.
-	//      But we do CREATE_ALWAYS as the option above which ensures we overwrite/reset the file when opening it.
-	//      Should we have an option for appending?? Or should we reframe this code to not act like the length matters for writing?
-	//Seek to the end of the file
-	LONG newCursorPosHighOrder = 0;
-	DWORD newCursorPos = SetFilePointer(
-		fileHandle,             //hFile
-		0,                      //lDistanceToMove
-		&newCursorPosHighOrder, //lDistanceToMoveHigh
-		FILE_END                //dMoveMethod
-	);
-	if (newCursorPos == INVALID_SET_FILE_POINTER)
+	u64 fileSize = 0;
+	u64 cursorIndex = 0;
+	if (calculateSize)
 	{
-		PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), StrPrint(fullPath));
-		CloseHandle(fileHandle);
-		TempPopMark();
-		return false;
-	}
-	
-	u64 fileSize = (((u64)newCursorPosHighOrder << 32) | (u64)newCursorPos);
-	u64 cursorIndex = fileSize;
-	if (!forWriting)
-	{
-		DWORD beginMove = SetFilePointer(
-			fileHandle, //hFile
-			0, //lDistanceToMove,
-			NULL, //lDistanceToMoveHigh
-			FILE_BEGIN
+		//TODO: Seems like this seek to end and back stuff was assuming that we were opening a file for appending when doing writing.
+		//      But we do CREATE_ALWAYS as the option above which ensures we overwrite/reset the file when opening it.
+		//      Should we have an option for appending?? Or should we reframe this code to not act like the length matters for writing?
+		//Seek to the end of the file
+		LONG newCursorPosHighOrder = 0;
+		DWORD newCursorPos = SetFilePointer(
+			fileHandle,             //hFile
+			0,                      //lDistanceToMove
+			&newCursorPosHighOrder, //lDistanceToMoveHigh
+			FILE_END                //dMoveMethod
 		);
-		Assert(beginMove != INVALID_SET_FILE_POINTER);
-		cursorIndex = 0;
+		if (newCursorPos == INVALID_SET_FILE_POINTER)
+		{
+			PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), StrPrint(fullPath));
+			CloseHandle(fileHandle);
+			TempPopMark();
+			return false;
+		}
+		
+		fileSize = (((u64)newCursorPosHighOrder << 32) | (u64)newCursorPos);
+		cursorIndex = fileSize;
+		if (!forWriting)
+		{
+			DWORD beginMove = SetFilePointer(
+				fileHandle, //hFile
+				0, //lDistanceToMove,
+				NULL, //lDistanceToMoveHigh
+				FILE_BEGIN
+			);
+			Assert(beginMove != INVALID_SET_FILE_POINTER);
+			cursorIndex = 0;
+		}
 	}
 	
 	TempPopMark();
@@ -489,6 +510,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 	openFileOut->id = Platform->nextOpenFileId; //TODO: Make this thread safe!
 	Platform->nextOpenFileId++;
 	openFileOut->openedForWriting = forWriting;
+	openFileOut->isKnownSize = calculateSize;
 	openFileOut->cursorIndex = cursorIndex;
 	openFileOut->fileSize = fileSize;
 	openFileOut->path = AllocString(&Platform->mainHeap, &filePath);
@@ -571,7 +593,7 @@ PLAT_API_READ_FROM_FILE_DEFINITION(Win32_ReadFromFile)
 	if (numBytes == 0) { return 0; }
 	
 	DWORD numBytesToRead = (DWORD)numBytes;
-	if (openFile->cursorIndex + numBytes > openFile->fileSize)
+	if (openFile->isKnownSize && openFile->cursorIndex + numBytes > openFile->fileSize)
 	{
 		numBytesToRead = (DWORD)(openFile->fileSize - openFile->cursorIndex);
 	}
@@ -597,7 +619,7 @@ PLAT_API_READ_FROM_FILE_DEFINITION(Win32_ReadFromFile)
 	u64 result = numBytesRead;
 	if (convertNewLines)
 	{
-		u64 numNewLinesReplaced = StrReplaceInPlace(NewStr(numBytesRead, (char*)bufferPntr), "\r\n", "\n");
+		u64 numNewLinesReplaced = StrReplaceInPlace(NewStr(numBytesRead, (char*)bufferPntr), "\r\n", "\n", false, true);
 		Assert(result > numNewLinesReplaced);
 		result -= numNewLinesReplaced;  //1 byte smaller for each "\r\n" pair to "\n"
 	}
@@ -671,6 +693,111 @@ PLAT_API_CLOSE_FILE_DEFINITION(Win32_CloseFile)
 	if (openFile->fullPath.pntr != nullptr) { FreeString(&Platform->mainHeap, &openFile->fullPath); }
 	ClearPointer(openFile);
 	openFile->handle = INVALID_HANDLE_VALUE;
+}
+
+// +--------------------------------------------------------------+
+// |                       Stream Callbacks                       |
+// +--------------------------------------------------------------+
+// void Win32_FreeReadFileStream(Stream_t* stream)
+STREAM_FREE_CALLBACK_DEF(Win32_FreeReadFileStream)
+{
+	NotNull2(stream, stream->mainPntr);
+	PlatFileContents_t* fileContents = (PlatFileContents_t*)stream->mainPntr;
+	Win32_FreeFileContents(fileContents);
+	FreeMem(stream->allocArena, fileContents, sizeof(PlatFileContents_t));
+}
+// void Win32_FreeFileStream(Stream_t* stream)
+STREAM_FREE_CALLBACK_DEF(Win32_FreeFileStream)
+{
+	NotNull2(stream, stream->mainPntr);
+	PlatOpenFile_t* openFile = (PlatOpenFile_t*)stream->mainPntr;
+	Win32_CloseFile(openFile);
+	FreeMem(stream->allocArena, openFile, sizeof(PlatOpenFile_t));
+}
+// u64 Win32_ReadBufferFileStream(Stream_t* stream, u64 numBytes, void* bufferPntr)
+STREAM_READ_BUFFER_CALLBACK_DEF(Win32_ReadBufferFileStream)
+{
+	NotNull2(stream, stream->mainPntr);
+	PlatOpenFile_t* openFile = (PlatOpenFile_t*)stream->mainPntr;
+	return Win32_ReadFromFile(openFile, numBytes, bufferPntr, stream->convertNewLines);
+}
+// u64 Win32_ReadAllocFileStream(Stream_t* stream, u64 numBytes, MemArena_t* memArena, void** outputPntr)
+STREAM_READ_ALLOC_CALLBACK_DEF(Win32_ReadAllocFileStream)
+{
+	NotNull2(stream, stream->mainPntr);
+	PlatOpenFile_t* openFile = (PlatOpenFile_t*)stream->mainPntr;
+	if (numBytes == 0) { SetOptionalOutPntr(outputPntr, nullptr); return 0; }
+	u8* allocSpace = AllocArray(memArena, u8, numBytes);
+	NotNull(allocSpace);
+	u64 numBytesRead = Win32_ReadFromFile(openFile, numBytes, allocSpace, stream->convertNewLines);
+	if (numBytesRead < numBytes) { ShrinkMem(memArena, allocSpace, numBytes, numBytesRead); }
+	SetOptionalOutPntr(outputPntr, allocSpace);
+	return numBytesRead;
+}
+// void Win32_MoveFileStream(Stream_t* stream, i64 offset)
+STREAM_MOVE_CALLBACK_DEF(Win32_MoveFileStream)
+{
+	NotNull2(stream, stream->mainPntr);
+	PlatOpenFile_t* openFile = (PlatOpenFile_t*)stream->mainPntr;
+	bool moveSuccess = Win32_MoveFileCursor(openFile, offset);
+	DebugAssert(moveSuccess);
+}
+
+// +==============================+
+// | Win32_ReadFileContentsStream |
+// +==============================+
+// Stream_t ReadFileContentsStream(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines)
+PLAT_API_READ_FILE_CONTENTS_STREAM_DEFINITION(Win32_ReadFileContentsStream)
+{
+	NotNullStr(&filePath);
+	if (memArena == nullptr) { memArena = &Platform->stdHeap; }
+	PlatFileContents_t fileContents;
+	if (Win32_ReadFileContents(filePath, memArena, convertNewLines, &fileContents))
+	{
+		Stream_t stream = NewBufferStream(fileContents.data, fileContents.size, true);
+		DebugAssert(stream.callbacks.Free == nullptr);
+		stream.callbacks.Free = Win32_FreeReadFileStream;
+		stream.source = StreamSource_EntireFile;
+		PlatFileContents_t* fileContentsPntr = AllocStruct(memArena, PlatFileContents_t);
+		MyMemCopy(fileContentsPntr, &fileContents, sizeof(PlatFileContents_t));
+		stream.mainPntr = (void*)fileContentsPntr;
+		stream.convertNewLines = convertNewLines;
+		return stream;
+	}
+	else
+	{
+		return Stream_Invalid;
+	}
+}
+
+// +==============================+
+// |     Win32_OpenFileStream     |
+// +==============================+
+// Stream_t OpenFileStream(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines)
+PLAT_API_OPEN_FILE_STREAM_DEFINITION(Win32_OpenFileStream)
+{
+	PlatOpenFile_t file;
+	if (Win32_OpenFile(filePath, false, false, &file))
+	{
+		StreamCallbacks_t callbacks = {};
+		callbacks.Free = Win32_FreeFileStream;
+		callbacks.ReadBuffer = Win32_ReadBufferFileStream;
+		callbacks.ReadAlloc = Win32_ReadAllocFileStream;
+		callbacks.Move = Win32_MoveFileStream;
+		u16 streamCaps = StreamCapability_FiniteSize | StreamCapability_GivenSize | StreamCapability_Backtracking;
+		Stream_t stream = NewStream(StreamSource_OpenFile, streamCaps, &callbacks, memArena, filePath);
+		PlatOpenFile_t* openFilePntr = AllocStruct(memArena, PlatOpenFile_t);
+		MyMemCopy(openFilePntr, &file, sizeof(PlatOpenFile_t));
+		stream.mainPntr = (void*)openFilePntr;
+		stream.isTotalSizeFilled = true;
+		stream.totalSize = file.fileSize;
+		stream.convertNewLines = convertNewLines;
+		return stream;
+	}
+	else
+	{
+		return Stream_Invalid;
+	}
 }
 
 // +==============================+

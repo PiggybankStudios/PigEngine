@@ -6,6 +6,8 @@ Description:
 	** Holds functions that Pig Gfx calls back to us through (passed in PigGfxCallbacks_t to PigGfx_Init)
 */
 
+#ifdef WIN32_GFX_TEST
+
 // +==============================+
 // |   Win32_PigGfxInitFailure    |
 // +==============================+
@@ -56,3 +58,5 @@ PIG_GFX_DEBUG_PRINT_DEF(Win32_PigGfxDebugPrint)
 	Win32_DebugOutputFromPlat(0x00, filePath, lineNumber, funcName, level, newLine, resultStr);
 	free(resultStr);
 }
+
+#endif // WIN32_GFX_TEST

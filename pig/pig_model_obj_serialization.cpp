@@ -1041,7 +1041,7 @@ bool TryDeserObjFile(MyStr_t objFileContents, MyStr_t folderPath, ProcessLog_t* 
 				TempPushMark();
 				MyStr_t filePath = TempPrintStr("%.*s%.*s", StrPrint(folderPath), StrPrint(fileName));
 				PlatFileContents_t matLibFile = {};
-				if (!plat->ReadFileContents(filePath, &matLibFile))
+				if (!plat->ReadFileContents(filePath, nullptr, true, &matLibFile))
 				{
 					LogPrintLine_E(log, "On line %llu couldn't find material library file at \"%.*s\": \"%.*s\"", lineParser.lineIndex+1, StrPrint(filePath), StrPrint(fileLine));
 					LogExitFailure(log, DeserObjFileError_CouldntFindMaterialLibrary);

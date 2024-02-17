@@ -212,7 +212,7 @@ bool LoadTextureArrayFromMultipleFiles(MemArena_t* memArena, Texture_t* textureO
 		NotNullStr(&filePath);
 		
 		PlatFileContents_t imageFileContents = {};
-		if (plat->ReadFileContents(filePath, &imageFileContents))
+		if (plat->ReadFileContents(filePath, nullptr, false, &imageFileContents))
 		{
 			if (imageFileContents.size == 0)
 			{

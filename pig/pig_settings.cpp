@@ -235,7 +235,7 @@ bool PigTryLoadSettings(MyStr_t filePath, ProcessLog_t* log, PigSettings_t* sett
 	Assert((readFileFunc == nullptr) == (freeFileFunc == nullptr));
 	bool result = false;
 	PlatFileContents_t settingsFile;
-	if ((readFileFunc != nullptr && readFileFunc(filePath, &settingsFile)) || (plat != nullptr && plat->ReadFileContents(filePath, &settingsFile)))
+	if ((readFileFunc != nullptr && readFileFunc(filePath, nullptr, true, &settingsFile)) || (plat != nullptr && plat->ReadFileContents(filePath, nullptr, true, &settingsFile)))
 	{
 		result = PigTryDeserSettings(NewStr(settingsFile.size, settingsFile.chars), log, settingsOut, memArena);
 		if (freeFileFunc != nullptr) { freeFileFunc(&settingsFile); }

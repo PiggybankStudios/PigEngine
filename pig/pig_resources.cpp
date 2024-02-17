@@ -404,7 +404,7 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 	MyStr_t vectorImgPathStr = NewStr(vectorImgPath);
 	
 	PlatFileContents_t svgFile = {};
-	if (!plat->ReadFileContents(vectorImgPathStr, &svgFile))
+	if (!plat->ReadFileContents(vectorImgPathStr, nullptr, false, &svgFile))
 	{
 		PrintLine_E("Failed to open vector image[%llu] at \"%s\"", vectorImgIndex, GetFileNamePart(vectorImgPathStr).pntr);
 		DebugAssert(false);
@@ -522,7 +522,7 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 	if (!IsEmptyStr(metaInfo.metaFilePath))
 	{
 		PlatFileContents_t metaFile = {};
-		if (plat->ReadFileContents(metaInfo.metaFilePath, &metaFile))
+		if (plat->ReadFileContents(metaInfo.metaFilePath, nullptr, true, &metaFile))
 		{
 			ProcessLog_t metaParseLog = {};
 			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap);
@@ -653,7 +653,7 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 	if (!IsEmptyStr(metaFilePath))
 	{
 		PlatFileContents_t metaFile = {};
-		if (plat->ReadFileContents(metaFilePath, &metaFile))
+		if (plat->ReadFileContents(metaFilePath, nullptr, true, &metaFile))
 		{
 			ProcessLog_t metaParseLog = {};
 			CreateProcessLog(&metaParseLog, Kilobytes(8), TempArena, mainHeap);
@@ -906,7 +906,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 	Sound_t newMusic = {};
 	
 	PlatFileContents_t musicFile = {};
-	if (plat->ReadFileContents(musicPathStr, &musicFile))
+	if (plat->ReadFileContents(musicPathStr, nullptr, false, &musicFile))
 	{
 		bool parseSuccess = false;
 		ProcessLog_t musicParseLog = {};

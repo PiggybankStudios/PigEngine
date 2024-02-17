@@ -583,7 +583,7 @@ bool Win32_LoadGameControllerDbFile(MyStr_t filePath)
 {
 	bool result = false;
 	PlatFileContents_t dbFile = {};
-	if (Win32_ReadFileContents(filePath, &dbFile))
+	if (Win32_ReadFileContents(filePath, nullptr, true, &dbFile))
 	{
 		int updateMappingResult = glfwUpdateGamepadMappings(dbFile.chars);
 		if (updateMappingResult == GLFW_TRUE)
@@ -834,7 +834,7 @@ void Win32_LoadWindowIcon(PlatWindow_t* window, u64 numIconFiles, MyStr_t* iconF
 		{
 			PlatFileContents_t iconFile;
 			AssertNullTerm(&iconFilePaths[fIndex]);
-			if (Win32_ReadFileContents(iconFilePaths[fIndex], &iconFile))
+			if (Win32_ReadFileContents(iconFilePaths[fIndex], nullptr, false, &iconFile))
 			{
 				int bitmapNumChannels = 0;
 				int bitmapWidth = 0;

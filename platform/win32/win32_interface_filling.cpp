@@ -149,6 +149,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->SeekToOffsetInFile        = Win32_SeekToOffsetInFile;
 	api->ReadFromFile              = Win32_ReadFromFile;
 	api->CloseFile                 = Win32_CloseFile;
+	api->ReadFileContentsStream    = Win32_ReadFileContentsStream;
+	api->OpenFileStream            = Win32_OpenFileStream;
 	api->TryParseImageFile         = Win32_TryParseImageFile;
 	api->SaveImageDataToFile       = Win32_SaveImageDataToFile;
 	api->FreeImageData             = Win32_FreeImageData;

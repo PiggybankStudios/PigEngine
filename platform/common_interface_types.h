@@ -140,6 +140,8 @@ struct PlatformApi_t
 	PlatApiSeekToOffsetInFile_f*        SeekToOffsetInFile;
 	PlatApiReadFromFile_f*              ReadFromFile;
 	PlatApiCloseFile_f*                 CloseFile;
+	PlatApiReadFileContentsStream_f*    ReadFileContentsStream;
+	PlatApiOpenFileStream_f*            OpenFileStream;
 	PlatApiTryParseImageFile_f*         TryParseImageFile;
 	PlatApiSaveImageDataToFile_f*       SaveImageDataToFile;
 	PlatApiFreeImageData_f*             FreeImageData;

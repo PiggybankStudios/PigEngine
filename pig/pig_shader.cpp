@@ -602,7 +602,7 @@ bool LoadShader(MemArena_t* memArena, Shader_t* shaderOut, MyStr_t filePath, Ver
 	ClearPointer(shaderOut);
 	
 	PlatFileContents_t shaderFile;
-	if (!plat->ReadFileContents(filePath, &shaderFile))
+	if (!plat->ReadFileContents(filePath, nullptr, false, &shaderFile))
 	{
 		shaderOut->error = ShaderError_CouldntOpenFile;
 		return false;

@@ -170,7 +170,7 @@ bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memAr
 {
 	bool result = false;
 	PlatFileContents_t soundFile = {};
-	if (plat->ReadFileContents(filePath, &soundFile))
+	if (plat->ReadFileContents(filePath, nullptr, false, &soundFile))
 	{
 		if (StrEndsWith(filePath, ".ogg"))
 		{

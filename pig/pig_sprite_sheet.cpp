@@ -289,7 +289,7 @@ bool LoadSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, MyStr_t file
 	NotEmptyStr(&filePath);
 	
 	PlatFileContents_t textureFile;
-	if (!plat->ReadFileContents(filePath, &textureFile))
+	if (!plat->ReadFileContents(filePath, nullptr, false, &textureFile))
 	{
 		sheetOut->error = SpriteSheetError_CouldntOpenFile;
 		return false;

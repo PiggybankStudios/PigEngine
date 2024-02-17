@@ -145,7 +145,7 @@ Win32_Texture_t Win32_LoadTexture_OpenGL(MyStr_t filePath, bool pixelated, bool 
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, false);
 	
-	if (!Win32_ReadFileContents(filePath, &imageFile))
+	if (!Win32_ReadFileContents(filePath, nullptr, false, &imageFile))
 	{
 		PrintLine_E("Failed to open image file at \"%.*s\"", StrPrint(fullPath));
 		TempPopMark();
@@ -183,7 +183,7 @@ Win32_Shader_t Win32_LoadShader_OpenGL(MyStr_t filePath)
 	TempPushMark();
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, false);
 	
-	if (!Win32_ReadFileContents(filePath, &shaderFile))
+	if (!Win32_ReadFileContents(filePath, nullptr, false, &shaderFile))
 	{
 		PrintLine_E("Failed to open shader file at \"%.*s\"", StrPrint(fullPath));
 		TempPopMark();

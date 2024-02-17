@@ -383,7 +383,7 @@ bool TryLoadModelArmatureFrom(MyStr_t armatureFilePath, ProcessLog_t* log, Model
 	SetProcessLogFilePath(log, armatureFilePath);
 	
 	PlatFileContents_t armatureFile;
-	if (plat->ReadFileContents(armatureFilePath, &armatureFile))
+	if (plat->ReadFileContents(armatureFilePath, nullptr, true, &armatureFile))
 	{
 		MyStr_t armatureFileContents = NewStr(armatureFile.length, armatureFile.chars);
 		bool success = TryDeserModelArmature(armatureFileContents, log, armatureOut, memArena);

@@ -39,13 +39,15 @@ PLAT_API_FREE_FONT_DATA_DEF(Win32_FreeFontData)
 // +==============================+
 // |    Win32_ReadPlatformFont    |
 // +==============================+
-// bool ReadPlatformFont(MyStr_t fontName, i32 fontSize, bool bold, bool italic, PlatFileContents_t* fileContentsOut)
+// bool ReadPlatformFont(MyStr_t fontName, i32 fontSize, bool bold, bool italic, MemArena_t* memArena, PlatFileContents_t* fileContentsOut)
 PLAT_API_READ_PLATFORM_FONT_DEF(Win32_ReadPlatformFont)
 {
+	NotNull(Platform);
 	AssertSingleThreaded();
 	NotNull(fileContentsOut);
 	NotNullStr(&fontName);
 	AssertNullTerm(&fontName);
+	if (memArena == nullptr) { memArena = &Platform->stdHeap; }
 	PlatFileContents_t result = {};
 	
 	//TODO: Call EnumFontFamiliesEx first to determine which font name exactly we will be getting
@@ -107,7 +109,7 @@ PLAT_API_READ_PLATFORM_FONT_DEF(Win32_ReadPlatformFont)
 	}
 	
 	u64 fontDataSize = (u64)getFontDataResult;
-	u8* fontDataPntr = AllocArray(&Platform->stdHeap, u8, fontDataSize);
+	u8* fontDataPntr = AllocArray(memArena, u8, fontDataSize);
 	if (fontDataPntr == nullptr)
 	{
 		PrintLine_E("Failed to allocate space to store font file data for font \"%s\": %llu bytes", fontName.pntr, fontDataSize);
@@ -128,9 +130,10 @@ PLAT_API_READ_PLATFORM_FONT_DEF(Win32_ReadPlatformFont)
 	BOOL deleteResult = DeleteObject(fontHandle);
 	DebugAssertAndUnused(deleteResult != 0, deleteResult);
 	
+	fileContentsOut->allocArena = memArena;
 	fileContentsOut->id = Platform->nextFileContentsId;
 	Platform->nextFileContentsId++;
-	fileContentsOut->path = AllocString(&Platform->stdHeap, &fontName);
+	fileContentsOut->path = AllocString(memArena, &fontName);
 	NotNullStr(&fileContentsOut->path);
 	fileContentsOut->data = fontDataPntr;
 	fileContentsOut->size = fontDataSize;

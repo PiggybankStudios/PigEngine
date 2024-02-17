@@ -102,7 +102,7 @@ typedef PLAT_API_ENUMERATE_FILES_DEF(PlatApiEnumerateFiles_f);
 #define PLAT_API_CREATE_FOLDER(functionName) bool functionName(MyStr_t folderPath)
 typedef PLAT_API_CREATE_FOLDER(PlatApiCreateFolder_f);
 
-#define PLAT_API_READ_FILE_CONTENTS_DEF(functionName) bool functionName(MyStr_t filePath, PlatFileContents_t* contentsOut)
+#define PLAT_API_READ_FILE_CONTENTS_DEF(functionName) bool functionName(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines, PlatFileContents_t* contentsOut)
 typedef PLAT_API_READ_FILE_CONTENTS_DEF(PlatApiReadFileContents_f);
 
 #define PLAT_API_FREE_FILE_CONTENTS_DEF(functionName) void functionName(PlatFileContents_t* fileContents)
@@ -112,8 +112,14 @@ typedef PLAT_API_FREE_FILE_CONTENTS_DEF(PlatApiFreeFileContents_f);
 #define WRITE_ENTIRE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, const void* memory, u64 memorySize)
 typedef WRITE_ENTIRE_FILE_DEFINITION(PlatApiWriteEntireFile_f);
 
-#define PLAT_API_OPEN_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, bool forWriting, PlatOpenFile_t* openFileOut)
+#define PLAT_API_OPEN_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, bool forWriting, bool calculateSize, PlatOpenFile_t* openFileOut)
 typedef PLAT_API_OPEN_FILE_DEFINITION(PlatApiOpenFile_f);
+
+#define PLAT_API_READ_FILE_CONTENTS_STREAM_DEFINITION(functionName) Stream_t functionName(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines)
+typedef PLAT_API_READ_FILE_CONTENTS_STREAM_DEFINITION(PlatApiReadFileContentsStream_f);
+
+#define PLAT_API_OPEN_FILE_STREAM_DEFINITION(functionName) Stream_t functionName(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines)
+typedef PLAT_API_OPEN_FILE_STREAM_DEFINITION(PlatApiOpenFileStream_f);
 
 #define PLAT_API_WRITE_TO_FILE_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
 typedef PLAT_API_WRITE_TO_FILE_DEFINITION(PlatApiWriteToFile_f);
@@ -170,7 +176,7 @@ typedef PLAT_API_RENDER_LOADING_SCREEN(PlatApiRenderLoadingScreen_f);
 #define PLAT_API_FREE_FONT_DATA_DEF(functionName) void functionName(PlatFontData_t* fontData)
 typedef PLAT_API_FREE_FONT_DATA_DEF(PlatApiFreeFontData_f);
 
-#define PLAT_API_READ_PLATFORM_FONT_DEF(functionName) bool functionName(MyStr_t fontName, i32 fontSize, bool bold, bool italic, PlatFileContents_t* fileContentsOut)
+#define PLAT_API_READ_PLATFORM_FONT_DEF(functionName) bool functionName(MyStr_t fontName, i32 fontSize, bool bold, bool italic, MemArena_t* memArena, PlatFileContents_t* fileContentsOut)
 typedef PLAT_API_READ_PLATFORM_FONT_DEF(PlatApiReadPlatformFont_f);
 
 #define PLAT_API_BAKE_FONT_DEF(functionName) bool functionName(PlatFileContents_t* fontFile, v2i bakeSize, bool expandTo32bit, u64 numRanges, PlatFontRange_t* ranges, PlatFontData_t* fontDataOut, PlatRectPackContext_t* packContextOut)

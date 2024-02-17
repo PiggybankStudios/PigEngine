@@ -32,6 +32,7 @@ struct PlatFileEnumerator_t
 
 struct PlatFileContents_t
 {
+	MemArena_t* allocArena;
 	u64 id;
 	bool readSuccess;
 	MyStr_t path;
@@ -54,6 +55,7 @@ struct PlatOpenFile_t
 	u64 id;
 	bool isOpen;
 	bool openedForWriting;
+	bool isKnownSize;
 	u64 cursorIndex;
 	u64 fileSize;
 	MyStr_t path;

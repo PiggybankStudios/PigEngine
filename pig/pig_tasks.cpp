@@ -27,7 +27,7 @@ void PigHandleTask(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThr
 			Assert(task->input.inputSize1 == sizeof(PlatFileContents_t));
 			NotNull(task->input.inputPntr1);
 			PlatFileContents_t* fileOut = (PlatFileContents_t*)task->input.inputPntr1;
-			task->result.success = plat->ReadFileContents(task->input.inputStr, fileOut);
+			task->result.success = plat->ReadFileContents(task->input.inputStr, nullptr, false, fileOut);
 			task->result.resultSize1 = sizeof(PlatFileContents_t);
 			task->result.resultPntr1 = fileOut;
 		} break;
