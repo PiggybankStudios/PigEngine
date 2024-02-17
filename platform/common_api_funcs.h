@@ -124,7 +124,7 @@ typedef PLAT_API_OPEN_FILE_STREAM_DEFINITION(PlatApiOpenFileStream_f);
 #define PLAT_API_WRITE_TO_FILE_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, u64 numBytes, const void* bytesPntr, bool convertNewLines)
 typedef PLAT_API_WRITE_TO_FILE_DEFINITION(PlatApiWriteToFile_f);
 
-#define PLAT_API_READ_FROM_FILE_DEFINITION(functionName) u64 functionName(PlatOpenFile_t* openFile, u64 numBytes, void* bufferPntr, bool convertNewLines)
+#define PLAT_API_READ_FROM_FILE_DEFINITION(functionName) u64 functionName(PlatOpenFile_t* openFile, u64 numBytes, void* bufferPntr, bool convertNewLines, u64* rawNumBytesReadOut)
 typedef PLAT_API_READ_FROM_FILE_DEFINITION(PlatApiReadFromFile_f);
 
 #define PLAT_API_MOVE_FILE_CURSOR_DEFINITION(functionName) bool functionName(PlatOpenFile_t* openFile, i64 moveAmount)
