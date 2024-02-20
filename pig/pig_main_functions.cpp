@@ -32,6 +32,16 @@ void PigInitialize(EngineMemory_t* memory)
 	#if PIG_MAIN_ARENA_DEBUG
 	InitMemArena_PagedHeapFuncs(&pig->mainHeapDebug, PIG_MAIN_ARENA_DEBUG_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	pig->mainHeap.debugArena = &pig->mainHeapDebug;
+	pig->mainHeapDebug.debugName = NewStringInArenaNt(&pig->mainHeap, "mainHeapDebug").chars;
+	#endif
+	#if DEBUG_BUILD
+	pig->mainHeap.debugName       = NewStringInArenaNt(&pig->mainHeap, "mainHeap").chars;
+	pig->platHeap.debugName       = NewStringInArenaNt(&pig->mainHeap, "platHeap").chars;
+	pig->fixedHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "fixedHeap").chars;
+	pig->audioHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "audioHeap").chars;
+	pig->largeAllocHeap.debugName = NewStringInArenaNt(&pig->mainHeap, "largeAllocHeap").chars;
+	pig->tempArena.debugName      = NewStringInArenaNt(&pig->mainHeap, "tempArena").chars;
+	pig->stdHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "stdHeap").chars;
 	#endif
 	TempPushMark();
 	

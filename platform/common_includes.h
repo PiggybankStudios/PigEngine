@@ -91,6 +91,9 @@ Date:   09\14\2021
 #define GYLIB_TEMP_MEMORY_STATIC
 #define GYLIB_SCRATCH_ARENAS_STATIC
 #endif
+#if DEBUG_BUILD
+#define GYLIB_DEBUG_NAMES_ENABLED
+#endif
 // #define GYLIB_MEM_ARENA_DEBUG_ENABLED //also see PIG_MAIN_ARENA_DEBUG in pig_defines.h
 #include "gylib/gy_defines_check.h"
 #include "gylib/gy_basic_macros.h"

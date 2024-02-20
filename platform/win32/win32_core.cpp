@@ -191,6 +191,18 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	InitMemArena_FixedHeap(&Platform->threadSafeHeap, PLAT_THREAD_SAFE_HEAP_SIZE, threadSafeHeapMem);
 	Win32_CreateMutex(&Platform->threadSafeHeapMutex);
 	
+	#if DEBUG_BUILD
+	Platform->mainHeap.debugName        = NewStringInArenaNt(&Platform->mainHeap, "win32_mainHeap").chars;
+	Platform->stdHeap.debugName         = NewStringInArenaNt(&Platform->mainHeap, "win32_stdHeap").chars;
+	Platform->stdHeapRedirect.debugName = NewStringInArenaNt(&Platform->mainHeap, "win32_stdHeapRedirect").chars;
+	Platform->tempArena.debugName       = NewStringInArenaNt(&Platform->mainHeap, "win32_tempArena").chars;
+	Platform->threadSafeHeap.debugName  = NewStringInArenaNt(&Platform->mainHeap, "win32_threadSafeHeap").chars;
+	CompileAssert(NUM_SCRATCH_ARENAS_PER_THREAD == 3);
+	ThreadLocalScratchArenas[0].debugName = NewStringInArenaNt(&Platform->mainHeap, "Scratch1").chars;
+	ThreadLocalScratchArenas[1].debugName = NewStringInArenaNt(&Platform->mainHeap, "Scratch2").chars;
+	ThreadLocalScratchArenas[2].debugName = NewStringInArenaNt(&Platform->mainHeap, "Scratch3").chars;
+	#endif
+	
 	#if PROCMON_SUPPORTED
 	InitMemArena_PagedHeapFuncs(&Platform->procmonHeap, Megabytes(1), ProcmonAllocate, ProcmonFree);
 	#endif
