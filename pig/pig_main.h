@@ -114,6 +114,7 @@ struct PigState_t
 	bool isFocusedItemTyping;
 	
 	//Debug Menus
+	PigImguiState_t imgui;
 	DebugConsole_t debugConsole;
 	PigNotificationQueue_t notificationsQueue;
 	PigDebugOverlay_t debugOverlay;

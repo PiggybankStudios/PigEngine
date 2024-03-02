@@ -125,6 +125,7 @@ void PigInitialize(EngineMemory_t* memory)
 	PigInitDebugBindings(&pig->sessionDebugBindings, fixedHeap);
 	PigInitDebugBindings(&pig->debugBindings, fixedHeap);
 	GameLoadDebugBindings(&pig->debugBindings);
+	PigInitImgui();
 	
 	plat->CreateMutex(&pig->volumeMutex);
 	pig->musicEnabled = true;
@@ -155,6 +156,7 @@ void PigInitialize(EngineMemory_t* memory)
 // +--------------------------------------------------------------+
 void PigUpdateMainWindow()
 {
+	PigUpdateImguiBefore();
 	Pig_UpdateResources();
 	
 	PigNotificationsCaptureMouse(&pig->notificationsQueue);
@@ -182,6 +184,8 @@ void PigUpdateMainWindow()
 	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);
 	UpdateAppState(pig->currentAppState);
+	
+	PigUpdateImguiAfter();
 }
 
 // +--------------------------------------------------------------+
@@ -251,6 +255,7 @@ void PigRenderDebugOverlays()
 	RcClearDepth(1.0f); //TODO: Do we need this?
 	RcSetDepth(0.0f);
 	
+	PigRenderImgui();
 	RenderPigDebugOverlayBelowConsole(&pig->debugOverlay);
 	PigRenderConfirmDialogs();
 	RenderDebugConsole(&pig->debugConsole);

@@ -25,6 +25,9 @@ Description:
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
+#include "pig_imconfig.h"
+#include "imgui/imgui.h"
+
 //NOTE: Since PigWasmStdLib already uses stb_sprintf.h as the implementation of vsnprintf, we don't need to re-include the source for that here
 #if !USING_PIG_WASM_STD_LIB
 #define STB_SPRINTF_IMPLEMENTATION
@@ -50,6 +53,7 @@ Description:
 #include "pig/pig_input_chars.h"
 #include "pig/pig_render.h"
 #include "pig/pig_types.h"
+#include "pig/pig_imgui.h"
 #include "pig/pig_slug_types.h"
 #include "pig/pig_svg.h"
 #include "pig/pig_vector_img.h"
@@ -139,6 +143,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_svg.cpp"
 #include "pig/pig_vector_img.cpp"
 #include "pig/pig_font.cpp"
+#include "pig/pig_imgui.cpp"
 #include "pig/pig_slug.cpp"
 #include "pig/pig_model_obj_serialization.cpp"
 #include "pig/pig_model_armature.cpp"
