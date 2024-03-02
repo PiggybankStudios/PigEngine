@@ -172,6 +172,7 @@ Date:   09\14\2021
 	#endif
 	#define GLFW_EXPOSE_NATIVE_WIN32
 	#include "GLFW/glfw3.h"
+	#include "GLFW/glfw3native.h"
 #elif WASM_COMPILATION
 	//TODO: Any platform files we want to include?
 #elif OSX_COMPILATION

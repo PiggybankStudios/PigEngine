@@ -54,7 +54,6 @@ bool CreateVertBuffer_(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynam
 {
 	NotNull(memArena);
 	NotNull(bufferOut);
-	Assert(verticesPntr != nullptr || numVertices == 0);
 	Assert(vertexType != VertexType_None);
 	Assert(vertexSize > 0);
 	ClearPointer(bufferOut);
@@ -98,7 +97,8 @@ bool CreateVertBuffer_(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynam
 			{
 				bufferOut->vertsVoidPntr = AllocMem(memArena, numVertices * vertexSize);
 				NotNullMsg(bufferOut->vertsVoidPntr, "Failed to allocate vertex data in CreateVertBuffer");
-				MyMemCopy(bufferOut->vertsVoidPntr, verticesPntr, numVertices * vertexSize);
+				if (verticesPntr != nullptr) { MyMemCopy(bufferOut->vertsVoidPntr, verticesPntr, numVertices * vertexSize); }
+				else { MyMemSet(bufferOut->vertsVoidPntr, 0x00, numVertices * vertexSize); }
 				bufferOut->hasVerticesCopy = true;
 			}
 			
@@ -135,7 +135,6 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 	u64 numIndices, u64 indexSize, const void* indicesPntr, bool copyIndices)
 {
 	Assert(indexSize > 0);
-	AssertIf(numIndices > 0, indicesPntr != nullptr);
 	bool result = CreateVertBuffer_(memArena, bufferOut, dynamic, numVertices, vertexType, vertexSize, verticesPntr, copyVertices);
 	if (!result || numIndices == 0) { return result; }
 	
@@ -174,13 +173,17 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 			
 			bufferOut->numIndices = numIndices;
 			bufferOut->indexSize = indexSize;
+			
 			if (copyIndices)
 			{
 				bufferOut->indicesVoidPntr = AllocMem(memArena, numIndices * indexSize);
 				NotNullMsg(bufferOut->indicesVoidPntr, "Failed to allocate index data in CreateVertBufferWithIndices");
-				MyMemCopy(bufferOut->indicesVoidPntr, indicesPntr, numIndices * indexSize);
+				if (indicesPntr != nullptr) { MyMemCopy(bufferOut->indicesVoidPntr, indicesPntr, numIndices * indexSize); }
+				else { MyMemSet(bufferOut->indicesVoidPntr, 0x00, numIndices * indexSize); }
 				bufferOut->hasIndicesCopy = true;
 			}
+			
+			result = true;
 		} break;
 		#endif
 		default:
@@ -193,8 +196,10 @@ bool CreateVertBufferWithIndices_(MemArena_t* memArena, VertBuffer_t* bufferOut,
 	return result;
 }
 
-#define CreateVertBufferWithIndices2D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default2D, VertexType_Default2D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
-#define CreateVertBufferWithIndices3D(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default3D, VertexType_Default3D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
+#define CreateVertBuffer2DWithIndicesI16(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI16, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default2D, VertexType_Default2D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i16), (indicesPntrI16), (copyIndices))
+#define CreateVertBuffer3DWithIndicesI16(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI16, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default3D, VertexType_Default3D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i16), (indicesPntrI16), (copyIndices))
+#define CreateVertBuffer2DWithIndicesI32(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default2D, VertexType_Default2D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
+#define CreateVertBuffer3DWithIndicesI32(memArena, bufferOut, dynamic, numVertices, verticesPntr, numIndices, indicesPntrI32, copyVertices, copyIndices) CreateVertBufferWithIndices_((memArena), (bufferOut), (dynamic), (numVertices), VertexType_Default3D, VertexType_Default3D_Size, (verticesPntr), (copyVertices), (numIndices), sizeof(i32), (indicesPntrI32), (copyIndices))
 
 bool CreateVertBufferFromIndexedPrimitiveVerts3D(MemArena_t* memArena, VertBuffer_t* bufferOut, bool dynamic, const PrimitiveIndexedVerts_t* primVerts, Color_t color, bool copyVertices)
 {
@@ -281,5 +286,66 @@ bool ChangeVertBufferVertices_(VertBuffer_t* buffer, u64 startIndex, u64 numVert
 }
 #define ChangeVertBufferVertices2D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default2D, VertexType_Default2D_Size)
 #define ChangeVertBufferVertices3D(buffer, startIndex, numVertices, verticesPntr) ChangeVertBufferVertices_((buffer), (startIndex), (numVertices), (verticesPntr), VertexType_Default3D, VertexType_Default3D_Size)
+
+bool ChangeVertBufferIndices_(VertBuffer_t* buffer, u64 startIndex, u64 numIndices, u64 indexSize, const void* indicesPntr)
+{
+	NotNull(buffer);
+	Assert(buffer->isValid);
+	Assert(buffer->isDynamic);
+	Assert(buffer->indexSize == indexSize);
+	Assert(indicesPntr != nullptr || numIndices == 0);
+	Assert(startIndex <= buffer->numIndices);
+	Assert(startIndex + numIndices <= buffer->numIndices);
+	if (numIndices == 0) { return true; }
+	
+	bool result = false;
+	switch (pig->renderApi)
+	{
+		// +==============================+
+		// |            OpenGL            |
+		// +==============================+
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->glIndexId);
+			const char* errorStr = CheckOpenGlError();
+			if (errorStr != nullptr)
+			{
+				PrintLine_E("ChangeVertBufferIndices glBindBuffer failed: %s", errorStr);
+				return false;
+			}
+			
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex * indexSize, numIndices * indexSize, indicesPntr);
+			errorStr = CheckOpenGlError();
+			if (errorStr != nullptr)
+			{
+				PrintLine_E("ChangeVertBufferIndices glBufferSubData(%u startIndex, %u indices, %u bytes) failed: %s", startIndex, numIndices * indexSize, numIndices * indexSize, errorStr);
+				return false;
+			}
+			
+			if (buffer->hasIndicesCopy)
+			{
+				NotNull(buffer->indicesVoidPntr);
+				MyMemCopy(((u8*)buffer->indicesVoidPntr) + (startIndex * buffer->indexSize), indicesPntr, numIndices * buffer->indexSize);
+			}
+			
+			result = true;
+		} break;
+		#endif
+		
+		// +==============================+
+		// |       Unsupported API        |
+		// +==============================+
+		default:
+		{
+			WriteLine_E("Unsupported render API in ChangeVertBufferVertices!");
+			result = false;
+		} break;
+	}
+	
+	return result;
+}
+#define ChangeVertBufferIndicesI16(buffer, startIndex, numIndices, indicesPntrI16) ChangeVertBufferIndices_((buffer), (startIndex), (numIndices), sizeof(i16), (indicesPntrI16))
+#define ChangeVertBufferIndicesI32(buffer, startIndex, numIndices, indicesPntrI32) ChangeVertBufferIndices_((buffer), (startIndex), (numIndices), sizeof(i32), (indicesPntrI32))
 
 //TODO: Implement ChangeVertBufferIndices

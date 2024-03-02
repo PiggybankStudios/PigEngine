@@ -1085,7 +1085,7 @@ void Win32_CheckControllerInputs(EngineInput_t* currentInput)
 // +==============================+
 // |   Win32_ChangeWindowTarget   |
 // +==============================+
-// void Win32_ChangeWindowTarget(const PlatWindow_t* window)
+// void ChangeWindowTarget(const PlatWindow_t* window)
 PLAT_API_CHANGE_WINDOW_TARGET_DEF(Win32_ChangeWindowTarget)
 {
 	AssertSingleThreaded();
@@ -1103,7 +1103,7 @@ PLAT_API_CHANGE_WINDOW_TARGET_DEF(Win32_ChangeWindowTarget)
 // +==============================+
 // |      Win32_SwapBuffers       |
 // +==============================+
-// void Win32_SwapBuffers()
+// void SwapBuffers()
 PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 {
 	u64 lastWindowIndex = 0;
@@ -1142,4 +1142,14 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 		}
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
+}
+
+// +==============================+
+// |  Win32_GetNativeWindowPntr   |
+// +==============================+
+// void* GetNativeWindowPntr(const PlatWindow_t* window)
+PLAT_API_GET_NATIVE_WINDOW_PNTR_DEF(Win32_GetNativeWindowPntr)
+{
+	NotNull(window);
+	return glfwGetWin32Window(window->handle);
 }

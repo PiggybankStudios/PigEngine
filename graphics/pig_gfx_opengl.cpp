@@ -8,6 +8,17 @@ Description:
 
 #include "glad/glad.c"
 
+//TODO: From opengl3 backend for Dear ImGui:
+// #if defined(IMGUI_IMPL_OPENGL_ES2)
+//         glsl_version = "#version 100";
+// #elif defined(IMGUI_IMPL_OPENGL_ES3)
+//         glsl_version = "#version 300 es";
+// #elif defined(__APPLE__)
+//         glsl_version = "#version 150";
+// #else
+//         glsl_version = "#version 130";
+// #endif
+
 const char* GetOpenGlProfileStr(OpenGlProfile_t enumValue)
 {
 	switch (enumValue)

@@ -569,13 +569,11 @@ void RcClearStencil_OpenGL(i32 stencilValue)
 	glClear(GL_STENCIL_BUFFER_BIT); AssertNoOpenGlError();
 }
 
-void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVertices = 0)
+void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numElements = 0, u64 vertexOffset = 0)
 {
 	//TODO: Keep track of buffer draw counts
 	NotNull(rc->state.boundShader);
 	NotNull(rc->state.boundBuffer);
-	Assert(startIndex < rc->state.boundBuffer->numVertices);
-	Assert(startIndex+numVertices <= rc->state.boundBuffer->numVertices);
 	GLenum glPrimitive = GL_FALSE;
 	switch (primitive)
 	{
@@ -586,10 +584,9 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 	}
 	if (rc->state.boundBuffer->numIndices > 0)
 	{
-		if (numVertices == 0)
-		{
-			numVertices = rc->state.boundBuffer->numIndices;
-		}
+		Assert(startIndex < rc->state.boundBuffer->numIndices);
+		Assert(startIndex + numElements <= rc->state.boundBuffer->numIndices);
+		if (numElements == 0) { numElements = rc->state.boundBuffer->numIndices - startIndex; }
 		GLenum glIndexType = GL_UNSIGNED_INT;
 		switch (rc->state.boundBuffer->indexSize)
 		{
@@ -599,17 +596,25 @@ void RcDrawBuffer_OpenGL(VertBufferPrimitive_t primitive, u64 startIndex = 0, u6
 			//TODO: Add other index types here
 			default: AssertMsg(false, "Unsupported index size in RcDrawBuffer_OpenGL"); break;
 		}
-		//TODO: Make sure our u64 numVertices isn't too large for GLsizei
-		glDrawElements(glPrimitive, (GLsizei)numVertices, glIndexType, (const void*)(startIndex * rc->state.boundBuffer->indexSize));
+		if (vertexOffset > 0)
+		{
+			//TODO: Make sure our u64 numElements/vertexOffset isn't too large for GLsizei and Glint
+			glDrawElementsBaseVertex(glPrimitive, (GLsizei)numElements, glIndexType, (const void*)(startIndex * rc->state.boundBuffer->indexSize), (GLint)vertexOffset);
+		}
+		else
+		{
+			//TODO: Make sure our u64 numElements isn't too large for GLsizei
+			glDrawElements(glPrimitive, (GLsizei)numElements, glIndexType, (const void*)(startIndex * rc->state.boundBuffer->indexSize));
+		}
 	}
 	else
 	{
-		if (numVertices == 0)
-		{
-			numVertices = rc->state.boundBuffer->numVertices;
-		}
-		//TODO: Make sure our u64 indices aren't too large for GLint and GLsizei
-		glDrawArrays(glPrimitive, (GLint)startIndex, (GLsizei)numVertices);
+		Assert(vertexOffset == 0); //This option is not needed for non-indexed vertex buffers
+		Assert(startIndex < rc->state.boundBuffer->numVertices);
+		Assert(startIndex + numElements <= rc->state.boundBuffer->numVertices);
+		if (numElements == 0) { numElements = rc->state.boundBuffer->numVertices - startIndex; }
+		//TODO: Make sure our u64 startIndex/numElements aren't too large for GLint and GLsizei
+		glDrawArrays(glPrimitive, (GLint)startIndex, (GLsizei)numElements);
 	}
 	AssertNoOpenGlError();
 }
@@ -1610,7 +1615,7 @@ void RcClearStencil(i32 stencilValue)
 	}
 }
 
-void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVertices = 0)
+void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numElements = 0, u64 vertexOffset = 0)
 {
 	NotNull(rc);
 	switch (pig->renderApi)
@@ -1618,7 +1623,7 @@ void RcDrawBuffer(VertBufferPrimitive_t primitive, u64 startIndex = 0, u64 numVe
 		#if OPENGL_SUPPORTED
 		case RenderApi_OpenGL:
 		{
-			RcDrawBuffer_OpenGL(primitive, startIndex, numVertices);
+			RcDrawBuffer_OpenGL(primitive, startIndex, numElements, vertexOffset);
 		} break;
 		#endif
 		

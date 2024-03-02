@@ -52,4 +52,7 @@ void PopAppState();
 //pig_debug_commands.cpp
 bool PigParseDebugCommand(MyStr_t commandStr);
 
+//pig_render_funcs_imgui.cpp
+void RcRenderImDrawData(ImDrawData* imDrawData);
+
 #endif //  _PIG_FUNC_DEFS_H

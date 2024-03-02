@@ -126,6 +126,7 @@ struct PlatformApi_t
 	PlatApiFreeMemory_f*                FreeMemory;
 	PlatApiChangeWindowTarget_f*        ChangeWindowTarget;
 	PlatApiSwapBuffers_f*               SwapBuffers;
+	PlatApiGetNativeWindowPntr_f*       GetNativeWindowPntr;
 	PlatApiGetFullPath_f*               GetFullPath;
 	PlatApiDoesFileExist_f*             DoesFileExist;
 	PlatApiStartEnumeratingFiles_f*     StartEnumeratingFiles;

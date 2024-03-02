@@ -135,6 +135,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->FreeMemory                = Win32_FreeMemory;
 	api->ChangeWindowTarget        = Win32_ChangeWindowTarget;
 	api->SwapBuffers               = Win32_SwapBuffers;
+	api->GetNativeWindowPntr       = Win32_GetNativeWindowPntr;
 	api->GetFullPath               = Win32_GetFullPath;
 	api->DoesFileExist             = Win32_DoesFileExist;
 	api->StartEnumeratingFiles     = Win32_StartEnumeratingFiles;

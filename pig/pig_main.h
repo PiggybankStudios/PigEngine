@@ -115,6 +115,7 @@ struct PigState_t
 	
 	//Debug Menus
 	PigImguiState_t imgui;
+	bool isImguiDemoWindowVisible;
 	DebugConsole_t debugConsole;
 	PigNotificationQueue_t notificationsQueue;
 	PigDebugOverlay_t debugOverlay;

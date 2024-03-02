@@ -47,6 +47,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	#endif
 	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
 	"test_scratch", "Allocates a specified number of bytes from one of the scratch arenas", "[num_bytes]", "\n",
+	"imgui_demo", "Shows the Dear Imgui demo window", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1437,6 +1438,19 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		void* allocResult = AllocMem(scratch, numBytesToAlloc);
 		PrintLine_D("Success %p! (%llu/%llu, %llu pages)", allocResult, scratch->used, scratch->size, scratch->numPages);
 		FreeScratchArena(scratch);
+	}
+	
+	// +==============================+
+	// |          imgui_demo          |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "imgui_demo"))
+	{
+		if (!pig->isImguiDemoWindowVisible)
+		{
+			pig->isImguiDemoWindowVisible = true;
+			WriteLine_I("Showing Dear Imgui Demo Window...");
+		}
+		else { WriteLine_W("Window is already spawned"); }
 	}
 	
 	// +==============================+

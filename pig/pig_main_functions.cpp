@@ -180,6 +180,8 @@ void PigUpdateMainWindow()
 	#if STEAM_BUILD
 	Pig_UpdateSteamAvatars();
 	#endif
+	if (pig->isImguiDemoWindowVisible) { ImGui::ShowDemoWindow(&pig->isImguiDemoWindowVisible); }
+	PigImguiHandleInputEventsAndCaptureMouse();
 	
 	GameGeneralUpdate();
 	Pig_HandleAppStateChanges(false);
@@ -400,6 +402,7 @@ void PigPostReload(Version_t oldVersion)
 	PigRegisterDebugCommands(&pig->debugConsole);
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
+	PigImguiInitAfterLoadOrReload(true);
 	GameHandleReload();
 }
 

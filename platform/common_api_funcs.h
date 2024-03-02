@@ -87,6 +87,9 @@ typedef PLAT_API_CHANGE_WINDOW_TARGET_DEF(PlatApiChangeWindowTarget_f);
 #define PLAT_API_SWAP_BUFFERS_DEF(functionName) void functionName()
 typedef PLAT_API_SWAP_BUFFERS_DEF(PlatApiSwapBuffers_f);
 
+#define PLAT_API_GET_NATIVE_WINDOW_PNTR_DEF(functionName) void* functionName(const PlatWindow_t* window)
+typedef PLAT_API_GET_NATIVE_WINDOW_PNTR_DEF(PlatApiGetNativeWindowPntr_f);
+
 #define PLAT_API_GET_FULL_PATH_DEF(functionName) MyStr_t functionName(MemArena_t* memArena, MyStr_t relativePath, bool giveBackslashes)
 typedef PLAT_API_GET_FULL_PATH_DEF(PlatApiGetFullPath_f);
 
