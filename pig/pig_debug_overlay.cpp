@@ -94,6 +94,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 						case 5: overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       break; //togglePieChartsBtnRec
 						case 6: overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     break; //toggleEasingFuncsBtnRec
 						case 7: overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; break; //toggleContollerDebugBtnRec
+						case 8: pig->imgui.launcherIsOpen       = !pig->imgui.launcherIsOpen;       break; //toggleLaunchWindowBtnRec
 						default: DebugAssert(false); break;
 					}
 				}
@@ -117,15 +118,18 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 				overlay->perfGraphWasEnabled      = pig->perfGraph.enabled;
 				overlay->memGraphWasEnabled       = pig->memGraph.enabled;
 				overlay->audioOutGraphWasEnabled  = pig->audioOutGraph.enabled;
+				overlay->launchWindowWasEnabled   = pig->imgui.launcherIsOpen;
 				pig->perfGraph.enabled     = false;
 				pig->audioOutGraph.enabled = false;
 				pig->memGraph.enabled      = false;
+				pig->imgui.launcherIsOpen  = false;
 			}
 			else
 			{
 				pig->perfGraph.enabled     = overlay->perfGraphWasEnabled;
 				pig->memGraph.enabled      = overlay->memGraphWasEnabled;
 				pig->audioOutGraph.enabled = overlay->audioOutGraphWasEnabled;
+				pig->imgui.launcherIsOpen  = overlay->launchWindowWasEnabled;
 			}
 		}
 	}
@@ -141,6 +145,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_6)) { HandleKey(Key_6); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_7)) { HandleKey(Key_7); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_8)) { HandleKey(Key_8); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_9)) { HandleKey(Key_9); pig->imgui.launcherIsOpen       = !pig->imgui.launcherIsOpen;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		
 		if (KeyPressed(Key_Num1)) { HandleKey(Key_Num1); overlay->debugReadoutsEnabled   = !overlay->debugReadoutsEnabled;   overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_Num2)) { HandleKey(Key_Num2); pig->perfGraph.enabled          = !pig->perfGraph.enabled;          overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
@@ -150,6 +155,7 @@ void UpdatePigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (KeyPressed(Key_Num6)) { HandleKey(Key_Num6); overlay->pieChartsEnabled       = !overlay->pieChartsEnabled;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_Num7)) { HandleKey(Key_Num7); overlay->easingFuncsEnabled     = !overlay->easingFuncsEnabled;     overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 		if (KeyPressed(Key_Num8)) { HandleKey(Key_Num8); overlay->controllerDebugEnabled = !overlay->controllerDebugEnabled; overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
+		if (KeyPressed(Key_Num9)) { HandleKey(Key_Num9); pig->imgui.launcherIsOpen       = !pig->imgui.launcherIsOpen;       overlay->hotkeyPlusNumberPressed = true; overlay->lastMouseCloseTime = ProgramTime; }
 	}
 	
 	// +==============================+
@@ -868,6 +874,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 				case 5: enabled = overlay->pieChartsEnabled;       btnColor = MonokaiMagenta;   break;
 				case 6: enabled = overlay->easingFuncsEnabled;     btnColor = MonokaiBrown;     break;
 				case 7: enabled = overlay->controllerDebugEnabled; btnColor = MonokaiGreen;     break;
+				case 8: enabled = pig->imgui.launcherIsOpen;       btnColor = MonokaiLightBlue; break;
 				default: DebugAssert(false);
 			}
 			Color_t outlineColor = Transparent;
@@ -898,6 +905,7 @@ void RenderPigDebugOverlay(PigDebugOverlay_t* overlay)
 		if (IsMouseOverNamed("DebugOverlayToggleBtn5")) { displayText = NewStr("Pie Charts"); }
 		if (IsMouseOverNamed("DebugOverlayToggleBtn6")) { displayText = NewStr("Easing Functions"); }
 		if (IsMouseOverNamed("DebugOverlayToggleBtn7")) { displayText = NewStr("Controller Debug"); }
+		if (IsMouseOverNamed("DebugOverlayToggleBtn8")) { displayText = NewStr("Imgui Window Launcher"); }
 		
 		RcBindFont(&pig->resources.fonts->debug, SelectFontFace(12, true));
 		v2 textPos = NewVec2(overlay->totalToggleBtnsRec.x + overlay->totalToggleBtnsRec.width/2, overlay->totalToggleBtnsRec.y + overlay->totalToggleBtnsRec.height + RcGetMaxAscend());

@@ -47,8 +47,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	#endif
 	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
 	"test_scratch", "Allocates a specified number of bytes from one of the scratch arenas", "[num_bytes]", "\n",
-	"imgui_launcher", "Shows the Imgui Window Launcher", "\n",
-	"open_window", "Opens a particular imgui window by name. See imgui_launcher command for a way to discover what windows exist", "[window_name]", "\n",
+	"open_window", "Opens a particular imgui window by name. Open the launcher from the F3 menu for a way to discover what windows exist", "[window_name]", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1439,19 +1438,6 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		void* allocResult = AllocMem(scratch, numBytesToAlloc);
 		PrintLine_D("Success %p! (%llu/%llu, %llu pages)", allocResult, scratch->used, scratch->size, scratch->numPages);
 		FreeScratchArena(scratch);
-	}
-	
-	// +==============================+
-	// |        imgui_launcher        |
-	// +==============================+
-	else if (StrEqualsIgnoreCase(command, "imgui_launcher"))
-	{
-		if (!pig->imgui.launcherIsOpen)
-		{
-			pig->imgui.launcherIsOpen = true;
-			WriteLine_I("Showing Imgui Window Launcher...");
-		}
-		else { WriteLine_W("Launcher is already open"); }
 	}
 	
 	// +==============================+

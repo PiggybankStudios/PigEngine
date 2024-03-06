@@ -125,6 +125,7 @@ struct PigDebugOverlay_t
 	bool perfGraphWasEnabled;
 	bool memGraphWasEnabled;
 	bool audioOutGraphWasEnabled;
+	bool launchWindowWasEnabled;
 	
 	bool hotkeyPlusNumberPressed;
 	u64 lastMouseCloseTime;
@@ -139,7 +140,7 @@ struct PigDebugOverlay_t
 	rec totalToggleBtnsRec;
 	union
 	{
-		rec toggleBtnRecs[8];
+		rec toggleBtnRecs[9];
 		struct
 		{
 			rec toggleDebugReadoutBtnRec;
@@ -150,6 +151,7 @@ struct PigDebugOverlay_t
 			rec togglePieChartsBtnRec;
 			rec toggleEasingFuncsBtnRec;
 			rec toggleContollerDebugBtnRec;
+			rec toggleLaunchWindowBtnRec;
 		};
 	};
 };
