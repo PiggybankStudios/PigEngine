@@ -97,6 +97,7 @@ void PigImguiInitAfterLoadOrReload(bool reload)
 		imguiIO.Fonts->GetTexDataAsRGBA32(&fontAtlasPixels, &fontAtlasWidth, &fontAtlasHeight);
 	}
 	imguiIO.Fonts->SetTexID((ImTextureID)&pig->imgui.fontTexture);
+	// imguiIO.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines;
 }
 void PigInitImgui()
 {
@@ -153,7 +154,7 @@ void PigInitImgui()
 		mainHeap,
 		&pig->imgui.fontTexture,
 		&fontAtlasImageData,
-		true, //pixelated
+		false, //pixelated
 		false //repeating
 	);
 	Assert(imguiFontTextureCreatedSuccessfully);
@@ -186,8 +187,6 @@ void PigUpdateImguiBefore()
 
 void PigImguiHandleInputEventsAndCaptureMouse()
 {
-	ImGuiIO& imguiIO = ImGui::GetIO();
-	
 	if (pig->imgui.isMouseOverImgui)
 	{
 		MouseHitNamed("ImGui");
