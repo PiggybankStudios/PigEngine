@@ -100,6 +100,9 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const StartupInfo_t* startupInfo,
 	plat = api;
 	pigIn = input;
 	pigOut = output;
+	#if GAME_USES_FUNC_TABLE
+	if (entryPoint == PigEntryPoint_Initialize) { FillGlobalFuncTable(); }
+	#endif
 	if (memory != nullptr)
 	{
 		NotNull_(api);

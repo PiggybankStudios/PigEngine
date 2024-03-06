@@ -22,6 +22,15 @@ Description:
 #define GYLIB_SCRATCH_ARENA_AVAILABLE
 #include "common_includes.h"
 
+#include "game_early_include.h"
+#ifndef GAME_USES_FUNC_TABLE
+#error You must define GAME_USES_FUNC_TABLE inside game_early_include.h
+#endif
+#if GAME_USES_FUNC_TABLE
+#include "gylib/gy_func_table.h"
+#include "gylib/gy_func_table.cpp"
+#endif
+
 #define MSFGIF_NO_STD_LIB
 #include "msf_gif/msf_gif.h"
 
