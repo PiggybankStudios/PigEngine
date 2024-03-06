@@ -161,7 +161,28 @@ void PigInitImgui()
 	
 	PigImguiInitAfterLoadOrReload(false);
 	
+	CreateVarArray(&pig->imgui.registeredWindows, mainHeap, sizeof(PigRegisteredImguiWindow_t));
+	
 	pig->imgui.initialized = true;
+}
+
+// +--------------------------------------------------------------+
+// |                     Window Registration                      |
+// +--------------------------------------------------------------+
+PigRegisteredImguiWindow_t* PigRegisterImguiWindow(MyStr_t name, Func_t renderFunc, void* contextPntr = nullptr)
+{
+	NotNullStr(&name);
+	PigRegisteredImguiWindow_t* newWindow = VarArrayAdd(&pig->imgui.registeredWindows, PigRegisteredImguiWindow_t);
+	NotNull(newWindow);
+	ClearPointer(newWindow);
+	newWindow->name = AllocString(mainHeap, &name);
+	newWindow->renderFunc = renderFunc;
+	newWindow->contextPntr = contextPntr;
+	return newWindow;
+}
+PigRegisteredImguiWindow_t* PigRegisterImguiWindow(const char* nameNullTerm, Func_t renderFunc, void* contextPntr = nullptr)
+{
+	return PigRegisterImguiWindow(NewStr(nameNullTerm), renderFunc, contextPntr);
 }
 
 // +--------------------------------------------------------------+
@@ -194,6 +215,32 @@ void PigImguiHandleInputEventsAndCaptureMouse()
 		if (MouseDown(MouseBtn_Right) || MouseReleased(MouseBtn_Right)) { HandleMouse(MouseBtn_Right); }
 		if (MouseDown(MouseBtn_Middle) || MouseReleased(MouseBtn_Middle)) { HandleMouse(MouseBtn_Middle); }
 		if (MouseScrolled()) { HandleMouseScroll(); }
+	}
+	
+	if (pig->imgui.launcherIsOpen)
+	{
+		if (ImGui::Begin("Launcher", &pig->imgui.launcherIsOpen))
+		{
+			ImGui::Text("Windows (%llu)", pig->imgui.registeredWindows.length);
+			VarArrayLoop(&pig->imgui.registeredWindows, wIndex)
+			{
+				VarArrayLoopGet(PigRegisteredImguiWindow_t, registeredWindow, &pig->imgui.registeredWindows, wIndex);
+				if (ImGui::Button(registeredWindow->name.chars))
+				{
+					registeredWindow->isOpen = !registeredWindow->isOpen;
+				}
+			}
+		}
+		ImGui::End();
+	}
+	
+	VarArrayLoop(&pig->imgui.registeredWindows, wIndex)
+	{
+		VarArrayLoopGet(PigRegisteredImguiWindow_t, registeredWindow, &pig->imgui.registeredWindows, wIndex);
+		if (registeredWindow->isOpen)
+		{
+			CallFunc(ImguiWindowRenderFunc_f, registeredWindow->renderFunc, registeredWindow);
+		}
 	}
 }
 

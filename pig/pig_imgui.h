@@ -7,6 +7,17 @@ Date:   03\01\2024
 #ifndef _PIG_IMGUI_H
 #define _PIG_IMGUI_H
 
+#define IMGUI_WINDOW_RENDER_FUNC_DEF(functionName) void functionName(struct PigRegisteredImguiWindow_t* window)
+typedef IMGUI_WINDOW_RENDER_FUNC_DEF(ImguiWindowRenderFunc_f);
+
+struct PigRegisteredImguiWindow_t
+{
+	MyStr_t name;
+	Func_t renderFunc; //ImguiWindowRenderFunc_f
+	void* contextPntr;
+	bool isOpen;
+};
+
 struct PigImguiState_t
 {
 	bool initialized;
@@ -18,6 +29,9 @@ struct PigImguiState_t
 	Shader_t mainShader;
 	Texture_t fontTexture;
 	VertBuffer_t vertBuffer;
+	
+	bool launcherIsOpen;
+	VarArray_t registeredWindows;
 };
 
 ImGuiKey GetImGuiKey(Key_t key)

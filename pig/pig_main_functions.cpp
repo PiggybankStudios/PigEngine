@@ -180,7 +180,6 @@ void PigUpdateMainWindow()
 	#if STEAM_BUILD
 	Pig_UpdateSteamAvatars();
 	#endif
-	if (pig->isImguiDemoWindowVisible) { ImGui::ShowDemoWindow(&pig->isImguiDemoWindowVisible); }
 	PigImguiHandleInputEventsAndCaptureMouse();
 	
 	GameGeneralUpdate();

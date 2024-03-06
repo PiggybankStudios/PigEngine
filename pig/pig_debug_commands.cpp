@@ -47,7 +47,8 @@ const char* PigDebugCommandInfoStrs[] = {
 	#endif
 	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
 	"test_scratch", "Allocates a specified number of bytes from one of the scratch arenas", "[num_bytes]", "\n",
-	"imgui_demo", "Shows the Dear Imgui demo window", "\n",
+	"imgui_launcher", "Shows the Imgui Window Launcher", "\n",
+	"open_window", "Opens a particular imgui window by name. See imgui_launcher command for a way to discover what windows exist", "[window_name]", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1441,16 +1442,42 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	}
 	
 	// +==============================+
-	// |          imgui_demo          |
+	// |        imgui_launcher        |
 	// +==============================+
-	else if (StrEqualsIgnoreCase(command, "imgui_demo"))
+	else if (StrEqualsIgnoreCase(command, "imgui_launcher"))
 	{
-		if (!pig->isImguiDemoWindowVisible)
+		if (!pig->imgui.launcherIsOpen)
 		{
-			pig->isImguiDemoWindowVisible = true;
-			WriteLine_I("Showing Dear Imgui Demo Window...");
+			pig->imgui.launcherIsOpen = true;
+			WriteLine_I("Showing Imgui Window Launcher...");
 		}
-		else { WriteLine_W("Window is already spawned"); }
+		else { WriteLine_W("Launcher is already open"); }
+	}
+	
+	// +==============================+
+	// |  open_window [window_name]   |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "open_window"))
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: open_window [window_name]", numArguments); return validCommand; }
+		
+		bool foundWindow = false;
+		VarArrayLoop(&pig->imgui.registeredWindows, wIndex)
+		{
+			VarArrayLoopGet(PigRegisteredImguiWindow_t, registeredWindow, &pig->imgui.registeredWindows, wIndex);
+			if (StrEqualsIgnoreCase(registeredWindow->name, arguments[0]))
+			{
+				PrintLine_I("Opening \"%.*s\"", StrPrint(registeredWindow->name));
+				registeredWindow->isOpen = true;
+				foundWindow = true;
+				break;
+			}
+		}
+		
+		if (!foundWindow)
+		{
+			PrintLine_E("No window registered as \"%.*s\"", StrPrint(arguments[0]));
+		}
 	}
 	
 	// +==============================+
