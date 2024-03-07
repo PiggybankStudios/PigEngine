@@ -143,6 +143,11 @@ void InitializePigMemGraph(PigMemGraph_t* graph)
 	graph->nextPageId = 1;
 	graph->selectedPageId = 0;
 	CreateVarArray(&graph->arenas, fixedHeap, sizeof(PigMemGraphArena_t));
+	graph->showUsed = true;
+	graph->showPercent = false;
+	graph->showAllocs = false;
+	graph->showHistory = false;
+	graph->historyGraphsHeight = 50;
 }
 
 void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t name, Color_t fillColor)
@@ -155,6 +160,7 @@ void PigMemGraphAddArena(PigMemGraph_t* graph, MemArena_t* arenaPntr, MyStr_t na
 	NotNull(newArena);
 	ClearPointer(newArena);
 	newArena->id = graph->nextArenaId;
+	newArena->showPages = false;
 	graph->nextArenaId++;
 	newArena->pntr = arenaPntr;
 	newArena->name = AllocString(fixedHeap, &name);
@@ -302,6 +308,14 @@ void UpdatePigMemGraph(PigMemGraph_t* graph)
 			{
 				page->usedPercentDisplay = page->usedPercent;
 			}
+			
+			for (u64 hIndex = 0; hIndex < MEM_GRAPH_HISTORY_LENGTH-1; hIndex++)
+			{
+				page->usedHistory[hIndex] = page->usedHistory[hIndex+1];
+				page->usedPercentHistory[hIndex] = page->usedPercentHistory[hIndex+1];
+			}
+			page->usedHistory[MEM_GRAPH_HISTORY_LENGTH-1] = page->used;
+			page->usedPercentHistory[MEM_GRAPH_HISTORY_LENGTH-1] = page->usedPercent;
 		}
 	}
 	
@@ -424,60 +438,159 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 
 void RenderPigMemGraph_Imgui(PigMemGraph_t* graph)
 {
+	MemArena_t* scratch = GetScratchArena();
+	r32 availableWidth = ImGui::GetContentRegionAvail().x;
+	
+	ImGui::Checkbox("Overlay", &graph->imguiOverlayMode);
+	
+	ImGui::Text("Show:");
+	ImGui::SameLine();
+	ImGui::Checkbox("Used", &graph->showUsed);
+	ImGui::SameLine();
+	ImGui::Checkbox("Percent", &graph->showPercent);
+	ImGui::SameLine();
+	ImGui::Checkbox("Allocs", &graph->showAllocs);
+	ImGui::SameLine();
+	ImGui::Checkbox("History", &graph->showHistory);
+	if (graph->showHistory)
+	{
+		ImGui::DragFloat("Graph Height", &graph->historyGraphsHeight, 5, 5, 200, "%.0f");
+	}
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::Spacing();
+	
 	VarArrayLoop(&graph->arenas, aIndex)
 	{
 		VarArrayLoopGet(PigMemGraphArena_t, arena, &graph->arenas, aIndex);
-		VarArrayLoop(&arena->pages, pIndex)
+		ImGui::PushID(arena->name.chars);
+		
+		ImGui::Text("%.*s", StrPrint(arena->name));
+		if (arena->pages.length > 1)
 		{
-			VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
-			
-			const char* lastUsedChangeAmountStr = "";
-			if (TimeSince(page->lastUsedChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
+			ImGui::SameLine();
+			ImGui::Checkbox(PrintInArena(scratch, "%s###Show Pages", arena->showPages ? "" : "Show Pages"), &arena->showPages);
+			if (arena->showPages)
 			{
-				lastUsedChangeAmountStr = TempPrint(" (%s%s)", (page->lastUsedChangeAmount >= 0) ? "+" : "-", FormatBytesNt((u64)AbsI64(page->lastUsedChangeAmount), TempArena));
-			}
-			const char* lastAllocationsChangeAmountStr = "";
-			if (TimeSince(page->lastAllocationsChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
-			{
-				lastAllocationsChangeAmountStr = TempPrint(" (%s%llu)", (page->lastAllocationsChangeAmount >= 0) ? "+" : "-", (u64)AbsI64(page->lastAllocationsChangeAmount));
-			}
-			
-			if (pIndex == 0)
-			{
-				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 128, 255, 255));
-				ImGui::Text("%.*s", StrPrint(arena->name));
-				ImGui::PopStyleColor();
 				ImGui::SameLine();
 				ImGui::Text("%llu page%s", arena->pages.length, Plural(arena->pages.length, "s"));
-				ImGui::Spacing();
 			}
+		}
+		
+		ImGui::Indent();
+		if (arena->showPages || arena->pages.length == 1)
+		{
+			VarArrayLoop(&arena->pages, pIndex)
+			{
+				VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
+				ImGui::PushID((int)pIndex);
+				
+				const char* lastUsedChangeAmountStr = "";
+				if (TimeSince(page->lastUsedChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
+				{
+					lastUsedChangeAmountStr = TempPrint(" (%s%s)", (page->lastUsedChangeAmount >= 0) ? "+" : "-", FormatBytesNt((u64)AbsI64(page->lastUsedChangeAmount), TempArena));
+				}
+				const char* lastAllocationsChangeAmountStr = "";
+				if (TimeSince(page->lastAllocationsChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
+				{
+					lastAllocationsChangeAmountStr = TempPrint(" (%s%llu)", (page->lastAllocationsChangeAmount >= 0) ? "+" : "-", (u64)AbsI64(page->lastAllocationsChangeAmount));
+				}
+				
+				u32 valueColor = IM_COL32(170, 170, 170, 255);
+				if (graph->showUsed)
+				{
+					ImGui::Text("Used:");
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+					ImGui::Text("%s / %s", FormatBytesNt(page->used, TempArena), FormatBytesNt(page->size, TempArena));
+					ImGui::SetItemTooltip("%llu / %llu", page->used, page->size);
+					ImGui::PopStyleColor();
+				}
+				
+				if (graph->showPercent)
+				{
+					ImGui::Text("Percent:");
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+					ImGui::Text("%.1f%%%s", page->usedPercent * 100, lastUsedChangeAmountStr);
+					ImGui::PopStyleColor();
+				}
+				
+				if (graph->showAllocs)
+				{
+					ImGui::Text("Allocs:");
+					ImGui::SameLine();
+					ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+					ImGui::Text("%llu%s", page->numAllocations, lastAllocationsChangeAmountStr);
+					ImGui::PopStyleColor();
+				}
+				
+				ImGui::SetNextItemWidth(100);
+				ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(arena->fillColor.r, arena->fillColor.g, arena->fillColor.b, arena->fillColor.a));
+				ImGui::ProgressBar(page->usedPercent);
+				ImGui::PopStyleColor();
+				
+				if (graph->showHistory)
+				{
+					ImGui::PlotLines("###PercentHistory", &page->usedPercentHistory[0], (int)MEM_GRAPH_HISTORY_LENGTH, 0, nullptr, 0.0f, 1.0f, ImVec2(ImGui::GetContentRegionAvail().x, graph->historyGraphsHeight));
+				}
+				
+				ImGui::PopID();
+			}
+		}
+		else
+		{
+			u64 totalSize = 0;
+			u64 totalUsed = 0;
+			u64 totalAllocations = 0;
+			VarArrayLoop(&arena->pages, pIndex)
+			{
+				VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
+				totalSize += page->size;
+				totalUsed += page->used;
+				totalAllocations += page->numAllocations;
+			}
+			r32 usedPercent = (totalSize > 0) ? ((r32)totalUsed / (r32)totalSize) : 0.0f;
 			
 			u32 valueColor = IM_COL32(170, 170, 170, 255);
-			ImGui::Text("Used:");
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
-			ImGui::Text("%s / %s", FormatBytesNt(page->used, TempArena), FormatBytesNt(page->size, TempArena));
-			ImGui::PopStyleColor();
+			if (graph->showUsed)
+			{
+				ImGui::Text("Used:");
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+				ImGui::Text("%s / %s", FormatBytesNt(totalUsed, TempArena), FormatBytesNt(totalSize, TempArena));
+				ImGui::SetItemTooltip("%llu / %llu", totalUsed, totalSize);
+				ImGui::PopStyleColor();
+			}
 			
-			ImGui::Text("Percent:");
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
-			ImGui::Text("%.1f%%%s", page->usedPercent * 100, lastUsedChangeAmountStr);
-			ImGui::PopStyleColor();
+			if (graph->showPercent)
+			{
+				ImGui::Text("Percent:");
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+				ImGui::Text("%.1f%%", usedPercent * 100);
+				ImGui::PopStyleColor();
+			}
 			
-			ImGui::Text("Allocs:");
-			ImGui::SameLine();
-			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
-			ImGui::Text("%llu%s", page->numAllocations, lastAllocationsChangeAmountStr);
-			ImGui::PopStyleColor();
+			if (graph->showAllocs)
+			{
+				ImGui::Text("Allocs:");
+				ImGui::SameLine();
+				ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+				ImGui::Text("%llu", totalAllocations);
+				ImGui::PopStyleColor();
+			}
 			
 			ImGui::SetNextItemWidth(100);
 			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(arena->fillColor.r, arena->fillColor.g, arena->fillColor.b, arena->fillColor.a));
-			ImGui::ProgressBar(page->usedPercent);
+			ImGui::ProgressBar(usedPercent);
 			ImGui::PopStyleColor();
-			ImGui::Spacing();
-			ImGui::Spacing();
-			ImGui::Spacing();
 		}
+		ImGui::Unindent();
+		
+		ImGui::PopID();
+		ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
 	}
+	
+	FreeScratchArena(scratch);
 }

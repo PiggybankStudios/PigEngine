@@ -53,6 +53,8 @@ struct PigPerfGraph_t
 	rec audioOutRec;
 };
 
+#define MEM_GRAPH_HISTORY_LENGTH 256 //values
+
 struct PigMemGraphArenaPage_t
 {
 	u64 id;
@@ -69,6 +71,10 @@ struct PigMemGraphArenaPage_t
 	i64 lastAllocationsChangeAmount;
 	r32 appearAnimTime;
 	
+	//imgui data
+	u64 usedHistory[MEM_GRAPH_HISTORY_LENGTH];
+	r32 usedPercentHistory[MEM_GRAPH_HISTORY_LENGTH];
+	
 	rec mainRec;
 };
 struct PigMemGraphArena_t
@@ -79,6 +85,9 @@ struct PigMemGraphArena_t
 	Color_t fillColor;
 	
 	VarArray_t pages; //PigMemGraphArenaPage_t
+	
+	//imgui data
+	bool showPages;
 	
 	rec mainRec;
 };
@@ -91,6 +100,14 @@ struct PigMemGraph_t
 	u64 selectedPageId;
 	
 	VarArray_t arenas; //PigMemGraphArena_t
+	
+	//imgui data
+	bool imguiOverlayMode;
+	bool showUsed;
+	bool showPercent;
+	bool showAllocs;
+	bool showHistory;
+	r32 historyGraphsHeight;
 	
 	rec mainRec;
 };
