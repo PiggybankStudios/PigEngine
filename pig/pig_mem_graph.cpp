@@ -421,3 +421,63 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 		}
 	}
 }
+
+void RenderPigMemGraph_Imgui(PigMemGraph_t* graph)
+{
+	VarArrayLoop(&graph->arenas, aIndex)
+	{
+		VarArrayLoopGet(PigMemGraphArena_t, arena, &graph->arenas, aIndex);
+		VarArrayLoop(&arena->pages, pIndex)
+		{
+			VarArrayLoopGet(PigMemGraphArenaPage_t, page, &arena->pages, pIndex);
+			
+			const char* lastUsedChangeAmountStr = "";
+			if (TimeSince(page->lastUsedChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
+			{
+				lastUsedChangeAmountStr = TempPrint(" (%s%s)", (page->lastUsedChangeAmount >= 0) ? "+" : "-", FormatBytesNt((u64)AbsI64(page->lastUsedChangeAmount), TempArena));
+			}
+			const char* lastAllocationsChangeAmountStr = "";
+			if (TimeSince(page->lastAllocationsChangeTime) < PIG_MEM_GRAPH_CHANGE_DISPLAY_TIME)
+			{
+				lastAllocationsChangeAmountStr = TempPrint(" (%s%llu)", (page->lastAllocationsChangeAmount >= 0) ? "+" : "-", (u64)AbsI64(page->lastAllocationsChangeAmount));
+			}
+			
+			if (pIndex == 0)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 128, 255, 255));
+				ImGui::Text("%.*s", StrPrint(arena->name));
+				ImGui::PopStyleColor();
+				ImGui::SameLine();
+				ImGui::Text("%llu page%s", arena->pages.length, Plural(arena->pages.length, "s"));
+				ImGui::Spacing();
+			}
+			
+			u32 valueColor = IM_COL32(170, 170, 170, 255);
+			ImGui::Text("Used:");
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+			ImGui::Text("%s / %s", FormatBytesNt(page->used, TempArena), FormatBytesNt(page->size, TempArena));
+			ImGui::PopStyleColor();
+			
+			ImGui::Text("Percent:");
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+			ImGui::Text("%.1f%%%s", page->usedPercent * 100, lastUsedChangeAmountStr);
+			ImGui::PopStyleColor();
+			
+			ImGui::Text("Allocs:");
+			ImGui::SameLine();
+			ImGui::PushStyleColor(ImGuiCol_Text, valueColor);
+			ImGui::Text("%llu%s", page->numAllocations, lastAllocationsChangeAmountStr);
+			ImGui::PopStyleColor();
+			
+			ImGui::SetNextItemWidth(100);
+			ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IM_COL32(arena->fillColor.r, arena->fillColor.g, arena->fillColor.b, arena->fillColor.a));
+			ImGui::ProgressBar(page->usedPercent);
+			ImGui::PopStyleColor();
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::Spacing();
+		}
+	}
+}

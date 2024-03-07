@@ -53,7 +53,11 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 			{
 				ImDrawVert* imVert = &imCmdList->VtxBuffer.Data[vIndex];
 				convertedVertices[vIndex].position = NewVec3(imVert->pos.x, imVert->pos.y, 0.0f);
-				convertedVertices[vIndex].color = ToVec4(NewColor(imVert->col));
+				u32 fixedImguiColor = ((imVert->col & 0xFF00FF00) |
+					((imVert->col & 0x00FF0000) >> 16) |
+					((imVert->col & 0x000000FF) << 16)
+				);
+				convertedVertices[vIndex].color = ToVec4(NewColor(fixedImguiColor));
 				convertedVertices[vIndex].texCoord = NewVec2(imVert->uv.x, imVert->uv.y);
 			}
 			bool vertUploadSuccess = ChangeVertBufferVertices2D(
