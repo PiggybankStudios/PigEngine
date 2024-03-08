@@ -11,6 +11,8 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 	NotNull(imDrawData);
 	MemArena_t* scratch = GetScratchArena();
 	
+	bool oldFaceCullingValue = rc->state.faceCulling;
+	RcSetFaceCulling(false);
 	// TODO: Rather than one vertex buffer that we resize and shove everything into, we could be using GL_STREAM_DRAW maybe, and just put each CmdList's data into the buffer as we go?
 	
 	// +===============================+
@@ -116,4 +118,5 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 	RcSetViewport(oldViewport);
 	
 	FreeScratchArena(scratch);
+	RcSetFaceCulling(oldFaceCullingValue);
 }
