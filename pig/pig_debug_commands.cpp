@@ -957,19 +957,19 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			case PigDebugBindingType_Keyboard:
 			{
-				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryKey(&pig->sessionDebugBindings, binding.modifiers, binding.key, arguments[1]);
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryKey(&pig->sessionDebugBindings, true, binding.modifiers, binding.key, arguments[1]);
 				NotNull(newEntry);
 				WriteLine_I("Keyboard binding created!");
 			} break;
 			case PigDebugBindingType_Mouse:
 			{
-				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryMouse(&pig->sessionDebugBindings, binding.mouseBtn, arguments[1]);
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryMouse(&pig->sessionDebugBindings, true, binding.mouseBtn, arguments[1]);
 				NotNull(newEntry);
 				WriteLine_I("Mouse binding created!");
 			} break;
 			case PigDebugBindingType_Controller:
 			{
-				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryController(&pig->sessionDebugBindings, binding.controllerBtn, arguments[1]);
+				PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryController(&pig->sessionDebugBindings, true, binding.controllerBtn, arguments[1]);
 				NotNull(newEntry);
 				WriteLine_I("Controller binding created!");
 			} break;
@@ -982,7 +982,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	// +==============================+
 	else if (StrEqualsIgnoreCase(command, "unbind"))
 	{
-		if (numArguments != 1) { PrintLine_E("unbind takes at 1 argument, not %llu", numArguments); return validCommand; }
+		if (numArguments != 1) { PrintLine_E("unbind takes 1 argument, not %llu", numArguments); return validCommand; }
 		
 		PigDebugBindingsEntry_t binding = {};
 		if (!PigTryDeserBindingStr(arguments[0], &binding))

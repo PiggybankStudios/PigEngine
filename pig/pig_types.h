@@ -385,6 +385,7 @@ struct PigDebugBindingsEntry_t
 {
 	u64 id;
 	PigDebugBindingType_t type;
+	bool isUserBinding;
 	
 	u8 modifiers;
 	Key_t key;

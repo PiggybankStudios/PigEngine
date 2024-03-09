@@ -84,6 +84,7 @@ PigDebugBindingsEntry_t* PigAddDebugBindingsEntryFromTemplate(PigDebugBindings_t
 	if (existingEntry != nullptr)
 	{
 		existingEntry->type = templateBinding->type;
+		existingEntry->isUserBinding = templateBinding->isUserBinding;
 		existingEntry->modifiers = templateBinding->modifiers;
 		existingEntry->key = templateBinding->key;
 		existingEntry->mouseBtn = templateBinding->mouseBtn;
@@ -101,6 +102,7 @@ PigDebugBindingsEntry_t* PigAddDebugBindingsEntryFromTemplate(PigDebugBindings_t
 		newEntry->id = bindings->nextId;
 		bindings->nextId++;
 		newEntry->type = templateBinding->type;
+		newEntry->isUserBinding = templateBinding->isUserBinding;
 		newEntry->modifiers = templateBinding->modifiers;
 		newEntry->key = templateBinding->key;
 		newEntry->mouseBtn = templateBinding->mouseBtn;
@@ -111,28 +113,31 @@ PigDebugBindingsEntry_t* PigAddDebugBindingsEntryFromTemplate(PigDebugBindings_t
 	}
 }
 
-PigDebugBindingsEntry_t* PigAddDebugBindingsEntryKey(PigDebugBindings_t* bindings, u8 modifiers, Key_t key, MyStr_t commandStr)
+PigDebugBindingsEntry_t* PigAddDebugBindingsEntryKey(PigDebugBindings_t* bindings, bool isUserBinding, u8 modifiers, Key_t key, MyStr_t commandStr)
 {
 	Assert(key > Key_None && key < Key_NumKeys);
 	PigDebugBindingsEntry_t templateBinding = {};
 	templateBinding.type = PigDebugBindingType_Keyboard;
+	templateBinding.isUserBinding = isUserBinding;
 	templateBinding.modifiers = modifiers;
 	templateBinding.key = key;
 	return PigAddDebugBindingsEntryFromTemplate(bindings, &templateBinding, commandStr);
 }
-PigDebugBindingsEntry_t* PigAddDebugBindingsEntryMouse(PigDebugBindings_t* bindings, MouseBtn_t mouseBtn, MyStr_t commandStr)
+PigDebugBindingsEntry_t* PigAddDebugBindingsEntryMouse(PigDebugBindings_t* bindings, bool isUserBinding, MouseBtn_t mouseBtn, MyStr_t commandStr)
 {
 	Assert(mouseBtn > MouseBtn_None && mouseBtn < MouseBtn_NumBtns);
 	PigDebugBindingsEntry_t templateBinding = {};
 	templateBinding.type = PigDebugBindingType_Mouse;
+	templateBinding.isUserBinding = isUserBinding;
 	templateBinding.mouseBtn = mouseBtn;
 	return PigAddDebugBindingsEntryFromTemplate(bindings, &templateBinding, commandStr);
 }
-PigDebugBindingsEntry_t* PigAddDebugBindingsEntryController(PigDebugBindings_t* bindings, ControllerBtn_t controllerBtn, MyStr_t commandStr)
+PigDebugBindingsEntry_t* PigAddDebugBindingsEntryController(PigDebugBindings_t* bindings, bool isUserBinding, ControllerBtn_t controllerBtn, MyStr_t commandStr)
 {
 	Assert(controllerBtn > ControllerBtn_None && controllerBtn < ControllerBtn_NumBtns);
 	PigDebugBindingsEntry_t templateBinding = {};
 	templateBinding.type = PigDebugBindingType_Controller;
+	templateBinding.isUserBinding = isUserBinding;
 	templateBinding.controllerBtn = controllerBtn;
 	return PigAddDebugBindingsEntryFromTemplate(bindings, &templateBinding, commandStr);
 }
@@ -360,7 +365,7 @@ bool PigTryDeserBindingStr(MyStr_t bindingStr, PigDebugBindingsEntry_t* bindingO
 		return false;
 	}
 }
-bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugBindings_t* bindingsOut)
+bool PigTryDeserDebugBindings(MyStr_t fileContents, bool isUserFile, ProcessLog_t* log, PigDebugBindings_t* bindingsOut)
 {
 	NotNullStr(&fileContents);
 	NotNull2(log, bindingsOut);
@@ -431,17 +436,17 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 				
 				if (binding.type == PigDebugBindingType_Keyboard)
 				{
-					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryKey(bindingsOut, binding.modifiers, binding.key, token.value);
+					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryKey(bindingsOut, isUserFile, binding.modifiers, binding.key, token.value);
 					NotNull(newEntry);
 				}
 				else if (binding.type == PigDebugBindingType_Mouse)
 				{
-					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryMouse(bindingsOut, binding.mouseBtn, token.value);
+					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryMouse(bindingsOut, isUserFile, binding.mouseBtn, token.value);
 					NotNull(newEntry);
 				}
 				else if (binding.type == PigDebugBindingType_Controller)
 				{
-					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryController(bindingsOut, binding.controllerBtn, token.value);
+					PigDebugBindingsEntry_t* newEntry = PigAddDebugBindingsEntryController(bindingsOut, isUserFile, binding.controllerBtn, token.value);
 					NotNull(newEntry);
 				}
 				else { DebugAssert(false); }
@@ -471,7 +476,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, ProcessLog_t* log, PigDebugB
 	return true;
 }
 
-bool PigTryLoadDebugBindings(MyStr_t filePath, ProcessLog_t* log, PigDebugBindings_t* bindingsOut)
+bool PigTryLoadDebugBindings(MyStr_t filePath, bool isUserFile, ProcessLog_t* log, PigDebugBindings_t* bindingsOut)
 {
 	NotNullStr(&filePath);
 	bool result = false;
@@ -481,7 +486,7 @@ bool PigTryLoadDebugBindings(MyStr_t filePath, ProcessLog_t* log, PigDebugBindin
 	PlatFileContents_t bindingsFile = {};
 	if (plat->ReadFileContents(filePath, nullptr, true, &bindingsFile))
 	{
-		result = PigTryDeserDebugBindings(NewStr(bindingsFile.size, bindingsFile.chars), log, bindingsOut);
+		result = PigTryDeserDebugBindings(NewStr(bindingsFile.size, bindingsFile.chars), isUserFile, log, bindingsOut);
 		plat->FreeFileContents(&bindingsFile);
 	}
 	else
@@ -523,7 +528,7 @@ void PigInitDebugBindings(PigDebugBindings_t* bindings, MemArena_t* memArena)
 	CreateVarArray(&bindings->entries, memArena, sizeof(PigDebugBindingsEntry_t));
 }
 
-void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t filePath)
+void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t filePath, bool isUserFile)
 {
 	NotNullStr(&filePath);
 	if (plat->DoesFileExist(filePath, nullptr))
@@ -531,7 +536,7 @@ void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t fi
 		u64 numBindingsBefore = bindingsOut->entries.length;
 		ProcessLog_t deserProcessLog = {};
 		CreateProcessLog(&deserProcessLog, Kilobytes(8), mainHeap, mainHeap);
-		if (PigTryLoadDebugBindings(filePath, &deserProcessLog, bindingsOut))
+		if (PigTryLoadDebugBindings(filePath, isUserFile, &deserProcessLog, bindingsOut))
 		{
 			u64 numNewBindings = bindingsOut->entries.length - numBindingsBefore;
 			PrintLine_D("Loaded %llu debug binding%s from \"%.*s\"", numNewBindings, (numNewBindings == 1 ? "" : "s"), StrPrint(filePath));

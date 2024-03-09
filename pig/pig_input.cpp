@@ -1782,6 +1782,54 @@ void StopFullscreen(const PlatWindow_t* window, v2i resolution, i64 framerate, b
 // +--------------------------------------------------------------+
 // |                        Debug Bindings                        |
 // +--------------------------------------------------------------+
+MyStr_t GetDebugBindingStr(MemArena_t* memArena, const PigDebugBindingsEntry_t* binding)
+{
+	NotNull2(memArena, binding);
+	MyStr_t result = MyStr_Empty;
+	switch (binding->type)
+	{
+		case PigDebugBindingType_Keyboard:
+		{
+			for (u8 pass = 0; pass < 2; pass++)
+			{
+				u64 charIndex = 0;
+				for (u64 mIndex = 0; mIndex < ModifierKey_NumKeys; mIndex++)
+				{
+					ModifierKey_t modifierKey = (ModifierKey_t)((u8)1 << mIndex);
+					if (IsFlagSet(binding->modifiers, modifierKey))
+					{
+						TwoPassPrint(result.chars, result.length, &charIndex, "%s+", GetModifierKeyStr(modifierKey));
+					}
+				}
+				TwoPassPrint(result.chars, result.length, &charIndex, "%s", GetKeyStr(binding->key));
+				
+				if (pass == 0)
+				{
+					result.chars = AllocArray(memArena, char, charIndex+1);
+					NotNull(result.chars);
+					result.length = charIndex;
+				}
+				else
+				{
+					Assert(charIndex == result.length);
+					result.chars[result.length] = '\0';
+				}
+			}
+			
+		} break;
+		case PigDebugBindingType_Mouse:
+		{
+			result = PrintInArenaStr(memArena, "Mouse_%s", GetMouseBtnStr(binding->mouseBtn));
+		} break;
+		case PigDebugBindingType_Controller:
+		{
+			result = PrintInArenaStr(memArena, "Controller_%s", GetControllerBtnStr(binding->controllerBtn));
+		} break;
+		default: DebugAssert(false); break;
+	}
+	return result;
+}
+
 void Pig_HandleDebugBindings(PigDebugBindings_t* bindings)
 {
 	NotNull(bindings);

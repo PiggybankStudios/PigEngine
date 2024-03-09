@@ -245,7 +245,7 @@ void PigInitImgui()
 		false, //pixelated
 		false //repeating
 	);
-	Assert(imguiFontTextureCreatedSuccessfully);
+Assert(imguiFontTextureCreatedSuccessfully);
 	imguiIO.Fonts->SetTexID((ImTextureID)&pig->imgui.fontTexture);
 	
 	CreateVarArray(&pig->imgui.registeredWindows, mainHeap, sizeof(PigRegisteredImguiWindow_t));
