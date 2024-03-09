@@ -7,6 +7,11 @@ Date:   03\01\2024
 #ifndef _PIG_IMGUI_H
 #define _PIG_IMGUI_H
 
+#define PIG_IMGUI_ARENA_PAGE_SIZE   Megabytes(1)
+
+#define IMGUI_INI_FILE_NAME "debug_window_layout.ini"
+#define IMGUI_LOG_FILE_NAME "debug_window_log.txt"
+
 #define IMGUI_WINDOW_RENDER_FUNC_DEF(functionName) void functionName(struct PigRegisteredImguiWindow_t* window)
 typedef IMGUI_WINDOW_RENDER_FUNC_DEF(ImguiWindowRenderFunc_f);
 
@@ -21,6 +26,7 @@ struct PigRegisteredImguiWindow_t
 struct PigImguiState_t
 {
 	bool initialized;
+	ImGuiContext* imguiContext;
 	bool frameStarted;
 	MyStr_t clipboardStr;
 	

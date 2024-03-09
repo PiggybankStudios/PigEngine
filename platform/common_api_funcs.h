@@ -115,7 +115,7 @@ typedef PLAT_API_FREE_FILE_CONTENTS_DEF(PlatApiFreeFileContents_f);
 #define WRITE_ENTIRE_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, const void* memory, u64 memorySize)
 typedef WRITE_ENTIRE_FILE_DEFINITION(PlatApiWriteEntireFile_f);
 
-#define PLAT_API_OPEN_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, bool forWriting, bool calculateSize, PlatOpenFile_t* openFileOut)
+#define PLAT_API_OPEN_FILE_DEFINITION(functionName) bool functionName(MyStr_t filePath, OpenFileMode_t mode, bool calculateSize, PlatOpenFile_t* openFileOut)
 typedef PLAT_API_OPEN_FILE_DEFINITION(PlatApiOpenFile_f);
 
 #define PLAT_API_READ_FILE_CONTENTS_STREAM_DEFINITION(functionName) Stream_t functionName(MyStr_t filePath, MemArena_t* memArena, bool convertNewLines)

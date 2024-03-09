@@ -40,7 +40,7 @@ bool CreateSlugPipelineShader(MemArena_t* memArena, Shader_t* shaderOut, u32 slu
 	
 	CreateShaderMultiPieceStart(memArena, shaderOut, VertexType_Slug, ShaderUniform_None, vertShaderPieceCount, fragShaderPieceCount);
 	// PlatOpenFile_t vertexShaderFile;
-	// plat->OpenFile(NewStr("slug_vertex.glsl"), true, true, &vertexShaderFile);
+	// plat->OpenFile(NewStr("slug_vertex.glsl"), OpenFileMode_Write, true, &vertexShaderFile);
 	for (u64 pIndex = 0; pIndex < vertShaderPieceCount; pIndex++)
 	{
 		CreateShaderMultiPieceVertex(shaderOut, NewStr(vertShaderPieces[pIndex]));
@@ -48,7 +48,7 @@ bool CreateSlugPipelineShader(MemArena_t* memArena, Shader_t* shaderOut, u32 slu
 	}
 	// plat->CloseFile(&vertexShaderFile);
 	// PlatOpenFile_t fragmentShaderFile;
-	// plat->OpenFile(NewStr("slug_fragment.glsl"), true, true, &fragmentShaderFile);
+	// plat->OpenFile(NewStr("slug_fragment.glsl"), OpenFileMode_Write, true, &fragmentShaderFile);
 	for (u64 pIndex = 0; pIndex < fragShaderPieceCount; pIndex++)
 	{
 		CreateShaderMultiPieceFragment(shaderOut, NewStr(fragShaderPieces[pIndex]));

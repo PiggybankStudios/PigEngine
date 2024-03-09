@@ -443,6 +443,30 @@ const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
 }
 #endif
 
+enum OpenFileMode_t
+{
+	OpenFileMode_None = 0,
+	OpenFileMode_Read,
+	OpenFileMode_Write,
+	OpenFileMode_Append,
+	OpenFileMode_NumModes,
+};
+#ifdef PIG_COMMON_HEADER_ONLY
+const char* GetOpenFileModeStr(OpenFileMode_t enumValue);
+#else
+const char* GetOpenFileModeStr(OpenFileMode_t enumValue)
+{
+	switch (enumValue)
+	{
+		case OpenFileMode_None:   return "None";
+		case OpenFileMode_Read:   return "Read";
+		case OpenFileMode_Write:  return "Write";
+		case OpenFileMode_Append: return "Append";
+		default: return "Unknown";
+	}
+}
+#endif
+
 #if PROCMON_SUPPORTED
 
 // #define IRP_MJ_QUERY_EA                 0x07

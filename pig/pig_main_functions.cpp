@@ -59,6 +59,7 @@ void PigInitialize(EngineMemory_t* memory)
 		PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,       NewStr("platHeap"),       Grey10);
 		PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap,      NewStr("fixedHeap"),      MonokaiGreen);
 		PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
+		PigMemGraphAddArena(&pig->memGraph, &pig->imguiHeap,      NewStr("imguiHeap"),      MonokaiYellow);
 		PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
 		PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
 		PigMemGraphAddArena(&pig->memGraph, scratch1,             NewStr("scratch1"),       MonokaiBlue);
@@ -401,7 +402,7 @@ void PigPostReload(Version_t oldVersion)
 	PigRegisterDebugCommands(&pig->debugConsole);
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
-	PigImguiInitAfterLoadOrReload(true);
+	PigImguiHandleReload();
 	GameHandleReload();
 }
 

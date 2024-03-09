@@ -54,62 +54,150 @@ static void ImguiCallback_SetClipboardText(void* user_data, const char* text)
 	Assert(copySuccess);
 }
 
+
+static void* ImguiCallback_Alloc(size_t numBytes, void* userData)
+{
+	//TODO: Put this in it's own arena maybe?
+	return AllocMem(&pig->imguiHeap, (u64)numBytes);
+}
+
+static void ImguiCallback_Free(void* allocPntr, void* userData)
+{
+	FreeMem(&pig->imguiHeap, allocPntr, 0, true);
+}
+
+int ImFormatString(char* bufferPntr, size_t bufferSize, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	int result = MyVaListPrintf(bufferPntr, bufferSize, fmt, args);
+	va_end(args);
+	if (bufferPntr == nullptr) { return result; }
+	if (result == -1 || result >= (int)bufferSize) { result = (int)(bufferSize - 1); }
+	bufferPntr[result] = '\0';
+	return result;
+}
+int ImFormatStringV(char* bufferPntr, size_t bufferSize, const char* fmt, va_list args)
+{
+	int result = MyVaListPrintf(bufferPntr, bufferSize, fmt, args);
+	if (bufferPntr == nullptr) { return result; }
+	if (result == -1 || result >= (int)bufferSize) { result = (int)(bufferSize - 1); }
+	bufferPntr[result] = '\0';
+	return result;
+}
+
+// +--------------------------------------------------------------+
+// |              Default File Function Replacements              |
+// +--------------------------------------------------------------+
+ImFileHandle ImFileOpen(const char* filename, const char* mode)
+{
+	NotNull2(filename, mode);
+	MemArena_t* scratch = GetScratchArena();
+	
+	//NOTE: All imgui files go to the AppData folder, not wherever the .exe and Resources are
+	MyStr_t appDataFolder = plat->GetSpecialFolderPath(SpecialFolder_SavesAndSettings, NewStr(PROJECT_NAME_SAFE), scratch);
+	MyStr_t fullPath = PrintInArenaStr(scratch, "%.*s/%s", StrPrint(appDataFolder), filename);
+	
+	MyStr_t modeStr = NewStr(mode);
+	bool isForRead = FindNextCharInStr(modeStr, 0, "r");
+	bool isForWrite = FindNextCharInStr(modeStr, 0, "w");
+	bool isForAppend = FindNextCharInStr(modeStr, 0, "a");
+	bool convertNewLines = !FindNextCharInStr(modeStr, 0, "b");
+	Assert(isForRead || isForWrite || isForAppend);
+	
+	ImguiFile_t* result = AllocStruct(&pig->imguiHeap, ImguiFile_t);
+	NotNull(result);
+	result->convertNewLines = convertNewLines;
+	if (isForWrite || isForAppend)
+	{
+		//TODO: How do we account for convertNewLines when using PlatOpenFile_t??
+		result->writing = true;
+		bool openSuccess = plat->OpenFile(fullPath, OpenFileMode_Write, true, &result->openFile);
+		if (!openSuccess) { FreeMem(&pig->imguiHeap, result, sizeof(ImguiFile_t)); FreeScratchArena(scratch); return nullptr; }
+	}
+	else
+	{
+		result->writing = false;
+		result->stream = plat->OpenFileStream(fullPath, &pig->imguiHeap, convertNewLines);
+		if (!StreamIsValid(&result->stream)) { FreeMem(&pig->imguiHeap, result, sizeof(ImguiFile_t)); FreeScratchArena(scratch); return nullptr; }
+	}
+	
+	FreeScratchArena(scratch);
+	return result;
+}
+
+bool ImFileClose(ImFileHandle file)
+{
+	NotNull(file);
+	if (file->writing) { plat->CloseFile(&file->openFile); }
+	else { FreeStream(&file->stream); }
+	FreeMem(&pig->imguiHeap, file, sizeof(ImguiFile_t));
+	return true;
+}
+
+ImU64 ImFileGetSize(ImFileHandle file)
+{
+	NotNull(file);
+	if (file->writing) { return file->openFile.fileSize; }
+	else { return StreamGetSize(&file->stream); }
+}
+
+ImU64 ImFileRead(void* data, ImU64 size, ImU64 count, ImFileHandle file)
+{
+	NotNull(file);
+	Assert(!file->writing);
+	u64 numBytesRead = StreamReadInto(&file->stream, size * count, data);
+	return numBytesRead;
+}
+
+ImU64 ImFileWrite(const void* data, ImU64 size, ImU64 count, ImFileHandle file)
+{
+	NotNull(file);
+	Assert(file->writing);
+	bool writeSuccess = plat->WriteToFile(&file->openFile, size * count, data, file->convertNewLines);
+	return (writeSuccess ? (size * count) : 0);
+}
+
 // +--------------------------------------------------------------+
 // |                     Imgui Initialization                     |
 // +--------------------------------------------------------------+
-void PigImguiInitAfterLoadOrReload(bool reload)
-{
-	if (reload)
-	{
-		PrintLine_I("Re-initializing ImGui %s", IMGUI_VERSION);
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-	}
-	
-	ImGuiIO& imguiIO = ImGui::GetIO();
-	imguiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	imguiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	
-	ImGui::StyleColorsDark();
-	
-	//We will be a custom platform and backend for Imgui
-	imguiIO.BackendPlatformName = "Pig Engine";
-	imguiIO.BackendRendererName = "Pig Engine";
-	imguiIO.BackendPlatformUserData = (void*)&pig->imgui;
-	imguiIO.BackendRendererUserData = (void*)&pig->imgui;
-	imguiIO.ClipboardUserData = (void*)&pig->imgui;
-	
-	imguiIO.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-	imguiIO.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
-	imguiIO.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; //we can do this in OpenGL 3.2+
-	imguiIO.SetClipboardTextFn = ImguiCallback_SetClipboardText;
-	imguiIO.GetClipboardTextFn = ImguiCallback_GetClipboardText;
-	
-	ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-	mainViewport->PlatformHandleRaw = plat->GetNativeWindowPntr(pig->currentWindow);
-	
-	imguiIO.ConfigDebugIsDebuggerPresent = DEBUG_BUILD; //TODO: Can we detect this better?
-	
-	if (reload)
-	{
-		u8* fontAtlasPixels;
-		int fontAtlasWidth, fontAtlasHeight;
-		imguiIO.Fonts->GetTexDataAsRGBA32(&fontAtlasPixels, &fontAtlasWidth, &fontAtlasHeight);
-	}
-	imguiIO.Fonts->SetTexID((ImTextureID)&pig->imgui.fontTexture);
-	// imguiIO.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines;
-}
 void PigInitImgui()
 {
 	NotNull(pig);
 	ClearStruct(pig->imgui);
 	pig->imgui.frameStarted = false;
 	
+	InitMemArena_PagedHeapFuncs(&pig->imguiHeap, PIG_IMGUI_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	
 	PrintLine_I("Initializing ImGui %s", IMGUI_VERSION);
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	ImGui::SetAllocatorFunctions(ImguiCallback_Alloc, ImguiCallback_Free, nullptr);
+	pig->imgui.imguiContext = ImGui::CreateContext();
+	NotNull(pig->imgui.imguiContext);
 	
 	ImGuiIO& imguiIO = ImGui::GetIO();
+	
+	imguiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	imguiIO.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	ImGui::StyleColorsDark();
+	
+	//We will be a custom platform and backend for Imgui
+	imguiIO.BackendPlatformName = AllocCharsAndFillNt(&pig->imguiHeap, "Pig Engine");
+	imguiIO.BackendRendererName = AllocCharsAndFillNt(&pig->imguiHeap, "Pig Engine");
+	imguiIO.BackendPlatformUserData = (void*)&pig->imgui;
+	imguiIO.BackendRendererUserData = (void*)&pig->imgui;
+	imguiIO.ClipboardUserData = (void*)&pig->imgui;
+	imguiIO.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+	imguiIO.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+	imguiIO.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; //we can do this in OpenGL 3.2+
+	imguiIO.SetClipboardTextFn = ImguiCallback_SetClipboardText;
+	imguiIO.GetClipboardTextFn = ImguiCallback_GetClipboardText;
+	imguiIO.ConfigDebugIsDebuggerPresent = DEBUG_BUILD; //TODO: Can we detect this better?
+	imguiIO.IniFilename = AllocCharsAndFillNt(&pig->imguiHeap, IMGUI_INI_FILE_NAME);
+	imguiIO.LogFilename = AllocCharsAndFillNt(&pig->imguiHeap, IMGUI_LOG_FILE_NAME);
+	
+	ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+	mainViewport->PlatformHandleRaw = plat->GetNativeWindowPntr(pig->currentWindow);
 	
 	//TODO: Look for "GL_ARB_clip_control" extension?
 	// GLint num_extensions = 0;
@@ -158,12 +246,49 @@ void PigInitImgui()
 		false //repeating
 	);
 	Assert(imguiFontTextureCreatedSuccessfully);
-	
-	PigImguiInitAfterLoadOrReload(false);
+	imguiIO.Fonts->SetTexID((ImTextureID)&pig->imgui.fontTexture);
 	
 	CreateVarArray(&pig->imgui.registeredWindows, mainHeap, sizeof(PigRegisteredImguiWindow_t));
 	
 	pig->imgui.initialized = true;
+}
+
+void PigImguiHandleReload()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::SetAllocatorFunctions(ImguiCallback_Alloc, ImguiCallback_Free, nullptr);
+	NotNull(pig->imgui.imguiContext);
+	
+	// ImGuiSettingsHandler type holds some function pointers which are not safe to keep after the reload
+	// Fortunately, they are relatively easy to fixup to new function pointers, since the type information is stored in the TypeHash
+	// (We also fixup the TypeName const char* because it was not allocated, so it also went away with the old dll)
+	for (ImGuiSettingsHandler& handler : pig->imgui.imguiContext->SettingsHandlers)
+	{
+		if (handler.TypeHash == ImHashStr("Window"))
+		{
+			handler.TypeName = "Window";
+			handler.ClearAllFn = WindowSettingsHandler_ClearAll;
+			handler.ReadOpenFn = WindowSettingsHandler_ReadOpen;
+			handler.ReadLineFn = WindowSettingsHandler_ReadLine;
+			handler.ApplyAllFn = WindowSettingsHandler_ApplyAll;
+			handler.WriteAllFn = WindowSettingsHandler_WriteAll;
+		}
+		else if (handler.TypeHash == ImHashStr("Table"))
+		{
+			handler.TypeName = "Table";
+			handler.ClearAllFn = TableSettingsHandler_ClearAll;
+			handler.ReadOpenFn = TableSettingsHandler_ReadOpen;
+			handler.ReadLineFn = TableSettingsHandler_ReadLine;
+			handler.ApplyAllFn = TableSettingsHandler_ApplyAll;
+			handler.WriteAllFn = TableSettingsHandler_WriteAll;
+		}
+		else
+		{
+			AssertMsg(false, "An ImGuiSettingsHandler was registered for an unknown type. We need to perform proper function pointer fixup for this type on reload, but we don't know how!");
+		}
+	}
+	
+	ImGui::SetCurrentContext(pig->imgui.imguiContext);
 }
 
 // +--------------------------------------------------------------+

@@ -25,6 +25,7 @@ void InitializePigDebugOverlay(PigDebugOverlay_t* overlay)
 	overlay->pieChartsEnabled = SHOW_PIE_GRAPHS_ON_STARTUP;
 	overlay->audioInstancesEnabled = (overlay->enabled ? SHOW_AUDIO_INSTANCES_ON_STARTUP : true);
 	overlay->perfGraphWasEnabled = true;
+	overlay->launchWindowWasEnabled = true;
 }
 
 void PigDebugOverlayLayout(PigDebugOverlay_t* overlay)

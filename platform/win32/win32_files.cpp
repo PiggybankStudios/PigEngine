@@ -439,7 +439,7 @@ WRITE_ENTIRE_FILE_DEFINITION(Win32_WriteEntireFile)
 // +==============================+
 // |        Win32_OpenFile        |
 // +==============================+
-// bool OpenFile(MyStr_t filePath, bool forWriting, bool calculateSize, PlatOpenFile_t* openFileOut)
+// bool OpenFile(MyStr_t filePath, OpenFileMode_t mode, bool calculateSize, PlatOpenFile_t* openFileOut)
 PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 {
 	NotNullStr(&filePath);
@@ -447,15 +447,17 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 	
 	TempPushMark(); //TODO: Make this thread safe!
 	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
+	bool forWriteOrAppend = (mode == OpenFileMode_Write || mode == OpenFileMode_Append);
+	bool forWriting = (mode == OpenFileMode_Write);
 	
 	HANDLE fileHandle = CreateFileA(
-		fullPath.pntr,                               //lpFileName
-		(forWriting ? GENERIC_WRITE : GENERIC_READ), //dwDesiredAccess
-		(forWriting ? 0 : FILE_SHARE_READ),          //dwShareMode
-		NULL,                                        //lpSecurityAttributes
-		(forWriting ? CREATE_ALWAYS : OPEN_ALWAYS),  //dwCreationDisposition
-		FILE_ATTRIBUTE_NORMAL,                       //dwFlagsAndAttributes
-		NULL                                         //hTemplateFile
+		fullPath.pntr,                                     //lpFileName
+		(forWriteOrAppend ? GENERIC_WRITE : GENERIC_READ), //dwDesiredAccess
+		(forWriteOrAppend ? 0 : FILE_SHARE_READ),          //dwShareMode
+		NULL,                                              //lpSecurityAttributes
+		(forWriting ? CREATE_ALWAYS : OPEN_ALWAYS),        //dwCreationDisposition
+		FILE_ATTRIBUTE_NORMAL,                             //dwFlagsAndAttributes
+		NULL                                               //hTemplateFile
 	);
 	if (fileHandle == INVALID_HANDLE_VALUE)
 	{
@@ -481,7 +483,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 		);
 		if (newCursorPos == INVALID_SET_FILE_POINTER)
 		{
-			PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", (forWriting ? "writing" : "reading"), StrPrint(fullPath));
+			PrintLine_E("Failed to seek to the end of the file when opened for %s \"%.*s\"!", GetOpenFileModeStr(mode), StrPrint(fullPath));
 			CloseHandle(fileHandle);
 			TempPopMark();
 			return false;
@@ -489,7 +491,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 		
 		fileSize = (((u64)newCursorPosHighOrder << 32) | (u64)newCursorPos);
 		cursorIndex = fileSize;
-		if (!forWriting)
+		if (!forWriteOrAppend)
 		{
 			DWORD beginMove = SetFilePointer(
 				fileHandle, //hFile
@@ -509,7 +511,7 @@ PLAT_API_OPEN_FILE_DEFINITION(Win32_OpenFile)
 	openFileOut->handle = fileHandle;
 	openFileOut->id = Platform->nextOpenFileId; //TODO: Make this thread safe!
 	Platform->nextOpenFileId++;
-	openFileOut->openedForWriting = forWriting;
+	openFileOut->openedForWriting = forWriteOrAppend;
 	openFileOut->isKnownSize = calculateSize;
 	openFileOut->cursorIndex = cursorIndex;
 	openFileOut->fileSize = fileSize;
@@ -837,7 +839,7 @@ PLAT_API_OPEN_FILE_STREAM_DEFINITION(Win32_OpenFileStream)
 	NotNullStr(&filePath);
 	NotNull(memArena);
 	PlatOpenFile_t file;
-	if (Win32_OpenFile(filePath, false, false, &file))
+	if (Win32_OpenFile(filePath, OpenFileMode_Read, false, &file))
 	{
 		StreamCallbacks_t callbacks = {};
 		callbacks.Free = Win32_FreeFileStream;

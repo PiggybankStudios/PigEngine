@@ -465,15 +465,13 @@ void RenderPigMemGraph_Imgui(PigMemGraph_t* graph)
 		VarArrayLoopGet(PigMemGraphArena_t, arena, &graph->arenas, aIndex);
 		ImGui::PushID(arena->name.chars);
 		
-		ImGui::Text("%.*s", StrPrint(arena->name));
+		ImGui::SeparatorText(PrintInArena(scratch, "%.*s%s###ArenaName", StrPrint(arena->name), (arena->pages.length > 1) ? PrintInArena(scratch, " (%llu page%s)", arena->pages.length, Plural(arena->pages.length, "s")) : ""));
 		if (arena->pages.length > 1)
 		{
-			ImGui::SameLine();
-			ImGui::Checkbox(PrintInArena(scratch, "%s###Show Pages", arena->showPages ? "" : "Show Pages"), &arena->showPages);
-			if (arena->showPages)
+			if (ImGui::BeginPopupContextItem("ArenaNameContextMenu"))
 			{
-				ImGui::SameLine();
-				ImGui::Text("%llu page%s", arena->pages.length, Plural(arena->pages.length, "s"));
+				ImGui::Checkbox("Show Pages", &arena->showPages);
+				ImGui::EndPopup();
 			}
 		}
 		
