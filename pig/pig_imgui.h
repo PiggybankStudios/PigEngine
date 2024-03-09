@@ -15,12 +15,18 @@ Date:   03\01\2024
 #define IMGUI_WINDOW_RENDER_FUNC_DEF(functionName) void functionName(struct PigRegisteredImguiWindow_t* window)
 typedef IMGUI_WINDOW_RENDER_FUNC_DEF(ImguiWindowRenderFunc_f);
 
+#define IMGUI_WINDOW_FREE_FUNC_DEF(functionName) void functionName(struct PigRegisteredImguiWindow_t* window)
+typedef IMGUI_WINDOW_FREE_FUNC_DEF(ImguiWindowFreeFunc_f);
+
 struct PigRegisteredImguiWindow_t
 {
 	MyStr_t name;
 	Func_t renderFunc; //ImguiWindowRenderFunc_f
+	Func_t freeFunc; //ImguiWindowCloseFunc_f
 	void* contextPntr;
+	u64 contextAllocSize; //if non-zero, we will allocate/deallocate contextPntr for the window automatically
 	bool isOpen;
+	bool wasOpen;
 };
 
 struct PigImguiState_t
@@ -30,6 +36,8 @@ struct PigImguiState_t
 	bool frameStarted;
 	MyStr_t clipboardStr;
 	
+	bool isTypingIntoImgui;
+	bool prevWantTextInput;
 	bool isMouseOverImgui;
 	MyStr_t mainShaderCode;
 	Shader_t mainShader;

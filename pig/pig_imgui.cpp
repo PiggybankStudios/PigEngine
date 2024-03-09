@@ -294,7 +294,7 @@ void PigImguiHandleReload()
 // +--------------------------------------------------------------+
 // |                     Window Registration                      |
 // +--------------------------------------------------------------+
-PigRegisteredImguiWindow_t* PigRegisterImguiWindow(MyStr_t name, Func_t renderFunc, void* contextPntr = nullptr)
+PigRegisteredImguiWindow_t* PigRegisterImguiWindow(MyStr_t name, Func_t renderFunc, Func_t freeFunc = Func_Nullptr_Const, void* contextPntr = nullptr)
 {
 	NotNullStr(&name);
 	PigRegisteredImguiWindow_t* newWindow = VarArrayAdd(&pig->imgui.registeredWindows, PigRegisteredImguiWindow_t);
@@ -302,13 +302,27 @@ PigRegisteredImguiWindow_t* PigRegisterImguiWindow(MyStr_t name, Func_t renderFu
 	ClearPointer(newWindow);
 	newWindow->name = AllocString(mainHeap, &name);
 	newWindow->renderFunc = renderFunc;
+	newWindow->freeFunc = freeFunc;
 	newWindow->contextPntr = contextPntr;
 	return newWindow;
 }
-PigRegisteredImguiWindow_t* PigRegisterImguiWindow(const char* nameNullTerm, Func_t renderFunc, void* contextPntr = nullptr)
+PigRegisteredImguiWindow_t* PigRegisterImguiWindowWithStruct_(MyStr_t name, Func_t renderFunc, Func_t freeFunc, u64 structSize)
 {
-	return PigRegisterImguiWindow(NewStr(nameNullTerm), renderFunc, contextPntr);
+	Assert(structSize > 0);
+	PigRegisteredImguiWindow_t* result = PigRegisterImguiWindow(name, renderFunc, freeFunc);
+	result->contextAllocSize = structSize;
+	return result;
 }
+PigRegisteredImguiWindow_t* PigRegisterImguiWindow(const char* nameNullTerm, Func_t renderFunc, Func_t freeFunc = Func_Nullptr_Const, void* contextPntr = nullptr)
+{
+	return PigRegisterImguiWindow(NewStr(nameNullTerm), renderFunc, freeFunc, contextPntr);
+}
+PigRegisteredImguiWindow_t* PigRegisterImguiWindowWithStruct_(const char* nameNullTerm, Func_t renderFunc, Func_t freeFunc, u64 structSize)
+{
+	return PigRegisterImguiWindowWithStruct_(NewStr(nameNullTerm), renderFunc, freeFunc, structSize);
+}
+
+#define PigRegisterImguiWindowWithStruct(name, renderFunc, freeFunc, structType) PigRegisterImguiWindowWithStruct_((name), (renderFunc), (freeFunc), sizeof(structType))
 
 // +--------------------------------------------------------------+
 // |                         Imgui Update                         |
@@ -325,8 +339,23 @@ void PigUpdateImguiBefore()
 		Unimplemented(); //TODO: Implement me!
 	}
 	
+	if (imguiIO.WantTextInput)
+	{
+		if (!IsFocused(&pig->imgui) && !pig->imgui.prevWantTextInput)
+		{
+			FocusItem(&pig->imgui, "ImGui");
+			pig->isFocusedItemTyping = true;
+		}
+	}
+	else
+	{
+		if (IsFocused(&pig->imgui)) { ClearFocus(); }
+	}
+	pig->imgui.isTypingIntoImgui = IsFocused(&pig->imgui);
+	pig->imgui.prevWantTextInput = imguiIO.WantTextInput;
+	
 	pig->imgui.isMouseOverImgui = imguiIO.WantCaptureMouse;
-	//TODO: Handle imguiIO.WantCaptureKeyboard and imguiIO.WantTextInput
+	//TODO: Handle imguiIO.WantCaptureKeyboard
 	ImGui::NewFrame();
 	pig->imgui.frameStarted = true;
 }
@@ -340,6 +369,31 @@ void PigImguiHandleInputEventsAndCaptureMouse()
 		if (MouseDown(MouseBtn_Right) || MouseReleased(MouseBtn_Right)) { HandleMouse(MouseBtn_Right); }
 		if (MouseDown(MouseBtn_Middle) || MouseReleased(MouseBtn_Middle)) { HandleMouse(MouseBtn_Middle); }
 		if (MouseScrolled()) { HandleMouseScroll(); }
+	}
+	
+	if (pig->imgui.isTypingIntoImgui)
+	{
+		for (u64 keyIndex = 0; keyIndex < Key_NumKeys; keyIndex++)
+		{
+			Key_t key = (Key_t)keyIndex;
+			if (IsKeyTypingRelated(key)) { HandleKey(key); }
+		}
+		
+		VarArrayLoop(&pigIn->inputEvents, eIndex)
+		{
+			VarArrayLoopGet(InputEvent_t, inputEvent, &pigIn->inputEvents, eIndex);
+			if (!inputEvent->handled)
+			{
+				if (inputEvent->type == InputEventType_Character)
+				{
+					inputEvent->handled = true;
+				}
+				else if (inputEvent->type == InputEventType_Key && IsKeyTypingRelated(inputEvent->key.key))
+				{
+					inputEvent->handled = true;
+				}
+			}
+		}
 	}
 	
 	if (pig->imgui.launcherIsOpen)
@@ -364,8 +418,30 @@ void PigImguiHandleInputEventsAndCaptureMouse()
 		VarArrayLoopGet(PigRegisteredImguiWindow_t, registeredWindow, &pig->imgui.registeredWindows, wIndex);
 		if (registeredWindow->isOpen)
 		{
+			if (registeredWindow->contextPntr == nullptr && registeredWindow->contextAllocSize > 0)
+			{
+				registeredWindow->contextPntr = AllocMem(mainHeap, registeredWindow->contextAllocSize);
+				NotNull(registeredWindow->contextPntr);
+				MyMemSet(registeredWindow->contextPntr, 0x00, registeredWindow->contextAllocSize);
+			}
+			
 			CallFunc(ImguiWindowRenderFunc_f, registeredWindow->renderFunc, registeredWindow);
 		}
+		
+		if (!registeredWindow->isOpen && registeredWindow->wasOpen)
+		{
+			if (IsValidFunc(registeredWindow->freeFunc))
+			{
+				CallFunc(ImguiWindowFreeFunc_f, registeredWindow->freeFunc, registeredWindow);
+			}
+			
+			if (registeredWindow->contextPntr != nullptr && registeredWindow->contextAllocSize > 0)
+			{
+				FreeMem(mainHeap, registeredWindow->contextPntr, registeredWindow->contextAllocSize);
+				registeredWindow->contextPntr = nullptr;
+			}
+		}
+		registeredWindow->wasOpen = registeredWindow->isOpen;
 	}
 }
 
@@ -392,7 +468,7 @@ void PigUpdateImguiAfter()
 		//TODO: Somehow we need to know if the mouse is over an imgui window. If so, we should handle the mouse buttons, and capture the mouse
 	}
 	
-	if (!IsFocusedItemTyping())
+	if (!IsFocusedItemTyping() || IsFocused(&pig->imgui))
 	{
 		for (u64 keyIndex = 0; keyIndex < Key_NumKeys; keyIndex++)
 		{
@@ -400,17 +476,20 @@ void PigUpdateImguiAfter()
 			ImGuiKey imguiKey = GetImGuiKey(key);
 			if (imguiKey != ImGuiKey_None)
 			{
-				if (KeyPressed(key)) { imguiIO.AddKeyEvent(imguiKey, true); }
-				if (KeyReleased(key)) { imguiIO.AddKeyEvent(imguiKey, false); }
+				if (KeyPressedRaw(key) && (!IsKeyHandled(key) || pig->imgui.isTypingIntoImgui)) { imguiIO.AddKeyEvent(imguiKey, true); }
+				if (KeyReleasedRaw(key) && (!IsKeyHandled(key) || pig->imgui.isTypingIntoImgui)) { imguiIO.AddKeyEvent(imguiKey, false); }
 			}
 		}
 		
 		VarArrayLoop(&pigIn->inputEvents, eIndex)
 		{
 			VarArrayLoopGet(InputEvent_t, inputEvent, &pigIn->inputEvents, eIndex);
-			if (inputEvent->type == InputEventType_Character)
+			if (!inputEvent->handled || pig->imgui.isTypingIntoImgui)
 			{
-				imguiIO.AddInputCharacter(inputEvent->character.codepoint);
+				if (inputEvent->type == InputEventType_Character)
+				{
+					imguiIO.AddInputCharacter(inputEvent->character.codepoint);
+				}
 			}
 		}
 		
