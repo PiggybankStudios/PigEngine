@@ -128,6 +128,11 @@ void Pig_UpdateInputAfter()
 	pig->prevProgramTime = ProgramTime;
 	pig->isMouseFullyCaptured = pig->wasMouseCapturedLastFrame;
 	pig->wasMouseCapturedLastFrame = (pigOut->mouseMode == PlatMouseMode_FirstPersonCamera);
+	MyMemCopy(&pig->prevKeyHandled[0], &pig->keyHandled[0], sizeof(pig->keyHandled));
+	MyMemCopy(&pig->prevMouseBtnHandled[0], &pig->mouseBtnHandled[0], sizeof(pig->mouseBtnHandled));
+	MyMemCopy(&pig->prevControllerBtnHandled[0], &pig->controllerBtnHandled[0], sizeof(pig->controllerBtnHandled));
+	pig->prevScrollXHandled = pig->scrollXHandled;
+	pig->prevScrollYHandled = pig->scrollYHandled;
 }
 
 void Pig_InputRenderDebugInfo()

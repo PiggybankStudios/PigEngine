@@ -107,6 +107,12 @@ struct PigState_t
 	BtnHandlingInfo_t controllerBtnHandled[MAX_NUM_CONTROLLERS][ControllerBtn_NumBtns];
 	BtnHandlingInfo_t scrollXHandled;
 	BtnHandlingInfo_t scrollYHandled;
+	//For Debug Purposes:
+	BtnHandlingInfo_t prevKeyHandled[Key_NumKeys];
+	BtnHandlingInfo_t prevMouseBtnHandled[MouseBtn_NumBtns];
+	BtnHandlingInfo_t prevControllerBtnHandled[MAX_NUM_CONTROLLERS][ControllerBtn_NumBtns];
+	BtnHandlingInfo_t prevScrollXHandled;
+	BtnHandlingInfo_t prevScrollYHandled;
 	
 	//Focus Tracking
 	VarArray_t unfocusedItems; //const void*
