@@ -192,6 +192,7 @@ void PigInitImgui()
 	imguiIO.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; //we can do this in OpenGL 3.2+
 	imguiIO.SetClipboardTextFn = ImguiCallback_SetClipboardText;
 	imguiIO.GetClipboardTextFn = ImguiCallback_GetClipboardText;
+	imguiIO.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
 	imguiIO.ConfigDebugIsDebuggerPresent = DEBUG_BUILD; //TODO: Can we detect this better?
 	imguiIO.IniFilename = AllocCharsAndFillNt(&pig->imguiHeap, IMGUI_INI_FILE_NAME);
 	imguiIO.LogFilename = AllocCharsAndFillNt(&pig->imguiHeap, IMGUI_LOG_FILE_NAME);
@@ -289,6 +290,17 @@ void PigImguiHandleReload()
 	}
 	
 	ImGui::SetCurrentContext(pig->imgui.imguiContext);
+	
+	ImGuiIO& imguiIO = ImGui::GetIO();
+	imguiIO.SetClipboardTextFn = ImguiCallback_SetClipboardText;
+	imguiIO.GetClipboardTextFn = ImguiCallback_GetClipboardText;
+	imguiIO.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
+}
+
+void PigImguiHandleClosing()
+{
+	ImGuiIO& imguiIO = ImGui::GetIO();
+	ImGui::SaveIniSettingsToDisk(imguiIO.IniFilename);
 }
 
 // +--------------------------------------------------------------+
@@ -470,6 +482,10 @@ void PigUpdateImguiAfter()
 	
 	if (!IsFocusedItemTyping() || IsFocused(&pig->imgui))
 	{
+		imguiIO.AddKeyEvent(ImGuiMod_Ctrl, KeyDownRaw(Key_Control));
+		imguiIO.AddKeyEvent(ImGuiMod_Alt, KeyDownRaw(Key_Alt));
+		imguiIO.AddKeyEvent(ImGuiMod_Shift, KeyDownRaw(Key_Shift));
+		
 		for (u64 keyIndex = 0; keyIndex < Key_NumKeys; keyIndex++)
 		{
 			Key_t key = (Key_t)keyIndex;

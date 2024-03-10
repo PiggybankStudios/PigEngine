@@ -417,5 +417,6 @@ void PigClosing()
 	{
 		StopAppState(pig->appStateStack[sIndex-1], AppState_None, true, true);
 	}
+	PigImguiHandleClosing();
 	pig->appStateStackSize = 0;
 }
