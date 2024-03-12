@@ -36,6 +36,7 @@ Description:
 
 #include "pig_imconfig.h"
 #include "imgui/imgui.h"
+#include "gylib/gy_imgui_helpers.h"
 
 //NOTE: Since PigWasmStdLib already uses stb_sprintf.h as the implementation of vsnprintf, we don't need to re-include the source for that here
 #if !USING_PIG_WASM_STD_LIB
