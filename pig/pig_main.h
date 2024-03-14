@@ -50,6 +50,8 @@ struct PigState_t
 	MemArena_t platHeap;
 	MemArena_t fixedHeap;
 	MemArena_t mainHeap;
+	PlatMutex_t threadSafeHeapMutex;
+	MemArena_t threadSafeHeap;
 	MemArena_t imguiHeap;
 	MemArena_t largeAllocHeap;
 	MemArena_t stdHeap;

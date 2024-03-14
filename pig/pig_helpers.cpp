@@ -9,36 +9,21 @@ Description:
 #define AssertSingleThreaded() Assert(plat != nullptr && pig != nullptr && plat->GetThisThreadId() == pig->mainThreadId)
 #define AssertSingleThreaded_() Assert_(plat != nullptr && pig != nullptr && plat->GetThisThreadId() == pig->mainThreadId)
 
-#define AssertNormalEntry() do                            \
-{                                                         \
-	NotNull(pig);                                         \
-	NotNull(plat);                                        \
-	Assert(pigEntryPoint != PigEntryPoint_None);          \
-	Assert(plat->GetThisThreadId() == pig->mainThreadId); \
-} while(0)
-#define AssertNormalEntry_() do                            \
-{                                                          \
-	NotNull_(pig);                                         \
-	NotNull_(plat);                                        \
-	Assert(pigEntryPoint != PigEntryPoint_None);           \
-	Assert_(plat->GetThisThreadId() == pig->mainThreadId); \
-} while(0)
-
 #define TIME_SCALED_ANIM(animTimeMs, timeScale) (((r32)PIG_DEFAULT_FRAME_TIME / (animTimeMs)) * (r32)(timeScale))
 
 void* PlatAllocFunc(u64 size)
 {
-	AssertNormalEntry();
+	NotNull2(plat, plat->AllocateMemory);
 	return plat->AllocateMemory(size, AllocAlignment_None);
 }
 void* PlatReallocFunc(void* allocPntr, u64 newSize, u64 oldSize = 0)
 {
-	AssertNormalEntry();
+	NotNull2(plat, plat->AllocateMemory);
 	return plat->ReallocMemory(allocPntr, newSize, oldSize, AllocAlignment_None);
 }
 void PlatFreeFunc(void* allocPntr)
 {
-	AssertNormalEntry();
+	NotNull2(plat, plat->AllocateMemory);
 	plat->FreeMemory(allocPntr, 0, nullptr);
 }
 
