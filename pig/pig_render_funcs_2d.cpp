@@ -1317,13 +1317,13 @@ void PostProcessingChainNextPassPntr(PostProcessingChain_t* chain, Color_t clear
 	NotNull(chain);
 	FrameBuffer_t* targetBuffer = ((chain->passIndex%2) == 0 ? &chain->mainBuffer : &chain->secondaryBuffer);
 	FrameBuffer_t* sourceBuffer = ((chain->passIndex%2) == 0 ? &chain->secondaryBuffer : &chain->mainBuffer);
+	if (secondInputBuffer != nullptr) { PrepareFrameBufferTexture(secondInputBuffer); }
 	RcBindFrameBuffer(nullptr);
 	PrepareFrameBufferTexture(sourceBuffer);
 	RcBindFrameBuffer(targetBuffer);
 	RcSetViewport(NewRec(Vec2_Zero, ToVec2(targetBuffer->size)));
 	RcClearColor(clearColor);
 	RcClearDepth(1.0f);
-	if (secondInputBuffer != nullptr) { PrepareFrameBufferTexture(secondInputBuffer); }
 	RcBindTexture1(&sourceBuffer->outTexture);
 	if (secondInputBuffer != nullptr)
 	{

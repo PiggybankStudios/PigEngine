@@ -366,6 +366,17 @@ void RcSetColor2_OpenGL(Colorf_t colorf)
 		AssertNoOpenGlError();
 	}
 }
+void RcSetScreenSpaceEffectColor_OpenGL(Colorf_t colorf)
+{
+	NotNull(rc);
+	NotNull(rc->state.boundShader);
+	if (IsFlagSet(rc->state.boundShader->uniformFlags, ShaderUniform_ScreenSpaceEffectColor))
+	{
+		Assert(rc->state.boundShader->glLocations.screenSpaceEffectColor >= 0);
+		glUniform4f(rc->state.boundShader->glLocations.screenSpaceEffectColor, colorf.r, colorf.g, colorf.b, colorf.a);
+		AssertNoOpenGlError();
+	}
+}
 
 void RcSetSourceRec1_OpenGL(rec rectangle, bool flipped, r32 textureHeight)
 {
@@ -822,6 +833,7 @@ void RcBindShader(Shader_t* shader)
 			RcSetPlayerPosition_OpenGL(rc->state.playerPosition);
 			RcSetColor1_OpenGL(rc->state.color1f);
 			RcSetColor2_OpenGL(rc->state.color2f);
+			RcSetScreenSpaceEffectColor_OpenGL(rc->state.screenSpaceEffectColorf);
 			if (rc->state.boundTexture1 != nullptr) { RcSetSourceRec1_OpenGL(rc->state.sourceRec1, rc->state.boundTexture1->isFlippedY, rc->state.boundTexture1->height); }
 			if (rc->state.boundTexture2 != nullptr) { RcSetSourceRec2_OpenGL(rc->state.sourceRec2, rc->state.boundTexture2->isFlippedY, rc->state.boundTexture2->height); }
 			RcSetShiftVec_OpenGL(rc->state.shiftVec);
@@ -1241,6 +1253,24 @@ void RcSetColor2(Colorf_t color)
 			RcSetColor2_OpenGL(color);
 			rc->state.color2 = ToColor(color);
 			rc->state.color2f = color;
+		} break;
+		#endif
+		
+		default: DebugAssertMsg(false, "Unsupported render API in RcSetColor2!"); break;
+	}
+}
+void RcSetScreenSpaceEffectColor(Color_t color)
+{
+	NotNull(rc);
+	if (rc->state.screenSpaceEffectColor.value == color.value) { return; }
+	switch (pig->renderApi)
+	{
+		#if OPENGL_SUPPORTED
+		case RenderApi_OpenGL:
+		{
+			RcSetScreenSpaceEffectColor_OpenGL(ToColorf(color));
+			rc->state.screenSpaceEffectColor = color;
+			rc->state.screenSpaceEffectColorf = ToColorf(color);
 		} break;
 		#endif
 		
@@ -1775,6 +1805,8 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 		rc->state.replaceColors[cIndex] = White;
 		rc->state.replaceColorsf[cIndex] = ToColorf(rc->state.replaceColors[cIndex]);
 	}
+	rc->state.screenSpaceEffectColor = Black;
+	rc->state.screenSpaceEffectColorf = ToColorf(rc->state.screenSpaceEffectColor);
 	
 	rc->state.time = 0.0f;
 	rc->state.brightness = 1.0f;

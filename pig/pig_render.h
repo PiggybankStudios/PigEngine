@@ -142,48 +142,50 @@ struct VertexArrayObject_t
 
 enum ShaderUniform_t
 {
-	ShaderUniform_None              = 0x00000000,
+	ShaderUniform_None                   = 0x00000000,
 	
-	ShaderUniform_WorldMatrix       = 0x00000001,
-	ShaderUniform_ViewMatrix        = 0x00000002,
-	ShaderUniform_ProjectionMatrix  = 0x00000004,
+	ShaderUniform_WorldMatrix            = 0x00000001,
+	ShaderUniform_ViewMatrix             = 0x00000002,
+	ShaderUniform_ProjectionMatrix       = 0x00000004,
 	
-	ShaderUniform_CameraPosition    = 0x00000008,
-	ShaderUniform_PlayerPosition    = 0x00000010,
+	ShaderUniform_CameraPosition         = 0x00000008,
+	ShaderUniform_PlayerPosition         = 0x00000010,
 	
-	ShaderUniform_Texture1          = 0x00000020,
-	ShaderUniform_Texture1Size      = 0x00000040,
-	ShaderUniform_Texture2          = 0x00000080,
-	ShaderUniform_Texture2Size      = 0x00000100,
+	ShaderUniform_Texture1               = 0x00000020,
+	ShaderUniform_Texture1Size           = 0x00000040,
+	ShaderUniform_Texture2               = 0x00000080,
+	ShaderUniform_Texture2Size           = 0x00000100,
 	
-	ShaderUniform_SourceRec1        = 0x00000200,
-	ShaderUniform_SourceRec2        = 0x00000400,
-	ShaderUniform_MaskRectangle     = 0x00000800,
-	ShaderUniform_ShiftVec          = 0x00001000,
+	ShaderUniform_SourceRec1             = 0x00000200,
+	ShaderUniform_SourceRec2             = 0x00000400,
+	ShaderUniform_MaskRectangle          = 0x00000800,
+	ShaderUniform_ShiftVec               = 0x00001000,
 	
-	ShaderUniform_Color1            = 0x00002000,
-	ShaderUniform_Color2            = 0x00004000,
-	ShaderUniform_ReplaceColors     = 0x00008000,
+	ShaderUniform_Color1                 = 0x00002000,
+	ShaderUniform_Color2                 = 0x00004000,
+	ShaderUniform_ReplaceColors          = 0x00008000,
 	
-	ShaderUniform_Time              = 0x00010000,
-	ShaderUniform_Count             = 0x00020000,
-	ShaderUniform_Brightness        = 0x00040000,
-	ShaderUniform_Saturation        = 0x00080000,
-	ShaderUniform_CircleRadius      = 0x00100000,
-	ShaderUniform_CircleInnerRadius = 0x00200000,
+	ShaderUniform_Time                   = 0x00010000,
+	ShaderUniform_Count                  = 0x00020000,
+	ShaderUniform_Brightness             = 0x00040000,
+	ShaderUniform_Saturation             = 0x00080000,
+	ShaderUniform_CircleRadius           = 0x00100000,
+	ShaderUniform_CircleInnerRadius      = 0x00200000,
 	
-	ShaderUniform_PolygonPlanes     = 0x00400000,
+	ShaderUniform_PolygonPlanes          = 0x00400000,
 	
-	ShaderUniform_Value0            = 0x00800000,
-	ShaderUniform_Value1            = 0x01000000,
-	ShaderUniform_Value2            = 0x02000000,
-	ShaderUniform_Value3            = 0x04000000,
-	ShaderUniform_Value4            = 0x08000000,
-	ShaderUniform_Value5            = 0x10000000,
-	ShaderUniform_Value6            = 0x20000000,
-	ShaderUniform_Value7            = 0x40000000,
+	ShaderUniform_Value0                 = 0x00800000,
+	ShaderUniform_Value1                 = 0x01000000,
+	ShaderUniform_Value2                 = 0x02000000,
+	ShaderUniform_Value3                 = 0x04000000,
+	ShaderUniform_Value4                 = 0x08000000,
+	ShaderUniform_Value5                 = 0x10000000,
+	ShaderUniform_Value6                 = 0x20000000,
+	ShaderUniform_Value7                 = 0x40000000,
 	
-	ShaderUniform_All               = 0x7FFFFFFF,
+	ShaderUniform_ScreenSpaceEffectColor = 0x80000000,
+	
+	ShaderUniform_All                    = 0xFFFFFFFF,
 	
 	ShaderUniform_RequireNone = ShaderUniform_None,
 	ShaderUniform_RequireMatrices = (ShaderUniform_WorldMatrix|ShaderUniform_ViewMatrix|ShaderUniform_ProjectionMatrix),
@@ -319,6 +321,8 @@ struct Shader_t
 		
 		//Generic "Value"s
 		GLint value[ShaderUniform_NumGenericValues];
+		
+		GLint screenSpaceEffectColor;
 	} glLocations;
 	#endif
 };

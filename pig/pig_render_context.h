@@ -51,6 +51,8 @@ struct RenderContextState_t
 	Colorf_t color2f;
 	Color_t replaceColors[16];
 	Colorf_t replaceColorsf[16];
+	Color_t screenSpaceEffectColor;
+	Colorf_t screenSpaceEffectColorf;
 	
 	r32 time;
 	i32 count;
