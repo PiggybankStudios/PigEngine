@@ -103,7 +103,6 @@ PLAT_API_START_PROCESS_DEFINITION(Win32_StartProcess)
 		return nullptr;
 	}
 	
-	Win32_LockMutex(&Platform->threadSafeHeapMutex, MUTEX_LOCK_INFINITE);
 	PlatRunningProcess_t* newProcess = BktArrayAdd(&Platform->runningProcesses, PlatRunningProcess_t);
 	NotNull(newProcess);
 	ClearPointer(newProcess);
@@ -118,7 +117,6 @@ PLAT_API_START_PROCESS_DEFINITION(Win32_StartProcess)
 	newProcess->workingDirectory = AllocString(newProcess->allocArena, &actualWorkingDirectory);
 	newProcess->argumentsString = AllocString(newProcess->allocArena, &argumentsString);
 	newProcess->isFinished = false;
-	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
 	
 	Win32_UnlockMutex(&Platform->runningProcessesMutex);
 	return newProcess;

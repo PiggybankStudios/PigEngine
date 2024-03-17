@@ -51,6 +51,37 @@ GYLIB_GET_TEMP_ARENA_DEF(Pig_GetTempArena)
 	}
 }
 
+// gy_threading implementations (required when defining GYLIB_THREADING_ENABLED)
+void InitGyMutex(GyMutex_t* mutex)
+{
+	NotNull2(plat, plat->CreateMutex);
+	plat->CreateMutex(mutex);
+}
+void FreeGyMutex(GyMutex_t* mutex)
+{
+	NotNull2(plat, plat->DestroyMutex);
+	plat->DestroyMutex(mutex);
+}
+bool IsValidGyMutex(GyMutex_t* mutex)
+{
+	return (mutex->id != 0);
+}
+bool TryLockGyMutex(GyMutex_t* mutex, u32 timeout)
+{
+	NotNull2(plat, plat->LockMutex);
+	return plat->LockMutex(mutex, timeout);
+}
+void LockGyMutex(GyMutex_t* mutex)
+{
+	NotNull2(plat, plat->LockMutex);
+	plat->LockMutex(mutex, MUTEX_LOCK_INFINITE);
+}
+void UnlockGyMutex(GyMutex_t* mutex)
+{
+	NotNull2(plat, plat->UnlockMutex);
+	plat->UnlockMutex(mutex);
+}
+
 // +--------------------------------------------------------------+
 // |               Custom Scratch Arenas Interface                |
 // +--------------------------------------------------------------+

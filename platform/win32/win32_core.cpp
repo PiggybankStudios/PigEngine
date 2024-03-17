@@ -189,7 +189,7 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 		Win32_InitError("Failed to allocate memory for Platform Thread Safe Heap");
 	}
 	InitMemArena_FixedHeap(&Platform->threadSafeHeap, PLAT_THREAD_SAFE_HEAP_SIZE, threadSafeHeapMem);
-	Win32_CreateMutex(&Platform->threadSafeHeapMutex);
+	Win32_CreateMutex(&Platform->threadSafeHeap.mutex);
 	
 	#if DEBUG_BUILD
 	Platform->mainHeap.debugName        = NewStringInArenaNt(&Platform->mainHeap, "win32_mainHeap").chars;

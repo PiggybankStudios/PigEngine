@@ -415,7 +415,6 @@ HRESULT AudioCallbackClass_c::OnDefaultDeviceChanged(EDataFlow flow, ERole role,
 {
 	NotNull(pwstrDefaultDeviceId);
 	ThreadId_t threadId = Win32_GetThisThreadId();
-	Win32_LockMutex(&Platform->threadSafeHeapMutex, MUTEX_LOCK_INFINITE);
 	MyStr_t idStr = ConvertUcs2StrToUtf8Nt(&Platform->threadSafeHeap, pwstrDefaultDeviceId);
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
@@ -436,7 +435,6 @@ HRESULT AudioCallbackClass_c::OnDefaultDeviceChanged(EDataFlow flow, ERole role,
 	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDefaultDeviceChanged: thread %u %s %s \"%.*s\"", threadId, flowStr, roleStr, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
-	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
 	// Unimplemented(); //TODO: Implement me!
 	return 0;
 }
@@ -444,7 +442,6 @@ HRESULT AudioCallbackClass_c::OnDeviceAdded(LPCWSTR pwstrDeviceId)
 {
 	NotNull(pwstrDeviceId);
 	ThreadId_t threadId = Win32_GetThisThreadId();
-	Win32_LockMutex(&Platform->threadSafeHeapMutex, MUTEX_LOCK_INFINITE);
 	MyStr_t idStr = ConvertUcs2StrToUtf8Nt(&Platform->threadSafeHeap, pwstrDeviceId);
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
@@ -452,7 +449,6 @@ HRESULT AudioCallbackClass_c::OnDeviceAdded(LPCWSTR pwstrDeviceId)
 	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceAdded: thread %u \"%.*s\"", threadId, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
-	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
 	// Unimplemented(); //TODO: Implement me!
 	return 0;
 }
@@ -460,7 +456,6 @@ HRESULT AudioCallbackClass_c::OnDeviceRemoved(LPCWSTR pwstrDeviceId)
 {
 	NotNull(pwstrDeviceId);
 	ThreadId_t threadId = Win32_GetThisThreadId();
-	Win32_LockMutex(&Platform->threadSafeHeapMutex, MUTEX_LOCK_INFINITE);
 	MyStr_t idStr = ConvertUcs2StrToUtf8Nt(&Platform->threadSafeHeap, pwstrDeviceId);
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
@@ -468,7 +463,6 @@ HRESULT AudioCallbackClass_c::OnDeviceRemoved(LPCWSTR pwstrDeviceId)
 	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceRemoved: thread %u \"%.*s\"", threadId, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
-	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
 	// Unimplemented(); //TODO: Implement me!
 	return 0;
 }
@@ -476,7 +470,6 @@ HRESULT AudioCallbackClass_c::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD 
 {
 	NotNull(pwstrDeviceId);
 	ThreadId_t threadId = Win32_GetThisThreadId();
-	Win32_LockMutex(&Platform->threadSafeHeapMutex, MUTEX_LOCK_INFINITE);
 	MyStr_t idStr = ConvertUcs2StrToUtf8Nt(&Platform->threadSafeHeap, pwstrDeviceId);
 	PlatAudioDevice_t* audioDevice = Win32_GetAudioDeviceByIdStr(idStr);
 	MyStr_t nameStr = (audioDevice != nullptr) ? audioDevice->name : NewStr("[Unknown]");
@@ -485,7 +478,6 @@ HRESULT AudioCallbackClass_c::OnDeviceStateChanged(LPCWSTR pwstrDeviceId, DWORD 
 	// MyStr_t printStr = PrintInArenaStr(&Platform->threadSafeHeap, "OnDeviceStateChanged: thread %u 0x%08X \"%.*s\"", threadId, dwNewState, StrPrint(nameStr));
 	// WriteLine_N(printStr.pntr);
 	// FreeString(&Platform->threadSafeHeap, &printStr);
-	Win32_UnlockMutex(&Platform->threadSafeHeapMutex);
 	// Unimplemented(); //TODO: Implement me!
 	return 0;
 }

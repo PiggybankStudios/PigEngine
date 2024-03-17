@@ -155,6 +155,16 @@ Date:   09\14\2021
 // +--------------------------------------------------------------+
 // |                       Library Includes                       |
 // +--------------------------------------------------------------+
+#if WINDOWS_COMPILATION
+#include "win32/win32_core_shared_types.h"
+#elif OSX_COMPILATION
+#include "osx/osx_core_shared_types.h"
+#elif LINUX_COMPILATION
+#include "linux/linux_core_shared_types.h"
+#elif WASM_COMPILATION
+#include "web/web_core_shared_types.h"
+#endif
+
 #ifdef WIN32_GFX_TEST
 #include "graphics/pig_gfx_early_include.h"
 #endif
@@ -198,6 +208,8 @@ Date:   09\14\2021
 
 #define GYLIB_LOOKUP_PRIMES_1000
 #define GYLIB_DEFAULT_RANDOM_SERIES_TYPE RandomSeriesType_XoroShiro128
+#define GYLIB_THREADING_ENABLED
+typedef PlatMutex_t GyMutex_t;
 #include "gylib/gy.h"
 
 #ifdef WIN32_GFX_TEST

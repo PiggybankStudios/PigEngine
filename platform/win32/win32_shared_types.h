@@ -110,27 +110,6 @@ struct PlatThreadPoolThread_t
 	bool isAwake;
 };
 
-struct PlatMutex_t
-{
-	u64 id;
-	
-	HANDLE handle;
-};
-
-struct PlatSemaphore_t
-{
-	u64 id;
-	
-	HANDLE handle;
-};
-
-struct PlatInterlockedInt_t
-{
-	u64 id;
-	
-	volatile LONG value;
-};
-
 // +--------------------------------------------------------------+
 // |                          Processes                           |
 // +--------------------------------------------------------------+

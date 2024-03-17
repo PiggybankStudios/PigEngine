@@ -25,8 +25,8 @@ void PigInitialize(EngineMemory_t* memory)
 	UNUSED(permanentMemoryNeeded);
 	InitMemArena_FixedHeap(&pig->fixedHeap, memory->persistentDataSize - sizeof(PigState_t) - totalConsoleSpaceSize, ((u8*)memory->persistentDataPntr) + sizeof(PigState_t) + totalConsoleSpaceSize);
 	InitMemArena_PagedHeapFuncs(&pig->mainHeap, PIG_MAIN_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
-	plat->CreateMutex(&pig->threadSafeHeapMutex);
 	InitMemArena_PagedHeapFuncs(&pig->threadSafeHeap, PIG_THREAD_SAFE_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	plat->CreateMutex(&pig->threadSafeHeap.mutex);
 	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_PagedHeapFuncs(&pig->largeAllocHeap, PIG_LARGE_ALLOC_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);

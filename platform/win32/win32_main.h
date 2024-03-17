@@ -25,7 +25,6 @@ struct Win32PlatformState_t
 	#if PROCMON_SUPPORTED
 	MemArena_t procmonHeap;
 	#endif
-	PlatMutex_t threadSafeHeapMutex;
 	MemArena_t threadSafeHeap;
 	
 	PlatMutex_t debugLineMutex;

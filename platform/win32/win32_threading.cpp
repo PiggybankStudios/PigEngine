@@ -28,6 +28,8 @@ PLAT_API_CREATE_MUTEX_DEF(Win32_CreateMutex) //pre-declared in win32_func_defs.c
 	AssertSingleThreaded_();
 	NotNull_(mutex);
 	ClearPointer(mutex);
+	mutex->id = Platform->nextMutexId;
+	Platform->nextMutexId++;
 	mutex->handle = CreateMutex(nullptr, false, nullptr); //default security, no ownership, no name
 	Assert_(mutex->handle != NULL);
 }
@@ -535,3 +537,33 @@ THREAD_FUNCTION_DEF(Win32_WorkerThreadInit, userPntr) //pre-declared at top of f
 	
 	return result;
 }
+
+// +--------------------------------------------------------------+
+// |                       GyLib Callbacks                        |
+// +--------------------------------------------------------------+
+// gy_threading implementations (required when defining GYLIB_THREADING_ENABLED)
+void InitGyMutex(GyMutex_t* mutex)
+{
+	Win32_CreateMutex(mutex);
+}
+void FreeGyMutex(GyMutex_t* mutex)
+{
+	Win32_DestroyMutex(mutex);
+}
+bool IsValidGyMutex(GyMutex_t* mutex)
+{
+	return (mutex->id != 0);
+}
+bool TryLockGyMutex(GyMutex_t* mutex, u32 timeout)
+{
+	return Win32_LockMutex(mutex, timeout);
+}
+void LockGyMutex(GyMutex_t* mutex)
+{
+	Win32_LockMutex(mutex, MUTEX_LOCK_INFINITE);
+}
+void UnlockGyMutex(GyMutex_t* mutex)
+{
+	Win32_UnlockMutex(mutex);
+}
+
