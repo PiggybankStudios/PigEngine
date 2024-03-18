@@ -12,6 +12,8 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 	MemArena_t* scratch = GetScratchArena();
 	
 	bool oldFaceCullingValue = rc->state.faceCulling;
+	rec oldViewport = rc->state.viewportRec;
+	Shader_t* oldShader = rc->state.boundShader;
 	RcSetFaceCulling(false);
 	// TODO: Rather than one vertex buffer that we resize and shove everything into, we could be using GL_STREAM_DRAW maybe, and just put each CmdList's data into the buffer as we go?
 	
@@ -88,7 +90,6 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 	// +==============================+
 	RcBindShader(&pig->imgui.mainShader);
 	RcBindVertBuffer(&pig->imgui.vertBuffer);
-	rec oldViewport = rc->state.viewportRec;
 	u64 listVtxOffset = 0;
 	u64 listIdxOffset = 0;
 	for (int lIndex = 0; lIndex < imDrawData->CmdListsCount; lIndex++)
@@ -115,8 +116,9 @@ void RcRenderImDrawData(ImDrawData* imDrawData) //pre-declared in pig_func_defs.
 		listVtxOffset += imCmdList->VtxBuffer.Size;
 		listIdxOffset += imCmdList->IdxBuffer.Size;
 	}
-	RcSetViewport(oldViewport);
 	
 	FreeScratchArena(scratch);
+	RcBindShader(oldShader);
 	RcSetFaceCulling(oldFaceCullingValue);
+	RcSetViewport(oldViewport);
 }
