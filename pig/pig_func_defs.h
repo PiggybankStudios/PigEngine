@@ -22,6 +22,9 @@ void GameHandleReload();
 void GamePinResources();
 void GamePrepareForClose();
 
+//pig_main_functions.cpp
+void CheckScratchNumMarksDuringUpdate(u64 numExtraMarks1 = 0, u64 numExtraMarks2 = 0, u64 numExtraMarks3 = 0);
+
 //pig_resources.cpp
 void AccessResource(ResourceType_t type, u64 resourceIndex);
 void AccessResource(const Texture_t* texture);

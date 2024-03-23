@@ -161,6 +161,7 @@ void PigInitialize(EngineMemory_t* memory)
 // +--------------------------------------------------------------+
 void PigUpdateMainWindow()
 {
+	CheckScratchNumMarksDuringUpdate();
 	PigUpdateImguiBefore();
 	Pig_UpdateResources();
 	
@@ -192,6 +193,7 @@ void PigUpdateMainWindow()
 	UpdateAppState(pig->currentAppState);
 	
 	PigUpdateImguiAfter();
+	CheckScratchNumMarksDuringUpdate();
 }
 
 // +--------------------------------------------------------------+
@@ -293,8 +295,46 @@ void PigHandleTaskCompletedInputEvents()
 	}
 }
 
+#if DEBUG_BUILD
+static u64 numMarksOnUpdateEntry1 = 0;
+static u64 numMarksOnUpdateEntry2 = 0;
+static u64 numMarksOnUpdateEntry3 = 0;
+void CheckScratchNumMarksDuringUpdate(u64 numExtraMarks1, u64 numExtraMarks2, u64 numExtraMarks3) //pre-declared in app_func_defs.h
+{
+	MemArena_t* scratch1 = GetScratchArena();
+	MemArena_t* scratch2 = GetScratchArena(scratch1);
+	MemArena_t* scratch3 = GetScratchArena(scratch1, scratch2);
+	u64 numMarksAtExit1 = GetNumMarks(scratch1);
+	u64 numMarksAtExit2 = GetNumMarks(scratch2);
+	u64 numMarksAtExit3 = GetNumMarks(scratch3);
+	Assert(numMarksAtExit1 == numMarksOnUpdateEntry1 + numExtraMarks1);
+	Assert(numMarksAtExit2 == numMarksOnUpdateEntry2 + numExtraMarks2);
+	Assert(numMarksAtExit3 == numMarksOnUpdateEntry3 + numExtraMarks3);
+	FreeScratchArena(scratch1);
+	FreeScratchArena(scratch2);
+	FreeScratchArena(scratch3);
+}
+#else
+void CheckScratchNumMarksDuringUpdate() { }
+#endif
+
 void PigUpdate()
 {
+	#if DEBUG_BUILD
+	{
+		MemArena_t* scratch1 = GetScratchArena();
+		MemArena_t* scratch2 = GetScratchArena(scratch1);
+		MemArena_t* scratch3 = GetScratchArena(scratch1, scratch2);
+		numMarksOnUpdateEntry1 = GetNumMarks(scratch1);
+		numMarksOnUpdateEntry2 = GetNumMarks(scratch2);
+		numMarksOnUpdateEntry3 = GetNumMarks(scratch3);
+		FreeScratchArena(scratch1);
+		FreeScratchArena(scratch2);
+		FreeScratchArena(scratch3);
+	}
+	#endif
+	CheckScratchNumMarksDuringUpdate();
+	
 	UpdatePigPerfGraphBefore(&pig->perfGraph);
 	PigHandlePlatformDebugLines(&pigIn->platDebugLines);
 	PigHandleTaskCompletedInputEvents();
@@ -359,6 +399,7 @@ void PigUpdate()
 	}
 	
 	Pig_UpdateInputAfter();
+	CheckScratchNumMarksDuringUpdate();
 	pig->firstUpdate = false;
 }
 
