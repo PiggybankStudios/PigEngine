@@ -57,12 +57,14 @@ static void ImguiCallback_SetClipboardText(void* user_data, const char* text)
 
 static void* ImguiCallback_Alloc(size_t numBytes, void* userData)
 {
+	UNUSED(userData);
 	//TODO: Put this in it's own arena maybe?
 	return AllocMem(&pig->imguiHeap, (u64)numBytes);
 }
 
 static void ImguiCallback_Free(void* allocPntr, void* userData)
 {
+	UNUSED(userData);
 	FreeMem(&pig->imguiHeap, allocPntr, 0, true);
 }
 

@@ -315,7 +315,7 @@ void CheckScratchNumMarksDuringUpdate(u64 numExtraMarks1, u64 numExtraMarks2, u6
 	FreeScratchArena(scratch3);
 }
 #else
-void CheckScratchNumMarksDuringUpdate() { }
+void CheckScratchNumMarksDuringUpdate(u64 numExtraMarks1, u64 numExtraMarks2, u64 numExtraMarks3) { UNUSED(numExtraMarks1); UNUSED(numExtraMarks2); UNUSED(numExtraMarks3); }
 #endif
 
 void PigUpdate()

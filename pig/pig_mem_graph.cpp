@@ -439,7 +439,6 @@ void RenderPigMemGraph(PigMemGraph_t* graph)
 void RenderPigMemGraph_Imgui(PigMemGraph_t* graph)
 {
 	MemArena_t* scratch = GetScratchArena();
-	r32 availableWidth = ImGui::GetContentRegionAvail().x;
 	
 	ImGui::Checkbox("Overlay", &graph->imguiOverlayMode);
 	
