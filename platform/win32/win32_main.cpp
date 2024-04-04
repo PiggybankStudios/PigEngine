@@ -280,7 +280,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	AssertMsg(Platform->startupOptions.numWindows > 0, "The engine DLL requested 0 windows. Is the engine DLL corrupt?");
 	NotNullMsg(Platform->startupOptions.windowOptions, "The engine DLL did not fill out the windowsOptions array. Is the engine DLL corrupt?");
-	AssertMsg(Platform->startupOptions.renderApi != RenderApi_None, "The engine DLL did not choose a valid Render API to use. Is the engine DLL corrupt?");
+	AssertMsg(Platform->startupOptions.render.api != RenderApi_None, "The engine DLL did not choose a valid Render API to use. Is the engine DLL corrupt?");
 	NotEmptyStr(&Platform->startupOptions.loadingImagePath);
 	AssertMsg(Platform->startupOptions.audioDeviceIndex < Platform->startupInfo.audioDevices.length, "Engine chose an invalid audio device index!");
 	AssertMsg(Platform->startupOptions.threadPoolSize <= PLAT_MAX_NUM_THREADS, "Engine wanted too many threads in it's thread pool!");
@@ -326,20 +326,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	//TODO: Add support for other APIs and then add else ifs here
-	if (Platform->startupOptions.renderApi == RenderApi_OpenGL && OPENGL_SUPPORTED)
+	if (Platform->startupOptions.render.api == RenderApi_OpenGL && OPENGL_SUPPORTED)
 	{
 		Platform->renderApi = RenderApi_OpenGL;
 	}
 	else
 	{
-		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.renderApi));
+		PrintLine_E("The Win32 platform layer does not support %s as a render API yet", GetRenderApiStr(Platform->startupOptions.render.api));
 		Win32_InitError("Unsupported win32 render API chosen by the engine");
 	}
 	
 	for (u64 wIndex = 0; wIndex < Platform->startupOptions.numWindows; wIndex++)
 	{
 		NotEmptyStr(&Platform->startupOptions.windowOptions[wIndex].create.windowTitle);
-		PlatWindow_t* newWindow = Win32_GlfwCreateWindow(&Platform->startupOptions.windowOptions[wIndex].create);
+		PlatWindow_t* newWindow = Win32_GlfwCreateWindow(&Platform->startupOptions.render, &Platform->startupOptions.windowOptions[wIndex].create);
 		if (newWindow == nullptr)
 		{
 			Win32_InitError("Failed to create application window through GLFW. This is usually caused by your graphics drivers not supporting the minimum version of OpenGL that we require.");
@@ -352,6 +352,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Platform->mainWindow = newWindow;
 			newWindow->activeInput.isFocused = true;
 			Win32_GladInit();
+			
+			if (Platform->startupOptions.render.api == RenderApi_OpenGL)
+			{
+				PrintLine_I("Successfully created %s v%d.%d graphics context!", GetRenderApiStr(Platform->startupOptions.render.api), GLVersion.major, GLVersion.minor);
+			}
 		}
 	}
 	NotNull(Platform->mainWindow);

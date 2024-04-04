@@ -38,6 +38,21 @@ struct StartupInfo_t
 	PlatApiGetMonitorVideoMode_f*  GetMonitorVideoMode;
 };
 
+struct StartupRenderOptions_t
+{
+	RenderApi_t api;
+	struct
+	{
+		int requestCoreProfile; //false = Compat profile
+		int requestVersionMajor;
+		int requestVersionMinor;
+		int minVersionMajor;
+		int minVersionMinor;
+		bool forwardCompat;
+		bool debugEnabled;
+	} opengl;
+};
+
 struct StartupOptions_t
 {
 	u64 mainMemoryRequest;
@@ -45,7 +60,7 @@ struct StartupOptions_t
 	u64 scratchArenaSizes;
 	bool openDebugConsole;
 	
-	RenderApi_t renderApi;
+	StartupRenderOptions_t render;
 	
 	u64 numWindows;
 	PlatWindowOptions_t* windowOptions;
@@ -75,7 +90,9 @@ struct PlatformInfo_t
 	PlatType_t type;
 	Version_t version;
 	GlfwVersion_t glfwVersion;
+	
 	RenderApi_t renderApi;
+	Version_t renderApiVersion;
 	
 	PlatAudioFormat_t audioFormat;
 	PerfTime_t programStartPerfTime;

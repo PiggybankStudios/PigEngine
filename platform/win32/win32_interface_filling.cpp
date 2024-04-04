@@ -74,6 +74,13 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->version.build = WIN32_VERSION_BUILD;
 	info->glfwVersion = Platform->glfwVersion;
 	info->renderApi = Platform->renderApi;
+	if (Platform->renderApi == RenderApi_OpenGL)
+	{
+		info->renderApiVersion.major = (u32)GLVersion.major;
+		info->renderApiVersion.minor = (u32)GLVersion.minor;
+		info->renderApiVersion.build = 0; //Unused in OpenGL as far as I can tell
+	}
+	else { AssertMsg(false, "Unimplemented RenderApi in Win32_FillPlatformInfo"); }
 	info->audioFormat = Platform->audioFormat;
 	info->programStartPerfTime = programStartPerfTime;
 	info->mainWindow = Platform->mainWindow;

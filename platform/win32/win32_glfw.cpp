@@ -6,21 +6,9 @@ Description:
 	** Holds the initilization and interop code for GLFW
 */
 
-//NOTE: Requesting OpenGL 3.2 or earlier requires us to change the profile type to COMPAT (or ANY)
-#define OPENGL_REQUEST_VERSION_MAJOR   3
-#define OPENGL_REQUEST_VERSION_MINOR   3
 #ifdef WIN32_GFX_TEST
 #define OPENGL_REQUEST_PROFILE         OpenGlProfile_Core
-#else
-#define OPENGL_REQUEST_PROFILE         GLFW_OPENGL_CORE_PROFILE //GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_COMPAT_PROFILE
 #endif
-//NOTE: Setting this to true causes weird texture problems when we run with the Steam Overlay on top.
-//      This setting is supposed to make sure that all deprecated functionality in version 3.0 of OpenGL
-//      are unsupported. Maybe we are using some deprecated features that we shouldn't be?
-#define OPENGL_FORCE_FORWARD_COMPAT    true
-#define OPENGL_DEBUG_CONTEXT           (true && DEBUG_BUILD)
-#define MIN_OPENGL_VERSION_MAJOR       3
-#define MIN_OPENGL_VERSION_MINOR       3
 
 // +--------------------------------------------------------------+
 // |                          Callbacks                           |
@@ -662,30 +650,28 @@ void Win32_GlfwCleanup()
 // +--------------------------------------------------------------+
 // |                        Create Window                         |
 // +--------------------------------------------------------------+
-PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
+PlatWindow_t* Win32_GlfwCreateWindow(const StartupRenderOptions_t* renderOptions, const PlatWindowCreateOptions_t* options)
 {
-	NotNull(options);
+	NotNull2(renderOptions, options);
 	AssertNullTerm(&options->windowTitle);
 	AssertSingleThreaded();
 	
 	#ifndef WIN32_GFX_TEST
-	if (Platform->renderApi == RenderApi_OpenGL)
+	if (renderOptions->api == RenderApi_OpenGL)
 	{
 		PrintLine_D("Requesting OpenGL %d.%d PROFILE=%s FORWARD_COMPAT=%s DEBUG=%s",
-			OPENGL_REQUEST_VERSION_MAJOR,
-			OPENGL_REQUEST_VERSION_MINOR,
-			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_ANY_PROFILE) ? "ANY" :
-			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_CORE_PROFILE) ? "CORE" :
-			(OPENGL_REQUEST_PROFILE == GLFW_OPENGL_COMPAT_PROFILE) ? "COMPAT" : "UNKNOWN",
-			OPENGL_FORCE_FORWARD_COMPAT ? "true" : "false",
-			OPENGL_DEBUG_CONTEXT ? "true" : "false"
+			renderOptions->opengl.requestVersionMajor,
+			renderOptions->opengl.requestVersionMinor,
+			renderOptions->opengl.requestCoreProfile ? "CORE" : "COMPAT",
+			renderOptions->opengl.forwardCompat ? "true" : "false",
+			renderOptions->opengl.debugEnabled ? "true" : "false"
 		);
 		glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_API);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_REQUEST_VERSION_MAJOR);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_REQUEST_VERSION_MINOR);
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, OPENGL_FORCE_FORWARD_COMPAT ? GLFW_TRUE : GLFW_FALSE); //Makes MacOSX happy?
-		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,  OPENGL_DEBUG_CONTEXT ? GLFW_TRUE : GLFW_FALSE);
-		glfwWindowHint(GLFW_OPENGL_PROFILE,        OPENGL_REQUEST_PROFILE);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, renderOptions->opengl.requestVersionMajor);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, renderOptions->opengl.requestVersionMinor);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, renderOptions->opengl.forwardCompat ? GLFW_TRUE : GLFW_FALSE);
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT,  renderOptions->opengl.debugEnabled ? GLFW_TRUE : GLFW_FALSE);
+		glfwWindowHint(GLFW_OPENGL_PROFILE,        (renderOptions->opengl.requestCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE));
 	}
 	else
 	{
@@ -750,6 +736,19 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 		LinkedListRemove(&Platform->windows, PlatWindow_t, newWindow);
 		return nullptr;
 	}
+	if (renderOptions->api == RenderApi_OpenGL)
+	{
+		int openglVersionMajor = glfwGetWindowAttrib(newWindow->handle, GLFW_CONTEXT_VERSION_MAJOR);
+		int openglVersionMinor = glfwGetWindowAttrib(newWindow->handle, GLFW_CONTEXT_VERSION_MINOR);
+		if (openglVersionMajor < renderOptions->opengl.minVersionMajor || (openglVersionMajor == renderOptions->opengl.minVersionMajor && openglVersionMinor < renderOptions->opengl.minVersionMinor))
+		{
+			PrintLine_E("Got OpenGL v%d.%d when we wanted at least v%d.%d", openglVersionMajor, openglVersionMinor, renderOptions->opengl.minVersionMajor, renderOptions->opengl.minVersionMinor);
+			// Win32_InitError("Your graphics card does not support a high enough version of OpenGL to run this application!");
+			LinkedListRemove(&Platform->windows, PlatWindow_t, newWindow);
+			return nullptr;
+		}
+	}
+	
 	newWindow->id = Platform->nextWindowId;
 	Platform->nextWindowId++;
 	Platform->numOpenWindows++;
@@ -762,6 +761,7 @@ PlatWindow_t* Win32_GlfwCreateWindow(const PlatWindowCreateOptions_t* options)
 	{
 		glfwMaximizeWindow(newWindow->handle);
 	}
+	
 	
 	Win32_InitWindowEngineInput(newWindow, options, &newWindow->activeInput);
 	Win32_CopyWindowEngineInput(&newWindow->input, &newWindow->activeInput);
