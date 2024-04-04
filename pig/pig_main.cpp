@@ -57,6 +57,14 @@ Description:
 #include "yajl/yajl_tree.h"
 #endif
 
+#if DEBUG_BUILD
+#define LUA_USE_APICHECK
+#endif
+extern "C" {
+#include "lualib.h"
+#include "lauxlib.h"
+}
+
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
 #include "pig/pig_serialization.h"
@@ -78,6 +86,7 @@ Description:
 #include "pig/pig_textbox.h"
 #include "pig/pig_value_slider.h"
 #include "pig/pig_checkbox.h"
+#include "pig/pig_lua.h"
 #include "pig/pig_debug_commands.h"
 #include "pig/pig_debug_console.h"
 #include "pig/pig_confirm_dialog.h"
@@ -185,6 +194,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_value_slider.cpp"
 #include "pig/pig_checkbox.cpp"
 #include "pig/pig_render_funcs_extra.cpp"
+#include "pig/pig_lua.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"

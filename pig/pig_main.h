@@ -56,6 +56,7 @@ struct PigState_t
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	MemArena_t audioHeap;
+	MemArena_t luaHeap;
 	#if PIG_MAIN_ARENA_DEBUG
 	MemArena_t mainHeapDebug;
 	#endif
@@ -160,6 +161,9 @@ struct PigState_t
 	bool debugRenderSteamFriendsList;
 	VarArray_t steamAvatars; //SteamAvatar_t
 	#endif
+	
+	//Lua
+	LuaState_t lua;
 };
 
 #endif //  _PIG_MAIN_H

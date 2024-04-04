@@ -28,7 +28,7 @@ Description:
 #include "win32/win32_box2d.h"
 
 #include <float.h>
-#include "gylib/gy_test_floatscan.h"
+// #include "gylib/gy_test_floatscan.h"
 
 // +--------------------------------------------------------------+
 // |                       Platform Globals                       |

@@ -48,6 +48,7 @@ const char* PigDebugCommandInfoStrs[] = {
 	"list_resource_pool", "Lists information about all resources in a pool (optionally filtered to a specific type of resource)", "{type}", "\n",
 	"test_scratch", "Allocates a specified number of bytes from one of the scratch arenas", "[num_bytes]", "\n",
 	"open_window", "Opens a particular imgui window by name. Open the launcher from the F3 menu for a way to discover what windows exist", "[window_name]", "\n",
+	"lua", "Runs the Lua interpreter on the supplied code", "[code]", "\n",
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1464,6 +1465,20 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		{
 			PrintLine_E("No window registered as \"%.*s\"", StrPrint(arguments[0]));
 		}
+	}
+	
+	// +==============================+
+	// |          lua [code]          |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "lua"))
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: lua [code]", numArguments); return validCommand; }
+		
+		MemArena_t* scratch = GetScratchArena();
+		MyStr_t scratchCodeStr = AllocString(scratch, &arguments[0]);
+		luaL_loadstring(pig->lua.handle, scratchCodeStr.chars);
+		lua_pcall(pig->lua.handle, 0, LUA_MULTRET, 0);
+		FreeScratchArena(scratch);
 	}
 	
 	// +==============================+

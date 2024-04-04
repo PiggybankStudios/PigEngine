@@ -29,6 +29,7 @@ void PigInitialize(EngineMemory_t* memory)
 	plat->CreateMutex(&pig->threadSafeHeap.mutex);
 	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_PagedHeapFuncs(&pig->largeAllocHeap, PIG_LARGE_ALLOC_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	InitMemArena_PagedHeapFuncs(&pig->luaHeap, PIG_LUA_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	#if PIG_MAIN_ARENA_DEBUG
@@ -43,6 +44,7 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->fixedHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "fixedHeap").chars;
 	pig->audioHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "audioHeap").chars;
 	pig->largeAllocHeap.debugName = NewStringInArenaNt(&pig->mainHeap, "largeAllocHeap").chars;
+	pig->luaHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "luaHeap").chars;
 	pig->tempArena.debugName      = NewStringInArenaNt(&pig->mainHeap, "tempArena").chars;
 	pig->stdHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "stdHeap").chars;
 	#endif
@@ -64,6 +66,7 @@ void PigInitialize(EngineMemory_t* memory)
 		PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
 		//TODO: Add the pig->threadSafeHeap here once we figure out how to do thread safe inspection
 		PigMemGraphAddArena(&pig->memGraph, &pig->imguiHeap,      NewStr("imguiHeap"),      MonokaiYellow);
+		PigMemGraphAddArena(&pig->memGraph, &pig->luaHeap,        NewStr("luaHeap"),        MonokaiYellow);
 		PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
 		PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
 		PigMemGraphAddArena(&pig->memGraph, scratch1,             NewStr("scratch1"),       MonokaiBlue);
@@ -131,6 +134,7 @@ void PigInitialize(EngineMemory_t* memory)
 	PigInitDebugBindings(&pig->debugBindings, fixedHeap);
 	GameLoadDebugBindings(&pig->debugBindings);
 	PigInitImgui();
+	PigInitLua();
 	
 	plat->CreateMutex(&pig->volumeMutex);
 	pig->musicEnabled = true;
@@ -440,6 +444,7 @@ void PigPostReload(Version_t oldVersion)
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->threadSafeHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->largeAllocHeap, PlatAllocFunc, PlatFreeFunc);
+	UpdateMemArenaFuncPntrs(&pig->luaHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
@@ -449,6 +454,7 @@ void PigPostReload(Version_t oldVersion)
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
 	PigImguiHandleReload();
+	PigLuaHandleReload();
 	GameHandleReload();
 }
 

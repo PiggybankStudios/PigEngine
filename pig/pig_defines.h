@@ -13,6 +13,7 @@ Description:
 #define PIG_THREAD_SAFE_ARENA_PAGE_SIZE   Megabytes(1)
 #define PIG_AUDIO_ARENA_PAGE_SIZE  Kilobytes(128) //the pages will probably NOT be this size. Since audio takes LARGE continuous chunks.
 #define PIG_LARGE_ALLOC_ARENA_PAGE_SIZE  Kilobytes(1) //we set it small, so most allocations will allocate an entire page, and therefore pages get freed with each allocation free
+#define PIG_LUA_ARENA_PAGE_SIZE  Megabytes(1)
 
 #define PIG_MAIN_ARENA_DEBUG             false //Make sure to uncomment GYLIB_MEM_ARENA_DEBUG_ENABLED in common_includes.h
 #define PIG_MAIN_ARENA_DEBUG_PAGE_SIZE   Megabytes(1)
