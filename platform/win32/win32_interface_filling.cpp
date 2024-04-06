@@ -76,9 +76,26 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->renderApi = Platform->renderApi;
 	if (Platform->renderApi == RenderApi_OpenGL)
 	{
-		info->renderApiVersion.major = (u32)GLVersion.major;
-		info->renderApiVersion.minor = (u32)GLVersion.minor;
-		info->renderApiVersion.build = 0; //Unused in OpenGL as far as I can tell
+		#if OPENGL_SUPPORTED
+		info->opengl.version.major = (u32)GLVersion.major;
+		info->opengl.version.minor = (u32)GLVersion.minor;
+		info->opengl.version.build = 0; //Unused in OpenGL as far as I can tell
+		GLint numExtensions = 0;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+		Win32_AssertNoOpenGlError("glGetIntegerv(GL_NUM_EXTENSIONS)");
+		PrintLine_I("There are %d supported OpenGL extensions", numExtensions);
+		for (u32 sIndex = 0; sIndex < (u32)numExtensions; sIndex++)
+		{
+			const GLubyte* extensionStr = glGetStringi(GL_EXTENSIONS, sIndex);
+			OpenGlExtension_t extension = OpenGlExtension_NumExtensions;
+			if (TryParseEnum(NewStr((const char*)extensionStr), &extension, OpenGlExtension_NumExtensions, GetOpenGlExtensionStr))
+			{
+				// PrintLine_I("OpenGlExtension_%s is supported", GetOpenGlExtensionStr(extension));
+				info->opengl.extensionSupported[extension] = true;
+			}
+			// else { PrintLine_E("Unknown extension name \"%s\"", extensionStr); }
+		}
+		#endif
 	}
 	else { AssertMsg(false, "Unimplemented RenderApi in Win32_FillPlatformInfo"); }
 	info->audioFormat = Platform->audioFormat;

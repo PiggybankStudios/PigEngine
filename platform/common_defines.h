@@ -16,7 +16,7 @@ Date:   01\14\2022
 #define PLAT_THREAD_SAFE_HEAP_SIZE              Kilobytes(64) //TODO: Measure our usage and size accordingly
 #define PLAT_TEMP_ARENA_SIZE                    Kilobytes(512) //TODO: Measure our usage and size accordingly
 #define PLAT_TEMP_ARENA_MAX_MARKS               256
-#define PLAT_DEBUG_OUTPUT_FIFO_SIZE             Kilobytes(32)
+#define PLAT_DEBUG_OUTPUT_FIFO_SIZE             Kilobytes(64)
 #define PLAT_MAX_FILEPATH_AND_FUNC_NAME         2048 //chars
 #define PLAT_DBG_FILEPATH_AND_FUNCNAME_SEP_CHAR '|'
 

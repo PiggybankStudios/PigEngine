@@ -233,6 +233,10 @@ typedef PlatMutex_t GyMutex_t;
 #include "web/web_shared_types.h"
 #endif
 
+#if OPENGL_SUPPORTED
+#include "opengl_types.h"
+#endif
+
 #include "common_api_funcs.h"
 #include "common_interface_types.h"
 //NOTE: common_performance.h is included later in pig_main.cpp and win32_main.cpp

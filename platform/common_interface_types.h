@@ -92,7 +92,9 @@ struct PlatformInfo_t
 	GlfwVersion_t glfwVersion;
 	
 	RenderApi_t renderApi;
-	Version_t renderApiVersion;
+	#if OPENGL_SUPPORTED
+	OpenGlInfo_t opengl;
+	#endif
 	
 	PlatAudioFormat_t audioFormat;
 	PerfTime_t programStartPerfTime;

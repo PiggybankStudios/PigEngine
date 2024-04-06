@@ -89,6 +89,15 @@ struct Version_t
 	u32 build;
 };
 
+Version_t NewVersion(u32 major, u32 minor, u32 build = 0)
+{
+	Version_t result;
+	result.major = major;
+	result.minor = minor;
+	result.build = build;
+	return result;
+}
+
 PACKED(struct VersionPacked_t
 {
 	u8 major;
