@@ -138,7 +138,7 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 	NotNull_(pig);
 	NotNull_(audioInfo);
 	
-	PerfTime_t serviceStartTime = plat->GetPerfTime();
+	PerfTime_t serviceStartTime = GetPerfTime();
 	
 	plat->LockMutex(&pig->volumeMutex, MUTEX_LOCK_INFINITE);
 	r32 masterVolume = pig->masterVolume;
@@ -238,6 +238,6 @@ void PigAudioService(AudioServiceInfo_t* audioInfo)
 	plat->UnlockMutex(&pig->audioOutSamplesMutex);
 	plat->UnlockMutex(&pig->soundInstancesMutex);
 	
-	PerfTime_t serviceEndTime = plat->GetPerfTime();
-	pig->audioMixerTime = plat->GetPerfTimeDiff(&serviceStartTime, &serviceEndTime);
+	PerfTime_t serviceEndTime = GetPerfTime();
+	pig->audioMixerTime = GetPerfTimeDiff(&serviceStartTime, &serviceEndTime);
 }

@@ -196,14 +196,6 @@ typedef COPY_TEXT_TO_CLIPBOARD_DEFINITION(PlatApiCopyTextToClipboard_f);
 #define PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(functionName) MyStr_t functionName(MemArena_t* memArena)
 typedef PASTE_TEXT_FROM_CLIPBOARD_DEFINITION(PlatApiPasteTextFromClipboard_f);
 
-//TODO: Add PLAT_API to this
-#define GET_PERF_TIME_DEFINITION(functionName) PerfTime_t functionName()
-typedef GET_PERF_TIME_DEFINITION(PlatApiGetPerfTime_f);
-
-//TODO: Add PLAT_API to this
-#define GET_PERF_TIME_DIFF_DEFINITION(functionName) r64 functionName(const PerfTime_t* tStart, const PerfTime_t* tEnd)
-typedef GET_PERF_TIME_DIFF_DEFINITION(PlatApiGetPerfTimeDiff_f);
-
 #define PLAT_API_GET_PROGRAM_TIME_DEFINITION(functionName) u64 functionName(r64* programTimeR64Out, bool ignoreFixedTimeScaleEffects)
 typedef PLAT_API_GET_PROGRAM_TIME_DEFINITION(PlatApiGetProgramTime_f);
 

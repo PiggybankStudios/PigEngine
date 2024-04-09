@@ -102,7 +102,6 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_debug.cpp"
 #include "win32/win32_program_args.cpp"
 #include "win32/win32_performance.cpp"
-#include "common_performance.cpp"
 #include "win32/win32_core.cpp"
 #include "win32/win32_threading.cpp"
 #include "win32/win32_files.cpp"
@@ -147,8 +146,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	#endif
 	
 	Win32_CoreInit((USED_WIN_MAIN_ENTRY_POINT != 0));
-	Win32_PerformanceInit();
-	PerfTime_t initStartTime = Win32_GetPerfTime();
+	PerfTime_t initStartTime = GetPerfTime();
 	TempPushMark();
 	
 	// +==============================+
@@ -428,8 +426,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PerfSection("EngineInitialization");
 	InitPhase = Win32InitPhase_EngineInitialization;
 	
-	PerfTime_t initEndTime = Win32_GetPerfTime();
-	PrintLine_N("Calling Pig_Initialize... (Win32 platform took %.1lfms to init)", Win32_GetPerfTimeDiff(&initStartTime, &initEndTime));
+	PerfTime_t initEndTime = GetPerfTime();
+	PrintLine_N("Calling Pig_Initialize... (Win32 platform took %.1lfms to init)", GetPerfTimeDiff(&initStartTime, &initEndTime));
 	Platform->callingEngineInitialize = true;
 	Platform->engine.Initialize(&Platform->info, &Platform->api, &Platform->engineMemory, initProgramTime, initUnixTimestamp, initLocalTimestamp);
 	Platform->callingEngineInitialize = false;
@@ -440,7 +438,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 	WriteLine_N("Pig_Initialize Complete");
-	Platform->firstUpdateStartTime = Win32_GetPerfTime();
+	Platform->firstUpdateStartTime = GetPerfTime();
 	
 	Win32_CheckForThreadAssertions();
 	
@@ -551,8 +549,8 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 	Platform->engine.Update(&Platform->info, &Platform->api, &Platform->engineMemory, &Platform->engineInput, &Platform->engineOutput);
 	if (InitPhase < Win32InitPhase_PostFirstUpdate)
 	{
-		PerfTime_t firstUpdateEndTime = Win32_GetPerfTime();
-		PrintLine_N("First Pig_Update Complete! (Took %.1lfms)", Win32_GetPerfTimeDiff(&Platform->firstUpdateStartTime, &firstUpdateEndTime));
+		PerfTime_t firstUpdateEndTime = GetPerfTime();
+		PrintLine_N("First Pig_Update Complete! (Took %.1lfms)", GetPerfTimeDiff(&Platform->firstUpdateStartTime, &firstUpdateEndTime));
 	}
 	Win32_CheckForStableFramerate(Platform->engineInput.uncappedElapsedMs);
 	

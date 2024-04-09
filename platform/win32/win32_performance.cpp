@@ -7,39 +7,6 @@ Description:
 	** for the purposes of measuring out performance
 */
 
-void Win32_PerformanceInit()
-{
-	LARGE_INTEGER perfCountFrequencyLarge;
-	QueryPerformanceFrequency(&perfCountFrequencyLarge);
-	Platform->perfCountFrequency = (i64)perfCountFrequencyLarge.QuadPart;
-}
-
-// +==============================+
-// |      Win32_GetPerfTime       |
-// +==============================+
-// PerfTime_t GetPerfTime()
-GET_PERF_TIME_DEFINITION(Win32_GetPerfTime)
-{
-	PerfTime_t result = {};
-	BOOL queryResult = QueryPerformanceCounter(&result.perfCount);
-	Assert_(queryResult != 0);
-	result.cycleCount = __rdtsc();
-	return result;
-}
-
-// +==============================+
-// |    Win32_GetPerfTimeDiff     |
-// +==============================+
-// r64 GetPerfTimeDiff(const PerfTime_t* tStart, const PerfTime_t* tEnd)
-// NOTE: Returns value in r64 milliseconds
-GET_PERF_TIME_DIFF_DEFINITION(Win32_GetPerfTimeDiff)
-{
-	NotNull_(tStart);
-	NotNull_(tEnd);
-	r64 resultSecs = ((r64)(tEnd->perfCount.QuadPart - tStart->perfCount.QuadPart) / (r64)Platform->perfCountFrequency);
-	return resultSecs * 1000.0;
-}
-
 // +==============================+
 // |     Win32_GetProgramTime     |
 // +==============================+

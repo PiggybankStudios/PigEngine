@@ -181,8 +181,6 @@ struct PlatformApi_t
 	PlatApiDebugReadout_f*              DebugReadout;
 	PlatApiCopyTextToClipboard_f*       CopyTextToClipboard;
 	PlatApiPasteTextFromClipboard_f*    PasteTextFromClipboard;
-	PlatApiGetPerfTime_f*               GetPerfTime;
-	PlatApiGetPerfTimeDiff_f*           GetPerfTimeDiff;
 	PlatApiGetProgramTime_f*            GetProgramTime;
 	PlatApiGetMonitorVideoMode_f*       GetMonitorVideoMode;
 	#if STEAM_BUILD

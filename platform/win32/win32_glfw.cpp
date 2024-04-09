@@ -1134,11 +1134,11 @@ PLAT_API_SWAP_BUFFERS_DEF(Win32_SwapBuffers)
 			}
 			
 			// r64 timeBeforeSwap = glfwGetTime() * 1000.0;
-			PerfTime_t timeBeforeSwap = Win32_GetPerfTime();
+			PerfTime_t timeBeforeSwap = GetPerfTime();
 			if (Platform->renderApi == RenderApi_OpenGL) { glfwSwapBuffers(window->handle); }
 			// r64 timeAfterSwap = glfwGetTime() * 1000.0;
-			PerfTime_t timeAfterSwap = Win32_GetPerfTime();
-			Platform->timeSpentOnSwapBuffers += Win32_GetPerfTimeDiff(&timeBeforeSwap, &timeAfterSwap);
+			PerfTime_t timeAfterSwap = GetPerfTime();
+			Platform->timeSpentOnSwapBuffers += GetPerfTimeDiff(&timeBeforeSwap, &timeAfterSwap);
 		}
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}

@@ -268,24 +268,6 @@ struct PlatTask_t
 	bool finished;
 };
 
-struct PerfTime_t
-{
-	LARGE_INTEGER perfCount;
-	u64 cycleCount;
-};
-
-struct PerfSection_t
-{
-	const char* name;
-	PerfTime_t time;
-};
-
-struct PerfSectionBundle_t
-{
-	MemArena_t* allocArena;
-	VarArray_t sections; //PerfSection_t
-};
-
 struct PlatDebugLine_t
 {
 	u8 flags;

@@ -197,8 +197,6 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	#endif
 	api->CopyTextToClipboard       = Win32_CopyTextToClipboard;
 	api->PasteTextFromClipboard    = Win32_PasteTextFromClipboard;
-	api->GetPerfTime               = Win32_GetPerfTime;
-	api->GetPerfTimeDiff           = Win32_GetPerfTimeDiff;
 	api->GetProgramTime            = Win32_GetProgramTime;
 	api->GetMonitorVideoMode       = Win32_GetMonitorVideoMode;
 	#if STEAM_BUILD

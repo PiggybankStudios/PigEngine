@@ -50,7 +50,7 @@ void PigInitialize(EngineMemory_t* memory)
 	#endif
 	TempPushMark();
 	
-	PerfTime_t initStartTime = plat->GetPerfTime();
+	PerfTime_t initStartTime = GetPerfTime();
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	PigRegisterDebugCommands(&pig->debugConsole);
@@ -153,8 +153,8 @@ void PigInitialize(EngineMemory_t* memory)
 	GameGeneralInit();
 	
 	pig->initialized = true;
-	PerfTime_t initEndTime = plat->GetPerfTime();
-	PrintLine_D("Initialization took %.1lfms (%.1lfms total startup time)", plat->GetPerfTimeDiff(&initStartTime, &initEndTime), plat->GetPerfTimeDiff(&platInfo->programStartPerfTime, &initEndTime));
+	PerfTime_t initEndTime = GetPerfTime();
+	PrintLine_D("Initialization took %.1lfms (%.1lfms total startup time)", GetPerfTimeDiff(&initStartTime, &initEndTime), GetPerfTimeDiff(&platInfo->programStartPerfTime, &initEndTime));
 	TempPopMark();
 	u64 numMarks = GetNumMarks(TempArena);
 	Assert(numMarks == 0);

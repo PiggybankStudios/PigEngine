@@ -265,7 +265,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 		PerfSection_t* section = VarArrayGet(&bundle->sections, sIndex, PerfSection_t);
 		PerfSection_t* nextSection = VarArrayGet(&bundle->sections, sIndex+1, PerfSection_t);
 		NotNull2(section, nextSection);
-		percentages[sIndex] = plat->GetPerfTimeDiff(&section->time, &nextSection->time);
+		percentages[sIndex] = GetPerfTimeDiff(&section->time, &nextSection->time);
 		totalTime += percentages[sIndex];
 	}
 	for (u64 sIndex = 0; sIndex+1 < bundle->sections.length; sIndex++)
@@ -290,7 +290,7 @@ void RcDrawPieChartForPerfSectionBundle(const PerfSectionBundle_t* bundle, rec r
 				PerfSection_t* nextSection = VarArrayGet(&bundle->sections, sIndex+1, PerfSection_t);
 				if (mouseAngle >= anglePercentage && mouseAngle < anglePercentage + (r32)percentages[sIndex])
 				{
-					r64 sectionTimeMs = plat->GetPerfTimeDiff(&section->time, &nextSection->time);
+					r64 sectionTimeMs = GetPerfTimeDiff(&section->time, &nextSection->time);
 					v2 textPos = NewVec2(rectangle.x, rectangle.y + rectangle.height - RcGetMaxDescend());
 					Vec2Align(&textPos);
 					RcDrawText(TempPrintStr("%s (%.1lfms)", (section->name != nullptr) ? section->name : "[Unnamed]", sectionTimeMs), textPos, MonokaiWhite, TextAlignment_Right);

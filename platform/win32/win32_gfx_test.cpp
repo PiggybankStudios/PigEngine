@@ -98,7 +98,6 @@ void Win32_DoMainLoopIteration(bool pollEvents); //pre-declared so win32_glfw.cp
 #include "win32/win32_debug.cpp"
 #include "win32/win32_program_args.cpp"
 #include "win32/win32_performance.cpp"
-#include "common_performance.cpp"
 #include "win32/win32_core.cpp"
 #include "win32/win32_threading.cpp"
 #include "win32/win32_files.cpp"
@@ -143,7 +142,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	Win32_CoreInit((USED_WIN_MAIN_ENTRY_POINT != 0));
 	Win32_PerformanceInit();
-	PerfTime_t initStartTime = Win32_GetPerfTime();
+	PerfTime_t initStartTime = GetPerfTime();
 	TempPushMark();
 	
 	// +==============================+
@@ -458,8 +457,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PerfSection("EngineInitialization");
 	InitPhase = Win32InitPhase_EngineInitialization;
 	
-	PerfTime_t initEndTime = Win32_GetPerfTime();
-	PrintLine_N("Blank platform took %.1lfms to init", Win32_GetPerfTimeDiff(&initStartTime, &initEndTime));
+	PerfTime_t initEndTime = GetPerfTime();
+	PrintLine_N("Blank platform took %.1lfms to init", GetPerfTimeDiff(&initStartTime, &initEndTime));
 	if (Platform->mainWindow == nullptr || Platform->mainWindow->closed || glfwWindowShouldClose(Platform->mainWindow->handle))
 	{
 		WriteLine_E("Exited during initialization");
@@ -467,7 +466,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 	WriteLine_N("Pig_Initialize Complete");
-	Platform->firstUpdateStartTime = Win32_GetPerfTime();
+	Platform->firstUpdateStartTime = GetPerfTime();
 	
 	Win32_CheckForThreadAssertions();
 	
