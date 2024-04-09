@@ -61,21 +61,25 @@ void Win32_InitError(const char* errorMessage) //pre-declared in win32_func_defs
 //TODO: We should probably think a little harder about where we get the procmon memory from. A VirtualAlloc call might be better?
 void* ProcmonAllocate(u64 numBytes)
 {
-	return malloc(numBytes);
+	return MyMalloc(numBytes);
 }
 void ProcmonFree(void* memPntr)
 {
-	return free(memPntr);
+	return MyFree(memPntr);
 }
 #endif
 
 void* Win32_StdAllocate(u64 numBytes)
 {
-	return malloc(numBytes);
+	return MyMalloc(numBytes);
+}
+void* Win32_StdRealloc(void* alloc, u64 newSize)
+{
+	return MyRealloc(alloc, newSize);
 }
 void Win32_StdFree(void* alloc)
 {
-	return free(alloc);
+	return MyFree(alloc);
 }
 
 // +--------------------------------------------------------------+
@@ -162,7 +166,7 @@ void Win32_CoreInit(bool usedWinMainEntryPoint)
 	printf("[Win32 Platform Core is Initializing...]\n");
 	
 	InitMemArena_StdHeap(&Platform->stdHeap);
-	InitMemArena_Redirect(&Platform->stdHeapRedirect, Win32_StdAllocate, Win32_StdFree);
+	InitMemArena_Redirect(&Platform->stdHeapRedirect, Win32_StdAllocate, Win32_StdFree, Win32_StdRealloc);
 	// InitThreadLocalScratchArenasPaged(&Platform->stdHeapRedirect, MAIN_SCRATCH_ARENA_PAGE_SIZE, MAIN_SCRATCH_ARENA_MAX_NUM_MARKS);
 	InitThreadLocalScratchArenasVirtual(MAIN_SCRATCH_ARENA_MAX_SIZE, MAIN_SCRATCH_ARENA_MAX_NUM_MARKS);
 	

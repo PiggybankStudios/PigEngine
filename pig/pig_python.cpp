@@ -59,7 +59,8 @@ void PigInitPython()
 	ClearStruct(pig->python);
 	PyStatus status = {};
 	
-	pig->python.allocator.ctx     = &pig->pythonHeap;
+	//TODO: Change this back to our own arena! (Our arena was running rather slow during initialization of python. We should do some performance work for PagedHeap and arenas in general)
+	pig->python.allocator.ctx     = platInfo->stdHeap; //&pig->pythonHeap;
 	pig->python.allocator.malloc  = PythonMallocCallback;
 	pig->python.allocator.calloc  = PythonCallocCallback;
 	pig->python.allocator.realloc = PythonReallocCallback;
@@ -91,8 +92,19 @@ void PigInitPython()
 	status = PyConfig_SetString(&pig->python.config, &pig->python.config.program_name, programPathWide.chars);
 	PigHandlePythonInitException(status, "Py_SetString");
 	
+	FlagSet(pig->pythonHeap.flags, MemArenaFlag_TrackTime);
+	pig->pythonHeap.totalTimeSpentAllocating = {};
+	pig->pythonHeap.totalTimedAllocationActions = 0;
+	PerfTime_t initStartTime = GetPerfTime();
 	status = Py_InitializeFromConfig(&pig->python.config);
+	PerfTime_t initEndTime = GetPerfTime();
 	PigHandlePythonInitException(status, "Py_InitializeFromConfig");
+	FlagUnset(pig->pythonHeap.flags, MemArenaFlag_TrackTime);
+	PrintLine_W("Python Init took %s total (%llu alloc actions took %s)",
+		FormatMillisecondsNt((u64)GetPerfTimeDiff(&initStartTime, &initEndTime), scratch),
+		pig->pythonHeap.totalTimedAllocationActions,
+		FormatMillisecondsNt((u64)GetPerfTimeTotal(&pig->pythonHeap.totalTimeSpentAllocating), scratch)
+	);
 	
 	// WriteLine_I("Running test.py");
 	// wchar_t* program = Py_DecodeLocale("test.py", NULL);

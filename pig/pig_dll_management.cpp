@@ -11,7 +11,6 @@ void PigClearGlobals()
 {
 	pig = nullptr;
 	mainHeap = nullptr;
-	platHeap = nullptr;
 	logGlobals = nullptr;
 }
 
@@ -144,7 +143,6 @@ void PigEntryPoint(PigEntryPoint_t entryPoint, const StartupInfo_t* startupInfo,
 		pig = (PigState_t*)memory->persistentDataPntr;
 		fixedHeap = &pig->fixedHeap;
 		mainHeap = &pig->mainHeap;
-		platHeap = &pig->platHeap;
 		rc = &pig->renderContext;
 		//TODO: Update the gylib debug output pointers
 		TempArena = &pig->tempArena;

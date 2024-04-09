@@ -18,6 +18,7 @@ struct StartupInfo_t
 	ThreadId_t mainThreadId;
 	
 	MemArena_t* platTempArena;
+	MemArena_t* stdHeap;
 	
 	u64 defaultAudioDeviceIndex;
 	VarArray_t audioDevices;
@@ -90,6 +91,7 @@ struct PlatformInfo_t
 	PlatType_t type;
 	Version_t version;
 	GlfwVersion_t glfwVersion;
+	MemArena_t* stdHeap;
 	
 	MyStr_t workingDirectory; //contains trailing / or is empty
 	MyStr_t exeDirectory; //contains trailing / or is empty

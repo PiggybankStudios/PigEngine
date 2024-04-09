@@ -47,13 +47,11 @@ struct PigState_t
 	RandomSeries_t random;
 	
 	//Memory Arenas
-	MemArena_t platHeap;
 	MemArena_t fixedHeap;
 	MemArena_t mainHeap;
 	MemArena_t threadSafeHeap;
 	MemArena_t imguiHeap;
 	MemArena_t largeAllocHeap;
-	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	MemArena_t audioHeap;
 	#if PIG_MAIN_ARENA_DEBUG

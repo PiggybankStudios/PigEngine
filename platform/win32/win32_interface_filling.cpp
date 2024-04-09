@@ -18,6 +18,7 @@ void Win32_FillStartupInfo(StartupInfo_t* info)
 	info->glfwVersion = Platform->glfwVersion;
 	info->mainThreadId = MainThreadId;
 	info->platTempArena = &Platform->tempArena;
+	info->stdHeap = &Platform->stdHeapRedirect;
 	
 	info->defaultAudioDeviceIndex = Platform->defaultAudioDeviceIndex;
 	MyMemCopy(&info->audioDevices, &Platform->audioDevices, sizeof(VarArray_t));
@@ -73,6 +74,7 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->version.minor = WIN32_VERSION_MINOR;
 	info->version.build = WIN32_VERSION_BUILD;
 	info->glfwVersion = Platform->glfwVersion;
+	info->stdHeap = &Platform->stdHeapRedirect;
 	info->workingDirectory = StrReplace(Platform->workingDirectory, "\\", "/", &Platform->mainHeap);
 	info->exeDirectory = StrReplace(Platform->exeDirectory, "\\", "/", &Platform->mainHeap);
 	info->defaultDirectory = StrReplace(Platform->defaultDirectory, "\\", "/", &Platform->mainHeap);

@@ -18,7 +18,6 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->reloadIndex = 1;
 	pig->dontExitOnAssert = DEBUG_BUILD;
 	
-	InitMemArena_Redirect(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	u64 totalConsoleSpaceSize = DBG_CONSOLE_BUFFER_SIZE + DBG_CONSOLE_BUILD_SPACE_SIZE;
 	u64 permanentMemoryNeeded = sizeof(PigState_t) + totalConsoleSpaceSize;
 	Assert_(memory->persistentDataSize > permanentMemoryNeeded);
@@ -36,7 +35,6 @@ void PigInitialize(EngineMemory_t* memory)
 	InitMemArena_PagedHeapFuncs(&pig->pythonHeap, PIG_LUA_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc, 0, AllocAlignment_8Bytes);
 	#endif
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
-	InitMemArena_StdHeap(&pig->stdHeap);
 	#if PIG_MAIN_ARENA_DEBUG
 	InitMemArena_PagedHeapFuncs(&pig->mainHeapDebug, PIG_MAIN_ARENA_DEBUG_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	pig->mainHeap.debugArena = &pig->mainHeapDebug;
@@ -45,7 +43,6 @@ void PigInitialize(EngineMemory_t* memory)
 	#if DEBUG_BUILD
 	pig->mainHeap.debugName       = NewStringInArenaNt(&pig->mainHeap, "mainHeap").chars;
 	pig->threadSafeHeap.debugName = NewStringInArenaNt(&pig->mainHeap, "threadSafeHeap").chars;
-	pig->platHeap.debugName       = NewStringInArenaNt(&pig->mainHeap, "platHeap").chars;
 	pig->fixedHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "fixedHeap").chars;
 	pig->audioHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "audioHeap").chars;
 	pig->largeAllocHeap.debugName = NewStringInArenaNt(&pig->mainHeap, "largeAllocHeap").chars;
@@ -56,7 +53,6 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->pythonHeap.debugName     = NewStringInArenaNt(&pig->mainHeap, "pythonHeap").chars;
 	#endif
 	pig->tempArena.debugName      = NewStringInArenaNt(&pig->mainHeap, "tempArena").chars;
-	pig->stdHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "stdHeap").chars;
 	#endif
 	TempPushMark();
 	
@@ -71,7 +67,7 @@ void PigInitialize(EngineMemory_t* memory)
 		MemArena_t* scratch1 = GetScratchArena();
 		MemArena_t* scratch2 = GetScratchArena(scratch1);
 		MemArena_t* scratch3 = GetScratchArena(scratch1, scratch2);
-		PigMemGraphAddArena(&pig->memGraph, &pig->platHeap,       NewStr("platHeap"),       Grey10);
+		PigMemGraphAddArena(&pig->memGraph, platInfo->stdHeap,    NewStr("stdHeap"),        Grey10);
 		PigMemGraphAddArena(&pig->memGraph, &pig->fixedHeap,      NewStr("fixedHeap"),      MonokaiGreen);
 		PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
 		//TODO: Add the pig->threadSafeHeap here once we figure out how to do thread safe inspection
@@ -87,7 +83,6 @@ void PigInitialize(EngineMemory_t* memory)
 		PigMemGraphAddArena(&pig->memGraph, scratch1,             NewStr("scratch1"),       MonokaiBlue);
 		PigMemGraphAddArena(&pig->memGraph, scratch2,             NewStr("scratch2"),       MonokaiBlue);
 		PigMemGraphAddArena(&pig->memGraph, scratch3,             NewStr("scratch3"),       MonokaiBlue);
-		PigMemGraphAddArena(&pig->memGraph, &pig->stdHeap,        NewStr("stdHeap"),        Grey10);
 		PigMemGraphAddArena(&pig->memGraph, &pig->audioHeap,      NewStr("audioHeap"),      MonokaiPurple);
 		FreeScratchArena(scratch1);
 		FreeScratchArena(scratch2);
@@ -460,7 +455,6 @@ void PigPostReload(Version_t oldVersion)
 	NotifyPrint_N("Now running Pig DLL v%u.%02u(%03u)!", ENGINE_VERSION_MAJOR, ENGINE_VERSION_MINOR, ENGINE_VERSION_BUILD);
 	
 	Pig_HandleResourcesOnReload();
-	UpdateMemArenaFuncPntrs(&pig->platHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->threadSafeHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->largeAllocHeap, PlatAllocFunc, PlatFreeFunc);

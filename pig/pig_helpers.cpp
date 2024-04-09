@@ -21,6 +21,10 @@ void* PlatReallocFunc(void* allocPntr, u64 newSize, u64 oldSize = 0)
 	NotNull2(plat, plat->AllocateMemory);
 	return plat->ReallocMemory(allocPntr, newSize, oldSize, AllocAlignment_None);
 }
+void* PlatReallocFuncNoOldSize(void* allocPntr, u64 newSize)
+{
+	return PlatReallocFunc(allocPntr, newSize);
+}
 void PlatFreeFunc(void* allocPntr)
 {
 	NotNull2(plat, plat->AllocateMemory);

@@ -293,11 +293,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		if (numArguments != 1) { PrintLine_E("arena_info takes 1 argument, not %llu", numArguments); return validCommand; }
 		
-		if (StrEqualsIgnoreCase(arguments[0], "Plat") || StrEqualsIgnoreCase(arguments[0], "PlatHeap"))
-		{
-			DebugPrintArenaInfo(&pig->platHeap, "PlatHeap");
-		}
-		else if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
+		if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
 		{
 			DebugPrintArenaInfo(&pig->fixedHeap, "FixedHeap");
 		}
@@ -311,7 +307,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		}
 		else if (StrEqualsIgnoreCase(arguments[0], "Std") || StrEqualsIgnoreCase(arguments[0], "StdHeap"))
 		{
-			DebugPrintArenaInfo(&pig->stdHeap, "stdHeap");
+			DebugPrintArenaInfo(platInfo->stdHeap, "stdHeap");
 		}
 		else if (StrEqualsIgnoreCase(arguments[0], "Temp") || StrEqualsIgnoreCase(arguments[0], "TempArena"))
 		{
@@ -345,12 +341,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			}
 		}
 		
-		if (StrEqualsIgnoreCase(arguments[0], "Plat") || StrEqualsIgnoreCase(arguments[0], "PlatHeap"))
-		{
-			MyDebugBreak();
-			MemArenaVerify(&pig->platHeap, assertOnFailure);
-		}
-		else if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
+		if (StrEqualsIgnoreCase(arguments[0], "Fixed") || StrEqualsIgnoreCase(arguments[0], "FixedHeap"))
 		{
 			MyDebugBreak();
 			MemArenaVerify(&pig->fixedHeap, assertOnFailure);
@@ -368,7 +359,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		else if (StrEqualsIgnoreCase(arguments[0], "Std") || StrEqualsIgnoreCase(arguments[0], "StdHeap"))
 		{
 			MyDebugBreak();
-			MemArenaVerify(&pig->stdHeap, assertOnFailure);
+			MemArenaVerify(platInfo->stdHeap, assertOnFailure);
 		}
 		else if (StrEqualsIgnoreCase(arguments[0], "Temp") || StrEqualsIgnoreCase(arguments[0], "TempArena"))
 		{

@@ -118,7 +118,6 @@ static       EngineInput_t*   pigIn         = nullptr;
 static       EngineOutput_t*  pigOut        = nullptr;
 static       PigEntryPoint_t  pigEntryPoint = PigEntryPoint_None;
 static       PigState_t*      pig           = nullptr;
-static       MemArena_t*      platHeap      = nullptr;
 static       MemArena_t*      fixedHeap     = nullptr;
 static       MemArena_t*      mainHeap      = nullptr;
 static       RenderContext_t* rc            = nullptr;

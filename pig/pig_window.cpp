@@ -116,7 +116,7 @@ void Pig_StartGifRecordingSub(reci subPartRec)
 	pig->currentWindowState->recordingGif = true;
 	pig->currentWindowState->finishGif = false;
 	pig->currentWindowState->screenSubPart = subPartRec;
-	CreateLinkedList(&pig->currentWindowState->gifFrames, &pig->stdHeap, PigGifFrame_t);
+	CreateLinkedList(&pig->currentWindowState->gifFrames, platInfo->stdHeap, PigGifFrame_t);
 }
 void Pig_StartGifRecording()
 {
@@ -228,7 +228,7 @@ void Pig_StoreGifFrame(FrameBuffer_t* frameBuffer, reci subPartRec, LinkedList_t
 	NotNull(newFrame);
 	ClearPointer(newFrame);
 	
-	if (!GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, &pig->stdHeap, &newFrame->imageData))
+	if (!GetTextureDataSubPart(&frameBuffer->outTexture, subPartRec, platInfo->stdHeap, &newFrame->imageData))
 	{
 		DebugAssert(false);//TODO: What should we do in case of frame get failure?
 	}
