@@ -56,7 +56,6 @@ struct PigState_t
 	MemArena_t stdHeap;
 	MemArena_t tempArena;
 	MemArena_t audioHeap;
-	MemArena_t luaHeap;
 	#if PIG_MAIN_ARENA_DEBUG
 	MemArena_t mainHeapDebug;
 	#endif
@@ -163,7 +162,16 @@ struct PigState_t
 	#endif
 	
 	//Lua
+	#if LUA_SUPPORTED
+	MemArena_t luaHeap;
 	LuaState_t lua;
+	#endif
+	
+	//Python
+	#if PYTHON_SUPPORTED
+	MemArena_t pythonHeap;
+	PythonState_t python;
+	#endif
 };
 
 #endif //  _PIG_MAIN_H

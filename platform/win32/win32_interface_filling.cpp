@@ -73,6 +73,10 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->version.minor = WIN32_VERSION_MINOR;
 	info->version.build = WIN32_VERSION_BUILD;
 	info->glfwVersion = Platform->glfwVersion;
+	info->workingDirectory = StrReplace(Platform->workingDirectory, "\\", "/", &Platform->mainHeap);
+	info->exeDirectory = StrReplace(Platform->exeDirectory, "\\", "/", &Platform->mainHeap);
+	info->defaultDirectory = StrReplace(Platform->defaultDirectory, "\\", "/", &Platform->mainHeap);
+	info->exeFileName = AllocString(&Platform->mainHeap, &Platform->exeFileName);
 	info->renderApi = Platform->renderApi;
 	if (Platform->renderApi == RenderApi_OpenGL)
 	{

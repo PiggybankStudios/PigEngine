@@ -6,10 +6,7 @@ Description:
 	** Holds all of the entry points for the engine DLL and includes all other files that need to be included to compile the engine DLL 
 */
 
-#define OPENGL_SUPPORTED  1
-#define WEBGL_SUPPORTED   0
-#define VULKAN_SUPPORTED  0
-#define DIRECTX_SUPPORTED 0
+#include "pig_config.h"
 
 // +--------------------------------------------------------------+
 // |                           Includes                           |
@@ -57,6 +54,7 @@ Description:
 #include "yajl/yajl_tree.h"
 #endif
 
+#if LUA_SUPPORTED
 #if DEBUG_BUILD
 #define LUA_USE_APICHECK
 #endif
@@ -64,6 +62,11 @@ extern "C" {
 #include "lualib.h"
 #include "lauxlib.h"
 }
+#endif
+
+#if PYTHON_SUPPORTED
+#include <Python.h>
+#endif
 
 #include "pig/pig_version.h"
 #include "pig/pig_defines.h"
@@ -87,6 +90,7 @@ extern "C" {
 #include "pig/pig_value_slider.h"
 #include "pig/pig_checkbox.h"
 #include "pig/pig_lua.h"
+#include "pig/pig_python.h"
 #include "pig/pig_debug_commands.h"
 #include "pig/pig_debug_console.h"
 #include "pig/pig_confirm_dialog.h"
@@ -194,6 +198,7 @@ static       v2               ScreenSize     = {};
 #include "pig/pig_checkbox.cpp"
 #include "pig/pig_render_funcs_extra.cpp"
 #include "pig/pig_lua.cpp"
+#include "pig/pig_python.cpp"
 #include "pig/pig_debug_commands.cpp"
 #include "pig/pig_debug_console.cpp"
 #include "pig/pig_notifications.cpp"

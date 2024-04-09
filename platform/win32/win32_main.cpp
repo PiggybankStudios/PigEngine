@@ -6,12 +6,9 @@ Description:
 	** Holds the main entry point for the Win32 Platform Layer executable
 */
 
-#define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
+#include "pig_config.h"
 
-#define OPENGL_SUPPORTED  1
-#define WEBGL_SUPPORTED   0
-#define VULKAN_SUPPORTED  0
-#define DIRECTX_SUPPORTED 0
+#define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
 
 // +--------------------------------------------------------------+
 // |                           Includes                           |

@@ -6,6 +6,8 @@ Description:
 	** Holds functions that help games in Pig Engine interact with the Lua scripting language
 */
 
+#if LUA_SUPPORTED
+
 void* LuaAllocMemCallback(void* userPntr, void* oldPntr, size_t oldSize, size_t newSize)
 {
 	UNUSED(userPntr);
@@ -46,3 +48,5 @@ void PigLuaHandleReload()
 {
 	lua_setallocf(pig->lua.handle, LuaAllocMemCallback, nullptr);
 }
+
+#endif //LUA_SUPPORTED

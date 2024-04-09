@@ -91,6 +91,11 @@ struct PlatformInfo_t
 	Version_t version;
 	GlfwVersion_t glfwVersion;
 	
+	MyStr_t workingDirectory; //contains trailing / or is empty
+	MyStr_t exeDirectory; //contains trailing / or is empty
+	MyStr_t defaultDirectory; //contains trailing / or is empty
+	MyStr_t exeFileName;
+	
 	RenderApi_t renderApi;
 	#if OPENGL_SUPPORTED
 	OpenGlInfo_t opengl;

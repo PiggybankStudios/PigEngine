@@ -29,7 +29,12 @@ void PigInitialize(EngineMemory_t* memory)
 	plat->CreateMutex(&pig->threadSafeHeap.mutex);
 	InitMemArena_PagedHeapFuncs(&pig->audioHeap, PIG_AUDIO_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
 	InitMemArena_PagedHeapFuncs(&pig->largeAllocHeap, PIG_LARGE_ALLOC_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	#if LUA_SUPPORTED
 	InitMemArena_PagedHeapFuncs(&pig->luaHeap, PIG_LUA_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc);
+	#endif
+	#if PYTHON_SUPPORTED
+	InitMemArena_PagedHeapFuncs(&pig->pythonHeap, PIG_LUA_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc, 0, AllocAlignment_8Bytes);
+	#endif
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	InitMemArena_StdHeap(&pig->stdHeap);
 	#if PIG_MAIN_ARENA_DEBUG
@@ -44,7 +49,12 @@ void PigInitialize(EngineMemory_t* memory)
 	pig->fixedHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "fixedHeap").chars;
 	pig->audioHeap.debugName      = NewStringInArenaNt(&pig->mainHeap, "audioHeap").chars;
 	pig->largeAllocHeap.debugName = NewStringInArenaNt(&pig->mainHeap, "largeAllocHeap").chars;
+	#if LUA_SUPPORTED
 	pig->luaHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "luaHeap").chars;
+	#endif
+	#if PYTHON_SUPPORTED
+	pig->pythonHeap.debugName     = NewStringInArenaNt(&pig->mainHeap, "pythonHeap").chars;
+	#endif
 	pig->tempArena.debugName      = NewStringInArenaNt(&pig->mainHeap, "tempArena").chars;
 	pig->stdHeap.debugName        = NewStringInArenaNt(&pig->mainHeap, "stdHeap").chars;
 	#endif
@@ -66,7 +76,12 @@ void PigInitialize(EngineMemory_t* memory)
 		PigMemGraphAddArena(&pig->memGraph, &pig->mainHeap,       NewStr("mainHeap"),       MonokaiOrange);
 		//TODO: Add the pig->threadSafeHeap here once we figure out how to do thread safe inspection
 		PigMemGraphAddArena(&pig->memGraph, &pig->imguiHeap,      NewStr("imguiHeap"),      MonokaiYellow);
+		#if LUA_SUPPORTED
 		PigMemGraphAddArena(&pig->memGraph, &pig->luaHeap,        NewStr("luaHeap"),        MonokaiYellow);
+		#endif
+		#if PYTHON_SUPPORTED
+		PigMemGraphAddArena(&pig->memGraph, &pig->pythonHeap,     NewStr("pythonHeap"),     MonokaiYellow);
+		#endif
 		PigMemGraphAddArena(&pig->memGraph, &pig->largeAllocHeap, NewStr("largeAllocHeap"), MonokaiBrown);
 		PigMemGraphAddArena(&pig->memGraph, &pig->tempArena,      NewStr("tempArena"),      MonokaiBlue);
 		PigMemGraphAddArena(&pig->memGraph, scratch1,             NewStr("scratch1"),       MonokaiBlue);
@@ -134,7 +149,12 @@ void PigInitialize(EngineMemory_t* memory)
 	PigInitDebugBindings(&pig->debugBindings, fixedHeap);
 	GameLoadDebugBindings(&pig->debugBindings);
 	PigInitImgui();
+	#if LUA_SUPPORTED
 	PigInitLua();
+	#endif
+	#if PYTHON_SUPPORTED
+	PigInitPython();
+	#endif
 	
 	plat->CreateMutex(&pig->volumeMutex);
 	pig->musicEnabled = true;
@@ -444,7 +464,12 @@ void PigPostReload(Version_t oldVersion)
 	UpdateMemArenaFuncPntrs(&pig->mainHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->threadSafeHeap, PlatAllocFunc, PlatFreeFunc);
 	UpdateMemArenaFuncPntrs(&pig->largeAllocHeap, PlatAllocFunc, PlatFreeFunc);
+	#if LUA_SUPPORTED
 	UpdateMemArenaFuncPntrs(&pig->luaHeap, PlatAllocFunc, PlatFreeFunc);
+	#endif
+	#if PYTHON_SUPPORTED
+	UpdateMemArenaFuncPntrs(&pig->pythonHeap, PlatAllocFunc, PlatFreeFunc);
+	#endif
 	UpdateMemArenaFuncPntrs(&pig->audioHeap, PlatAllocFunc, PlatFreeFunc);
 	GyLibDebugOutputFunc = Pig_GyLibDebugOutputHandler;
 	GyLibDebugPrintFunc  = Pig_GyLibDebugPrintHandler;
@@ -454,7 +479,12 @@ void PigPostReload(Version_t oldVersion)
 	
 	Pig_ChangeWindow(platInfo->mainWindow);
 	PigImguiHandleReload();
+	#if LUA_SUPPORTED
 	PigLuaHandleReload();
+	#endif
+	#if LUA_SUPPORTED
+	PigPythonHandleReload();
+	#endif
 	GameHandleReload();
 }
 
