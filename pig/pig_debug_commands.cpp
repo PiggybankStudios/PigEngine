@@ -1484,30 +1484,66 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: python [code]", numArguments); return validCommand; }
 		
-		MemArena_t* scratch = GetScratchArena();
-		MyStr_t scratchCodeStr = AllocString(scratch, &arguments[0]);
-		#if 0
-		int runResult = PyRun_SimpleString(scratchCodeStr.chars);
-		Assert(runResult == 0);
-		#else
-		PyCompilerFlags flags = {};
-		flags.cf_flags = PyCF_SOURCE_IS_UTF8;
-		flags.cf_feature_version = PY_MINOR_VERSION;
-		PyObject* mainModule = PyImport_AddModule("__main__");
-		if (mainModule == nullptr) { WriteLine_E("Failed to add main module to Python!"); FreeScratchArena(scratch); return validCommand; }
-		PyObject* mainModuleDict = PyModule_GetDict(mainModule);
-		PrintPyObject("mainModuleDict: ", mainModuleDict);
-		PyObject* runResult = PyRun_StringFlags(scratchCodeStr.chars, Py_file_input, mainModuleDict, mainModuleDict, &flags);
-		if (runResult == nullptr)
+		PyObject* mainModule = PyImport_GetModule(pig->python.mainModuleName);
+		if (mainModule == nullptr)
 		{
-			PrintPyException("Failed to execute python: ");
-			FreeScratchArena(scratch);
-			return validCommand;
+			mainModule = PyImport_AddModule("__main__");
+			if (mainModule == nullptr) { WriteLine_E("Failed to add __main__ module to Python!"); return validCommand; }
+			Py_INCREF(mainModule);
 		}
-		PrintPyObject("Result: ", runResult);
-		Py_DECREF(runResult);
-		#endif
-		FreeScratchArena(scratch);
+		PyObject* mainModuleDict = PyModule_GetDict(mainModule);
+		// PrintPyObject("mainModuleDict: ", mainModuleDict);
+		
+		PyObject* localDict = PyDict_New();
+		{
+			MemArena_t* scratch = GetScratchArena();
+			MyStr_t scratchCodeStr = AllocString(scratch, &arguments[0]);
+			
+			PyCompilerFlags flags = {};
+			flags.cf_flags = PyCF_SOURCE_IS_UTF8;
+			flags.cf_feature_version = PY_MINOR_VERSION;
+			PyObject* parseResult = PyRun_StringFlags(scratchCodeStr.chars, Py_file_input, mainModuleDict, localDict, &flags);
+			FreeScratchArena(scratch);
+			if (parseResult == nullptr)
+			{
+				PrintPyException("Parse exception: ");
+				return validCommand;
+			}
+			Py_DECREF(parseResult);
+		}
+		// PrintPyObject("localDict: ", localDict);
+		
+		PyObject* mainFunction = PyDict_GetItem(localDict, pig->python.mainFunctionName);
+		if (mainFunction != nullptr)
+		{
+			Py_INCREF(mainFunction);
+			if (PyFunction_Check(mainFunction))
+			{
+				WriteLine_D("Calling main()...");
+				PyObject* mainResult = PyObject_CallNoArgs(mainFunction);
+				if (mainResult != nullptr)
+				{
+					PrintPyObject("main() => ", mainResult);
+					if (mainResult != nullptr) { Py_DECREF(mainResult); }
+				}
+				else
+				{
+					PrintPyException("Runtime exception: ");
+				}
+			}
+			else
+			{
+				WriteLine_E("The script is missing a \"main()\" function (found \"main\" but it wasn't a function)");
+			}
+			Py_DECREF(mainFunction);
+		}
+		else
+		{
+			WriteLine_E("The script is missing a \"main()\" function");
+		}
+		
+		Py_DECREF(localDict);
+		Py_DECREF(mainModule);
 	}
 	#endif //PYTHON_SUPPORTED
 	

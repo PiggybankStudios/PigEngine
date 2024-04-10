@@ -14,6 +14,9 @@ struct PythonState_t
 	PyMemAllocatorEx allocator;
 	PyPreConfig preConfig;
 	PyConfig config;
+	
+	PyObject* mainModuleName; //Unicode
+	PyObject* mainFunctionName; //Unicode
 };
 
 #endif //PYTHON_SUPPORTED

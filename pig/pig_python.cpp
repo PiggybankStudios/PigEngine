@@ -19,20 +19,59 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 	NewStringBuilder(&result, memArena);
 	if (pyObject != nullptr)
 	{
+		// +==============================+
+		// |        Stringify None        |
+		// +==============================+
 		if (Py_IsNone(pyObject))
 		{
 			StringBuilderAppend(&result, "None");
 		}
+		// +==============================+
+		// |        Stringify Bool        |
+		// +==============================+
 		else if (PyBool_Check(pyObject))
 		{
 			StringBuilderAppend(&result, Py_IsTrue(pyObject) ? "True" : "False");
 		}
+		// +==============================+
+		// |        Stringify Long        |
+		// +==============================+
+		else if (PyLong_Check(pyObject))
+		{
+			long valueLong = PyLong_AsLong(pyObject);
+			StringBuilderAppendPrint(&result, "%lld", valueLong);
+		}
+		// +==============================+
+		// |       Stringify Float        |
+		// +==============================+
+		else if (PyFloat_Check(pyObject))
+		{
+			double valueDouble = PyFloat_AsDouble(pyObject);
+			StringBuilderAppendPrint(&result, "%llf", valueDouble);
+		}
+		// +==============================+
+		// |        Stringify Type        |
+		// +==============================+
 		else if (PyType_Check(pyObject))
 		{
 			PyTypeObject* pyType = _PyType_CAST(pyObject);
 			NotNull(pyType);
 			StringBuilderAppendPrint(&result, "(%s)", pyType->tp_name);
 		}
+		// +==============================+
+		// |      Stringify Function      |
+		// +==============================+
+		else if (PyFunction_Check(pyObject))
+		{
+			PyObject* code = PyFunction_GetCode(pyObject);
+			MemArena_t* scratch = GetScratchArena(memArena);
+			MyStr_t codeStr = ToStr(scratch, code, depth+1);
+			StringBuilderAppendPrint(&result, "Function(%.*s)", StrPrint(codeStr));
+			FreeScratchArena(scratch);
+		}
+		// +==============================+
+		// |      Stringify Unicode       |
+		// +==============================+
 		else if (PyUnicode_Check(pyObject))
 		{
 			i64 numWideChars = PyUnicode_AsWideChar(pyObject, nullptr, 0);
@@ -47,6 +86,9 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 			StringBuilderAppendPrint(&result, "\"%S\"", wideStr.chars);
 			FreeScratchArena(scratch);
 		}
+		// +==============================+
+		// |        Stringify List        |
+		// +==============================+
 		else if (PyList_Check(pyObject))
 		{
 			i64 listLength = PyList_Size(pyObject);
@@ -62,6 +104,9 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 			}
 			StringBuilderAppend(&result, " }");
 		}
+		// +==============================+
+		// |        Stringify Dict        |
+		// +==============================+
 		else if (PyDict_Check(pyObject))
 		{
 			i64 dictSize = PyDict_Size(pyObject);
@@ -93,6 +138,9 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 			}
 			StringBuilderAppend(&result, " }");
 		}
+		// +==============================+
+		// |       Stringify Module       |
+		// +==============================+
 		else if (PyModule_Check(pyObject))
 		{
 			PyObject* moduleDict = PyModule_GetDict(pyObject);
@@ -101,6 +149,9 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 			i64 moduleDictSize = PyDict_Size(moduleDict);
 			StringBuilderAppendPrint(&result, "Module{\"%s\"}[%lld]", PyModule_GetName(pyObject), moduleDictSize);
 		}
+		// +===============================+
+		// | Stringify Unknown Python Type |
+		// +===============================+
 		else
 		{
 			PyObject* pyObjectStr = PyObject_Str(pyObject);
@@ -213,7 +264,7 @@ void PigInitPython()
 	PyStatus status = {};
 	
 	//TODO: Change this back to our own arena! (Our arena was running rather slow during initialization of python. We should do some performance work for PagedHeap and arenas in general)
-	#if 0
+	#if 1
 	pig->python.allocator.ctx     = &pig->pythonHeap;
 	#else
 	pig->python.allocator.ctx     = platInfo->stdHeap;
@@ -332,6 +383,9 @@ void PigInitPython()
 	
 	status = _Py_InitializeMain();
 	PigHandlePythonInitException(status, "_Py_InitializeMain");
+	
+	pig->python.mainModuleName = PyUnicode_FromString("__main__");
+	pig->python.mainFunctionName = PyUnicode_FromString("main");
 	
 	FreeScratchArena(scratch);
 	PerfTime_t initEndTime = GetPerfTime();
