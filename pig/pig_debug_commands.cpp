@@ -1476,6 +1476,41 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	}
 	#endif //LUA_SUPPORTED
 	
+	#if PYTHON_SUPPORTED
+	// +==============================+
+	// |        python [code]         |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "python"))
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: python [code]", numArguments); return validCommand; }
+		
+		MemArena_t* scratch = GetScratchArena();
+		MyStr_t scratchCodeStr = AllocString(scratch, &arguments[0]);
+		#if 0
+		int runResult = PyRun_SimpleString(scratchCodeStr.chars);
+		Assert(runResult == 0);
+		#else
+		PyCompilerFlags flags = {};
+		flags.cf_flags = PyCF_SOURCE_IS_UTF8;
+		flags.cf_feature_version = PY_MINOR_VERSION;
+		PyObject* mainModule = PyImport_AddModule("__main__");
+		if (mainModule == nullptr) { WriteLine_E("Failed to add main module to Python!"); FreeScratchArena(scratch); return validCommand; }
+		PyObject* mainModuleDict = PyModule_GetDict(mainModule);
+		PrintPyObject("mainModuleDict: ", mainModuleDict);
+		PyObject* runResult = PyRun_StringFlags(scratchCodeStr.chars, Py_file_input, mainModuleDict, mainModuleDict, &flags);
+		if (runResult == nullptr)
+		{
+			PrintPyException("Failed to execute python: ");
+			FreeScratchArena(scratch);
+			return validCommand;
+		}
+		PrintPyObject("Result: ", runResult);
+		Py_DECREF(runResult);
+		#endif
+		FreeScratchArena(scratch);
+	}
+	#endif //PYTHON_SUPPORTED
+	
 	// +==============================+
 	// |       Unknown Command        |
 	// +==============================+
