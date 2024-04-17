@@ -33,6 +33,7 @@ void PigInitialize(EngineMemory_t* memory)
 	#endif
 	#if PYTHON_SUPPORTED
 	InitMemArena_PagedHeapFuncs(&pig->pythonHeap, PIG_LUA_ARENA_PAGE_SIZE, PlatAllocFunc, PlatFreeFunc, 0, AllocAlignment_8Bytes);
+	FlagSet(pig->pythonHeap.flags, MemArenaFlag_CacheFreeOffset);
 	#endif
 	InitMemArena_MarkedStack(&pig->tempArena, memory->tempDataSize, memory->tempDataPntr, PIG_TEMP_MAX_MARKS);
 	#if PIG_MAIN_ARENA_DEBUG

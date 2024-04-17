@@ -206,11 +206,18 @@ Date:   09\14\2021
 
 #include "stb/stb_rect_pack.h"
 
+// Enable this when doing PIG_MEM_ARENA_TEST_SET
+// #define GYLIB_PREDECLARE_ONLY
+// #include "gylib/test/gy_test_memory.h"
+
 #define GYLIB_LOOKUP_PRIMES_1000
 #define GYLIB_DEFAULT_RANDOM_SERIES_TYPE RandomSeriesType_XoroShiro128
 #define GYLIB_THREADING_ENABLED
 typedef PlatMutex_t GyMutex_t;
 #include "gylib/gy.h"
+
+// Enable this when doing PIG_MEM_ARENA_TEST_SET
+// #include "gylib/test/gy_test_memory.h"
 
 #ifdef WIN32_GFX_TEST
 #include "graphics/pig_gfx.h"

@@ -51,6 +51,13 @@ const char* PigDebugCommandInfoStrs[] = {
 	#if LUA_SUPPORTED
 	"lua", "Runs the Lua interpreter on the supplied code", "[code]", "\n",
 	#endif
+	#if PYTHON_SUPPORTED
+	"python", "Runs the python interpreter on the supplied code and runs the \"main\" function in the script", "[code]", "\n",
+	"python_file", "Runs the python interpreter on the code stored in a file and runs the \"main\" function in the script", "[file_path]", "\n",
+	#endif
+	#if PIG_MEM_ARENA_TEST_SET
+	"run_mem_test_set", "Runs a paged heap memory arena through a series of allocs/frees/reallocs that were captured by some other process (right now, it's the initialization process of python that we capture)", "\n",
+	#endif
 };
 
 #define DEBUG_COMMAND_DESCRIPTION_TRUNCATE_LIMIT   32 //chars
@@ -1484,14 +1491,14 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: python [code]", numArguments); return validCommand; }
 		
-		PyObject* mainModule = PyImport_GetModule(pig->python.mainModuleName);
-		if (mainModule == nullptr)
-		{
-			mainModule = PyImport_AddModule("__main__");
-			if (mainModule == nullptr) { WriteLine_E("Failed to add __main__ module to Python!"); return validCommand; }
-			Py_INCREF(mainModule);
-		}
-		PyObject* mainModuleDict = PyModule_GetDict(mainModule);
+		// PyObject* mainModule = PyImport_GetModule(pig->python.mainModuleName);
+		// if (mainModule == nullptr)
+		// {
+		// 	mainModule = PyImport_AddModule("__main__");
+		// 	if (mainModule == nullptr) { WriteLine_E("Failed to add __main__ module to Python!"); return validCommand; }
+		// 	Py_INCREF(mainModule);
+		// }
+		// PyObject* mainModuleDict = PyModule_GetDict(mainModule);
 		// PrintPyObject("mainModuleDict: ", mainModuleDict);
 		
 		PyObject* localDict = PyDict_New();
@@ -1502,7 +1509,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			PyCompilerFlags flags = {};
 			flags.cf_flags = PyCF_SOURCE_IS_UTF8;
 			flags.cf_feature_version = PY_MINOR_VERSION;
-			PyObject* parseResult = PyRun_StringFlags(scratchCodeStr.chars, Py_file_input, mainModuleDict, localDict, &flags);
+			PyObject* parseResult = PyRun_StringFlags(scratchCodeStr.chars, Py_file_input, localDict, localDict, &flags);
 			FreeScratchArena(scratch);
 			if (parseResult == nullptr)
 			{
@@ -1542,10 +1549,91 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			WriteLine_E("The script is missing a \"main()\" function");
 		}
 		
+		i64 localDictSize = PyDict_Size(localDict);
+		PyObject* localDictKeys = PyDict_Keys(localDict);
+		NotNull(localDictKeys);
+		Assert(PyList_Check(localDictKeys));
+		Assert(PyList_Size(localDictKeys) == localDictSize);
+		for (i64 keyIndex = 0; keyIndex < localDictSize; keyIndex++)
+		{
+			PyObject* key = PyList_GetItem(localDictKeys, keyIndex);
+			NotNull(key);
+			PyDict_DelItem(localDict, key);
+		}
+		// Assert(Py_REFCNT(localDict) == 1);
 		Py_DECREF(localDict);
-		Py_DECREF(mainModule);
+		
+		// Py_DECREF(mainModule);
+	}
+	
+	// +==============================+
+	// |   python_file [file_name]    |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "python_file"))
+	{
+		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: python_file [file_name]", numArguments); return validCommand; }
+		
+		MemArena_t* scratch = GetScratchArena();
+		PlatFileContents_t scriptFile;
+		if (!plat->ReadFileContents(arguments[0], scratch, true, &scriptFile)) { PrintLine_E("Failed to open file \"%.*s\"", StrPrint(arguments[0])); return validCommand; }
+		MyStr_t scriptStr = NewStr(scriptFile.length, scriptFile.chars);
+		
+		PythonScript_t* script = CreatePythonScript(scratch);
+		if (!ParsePythonScriptStr(script, scriptStr))
+		{
+			PrintPyException("Parse exception: ");
+			plat->FreeFileContents(&scriptFile);
+			FreeScratchArena(scratch);
+			return validCommand;
+		}
+		
+		PyObject* mainResult = nullptr;
+		RunPythonFunctionResult_t runResult = RunPythonFunctionInScript(script, NewStr("main"), &mainResult);
+		if (runResult == RunPythonFunctionResult_Success)
+		{
+			PrintPyObject("main() => ", mainResult);
+			if (mainResult != nullptr) { Py_DECREF(mainResult); }
+		}
+		else if (runResult == RunPythonFunctionResult_Exception)
+		{
+			PrintPyException("Runtime exception: ");
+		}
+		else if (runResult == RunPythonFunctionResult_NotAFunction)
+		{
+			WriteLine_E("The script is missing a \"main()\" function (found \"main\" but it wasn't a function)");
+		}
+		else
+		{
+			WriteLine_E("The script is missing a \"main()\" function");
+		}
+		
+		FreePythonScript(script);
+		
+		plat->FreeFileContents(&scriptFile);
+		FreeScratchArena(scratch);
 	}
 	#endif //PYTHON_SUPPORTED
+	
+	#if PIG_MEM_ARENA_TEST_SET
+	// +==============================+
+	// |       run_mem_test_set       |
+	// +==============================+
+	else if (StrEqualsIgnoreCase(command, "run_mem_test_set"))
+	{
+		if (pig->arenaTestSet.actions.length == 0) { WriteLine_E("No test set was captured"); return validCommand; }
+		MemArena_t testArena;
+		InitMemArena_PagedHeapFuncs(&testArena, Megabytes(1), PlatAllocFunc, PlatFreeFunc, 0, AllocAlignment_8Bytes);
+		FlagSet(testArena.flags, MemArenaFlag_CacheFreeOffset);
+		MemArenaTestSetPrepare(&pig->arenaTestSet);
+		PerfTime_t allocStartTime = GetPerfTime();
+		MemArenaTestSetPerformAllActions(&testArena, &pig->arenaTestSet);
+		PerfTime_t allocEndTime = GetPerfTime();
+		FreeMemArena(&testArena);
+		MemArena_t* scratch = GetScratchArena();
+		PrintLine_I("%llu allocations took %s", pig->arenaTestSet.actions.length, FormatMillisecondsNt((u64)GetPerfTimeDiff(&allocStartTime, &allocEndTime), scratch));
+		FreeScratchArena(scratch);
+	}
+	#endif
 	
 	// +==============================+
 	// |       Unknown Command        |

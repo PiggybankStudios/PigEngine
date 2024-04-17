@@ -57,6 +57,9 @@ struct PigState_t
 	#if PIG_MAIN_ARENA_DEBUG
 	MemArena_t mainHeapDebug;
 	#endif
+	#if PIG_MEM_ARENA_TEST_SET
+	MemArenaTestSet_t arenaTestSet;
+	#endif
 	
 	//AppStates
 	AppGlobals_t appGlobals;

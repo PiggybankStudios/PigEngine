@@ -12,6 +12,7 @@ Description:
 //https://docs.python.org/3/c-api/intro.html
 //https://docs.python.org/3/c-api/init.html
 //https://www.python.org/downloads/release/python-3119/
+//https://python.readthedocs.io/en/latest/faq/extending.html
 
 MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 {
@@ -49,15 +50,15 @@ MyStr_t ToStr(MemArena_t* memArena, PyObject* pyObject, u64 depth = 0)
 			double valueDouble = PyFloat_AsDouble(pyObject);
 			StringBuilderAppendPrint(&result, "%llf", valueDouble);
 		}
-		// +==============================+
-		// |        Stringify Type        |
-		// +==============================+
-		else if (PyType_Check(pyObject))
-		{
-			PyTypeObject* pyType = _PyType_CAST(pyObject);
-			NotNull(pyType);
-			StringBuilderAppendPrint(&result, "(%s)", pyType->tp_name);
-		}
+		// // +==============================+
+		// // |        Stringify Type        |
+		// // +==============================+
+		// else if (PyType_Check(pyObject))
+		// {
+		// 	PyTypeObject* pyType = _PyType_CAST(pyObject);
+		// 	NotNull(pyType);
+		// 	StringBuilderAppendPrint(&result, "(%s)", pyType->tp_name);
+		// }
 		// +==============================+
 		// |      Stringify Function      |
 		// +==============================+
@@ -221,7 +222,8 @@ void* PythonMallocCallback(void* ctx, size_t size)
 	NotNull(ctx);
 	MemArena_t* pythonHeap = (MemArena_t*)ctx;
 	if (size == 0) { size = 1; } //We are required to provide a unique pntr when asked to allocate 0 bytes (https://docs.python.org/3/c-api/memory.html#c.PyMem_SetAllocator)
-	return AllocMem(pythonHeap, (u64)size);
+	void* result = AllocMem(pythonHeap, (u64)size);
+	return result;
 }
 void* PythonCallocCallback(void* ctx, size_t nelem, size_t elsize)
 {
@@ -235,7 +237,8 @@ void* PythonReallocCallback(void* ctx, void* ptr, size_t new_size)
 {
 	NotNull(ctx);
 	MemArena_t* pythonHeap = (MemArena_t*)ctx;
-	return ReallocMem(pythonHeap, ptr, new_size, 0, AllocAlignment_None, true);
+	void* result = ReallocMem(pythonHeap, ptr, new_size, 0, AllocAlignment_None, true);
+	return result;
 }
 void PythonFreeCallback(void* ctx, void* ptr)
 {
@@ -273,6 +276,10 @@ void PigInitPython()
 	pig->python.allocator.calloc  = PythonCallocCallback;
 	pig->python.allocator.realloc = PythonReallocCallback;
 	pig->python.allocator.free    = PythonFreeCallback;
+	#if PIG_MEM_ARENA_TEST_SET
+	NewMemArenaTestSet(platInfo->stdHeap, &pig->arenaTestSet, 31000, 48000);
+	pig->pythonHeap.testSetOut = &pig->arenaTestSet;
+	#endif
 	
 	// pig->python.preConfig._config_init = 0;
 	pig->python.preConfig.parse_argv = 0;
@@ -384,6 +391,30 @@ void PigInitPython()
 	status = _Py_InitializeMain();
 	PigHandlePythonInitException(status, "_Py_InitializeMain");
 	
+	#if PIG_MEM_ARENA_TEST_SET
+	{
+		pig->pythonHeap.testSetOut = nullptr;
+		PrintLine_O("Captured %llu allocation action%s during python initialization (%llu unique allocation pntr%s)", pig->arenaTestSet.actions.length, Plural(pig->arenaTestSet.actions.length, "s"), pig->arenaTestSet.allocations.length, Plural(pig->arenaTestSet.allocations.length, "s"));
+		MemArena_t* scratch2 = GetScratchArena();
+		VarArrayLoop(&pig->arenaTestSet.actions, aIndex)
+		{
+			VarArrayLoopGet(MemArenaTestAction_t, action, &pig->arenaTestSet.actions, aIndex);
+			PushMemMark(scratch2);
+			switch (action->type)
+			{
+				case MemArenaTestActionType_Alloc: PrintLine_D("\tAlloc %s[%llu] (%s)", GetStandardRockName(action->allocIndex), (action->allocIndex / GYLIB_NUM_STANDARD_ROCK_NAMES), FormatBytesNt(action->size, scratch2)); break;
+				case MemArenaTestActionType_Realloc:
+					if (action->oldAllocIndex < pig->arenaTestSet.allocations.length) { PrintLine_D("\tRealloc %s[%llu] to %s[%llu] (%s %s -> %s)", GetStandardRockName(action->oldAllocIndex), (action->oldAllocIndex / GYLIB_NUM_STANDARD_ROCK_NAMES), GetStandardRockName(action->allocIndex), (action->allocIndex / GYLIB_NUM_STANDARD_ROCK_NAMES), (action->size >= action->oldSize ? "Grow" : "Shrink"), FormatBytesNt(action->oldSize, scratch2), FormatBytesNt(action->size, scratch2)); break; }
+					else { PrintLine_D("\treAlloc %s[%llu] (%s)", GetStandardRockName(action->allocIndex), (action->allocIndex / GYLIB_NUM_STANDARD_ROCK_NAMES), FormatBytesNt(action->size, scratch2)); break; }
+				case MemArenaTestActionType_Free: PrintLine_D("\tFree %s[%llu] (%s)", GetStandardRockName(action->allocIndex), (action->allocIndex / GYLIB_NUM_STANDARD_ROCK_NAMES), FormatBytesNt(action->size, scratch2)); break;
+				default: Unimplemented();
+			}
+			PopMemMark(scratch2);
+		}
+		FreeScratchArena(scratch2);
+	}
+	#endif
+	
 	pig->python.mainModuleName = PyUnicode_FromString("__main__");
 	pig->python.mainFunctionName = PyUnicode_FromString("main");
 	
@@ -401,6 +432,107 @@ void PigPythonHandleReload()
 	PyMem_SetAllocator(PYMEM_DOMAIN_RAW, &pig->python.allocator);
 	PyMem_SetAllocator(PYMEM_DOMAIN_MEM, &pig->python.allocator);
 	PyMem_SetAllocator(PYMEM_DOMAIN_OBJ, &pig->python.allocator);
+}
+
+PyObject* PythonDebugOutputCallback(PyObject* arguments, PyObject* kwArguments)
+{
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t argumentsStr = ToStr(scratch, arguments);
+	MyStr_t kwArgumentsStr = ToStr(scratch, kwArguments);
+	PrintLine_I("PythonDebugOutputCallback(%.*s, %.*s)", StrPrint(argumentsStr), StrPrint(kwArgumentsStr));
+	FreeScratchArena(scratch);
+	return Py_None;
+}
+
+void FreePythonLocalDict(PyObject* localDict)
+{
+	NotNull(localDict);
+	Assert(PyDict_Check(localDict));
+	i64 localDictSize = PyDict_Size(localDict);
+	PyObject* localDictKeys = PyDict_Keys(localDict);
+	NotNull(localDictKeys);
+	Assert(PyList_Check(localDictKeys));
+	Assert(PyList_Size(localDictKeys) == localDictSize);
+	for (i64 keyIndex = 0; keyIndex < localDictSize; keyIndex++)
+	{
+		PyObject* key = PyList_GetItem(localDictKeys, keyIndex);
+		NotNull(key);
+		PyDict_DelItem(localDict, key);
+	}
+	// Assert(Py_REFCNT(localDict) == 1); //TODO: Can we figure out why this isn't always going to 0 references??
+	Py_DECREF(localDict);
+}
+
+void FreePythonScript(PythonScript_t* script)
+{
+	NotNull(script);
+	NotNull(script->allocArena);
+	if (script->localDict != nullptr) { FreePythonLocalDict(script->localDict); }
+	FreeString(script->allocArena, &script->debugOutputCallbackNameStr);
+	FreeString(script->allocArena, &script->debugOutputCallbackDescriptionStr);
+	FreeMem(script->allocArena, script, sizeof(PythonScript_t));
+}
+
+PythonScript_t* CreatePythonScript(MemArena_t* memArena)
+{
+	NotNull(memArena);
+	PythonScript_t* result = AllocStruct(memArena, PythonScript_t);
+	NotNull(result);
+	result->allocArena = memArena;
+	result->localDict = PyDict_New();
+	result->debugOutputCallbackNameStr = NewStringInArenaNt(memArena, "PigDebugOutput");
+	result->debugOutputCallbackDescriptionStr = NewStringInArenaNt(memArena, "Write string(s) to the debug output");
+	result->debugOutputCallbackDef = { result->debugOutputCallbackNameStr.chars, PythonDebugOutputCallback, METH_VARARGS, result->debugOutputCallbackDescriptionStr.chars }; //TODO: Flatten this!
+	PyObject* callbackName = PyUnicode_FromString(result->debugOutputCallbackNameStr.chars);
+	PyObject* callback = PyCFunction_New(&result->debugOutputCallbackDef, nullptr); //TODO: Pass result here instead of nullptr?
+	PyDict_SetItem(result->localDict, callbackName, callback);
+	Py_DECREF(callback);
+	Py_DECREF(callbackName);
+	return result;
+}
+
+//If this returns false, you can call PrintPyException to print the error
+bool ParsePythonScriptStr(PythonScript_t* script, MyStr_t codeStr)
+{
+	MemArena_t* scratch = GetScratchArena();
+	MyStr_t allocatedCodeStr = AllocString(scratch, &codeStr);
+	PyCompilerFlags flags = {};
+	flags.cf_flags = PyCF_SOURCE_IS_UTF8;
+	flags.cf_feature_version = PY_MINOR_VERSION;
+	
+	PyObject* parseResult = PyRun_StringFlags(allocatedCodeStr.chars, Py_file_input, script->localDict, script->localDict, &flags);
+	
+	Py_XDECREF(parseResult);
+	FreeScratchArena(scratch);
+	return (parseResult != nullptr);
+}
+
+//If this returns RunPythonFunctionResult_Exception, you can call PrintPyException to print the error
+RunPythonFunctionResult_t RunPythonFunctionInDict(PyObject* pyDict, MyStr_t functionName, PyObject** returnOut)
+{
+	PyObject* functionNameObject = PyUnicode_FromStringAndSize(functionName.chars, functionName.length);
+	PyObject* functionObject = PyDict_GetItem(pyDict, functionNameObject);
+	Py_DECREF(functionNameObject);
+	if (functionObject == nullptr) { return RunPythonFunctionResult_FunctionMissing; }
+	Py_INCREF(functionObject);
+	
+	if (!PyFunction_Check(functionObject)) { Py_DECREF(functionObject); return RunPythonFunctionResult_NotAFunction; }
+	
+	PyObject* mainResult = PyObject_CallNoArgs(functionObject);
+	if (mainResult == nullptr) { Py_DECREF(functionObject); return RunPythonFunctionResult_Exception; }
+	
+	if (returnOut != nullptr)
+	{
+		*returnOut = mainResult;
+	}
+	else { Py_DECREF(mainResult); }
+	
+	return RunPythonFunctionResult_Success;
+}
+RunPythonFunctionResult_t RunPythonFunctionInScript(PythonScript_t* script, MyStr_t functionName, PyObject** returnOut)
+{
+	NotNull2(script, script->localDict);
+	return RunPythonFunctionInDict(script->localDict, functionName, returnOut);
 }
 
 #endif //PYTHON_SUPPORTED

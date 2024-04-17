@@ -18,6 +18,7 @@ Description:
 
 #define PIG_MAIN_ARENA_DEBUG             false //Make sure to uncomment GYLIB_MEM_ARENA_DEBUG_ENABLED in common_includes.h
 #define PIG_MAIN_ARENA_DEBUG_PAGE_SIZE   Megabytes(1)
+#define PIG_MEM_ARENA_TEST_SET           false //make sure to uncomment includes for gy_test_memory.h in common_includes.h
 
 #define SHOW_PERF_GRAPH_ON_STARTUP      false
 #define SHOW_MEM_GRAPH_ON_STARTUP       false

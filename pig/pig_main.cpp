@@ -17,6 +17,7 @@ Description:
 #endif
 #define GYLIB_USE_ASSERT_FAILURE_FUNC
 #define GYLIB_SCRATCH_ARENA_AVAILABLE
+#define GYLIB_NUM_STANDARD_ROCK_NAMES 100
 #include "common_includes.h"
 
 #include "game_early_include.h"
