@@ -864,7 +864,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 	if (fileContents.length == 0)
 	{
 		LogWriteLine_E(log, "Empty file is a not a valid SVG file");
-		LogExitFailure(log, TryDeserSvgFileError_EmptyFile);
+		LogExitFailure(log, Result_EmptyFile);
 		return false;
 	}
 	
@@ -906,7 +906,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!foundSvgToken)
 					{
 						LogPrintLine_E(log, "Found group before svg token on line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_GroupOutsideSvg);
+						LogExitFailure(log, Result_GroupOutsideSvg);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1002,7 +1002,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						if (!TryParseSvgTransformString(log, transformProperty->value, &currentGroup->transform))
 						{
 							LogPrintLine_E(log, "Failed to parse transform for group on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
-							LogExitFailure(log, TryDeserSvgFileError_GroupTransformIsInvalid);
+							LogExitFailure(log, Result_GroupTransformIsInvalid);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
 							return false;
@@ -1019,7 +1019,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (currentGroup == nullptr)
 					{
 						LogPrintLine_E(log, "Found circle shape outside of a group on line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_ShapeOutsideGroup);
+						LogExitFailure(log, Result_ShapeOutsideGroup);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1029,7 +1029,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (styleProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Circle shape is missing \"style\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1038,7 +1038,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (cxProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Circle shape is missing \"cx\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1047,7 +1047,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (cyProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Circle shape is missing \"cy\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1056,7 +1056,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (rProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Circle shape is missing \"r\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1066,7 +1066,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					SvgStroke_t circleStroke = {};
 					if (!TryParseSvgShapeStyleString(log, styleProperty->value, &circleFill, &circleStroke))
 					{
-						LogExitFailure(log, TryDeserSvgFileError_StyleFormatError);
+						LogExitFailure(log, Result_StyleFormatError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1076,7 +1076,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(cxProperty->value, &circleCenter.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse circle center x value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(cxProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1084,7 +1084,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(cyProperty->value, &circleCenter.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse circle center y value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(cyProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1094,7 +1094,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(rProperty->value, &circleRadius, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse circle radius value in circle on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(rProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1126,7 +1126,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
 							LogPrintLine_E(log, "Couldn't parse circle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
-							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+							LogExitFailure(log, Result_ParseFailure);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
 							return false;
@@ -1144,7 +1144,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (currentGroup == nullptr)
 					{
 						LogPrintLine_E(log, "Found rectangle shape outside of a group on line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_ShapeOutsideGroup);
+						LogExitFailure(log, Result_ShapeOutsideGroup);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1154,7 +1154,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (styleProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"style\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1163,7 +1163,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (xProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"x\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1172,7 +1172,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (yProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"y\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1181,7 +1181,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (widthProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"width\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1190,7 +1190,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (heightProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"height\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1202,7 +1202,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					SvgStroke_t rectangleStroke = {};
 					if (!TryParseSvgShapeStyleString(log, styleProperty->value, &rectangleFill, &rectangleStroke))
 					{
-						LogExitFailure(log, TryDeserSvgFileError_StyleFormatError);
+						LogExitFailure(log, Result_StyleFormatError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1212,7 +1212,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(xProperty->value, &rectangleValue.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle x value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(xProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1220,7 +1220,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(yProperty->value, &rectangleValue.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle y value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(yProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1228,7 +1228,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(widthProperty->value, &rectangleValue.width, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle width value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(widthProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1236,7 +1236,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseR32(heightProperty->value, &rectangleValue.height, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle height value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(heightProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1246,7 +1246,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (rxProperty != nullptr && !TryParseR32(rxProperty->value, &roundedRadius.x, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle rx value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(rxProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1254,7 +1254,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (ryProperty != nullptr && !TryParseR32(ryProperty->value, &roundedRadius.y, &log->parseFailureReason))
 					{
 						LogPrintLine_E(log, "Couldn't parse rectangle ry value on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(ryProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+						LogExitFailure(log, Result_ParseFailure);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1286,7 +1286,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
 							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
-							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+							LogExitFailure(log, Result_ParseFailure);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
 							return false;
@@ -1304,7 +1304,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (currentGroup == nullptr)
 					{
 						LogPrintLine_E(log, "Found path shape outside of a group on line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_ShapeOutsideGroup);
+						LogExitFailure(log, Result_ShapeOutsideGroup);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1314,7 +1314,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (styleProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"style\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1323,7 +1323,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (dataProperty == nullptr)
 					{
 						LogPrintLine_E(log, "Rectangle shape is missing \"d\" property line %llu", xmlParser.lineParser.lineIndex);
-						LogExitFailure(log, TryDeserSvgFileError_MissingProperty);
+						LogExitFailure(log, Result_MissingProperty);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1333,7 +1333,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					SvgStroke_t pathStroke = {};
 					if (!TryParseSvgShapeStyleString(log, styleProperty->value, &pathFill, &pathStroke))
 					{
-						LogExitFailure(log, TryDeserSvgFileError_StyleFormatError);
+						LogExitFailure(log, Result_StyleFormatError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1361,7 +1361,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 					if (!TryParseSvgPathDataString(log, dataProperty->value, &newShape->path.value))
 					{
 						LogPrintLine_E(log, "Failed to parse path data on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(dataProperty->value));
-						LogExitFailure(log, TryDeserSvgFileError_PathFormatError);
+						LogExitFailure(log, Result_PathFormatError);
 						FreeXmlParser(&xmlParser);
 						FreeSvgData(dataOut);
 						return false;
@@ -1374,7 +1374,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 						if (!TryParseSvgTransformString(log, transformProperty->value, &newShape->transform))
 						{
 							LogPrintLine_E(log, "Couldn't parse rectangle transform on line %llu: \"%.*s\"", xmlParser.lineParser.lineIndex, StrPrint(transformProperty->value));
-							LogExitFailure(log, TryDeserSvgFileError_TryParseError);
+							LogExitFailure(log, Result_ParseFailure);
 							FreeXmlParser(&xmlParser);
 							FreeSvgData(dataOut);
 							return false;
@@ -1431,7 +1431,7 @@ bool TryDeserSvgFile(MyStr_t fileContents, ProcessLog_t* log, SvgData_t* dataOut
 			case XmlParseResultType_Error:
 			{
 				log->xmlParsingError = parse.error;
-				LogExitFailure(log, TryDeserSvgFileError_XmlParsingError);
+				LogExitFailure(log, Result_XmlParsingError);
 				FreeXmlParser(&xmlParser);
 				FreeSvgData(dataOut);
 				return false;

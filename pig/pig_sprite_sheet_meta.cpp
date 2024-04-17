@@ -9,28 +9,6 @@ Description:
 
 #define SPRITE_SHEET_META_FILE_PREFIX "# Sprite Meta"
 
-enum SpriteSheetMetaError_t
-{
-	SpriteSheetMetaError_None = 0,
-	SpriteSheetMetaError_TokenBeforeFilePrefix,
-	SpriteSheetMetaError_InvalidFilePrefix,
-	SpriteSheetMetaError_MultipleFilePrefix,
-	SpriteSheetMetaError_MissingFilePrefix,
-	SpriteSheetMetaError_KeyValuePairBeforeFrameDefined,
-	SpriteSheetMetaError_NumErrors,
-};
-const char* GetSpriteSheetMetaErrorStr(SpriteSheetMetaError_t error)
-{
-	switch (error)
-	{
-		case SpriteSheetMetaError_None:                           return "None";
-		case SpriteSheetMetaError_TokenBeforeFilePrefix:          return "TokenBeforeFilePrefix";
-		case SpriteSheetMetaError_InvalidFilePrefix:              return "InvalidFilePrefix";
-		case SpriteSheetMetaError_KeyValuePairBeforeFrameDefined: return "KeyValuePairBeforeFrameDefined";
-		default: return "Unknown";
-	}
-}
-
 bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, ProcessLog_t* log)
 {
 	NotNullStr(&fileContents);
@@ -57,7 +35,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
 			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
-			LogExitFailure(log, SpriteSheetMetaError_TokenBeforeFilePrefix);
+			LogExitFailure(log, Result_TokenBeforeFilePrefix);
 			return false;
 		}
 		
@@ -81,7 +59,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!StrEquals(token.str, SPRITE_SHEET_META_FILE_PREFIX))
 					{
 						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_InvalidFilePrefix);
+						LogExitFailure(log, Result_InvalidFilePrefix);
 						return false;
 					}
 					foundFilePrefix = true;
@@ -89,7 +67,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 				else
 				{
 					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
-					LogExitFailure(log, SpriteSheetMetaError_MultipleFilePrefix);
+					LogExitFailure(log, Result_MultipleFilePrefix);
 					return false;
 				}
 			} break;
@@ -107,7 +85,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -133,7 +111,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found Name key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -168,7 +146,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found Codepoint key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -198,7 +176,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found AdvanceX key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -228,7 +206,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found CharBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -258,7 +236,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found LogicalBounds key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -288,7 +266,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 					if (!currentFrameFilled)
 					{
 						LogPrintLine_E(log, "Found CharOffset key before a frame index was given on line %llu: \"%.*s\"", textParser.lineParser.lineIndex+1, StrPrint(token.str));
-						LogExitFailure(log, SpriteSheetMetaError_KeyValuePairBeforeFrameDefined);
+						LogExitFailure(log, Result_KeyValuePairBeforeFrameDefined);
 						return false;
 					}
 					
@@ -365,7 +343,7 @@ bool TryDeserSpriteSheetMeta(MyStr_t fileContents, SpriteSheet_t* sheet, Process
 	if (!foundFilePrefix)
 	{
 		LogWriteLine_E(log, "Found no file prefix! This is probably an empty file");
-		LogExitFailure(log, SpriteSheetMetaError_MissingFilePrefix);
+		LogExitFailure(log, Result_MissingFilePrefix);
 		return false;
 	}
 	

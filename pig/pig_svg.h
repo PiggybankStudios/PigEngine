@@ -9,37 +9,6 @@ Date:   01\23\2022
 
 #define SVG_TRIANGULATION_CURVE_VERT_COUNT    9 //verts/curve
 
-enum TryDeserSvgFileError_t
-{
-	TryDeserSvgFileError_None = 0,
-	TryDeserSvgFileError_EmptyFile,
-	TryDeserSvgFileError_TryParseError,
-	TryDeserSvgFileError_XmlParsingError,
-	TryDeserSvgFileError_GroupTransformIsInvalid,
-	TryDeserSvgFileError_GroupOutsideSvg,
-	TryDeserSvgFileError_ShapeOutsideGroup,
-	TryDeserSvgFileError_MissingProperty,
-	TryDeserSvgFileError_StyleFormatError,
-	TryDeserSvgFileError_PathFormatError,
-	TryDeserSvgFileError_NumErrors,
-};
-const char* GetTryDeserSvgFileErrorStr(TryDeserSvgFileError_t error)
-{
-	switch (error)
-	{
-		case TryDeserSvgFileError_EmptyFile:               return "EmptyFile";
-		case TryDeserSvgFileError_TryParseError:           return "TryParseError";
-		case TryDeserSvgFileError_XmlParsingError:         return "XmlParsingError";
-		case TryDeserSvgFileError_GroupTransformIsInvalid: return "GroupTransformIsInvalid";
-		case TryDeserSvgFileError_GroupOutsideSvg:         return "GroupOutsideSvg";
-		case TryDeserSvgFileError_ShapeOutsideGroup:       return "ShapeOutsideGroup";
-		case TryDeserSvgFileError_MissingProperty:         return "MissingProperty";
-		case TryDeserSvgFileError_StyleFormatError:        return "StyleFormatError";
-		case TryDeserSvgFileError_PathFormatError:         return "PathFormatError";
-		default: return "Unknown";
-	}
-}
-
 enum SvgTransformType_t
 {
 	SvgTransformType_None,

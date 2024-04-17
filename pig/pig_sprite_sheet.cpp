@@ -24,8 +24,8 @@ void DestroySpriteSheet(SpriteSheet_t* sheet)
 	}
 	FreeVarArray(&sheet->frames);
 	DestroyTexture(&sheet->texture);
-	SpriteSheetError_t error = sheet->error;
-	TextureError_t textureError = sheet->texture.error;
+	Result_t error = sheet->error;
+	Result_t textureError = sheet->texture.error;
 	ClearPointer(sheet);
 	sheet->error = error;
 	sheet->texture.error = textureError;
@@ -116,7 +116,7 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 		const bool repeating = false;
 		if (!CreateTextureArray(memArena, &sheetOut->texture, totalNumFrames, frameDatas, pixelated, repeating))
 		{
-			sheetOut->error = SpriteSheetError_TextureError;
+			sheetOut->error = Result_TextureError;
 			DestroySpriteSheet(sheetOut);
 			FreeMem(mainHeap, pixelBuffer, pixelBufferSize);
 			TempPopMark();
@@ -136,7 +136,7 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 		if (newPixels == nullptr)
 		{
 			DebugAssert(false);
-			sheetOut->error = SpriteSheetError_AllocFailure;
+			sheetOut->error = Result_AllocFailure;
 			DestroySpriteSheet(sheetOut);
 			FreeMem(mainHeap, newPixels, newPixelsSize);
 			return false;
@@ -267,7 +267,7 @@ bool CreateSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, const Plat
 		const bool repeating = false;
 		if (!CreateTexture(memArena, &sheetOut->texture, &paddedImageData, pixelated, repeating))
 		{
-			sheetOut->error = SpriteSheetError_TextureError;
+			sheetOut->error = Result_TextureError;
 			DestroySpriteSheet(sheetOut);
 			FreeMem(mainHeap, newPixels, newPixelsSize);
 			return false;
@@ -291,12 +291,12 @@ bool LoadSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, MyStr_t file
 	PlatFileContents_t textureFile;
 	if (!plat->ReadFileContents(filePath, nullptr, false, &textureFile))
 	{
-		sheetOut->error = SpriteSheetError_CouldntOpenFile;
+		sheetOut->error = Result_CouldntOpenFile;
 		return false;
 	}
 	if (textureFile.size == 0)
 	{
-		sheetOut->error = SpriteSheetError_EmptyFile;
+		sheetOut->error = Result_EmptyFile;
 		plat->FreeFileContents(&textureFile);
 		return false;
 	}
@@ -305,7 +305,7 @@ bool LoadSpriteSheet(MemArena_t* memArena, SpriteSheet_t* sheetOut, MyStr_t file
 	PlatImageData_t imageData;
 	if (!plat->TryParseImageFile(&textureFile, sizeof(u32), &imageData))
 	{
-		sheetOut->error = SpriteSheetError_ParseFailure;
+		sheetOut->error = Result_ParseFailure;
 		plat->FreeFileContents(&textureFile);
 		return false;
 	}

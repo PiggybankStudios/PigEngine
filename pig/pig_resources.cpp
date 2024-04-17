@@ -423,10 +423,10 @@ void Pig_LoadVectorImgResource(u64 vectorImgIndex)
 		PrintLine_E("Failed to load vector image[%llu] from \"%s\"! Error %s%s%s%s",
 			vectorImgIndex,
 			GetFileNamePart(vectorImgPathStr).pntr,
-			GetTryDeserSvgFileErrorStr((TryDeserSvgFileError_t)svgParseLog.errorCode),
-			(svgParseLog.errorCode == TryDeserSvgFileError_XmlParsingError || svgParseLog.errorCode == TryDeserSvgFileError_TryParseError) ? ": " : "",
-			(svgParseLog.errorCode == TryDeserSvgFileError_XmlParsingError) ? GetXmlParsingErrorStr(svgParseLog.xmlParsingError) : "",
-			(svgParseLog.errorCode == TryDeserSvgFileError_TryParseError) ? GetTryParseFailureReasonStr(svgParseLog.parseFailureReason) : ""
+			GetResultStr((Result_t)svgParseLog.errorCode),
+			(svgParseLog.errorCode == Result_XmlParsingError || svgParseLog.errorCode == Result_ParseFailure) ? ": " : "",
+			(svgParseLog.errorCode == Result_XmlParsingError) ? GetXmlParsingErrorStr(svgParseLog.xmlParsingError) : "",
+			(svgParseLog.errorCode == Result_ParseFailure) ? GetTryParseFailureReasonStr(svgParseLog.parseFailureReason) : ""
 		);
 		DumpProcessLog(&svgParseLog, "SVG Parse Log", DbgLevel_Warning);
 		FreeProcessLog(&svgParseLog);
@@ -503,9 +503,9 @@ void Pig_LoadSpriteSheetResource(u64 sheetIndex)
 		NotifyPrint_E("Failed to load sheet[%u] from \"%s\"! Error %s%s%s",
 			sheetIndex,
 			GetFileNamePart(sheetPathStr).pntr,
-			GetSpriteSheetErrorStr(tempSheet.error),
-			(tempSheet.error == SpriteSheetError_TextureError) ? ": " : "",
-			(tempSheet.error == SpriteSheetError_TextureError) ? GetTextureErrorStr(tempSheet.texture.error) : ""
+			GetResultStr(tempSheet.error),
+			(tempSheet.error == Result_TextureError) ? ": " : "",
+			(tempSheet.error == Result_TextureError) ? GetResultStr(tempSheet.texture.error) : ""
 		);
 		sheetStatus->state = ResourceStateWarnOrError(sheetStatus->state);
 		return;
@@ -587,17 +587,17 @@ void Pig_LoadShaderResource(u64 shaderIndex)
 	Shader_t tempShader = {};
 	if (!LoadShader(mainHeap, &tempShader, shaderPathStr, metaInfo.vertexType, metaInfo.requiredUniforms))
 	{
-		if (tempShader.error == ShaderError_MissingAttribute)
+		if (tempShader.error == Result_MissingAttribute)
 		{
 			PrintLine_W("Loaded shader[%u] from %s but it is missing an attribute", shaderIndex, GetFileNamePart(shaderPathStr).pntr);
 		}
-		else if (tempShader.error == ShaderError_MissingUniform)
+		else if (tempShader.error == Result_MissingUniform)
 		{
 			PrintLine_W("Loaded shader[%u] from %s but it is missing a uniform", shaderIndex, GetFileNamePart(shaderPathStr).pntr);
 		}
 		else
 		{
-			NotifyPrint_E("Failed to load shader[%u] from %s! Error %s%s%s", shaderIndex, GetFileNamePart(shaderPathStr).pntr, GetShaderErrorStr(tempShader.error), (tempShader.error == ShaderError_ApiError) ? ": " : "", (tempShader.error == ShaderError_ApiError) ? tempShader.apiErrorStr.pntr : "");
+			NotifyPrint_E("Failed to load shader[%u] from %s! Error %s%s%s", shaderIndex, GetFileNamePart(shaderPathStr).pntr, GetResultStr(tempShader.error), (tempShader.error == Result_ApiError) ? ": " : "", (tempShader.error == Result_ApiError) ? tempShader.apiErrorStr.pntr : "");
 			DestroyShader(&tempShader);
 			MyDebugBreak();
 			shaderStatus->state = ResourceStateWarnOrError(shaderStatus->state);
@@ -641,9 +641,9 @@ bool TryLoadSpriteSheetAndMeta(MemArena_t* memArena, MyStr_t filePath, MyStr_t m
 		{
 			PrintLine_E("Failed to load sprite sheet from \"%.*s\"! Error %s%s%s",
 				StrPrint(filePath),
-				GetSpriteSheetErrorStr(spriteSheetOut->error),
-				(spriteSheetOut->error == SpriteSheetError_TextureError) ? ": " : "",
-				(spriteSheetOut->error == SpriteSheetError_TextureError) ? GetTextureErrorStr(spriteSheetOut->texture.error) : ""
+				GetResultStr(spriteSheetOut->error),
+				(spriteSheetOut->error == Result_TextureError) ? ": " : "",
+				(spriteSheetOut->error == Result_TextureError) ? GetResultStr(spriteSheetOut->texture.error) : ""
 			);
 		}
 		DebugAssert(false);
@@ -922,7 +922,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 			}
 			else
 			{
-				PrintLine_E("Failed to deserialize ogg music[%llu] at \"%.*s\"", musicIndex, StrPrint(musicPathStr));
+				PrintLine_E("Failed to deserialize ogg music[%llu] at \"%.*s\": %s", musicIndex, StrPrint(musicPathStr), GetResultStr((Result_t)musicParseLog.errorCode));
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "OGG Parse Log"); }
@@ -938,7 +938,7 @@ void Pig_LoadMusicResource(u64 musicIndex)
 			}
 			else
 			{
-				PrintLine_E("Failed to deserialize wav music[%llu] at \"%.*s\"", musicIndex, StrPrint(musicPathStr));
+				PrintLine_E("Failed to deserialize wav music[%llu] at \"%.*s\": %s", musicIndex, StrPrint(musicPathStr), GetResultStr((Result_t)musicParseLog.errorCode));
 				DebugAssert(false);
 			}
 			if (musicParseLog.hadErrors || musicParseLog.hadWarnings) { DumpProcessLog(&musicParseLog, "WAV Parse Log"); }
@@ -1024,7 +1024,11 @@ void Pig_LoadModelResource(u64 modelIndex)
 				bool foundBonesForAllParts = AddArmatureToModel(model, &tempArmature, &modelParseLog);
 				if (!foundBonesForAllParts) { DebugAssertMsg(false, "Some parts in the model are not connected to the armature!"); }
 			}
-			else { DebugAssertMsg(false, "Failed to parse armature for model!"); }
+			else
+			{
+				PrintLine_E("Failed to load armature model: %s", GetResultStr((Result_t)modelParseLog.errorCode));
+				DebugAssertMsg(false, "Failed to parse armature for model!");
+			}
 		}
 		
 		StopWatchingFilesForResource(ResourceType_Model, modelIndex);

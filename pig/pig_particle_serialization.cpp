@@ -8,15 +8,6 @@ Description:
 
 #define PARTS_PREFAB_COLLECTION_PREFIX "# Parts Prefab Collection"
 
-enum PartsPrefabCollectionError_t
-{
-	PartsPrefabCollectionError_None = 0,
-	PartsPrefabCollectionError_TokenBeforeFilePrefix,
-	PartsPrefabCollectionError_InvalidFilePrefix,
-	PartsPrefabCollectionError_MultipleFilePrefix,
-	PartsPrefabCollectionError_NumErrors,
-};
-
 struct CollectionNamedColor_t
 {
 	MyStr_t name;
@@ -524,7 +515,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
 			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
-			LogExitFailure(log, PartsPrefabCollectionError_TokenBeforeFilePrefix);
+			LogExitFailure(log, Result_TokenBeforeFilePrefix);
 			FreeVarArray(&types);
 			FreeVarArray(&bursts);
 			FreeVarArray(&previousKeys);
@@ -541,7 +532,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 					if (!StrEquals(token.str, PARTS_PREFAB_COLLECTION_PREFIX))
 					{
 						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
-						LogExitFailure(log, PartsPrefabCollectionError_InvalidFilePrefix);
+						LogExitFailure(log, Result_InvalidFilePrefix);
 						FreeVarArray(&types);
 						FreeVarArray(&bursts);
 						FreeVarArray(&previousKeys);
@@ -553,7 +544,7 @@ bool TryDeserPartsPrefabCollection(MyStr_t fileContents, MemArena_t* memArena, P
 				else
 				{
 					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
-					LogExitFailure(log, PartsPrefabCollectionError_MultipleFilePrefix);
+					LogExitFailure(log, Result_MultipleFilePrefix);
 					FreeVarArray(&types);
 					FreeVarArray(&bursts);
 					FreeVarArray(&previousKeys);

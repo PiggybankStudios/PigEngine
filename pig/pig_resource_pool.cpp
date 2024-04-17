@@ -475,7 +475,7 @@ TextureRef_t ResourcePoolLoadTexture(ResourcePool_t* pool, MyStr_t filePath, boo
 	bool loadSuccess = LoadTexture(mainHeap, &tempTexture, filePath, pixelated, repeating, imageDataOut);
 	if (!loadSuccess)
 	{
-		PrintLine_E("Failed to load Texture for pool from \"%.*s\": Error %s", StrPrint(filePath), GetTextureErrorStr(tempTexture.error));
+		PrintLine_E("Failed to load Texture for pool from \"%.*s\": Error %s", StrPrint(filePath), GetResultStr(tempTexture.error));
 		return TextureRef_Invalid;
 	}
 	
@@ -533,7 +533,7 @@ SpriteSheetRef_t ResourcePoolLoadSpriteSheet(ResourcePool_t* pool, MyStr_t fileP
 	bool loadSuccess = LoadSpriteSheet(mainHeap, &tempSheet, filePath, padding, numFrames, pixelated, useTextureArray);
 	if (!loadSuccess)
 	{
-		PrintLine_E("Failed to load SpriteSheet for pool from \"%.*s\": Error %s", StrPrint(filePath), GetSpriteSheetErrorStr(tempSheet.error));
+		PrintLine_E("Failed to load SpriteSheet for pool from \"%.*s\": Error %s", StrPrint(filePath), GetResultStr(tempSheet.error));
 		return SpriteSheetRef_Invalid;
 	}
 	
@@ -564,7 +564,7 @@ ShaderRef_t ResourcePoolLoadShader(ResourcePool_t* pool, MyStr_t filePath, Verte
 	if (!loadSuccess)
 	{
 		//TODO: Copy the nice error output from Pig_LoadShaderResource
-		PrintLine_E("Failed to load Shader for pool from \"%.*s\": Error %s", StrPrint(filePath), GetShaderErrorStr(tempShader.error));
+		PrintLine_E("Failed to load Shader for pool from \"%.*s\": Error %s", StrPrint(filePath), GetResultStr(tempShader.error));
 		return ShaderRef_Invalid;
 	}
 	

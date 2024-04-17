@@ -9,36 +9,6 @@ Description:
 #define PIG_PARTS_MODEL_ARMATURE_FILE_PREFIX        "# Pig Engine Armature Data"
 #define PIG_PARTS_MODEL_ARMATURE_FILE_PREFIX_LENGTH 26
 
-enum TryDeserModelArmatureError_t
-{
-	TryDeserModelArmatureError_None = 0,
-	TryDeserModelArmatureError_CouldntOpenFile,
-	TryDeserModelArmatureError_EmptyFile,
-	TryDeserModelArmatureError_MissingFilePrefix,
-	TryDeserModelArmatureError_MissingRequiredFields,
-	TryDeserModelArmatureError_UnknownBoneName,
-	TryDeserModelArmatureError_MissingOrCorruptBones,
-	TryDeserModelArmatureError_MissingOrCorruptChildren,
-	TryDeserModelArmatureError_UnknownParentBoneName,
-	TryDeserModelArmatureError_NumErrors,
-};
-const char* GetTryDeserModelArmatureErrorStr(TryDeserModelArmatureError_t enumValue)
-{
-	switch (enumValue)
-	{
-		case TryDeserModelArmatureError_None:                     return "None";
-		case TryDeserModelArmatureError_CouldntOpenFile:          return "CouldntOpenFile";
-		case TryDeserModelArmatureError_EmptyFile:                return "EmptyFile";
-		case TryDeserModelArmatureError_MissingFilePrefix:        return "MissingFilePrefix";
-		case TryDeserModelArmatureError_MissingRequiredFields:    return "MissingRequiredFields";
-		case TryDeserModelArmatureError_UnknownBoneName:          return "UnknownBoneName";
-		case TryDeserModelArmatureError_MissingOrCorruptBones:    return "MissingOrCorruptBones";
-		case TryDeserModelArmatureError_MissingOrCorruptChildren: return "MissingOrCorruptChildren";
-		case TryDeserModelArmatureError_UnknownParentBoneName:    return "UnknownParentBoneName";
-		default: return "Unknown";
-	}
-}
-
 //NOTE: You should call DestroyModelArmature on armatureOut even if this function fails!
 bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, ModelArmature_t* armatureOut, MemArena_t* memArena)
 {
@@ -53,14 +23,14 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 	if (fileContents.length == 0)
 	{
 		LogWriteLine_E(log, "The file is empty!");
-		LogExitFailure(log, TryDeserModelArmatureError_EmptyFile);
+		LogExitFailure(log, Result_EmptyFile);
 		FreeScratchArena(scratch);
 		return false;
 	}
 	if (!StrStartsWith(fileContents, PIG_PARTS_MODEL_ARMATURE_FILE_PREFIX))
 	{
 		LogPrintLine_E(log, "The file is missing the required header: %s", PIG_PARTS_MODEL_ARMATURE_FILE_PREFIX);
-		LogExitFailure(log, TryDeserModelArmatureError_MissingFilePrefix);
+		LogExitFailure(log, Result_MissingFilePrefix);
 		FreeScratchArena(scratch);
 		return false;
 	}
@@ -88,7 +58,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 				(token.type == ParsingTokenType_KeyValuePair && (!StrEqualsIgnoreCase(token.key, "NumBones") && !StrEqualsIgnoreCase(token.key, "NumChildren") && !StrEqualsIgnoreCase(token.key, "ArmatureName"))))
 			{
 				LogPrintLine_E(log, "Found %s on line %llu, before NumBones/NumChildren/ArmatureName were specified!", GetParsingTokenTypeStr(token.type), parser.lineParser.lineIndex);
-				LogExitFailure(log, TryDeserModelArmatureError_MissingRequiredFields);
+				LogExitFailure(log, Result_MissingRequiredFields);
 				FreeScratchArena(scratch);
 				return false;
 			}
@@ -220,7 +190,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 						else if (!isRootBone && parentBone == nullptr)
 						{
 							LogPrintLine_E(log, "Unknown bone name \"%.*s\" for parent on bone \"%.*s\" (on line %llu). This could mean the bones are not ordered properly, or it could mean a bone is missing", StrPrint(parentNamePart), StrPrint(namePart), parser.lineParser.lineIndex);
-							LogExitFailure(log, TryDeserModelArmatureError_UnknownParentBoneName);
+							LogExitFailure(log, Result_UnknownParentBoneName);
 							PopMemMark(scratch);
 							FreeScratchArena(scratch);
 							return false;
@@ -285,7 +255,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 						else
 						{
 							LogPrintLine_W(log, "Unknown bone name \"%.*s\" for child \"%.*s\" on line %llu", StrPrint(boneNamePart), StrPrint(childNamePart), parser.lineParser.lineIndex);
-							LogExitFailure(log, TryDeserModelArmatureError_UnknownBoneName);
+							LogExitFailure(log, Result_UnknownBoneName);
 							PopMemMark(scratch);
 							FreeScratchArena(scratch);
 							return false;
@@ -328,7 +298,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 		if (!foundArmatureName) { LogWriteLine_E(log, "Missing ArmatureName!"); }
 		if (!foundNumBones) { LogWriteLine_E(log, "Missing NumBones!"); }
 		if (!foundNumChildren) { LogWriteLine_E(log, "Missing NumChildren!"); }
-		LogExitFailure(log, TryDeserModelArmatureError_MissingRequiredFields);
+		LogExitFailure(log, Result_MissingRequiredFields);
 		FreeScratchArena(scratch);
 		return false;
 	}
@@ -346,7 +316,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 		else
 		{
 			LogPrintLine_E(log, "Found %llu bones instead of %llu that was declared at the top of the file!", numBonesFound, numBones);
-			LogExitFailure(log, TryDeserModelArmatureError_MissingOrCorruptBones);
+			LogExitFailure(log, Result_MissingOrCorruptBones);
 			FreeScratchArena(scratch);
 			return false;
 		}
@@ -361,7 +331,7 @@ bool TryDeserModelArmature(MyStr_t armatureFileContents, ProcessLog_t* log, Mode
 		else
 		{
 			LogPrintLine_E(log, "Found %llu children instead of %llu that was declared at the top of the file!", numChildrenFound, numChildren);
-			LogExitFailure(log, TryDeserModelArmatureError_MissingOrCorruptChildren);
+			LogExitFailure(log, Result_MissingOrCorruptChildren);
 			FreeScratchArena(scratch);
 			return false;
 		}
@@ -393,7 +363,7 @@ bool TryLoadModelArmatureFrom(MyStr_t armatureFilePath, ProcessLog_t* log, Model
 	else
 	{
 		LogPrintLine_E(log, "Failed to open model armature file at \"%.*s\"", StrPrint(armatureFilePath));
-		LogExitFailure(log, TryDeserModelArmatureError_CouldntOpenFile);
+		LogExitFailure(log, Result_CouldntOpenFile);
 		return false;
 	}
 }

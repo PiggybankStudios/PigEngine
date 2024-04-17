@@ -67,7 +67,7 @@ bool CreateTextureArray(MemArena_t* memArena, Texture_t* textureOut, u64 numLaye
 	textureOut->sizei = textureSize;
 	textureOut->size = ToVec2(textureSize);
 	textureOut->numLayers = numLayers;
-	textureOut->error = TextureError_None;
+	textureOut->error = Result_None;
 	
 	#if OPENGL_SUPPORTED
 	const char* errorStr = nullptr;
@@ -77,7 +77,7 @@ bool CreateTextureArray(MemArena_t* memArena, Texture_t* textureOut, u64 numLaye
 		if (errorStr != nullptr)                                                                    \
 		{                                                                                           \
 			textureOut->apiErrorStr = PrintInArenaStr(memArena, apiCallStr " error: %s", errorStr); \
-			textureOut->error = TextureError_ApiError;                                              \
+			textureOut->error = Result_ApiError;                                              \
 		}                                                                                           \
 	} if (errorStr != nullptr)
 	#endif
@@ -184,11 +184,11 @@ bool CreateTextureArray(MemArena_t* memArena, Texture_t* textureOut, u64 numLaye
 		// +==============================+
 		default:
 		{
-			textureOut->error = TextureError_UnsupportedApi;
+			textureOut->error = Result_UnsupportedApi;
 		} break;
 	}
 	
-	AssertIf(!textureOut->isValid, textureOut->error != TextureError_None);
+	AssertIf(!textureOut->isValid, textureOut->error != Result_None);
 	return textureOut->isValid;
 }
 
@@ -217,13 +217,13 @@ bool LoadTextureArrayFromMultipleFiles(MemArena_t* memArena, Texture_t* textureO
 			if (imageFileContents.size == 0)
 			{
 				PrintLine_E("Image file %llu/%llu for texture array was empty at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
-				textureOut->error = TextureError_EmptyFile;
+				textureOut->error = Result_EmptyFile;
 				allImagesLoadedSuccessfully = false;
 			}
 			else if (!plat->TryParseImageFile(&imageFileContents, 4, imageDataPntr))
 			{
 				PrintLine_E("Failed to parse image %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
-				textureOut->error = TextureError_ParseFailure;
+				textureOut->error = Result_ParseFailure;
 				allImagesLoadedSuccessfully = false;
 			}
 			plat->FreeFileContents(&imageFileContents);
@@ -231,7 +231,7 @@ bool LoadTextureArrayFromMultipleFiles(MemArena_t* memArena, Texture_t* textureO
 		else
 		{
 			PrintLine_E("Failed to open file %llu/%llu for texture array at \"%.*s\"", fIndex+1, numFiles, StrPrint(filePath));
-			textureOut->error = TextureError_CouldntOpenFile;
+			textureOut->error = Result_CouldntOpenFile;
 			allImagesLoadedSuccessfully = false;
 		}
 		

@@ -12,30 +12,6 @@ Description:
 #define PIG_DBG_BINDINGS_MOUSE_BINDING_PREFIX      "(M)"
 #define PIG_DBG_BINDINGS_CONTROLLER_BINDING_PREFIX "(C)"
 
-enum PigTryDeserDebugBindingsError_t
-{
-	PigTryDeserDebugBindingsError_None = 0,
-	PigTryDeserDebugBindingsError_CantOpenFile,
-	PigTryDeserDebugBindingsError_MissingFilePrefix,
-	PigTryDeserDebugBindingsError_TokenBeforeFilePrefix,
-	PigTryDeserDebugBindingsError_InvalidFilePrefix,
-	PigTryDeserDebugBindingsError_MultipleFilePrefix,
-	PigTryDeserDebugBindingsError_NumErrors,
-};
-const char* GetPigTryDeserDebugBindingsErrorStr(PigTryDeserDebugBindingsError_t error)
-{
-	switch (error)
-	{
-		case PigTryDeserDebugBindingsError_None:                  return "None";
-		case PigTryDeserDebugBindingsError_CantOpenFile:          return "CantOpenFile";
-		case PigTryDeserDebugBindingsError_MissingFilePrefix:     return "MissingFilePrefix";
-		case PigTryDeserDebugBindingsError_TokenBeforeFilePrefix: return "TokenBeforeFilePrefix";
-		case PigTryDeserDebugBindingsError_InvalidFilePrefix:     return "InvalidFilePrefix";
-		case PigTryDeserDebugBindingsError_MultipleFilePrefix:    return "MultipleFilePrefix";
-		default: return "Unknown";
-	}
-}
-
 // +--------------------------------------------------------------+
 // |                           Helpers                            |
 // +--------------------------------------------------------------+
@@ -383,7 +359,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, bool isUserFile, ProcessLog_
 		if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 		{
 			LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
-			LogExitFailure(log, PigTryDeserDebugBindingsError_TokenBeforeFilePrefix);
+			LogExitFailure(log, Result_TokenBeforeFilePrefix);
 			return false;
 		}
 		
@@ -407,7 +383,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, bool isUserFile, ProcessLog_
 					if (token.str.length != PIG_DBG_BINDINGS_FILE_PREFIX_LENGTH || MyMemCompare(token.str.pntr, PIG_DBG_BINDINGS_FILE_PREFIX_STR, PIG_DBG_BINDINGS_FILE_PREFIX_LENGTH) != 0)
 					{
 						LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
-						LogExitFailure(log, PigTryDeserDebugBindingsError_InvalidFilePrefix);
+						LogExitFailure(log, Result_InvalidFilePrefix);
 						return false;
 					}
 					foundFilePrefix = true;
@@ -415,7 +391,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, bool isUserFile, ProcessLog_
 				else
 				{
 					LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
-					LogExitFailure(log, PigTryDeserDebugBindingsError_MultipleFilePrefix);
+					LogExitFailure(log, Result_MultipleFilePrefix);
 					return false;
 				}
 			} break;
@@ -468,7 +444,7 @@ bool PigTryDeserDebugBindings(MyStr_t fileContents, bool isUserFile, ProcessLog_
 	if (!foundFilePrefix)
 	{
 		LogWriteLine_E(log, "Found no file prefix! This is probably an empty file");
-		LogExitFailure(log, PigTryDeserDebugBindingsError_MissingFilePrefix);
+		LogExitFailure(log, Result_MissingFilePrefix);
 		return false;
 	}
 	
@@ -494,7 +470,7 @@ bool PigTryLoadDebugBindings(MyStr_t filePath, bool isUserFile, ProcessLog_t* lo
 		if (plat->DoesFileExist(filePath, nullptr))
 		{
 			LogPrintLine_E(log, "Failed to open debug bindings file at \"%.*s\"", StrPrint(filePath));
-			LogExitFailure(log, PigTryDeserDebugBindingsError_CantOpenFile);
+			LogExitFailure(log, Result_CouldntOpenFile);
 		}
 		else
 		{
@@ -543,7 +519,7 @@ void PigLoadDebugBindingsFullService(PigDebugBindings_t* bindingsOut, MyStr_t fi
 		}
 		else
 		{
-			PrintLine_D("Failed to load debug bindings from \"%.*s\"", StrPrint(filePath));
+			PrintLine_E("Failed to load debug bindings from \"%.*s\": %s", StrPrint(filePath), GetResultStr((Result_t)deserProcessLog.errorCode));
 		}
 		if (deserProcessLog.hadWarnings || deserProcessLog.hadErrors) { DumpProcessLog(&deserProcessLog, "Debug Bindings Parse Log"); }
 		FreeProcessLog(&deserProcessLog);

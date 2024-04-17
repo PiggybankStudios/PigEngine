@@ -121,7 +121,7 @@ void CreateShaderMultiPieceStart(MemArena_t* memArena, Shader_t* shaderOut, Vert
 	Assert(vertexType != VertexType_None);
 	ClearPointer(shaderOut);
 	shaderOut->allocArena = memArena;
-	shaderOut->error = ShaderError_None;
+	shaderOut->error = Result_None;
 	shaderOut->vertexType = vertexType;
 	shaderOut->requiredUniforms = requiredUniforms;
 	CreateVarArray(&shaderOut->dynamicUniforms, memArena, sizeof(ShaderDynamicUniform_t));
@@ -144,7 +144,7 @@ void CreateShaderMultiPieceStart(MemArena_t* memArena, Shader_t* shaderOut, Vert
 				if (errorStr != nullptr)                                                                              \
 				{                                                                                                     \
 					shaderOut->apiErrorStr = PrintInArenaStr(shaderOut->allocArena, apiCallStr " error: ", errorStr); \
-					shaderOut->error = ShaderError_ApiError;                                                          \
+					shaderOut->error = Result_ApiError;                                                          \
 				}                                                                                                     \
 			} if (errorStr != nullptr)
 			
@@ -154,28 +154,28 @@ void CreateShaderMultiPieceStart(MemArena_t* memArena, Shader_t* shaderOut, Vert
 			GLboolean shaderCompileSupported = GL_FALSE;
 			glGetBooleanv(GL_SHADER_COMPILER, &shaderCompileSupported);
 			CreateShader_CheckOpenGlError("glGetBooleanv(GL_SHADER_COMPILER)") { return; }
-			if (shaderCompileSupported == GL_FALSE) { shaderOut->error = ShaderError_CompilationNotSupported; return; }
+			if (shaderCompileSupported == GL_FALSE) { shaderOut->error = Result_CompilationNotSupported; return; }
 			
 			// +==============================+
 			// |     Create Vertex Shader     |
 			// +==============================+
 			shaderOut->glVertId = glCreateShader(GL_VERTEX_SHADER);
 			CreateShader_CheckOpenGlError("glCreateShader(GL_VERTEX_SHADER)") { return; }
-			if (shaderOut->glVertId == 0) { shaderOut->error = ShaderError_VertexCreationFailed; return; }
+			if (shaderOut->glVertId == 0) { shaderOut->error = Result_VertexCreationFailed; return; }
 			
 			// +==============================+
 			// |    Create Fragment Shader    |
 			// +==============================+
 			shaderOut->glFragId = glCreateShader(GL_FRAGMENT_SHADER);
 			CreateShader_CheckOpenGlError("glCreateShader(GL_FRAGMENT_SHADER)") { return; }
-			if (shaderOut->glFragId == 0) { shaderOut->error = ShaderError_FragmentCreationFailed; return; }
+			if (shaderOut->glFragId == 0) { shaderOut->error = Result_FragmentCreationFailed; return; }
 			
 			// +==============================+
 			// |    Create Shader Program     |
 			// +==============================+
 			shaderOut->glId = glCreateProgram();
 			CreateShader_CheckOpenGlError("glCreateProgram()") { return; }
-			if (shaderOut->glId == 0) { shaderOut->error = ShaderError_ShaderCreationFailed; return; }
+			if (shaderOut->glId == 0) { shaderOut->error = Result_ShaderCreationFailed; return; }
 			
 			#undef CreateShader_CheckOpenGlError
 		} break;
@@ -186,7 +186,7 @@ void CreateShaderMultiPieceStart(MemArena_t* memArena, Shader_t* shaderOut, Vert
 		// +==============================+
 		default:
 		{
-			shaderOut->error = ShaderError_UnsupportedApi;
+			shaderOut->error = Result_UnsupportedApi;
 		} break;
 	}
 }
@@ -196,7 +196,7 @@ void CreateShaderMultiPieceVertex(Shader_t* shaderOut, MyStr_t vertexPiece)
 	NotNull(shaderOut);
 	NotNull(shaderOut->allocArena);
 	NotNullStr(&vertexPiece);
-	if (shaderOut->error != ShaderError_None) { return; }
+	if (shaderOut->error != Result_None) { return; }
 	MyStr_t* newPiecePntr = VarArrayAdd(&shaderOut->vertexCodePieces, MyStr_t);
 	NotNull(newPiecePntr);
 	*newPiecePntr = AllocString(shaderOut->allocArena, &vertexPiece);
@@ -208,7 +208,7 @@ void CreateShaderMultiPieceFragment(Shader_t* shaderOut, MyStr_t fragmentPiece)
 	NotNull(shaderOut);
 	NotNull(shaderOut->allocArena);
 	NotNullStr(&fragmentPiece);
-	if (shaderOut->error != ShaderError_None) { return; }
+	if (shaderOut->error != Result_None) { return; }
 	MyStr_t* newPiecePntr = VarArrayAdd(&shaderOut->fragmentCodePieces, MyStr_t);
 	NotNull(newPiecePntr);
 	*newPiecePntr = AllocString(shaderOut->allocArena, &fragmentPiece);
@@ -219,7 +219,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 	AssertSingleThreaded();
 	NotNull(shaderOut);
 	NotNull(shaderOut->allocArena);
-	if (shaderOut->error != ShaderError_None) { return false; }
+	if (shaderOut->error != Result_None) { return false; }
 	
 	bool isSlugShader = IsFlagSet(shaderOut->vertexType, VertexType_SlugBit);
 	bool result = false;
@@ -238,12 +238,12 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 				if (errorStr != nullptr)                                                                              \
 				{                                                                                                     \
 					shaderOut->apiErrorStr = PrintInArenaStr(shaderOut->allocArena, apiCallStr " error: ", errorStr); \
-					shaderOut->error = ShaderError_ApiError;                                                          \
+					shaderOut->error = Result_ApiError;                                                          \
 				}                                                                                                     \
 			} if (errorStr != nullptr)
 			
-			if (shaderOut->vertexCodePieces.length == 0) { shaderOut->error = ShaderError_NoVertShaderPieces; return false; }
-			if (shaderOut->fragmentCodePieces.length == 0) { shaderOut->error = ShaderError_NoFragShaderPieces; return false; }
+			if (shaderOut->vertexCodePieces.length == 0) { shaderOut->error = Result_NoVertShaderPieces; return false; }
+			if (shaderOut->fragmentCodePieces.length == 0) { shaderOut->error = Result_NoFragShaderPieces; return false; }
 			
 			// +==============================+
 			// |    Compile Vertex Shader     |
@@ -260,7 +260,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 				glVertexCodePieceLengths[pIndex] = (GLint)codePiece->length;
 				totalVertexCodeLength += codePiece->length;
 			}
-			if (totalVertexCodeLength == 0) { shaderOut->error = ShaderError_Empty; return false; }
+			if (totalVertexCodeLength == 0) { shaderOut->error = Result_EmptyFile; return false; }
 			
 			glShaderSource(shaderOut->glVertId, (GLsizei)shaderOut->vertexCodePieces.length, glVertexCodePiecePntrs, glVertexCodePieceLengths);
 			CreateShader_CheckOpenGlError("glShaderSource(vertId)") { return false; }
@@ -303,7 +303,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			}
 			if (vertCompileStatus != GL_TRUE)
 			{
-				shaderOut->error = ShaderError_VertexCompileFailed;
+				shaderOut->error = Result_VertexCompileFailed;
 				return false;
 			}
 			
@@ -322,7 +322,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 				glFragmentCodePieceLengths[pIndex] = (GLint)codePiece->length;
 				totalFragmentCodeLength += codePiece->length;
 			}
-			if (totalFragmentCodeLength == 0) { shaderOut->error = ShaderError_Empty; return false; }
+			if (totalFragmentCodeLength == 0) { shaderOut->error = Result_EmptyFile; return false; }
 			
 			glShaderSource(shaderOut->glFragId, (GLsizei)shaderOut->fragmentCodePieces.length, glFragmentCodePiecePntrs, glFragmentCodePieceLengths);
 			CreateShader_CheckOpenGlError("glShaderSource(fragId)") { return false; }
@@ -365,7 +365,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			}
 			if (fragCompileStatus != GL_TRUE)
 			{
-				shaderOut->error = ShaderError_VertexCompileFailed;
+				shaderOut->error = Result_VertexCompileFailed;
 				return false;
 			}
 			
@@ -410,7 +410,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			}
 			if (linkStatus != GL_TRUE)
 			{
-				shaderOut->error = ShaderError_LinkingFailed;
+				shaderOut->error = Result_LinkingFailed;
 				return false;
 			}
 			
@@ -428,7 +428,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 				else                                                                                                     \
 				{                                                                                                        \
 					PrintLine_W("Warning: Shader is missing " attributeName " attribute");                               \
-					shaderOut->error = ShaderError_MissingAttribute;                                                     \
+					shaderOut->error = Result_MissingAttribute;                                                     \
 				}                                                                                                        \
 			} while(0)
 			shaderOut->actualVertexType = VertexType_None;
@@ -498,7 +498,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 				}                                                                                                        \
 				else if (IsFlagSet(shaderOut->requiredUniforms, (uniformBit)))                                           \
 				{                                                                                                        \
-					if (shaderOut->error == ShaderError_None) { shaderOut->error = ShaderError_MissingUniform; }         \
+					if (shaderOut->error == Result_None) { shaderOut->error = Result_MissingUniform; }         \
 					PrintLine_W("Warning: Shader is missing \"%s\" required uniform", (uniformName));                    \
 				}                                                                                                        \
 			} while(0)
@@ -543,7 +543,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 			CreateShader_FindUniform(shaderOut->glLocations.polygonPlanes,          "PolygonPlanes",          ShaderUniform_PolygonPlanes);
 			#undef CreateShader_FindUniform
 			
-			if (shaderOut->error == ShaderError_None || shaderOut->error == ShaderError_MissingAttribute || shaderOut->error == ShaderError_MissingUniform)
+			if (shaderOut->error == Result_None || shaderOut->error == Result_MissingAttribute || shaderOut->error == Result_MissingUniform)
 			{
 				shaderOut->isValid = true;
 				shaderOut->id = pig->nextShaderId;
@@ -560,7 +560,7 @@ bool CreateShaderMultiPieceEnd(Shader_t* shaderOut)
 		// +==============================+
 		default:
 		{
-			shaderOut->error = ShaderError_UnsupportedApi;
+			shaderOut->error = Result_UnsupportedApi;
 		} break;
 	}
 	return result;
@@ -581,7 +581,7 @@ bool CreateShader(MemArena_t* memArena, Shader_t* shaderOut, MyStr_t shaderCode,
 	if (!FindSubstring(shaderCode, divider, &dividerIndex))
 	{
 		ClearPointer(shaderOut);
-		shaderOut->error = ShaderError_MissingDivider;
+		shaderOut->error = Result_MissingDivider;
 		return false;
 	}
 	while (dividerIndex > 0 && shaderCode.pntr[dividerIndex] != '\n') { dividerIndex--; }
@@ -605,12 +605,12 @@ bool LoadShader(MemArena_t* memArena, Shader_t* shaderOut, MyStr_t filePath, Ver
 	PlatFileContents_t shaderFile;
 	if (!plat->ReadFileContents(filePath, nullptr, false, &shaderFile))
 	{
-		shaderOut->error = ShaderError_CouldntOpenFile;
+		shaderOut->error = Result_CouldntOpenFile;
 		return false;
 	}
 	
 	bool result = CreateShader(memArena, shaderOut, NewStr(shaderFile.size, shaderFile.chars), vertexType, requiredUniforms);
-	AssertIf(result == false, shaderOut->error != ShaderError_None);
+	AssertIf(result == false, shaderOut->error != Result_None);
 	
 	plat->FreeFileContents(&shaderFile);
 	return result;

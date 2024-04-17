@@ -210,7 +210,7 @@ bool TryLoadModel(ProcessLog_t* log, MyStr_t filePath, ModelTextureType_t textur
 		else
 		{
 			LogPrintLine_E(log, "Couldn't open model file at \"%.*s\"", StrPrint(filePath));
-			LogExitFailure(log, DeserObjFileError_MissingFile);
+			LogExitFailure(log, Result_MissingFile);
 		}
 	}
 	

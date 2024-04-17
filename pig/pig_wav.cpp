@@ -9,36 +9,6 @@ Description:
 // +--------------------------------------------------------------+
 // |                         Public Types                         |
 // +--------------------------------------------------------------+
-enum WavError_t
-{
-	WavError_None = 0,
-	WavError_EmptyFile,
-	WavError_InvalidRIFF,
-	WavError_InvalidWAVE,
-	WavError_MissingFormatChunk,
-	WavError_MissingDataChunks,
-	WavError_UnsupportedFormat,
-	WavError_DataBeforeFormat,
-	WavError_InvalidDataChunkSize,
-	WavError_NumCodes,
-};
-const char* GetWavErrorStr(WavError_t wavError)
-{
-	switch (wavError)
-	{
-		case WavError_None:                 return "None";
-		case WavError_EmptyFile:            return "EmptyFile";
-		case WavError_InvalidRIFF:          return "InvalidRIFF";
-		case WavError_InvalidWAVE:          return "InvalidWAVE";
-		case WavError_MissingFormatChunk:   return "MissingFormatChunk";
-		case WavError_MissingDataChunks:    return "MissingDataChunks";
-		case WavError_UnsupportedFormat:    return "UnsupportedFormat";
-		case WavError_DataBeforeFormat:     return "DataBeforeFormat";
-		case WavError_InvalidDataChunkSize: return "InvalidDataChunkSize";
-		default: return "Unknown";
-	}
-}
-
 struct WavAudioDataChunk_t
 {
 	WavAudioDataChunk_t* next;
@@ -189,7 +159,7 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 	if (wavFileSize < sizeof(WAV_Header_t))
 	{
 		LogWriteLine_E(log, "An empty file is not a valid WAV file");
-		LogExitFailure(log, WavError_EmptyFile);
+		LogExitFailure(log, Result_EmptyFile);
 		return false;
 	}
 	
@@ -199,13 +169,13 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 	if (wavHeader->RIFFID != WAV_CHUNK_TYPE_ID('R', 'I', 'F', 'F'))
 	{
 		LogWriteLine_E(log, "Invalid RIFF code at start of file. Is this really a WAV file?");
-		LogExitFailure(log, WavError_InvalidRIFF);
+		LogExitFailure(log, Result_InvalidRIFF);
 		return false;
 	}
 	if (wavHeader->WAVEID != WAV_CHUNK_TYPE_ID('W', 'A', 'V', 'E'))
 	{
 		LogWriteLine_E(log, "Invalid WAVE code at start of file. Is this really a WAV file?");
-		LogExitFailure(log, WavError_InvalidWAVE);
+		LogExitFailure(log, Result_InvalidWAVE);
 		return false;
 	}
 	
@@ -240,21 +210,21 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 				if (format->formatTag != 0x01)
 				{
 					LogPrintLine_E(log, "The formatTag in the WAV file is unsupported. We currently only support uncompressed PCM data. Found format 0x%02X", format->formatTag);
-					LogExitFailure(log, WavError_UnsupportedFormat);
+					LogExitFailure(log, Result_UnsupportedFormat);
 					FreeWavAudioData(wavDataOut);
 					return false;
 				}
 				if (format->numChannels != 1 && format->numChannels != 2)
 				{
 					LogPrintLine_E(log, "We don't support %u channel wav files!", format->numChannels);
-					LogExitFailure(log, WavError_UnsupportedFormat);
+					LogExitFailure(log, Result_UnsupportedFormat);
 					FreeWavAudioData(wavDataOut);
 					return false;
 				}
 				if (format->bitsPerSample != 16)
 				{
 					LogPrintLine_E(log, "We don't support %ubit wav files!", format->bitsPerSample);
-					LogExitFailure(log, WavError_UnsupportedFormat);
+					LogExitFailure(log, Result_UnsupportedFormat);
 					FreeWavAudioData(wavDataOut);
 					return false;
 				}
@@ -276,7 +246,7 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 				if (!foundFormat)
 				{
 					LogWriteLine_E(log, "\"data\" chunk came before \"fmt\" chunk!");
-					LogExitFailure(log, WavError_DataBeforeFormat);
+					LogExitFailure(log, Result_DataBeforeFormat);
 					FreeWavAudioData(wavDataOut);
 					return false;
 				}
@@ -287,7 +257,7 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 				if ((sampleDataSize % formatFrameSize) != 0)
 				{
 					LogPrintLine_E(log, "Data chunk contained an invalid number of bytes for %llu channel %llubit audio: %u bytes", wavDataOut->format.numChannels, wavDataOut->format.bitsPerSample, sampleDataSize);
-					LogExitFailure(log, WavError_InvalidDataChunkSize);
+					LogExitFailure(log, Result_InvalidDataChunkSize);
 					FreeWavAudioData(wavDataOut);
 					return false;
 				}
@@ -330,14 +300,14 @@ bool TryDeserWavFile(u64 wavFileSize, const void* wavFilePntr, ProcessLog_t* log
 	if (!foundFormat)
 	{
 		LogWriteLine_E(log, "We did not find the format chunk in the WAV file");
-		LogExitFailure(log, WavError_MissingFormatChunk);
+		LogExitFailure(log, Result_MissingFormatChunk);
 		FreeWavAudioData(wavDataOut);
 		return false;
 	}
 	if (wavDataOut->totalNumFrames == 0)
 	{
 		LogWriteLine_E(log, "We did not find any data chunks in the WAV file");
-		LogExitFailure(log, WavError_MissingDataChunks);
+		LogExitFailure(log, Result_MissingDataChunks);
 		FreeWavAudioData(wavDataOut);
 		return false;
 	}

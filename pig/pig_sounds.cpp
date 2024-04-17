@@ -182,7 +182,7 @@ bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memAr
 			}
 			else
 			{
-				LogPrintLine_E(log, "Failed to deserialize ogg sound at \"%.*s\"", StrPrint(filePath));
+				LogPrintLine_E(log, "Failed to deserialize ogg sound at \"%.*s\": %s", StrPrint(filePath), GetResultStr((Result_t)log->errorCode));
 			}
 			FreeOggAudioData(&oggData);
 		}
@@ -196,7 +196,7 @@ bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memAr
 			}
 			else
 			{
-				LogPrintLine_E(log, "Failed to deserialize wav sound at \"%.*s\"", StrPrint(filePath));
+				LogPrintLine_E(log, "Failed to deserialize wav sound at \"%.*s\": %s", StrPrint(filePath), GetResultStr((Result_t)log->errorCode));
 			}
 			FreeWavAudioData(&wavData);
 		}
@@ -204,7 +204,7 @@ bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memAr
 		{
 			LogPrintLine_E(log, "Unknown file format extension found on sound path: \"%.*s\"", StrPrint(filePath));
 			log->hadErrors = true;
-			log->errorCode = OggError_UnknownExtension;
+			log->errorCode = Result_UnknownExtension;
 		}
 		
 		plat->FreeFileContents(&soundFile);
@@ -213,7 +213,7 @@ bool TryLoadSoundOggOrWav(ProcessLog_t* log, MyStr_t filePath, MemArena_t* memAr
 	{
 		LogPrintLine_E(log, "Couldn't find/open sound file at \"%.*s\"", StrPrint(filePath));
 		log->hadErrors = true;
-		log->errorCode = OggError_MissingFile;
+		log->errorCode = Result_MissingFile;
 	}
 	return result;
 }

@@ -2013,7 +2013,7 @@ void RcLoadBasicResources()
 	
 	if (!LoadTexture(fixedHeap, &rc->invalidTexture, NewStr(RESOURCE_FOLDER_TEXTURES "/pig_invalid.png"), true, true))
 	{
-		PrintLine_E("Failed to load invalid texture! Error %s%s%s", GetTextureErrorStr(rc->invalidTexture.error), (rc->invalidTexture.error == TextureError_ApiError) ? ": " : "", (rc->invalidTexture.error == TextureError_ApiError) ? rc->invalidTexture.apiErrorStr.pntr : "");
+		PrintLine_E("Failed to load invalid texture! Error %s%s%s", GetResultStr(rc->invalidTexture.error), (rc->invalidTexture.error == Result_ApiError) ? ": " : "", (rc->invalidTexture.error == Result_ApiError) ? rc->invalidTexture.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->invalidTexture);
 		DebugAssert(false);
 	}
@@ -2034,7 +2034,7 @@ void RcLoadBasicResources()
 	gradientImageData.data32 = (u32*)&gradientColors[0];
 	if (!CreateTexture(fixedHeap, &rc->gradientHorizontal, &gradientImageData, false, false))
 	{
-		PrintLine_E("Failed to load gradientHorizontal texture! Error %s%s%s", GetTextureErrorStr(rc->gradientHorizontal.error), (rc->gradientHorizontal.error == TextureError_ApiError) ? ": " : "", (rc->gradientHorizontal.error == TextureError_ApiError) ? rc->gradientHorizontal.apiErrorStr.pntr : "");
+		PrintLine_E("Failed to load gradientHorizontal texture! Error %s%s%s", GetResultStr(rc->gradientHorizontal.error), (rc->gradientHorizontal.error == Result_ApiError) ? ": " : "", (rc->gradientHorizontal.error == Result_ApiError) ? rc->gradientHorizontal.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientHorizontal);
 		DebugAssert(false);
 	}
@@ -2042,7 +2042,7 @@ void RcLoadBasicResources()
 	gradientImageData.rowSize = gradientImageData.pixelSize * gradientImageData.width;
 	if (!CreateTexture(fixedHeap, &rc->gradientVertical, &gradientImageData, false, false))
 	{
-		PrintLine_E("Failed to load gradientVertical texture! Error %s%s%s", GetTextureErrorStr(rc->gradientVertical.error), (rc->gradientVertical.error == TextureError_ApiError) ? ": " : "", (rc->gradientVertical.error == TextureError_ApiError) ? rc->gradientVertical.apiErrorStr.pntr : "");
+		PrintLine_E("Failed to load gradientVertical texture! Error %s%s%s", GetResultStr(rc->gradientVertical.error), (rc->gradientVertical.error == Result_ApiError) ? ": " : "", (rc->gradientVertical.error == Result_ApiError) ? rc->gradientVertical.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->gradientVertical);
 		DebugAssert(false);
 	}
@@ -2056,7 +2056,7 @@ void RcLoadBasicResources()
 	dotTextureData.dataSize = dotTextureData.rowSize * dotTextureData.height;
 	if (!CreateTexture(fixedHeap, &rc->dotTexture, &dotTextureData, true, true))
 	{
-		PrintLine_E("Failed to create dotTexture! Error %s%s%s", GetTextureErrorStr(rc->dotTexture.error), (rc->dotTexture.error == TextureError_ApiError) ? ": " : "", (rc->dotTexture.error == TextureError_ApiError) ? rc->dotTexture.apiErrorStr.pntr : "");
+		PrintLine_E("Failed to create dotTexture! Error %s%s%s", GetResultStr(rc->dotTexture.error), (rc->dotTexture.error == Result_ApiError) ? ": " : "", (rc->dotTexture.error == Result_ApiError) ? rc->dotTexture.apiErrorStr.pntr : "");
 		DestroyTexture(&rc->dotTexture);
 		DebugAssert(false);
 	}

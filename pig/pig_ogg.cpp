@@ -24,38 +24,6 @@ Description:
 #include "stb/stb_vorbis.c"
 #pragma warning(pop)
 
-enum OggError_t
-{
-	OggError_None = 0,
-	OggError_MissingFile,
-	OggError_UnknownExtension,
-	OggError_EmptyFile,
-	OggError_DecodeError,
-	OggError_NoSamples,
-	OggError_NoDecodedData,
-	OggError_InvalidChannelCount,
-	OggError_InvalidSampleRate,
-	OggError_NotEnoughMemory,
-	OggError_NumCodes,
-};
-const char* GetOggErrorStr(OggError_t oggError)
-{
-	switch (oggError)
-	{
-		case OggError_None:                return "None";
-		case OggError_MissingFile:         return "MissingFile";
-		case OggError_UnknownExtension:    return "UnknownExtension";
-		case OggError_EmptyFile:           return "EmptyFile";
-		case OggError_DecodeError:         return "DecodeError";
-		case OggError_NoSamples:           return "NoSamples";
-		case OggError_NoDecodedData:       return "NoDecodedData";
-		case OggError_InvalidChannelCount: return "InvalidChannelCount";
-		case OggError_InvalidSampleRate:   return "InvalidSampleRate";
-		case OggError_NotEnoughMemory:     return "NotEnoughMemory";
-		default: return "Unknown";
-	}
-}
-
 const char* GetOggVorbisErrorStr(int errorCode)
 {
 	switch (errorCode)
@@ -119,7 +87,7 @@ bool TryDeserOggFile(u64 oggFileSize, const void* oggFilePntr, ProcessLog_t* log
 	
 	if (oggFileSize == 0)
 	{
-		LogExitFailure(log, OggError_EmptyFile);
+		LogExitFailure(log, Result_EmptyFile);
 		return false;
 	}
 	
@@ -142,32 +110,32 @@ bool TryDeserOggFile(u64 oggFileSize, const void* oggFilePntr, ProcessLog_t* log
 	if (decodeResult == -1)
 	{
 		LogWriteLine_E(log, "stb_vorbis_decode_memory returned -1 error code. Is this actually an ogg vorbis file?");
-		LogExitFailure(log, OggError_DecodeError);
+		LogExitFailure(log, Result_DecodeError);
 		return false;
 	}
 	if (decodeResult == 0)
 	{
 		LogWriteLine_E(log, "The ogg file contained no samples");
-		LogExitFailure(log, OggError_NoSamples);
+		LogExitFailure(log, Result_NoSamples);
 		return false;
 	}
 	if (decodedData == nullptr)
 	{
 		LogWriteLine_E(log, "stb_vorbis_decode_memory returned success but decodedData was not filled");
-		LogExitFailure(log, OggError_NoDecodedData);
+		LogExitFailure(log, Result_NoDecodedData);
 		return false;
 	}
 	if (decodedNumChannels != 1 && decodedNumChannels != 2)
 	{
 		LogPrintLine_E(log, "Unsupported channel count: %d", decodedNumChannels);
-		LogExitFailure(log, OggError_InvalidChannelCount);
+		LogExitFailure(log, Result_InvalidChannelCount);
 		return false;
 	}
 	//TODO: Add more supported sample rates if we can support them
 	if (decodedSampleRate != platInfo->audioFormat.samplesPerSecond)
 	{
 		LogPrintLine_E(log, "Unsupported sample rate: %d (we only support %llu currently)", decodedSampleRate, platInfo->audioFormat.samplesPerSecond);
-		LogExitFailure(log, OggError_InvalidSampleRate);
+		LogExitFailure(log, Result_InvalidSampleRate);
 		return false;
 	}
 	
@@ -184,7 +152,7 @@ bool TryDeserOggFile(u64 oggFileSize, const void* oggFilePntr, ProcessLog_t* log
 	if (oggDataOut->samples == nullptr)
 	{
 		LogPrintLine_E(log, "Failed to allocate %llu bytes for %llu audio samples (%llu frames)", oggDataOut->samplesSize, oggDataOut->totalNumFrames * oggDataOut->format.numChannels, oggDataOut->totalNumFrames);
-		LogExitFailure(log, OggError_NotEnoughMemory);
+		LogExitFailure(log, Result_NotEnoughMemory);
 		return false;
 	}
 	
@@ -242,7 +210,7 @@ bool CreateOggAudioStream(ProcessLog_t* log, PlatOpenFile_t* openFile, Fifo_t* f
 	if (stbHandle == nullptr)
 	{
 		LogPrintLine_E(log, "Failed to start parsing the ogg file! Maybe this isn't a valid ogg file? Maybe our initial read buffer isn't large enough? Stb Error: %s", GetOggVorbisErrorStr(stbError));
-		LogExitFailure(log, OggError_DecodeError);
+		LogExitFailure(log, Result_DecodeError);
 		return false;
 	}
 	

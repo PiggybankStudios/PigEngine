@@ -66,7 +66,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 	bufferOut->antialiasingNumSamples = antialiasingNumSamples;
 	bufferOut->isHdrBuffer = isHdrBuffer;
 	bufferOut->channelFlags = channelFlags;
-	bufferOut->error = FrameBufferError_None;
+	bufferOut->error = Result_None;
 	bool hasMsaa = (antialiasingNumSamples > 0);
 	
 	#if OPENGL_SUPPORTED
@@ -76,7 +76,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 		if (errorStr != nullptr)                                                                   \
 		{                                                                                          \
 			bufferOut->apiErrorStr = PrintInArenaStr(memArena, apiCallStr " error: %s", errorStr); \
-			bufferOut->error = FrameBufferError_ApiError;                                          \
+			bufferOut->error = Result_ApiError;                                          \
 		}                                                                                          \
 	} if (errorStr != nullptr)
 	#endif
@@ -110,7 +110,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 			const bool pixelated = false, repeating = false, reverseByteOrder = false, generateMipmap = !hasMsaa;
 			if (!CreateTexture(memArena, &bufferOut->texture, &emptyImageData, pixelated, repeating, reverseByteOrder, generateMipmap, antialiasingNumSamples))
 			{
-				bufferOut->error = FrameBufferError_TextureError;
+				bufferOut->error = Result_TextureError;
 				break;
 			}
 			// Framebuffers render with (0, 0) in the bottom left of the texture, so when we go to use this texture we should flip it on the y-axis to act like other textures we use
@@ -168,7 +168,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 					default: statusStr = TempPrint("%d", bufferStatus); break;
 				}
 				bufferOut->apiErrorStr = PrintInArenaStr(memArena, "FramebufferStatus came back as \"%s\"", statusStr);
-				bufferOut->error = FrameBufferError_ApiError;
+				bufferOut->error = Result_ApiError;
 				break;
 			}
 			
@@ -187,7 +187,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 				const bool outPixelated = false, outRepeating = false;
 				if (!CreateTexture(memArena, &bufferOut->outTexture, &emptyImageData, outPixelated, outRepeating))
 				{
-					bufferOut->error = FrameBufferError_OutTextureError;
+					bufferOut->error = Result_OutTextureError;
 					break;
 				}
 				bufferOut->outTexture.isFlippedY = true;
@@ -216,7 +216,7 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 						default: statusStr = TempPrint("%d", intBufferStatus); break;
 					}
 					bufferOut->apiErrorStr = PrintInArenaStr(memArena, "Out FramebufferStatus came back as \"%s\"", statusStr);
-					bufferOut->error = FrameBufferError_ApiError;
+					bufferOut->error = Result_ApiError;
 					break;
 				}
 			}
@@ -230,32 +230,32 @@ bool CreateFrameBuffer(MemArena_t* memArena, FrameBuffer_t* bufferOut, v2i size,
 		// +==============================+
 		default:
 		{
-			bufferOut->error = FrameBufferError_UnsupportedApi;
+			bufferOut->error = Result_UnsupportedApi;
 		} break;
 	}
 	
-	AssertIf(!bufferOut->isValid, bufferOut->error != FrameBufferError_None);
+	AssertIf(!bufferOut->isValid, bufferOut->error != Result_None);
 	return bufferOut->isValid;
 }
 
 const char* PrintFrameBufferError(const FrameBuffer_t* buffer)
 {
 	NotNull(buffer);
-	if (buffer->error == FrameBufferError_TextureError)
+	if (buffer->error == Result_TextureError)
 	{
 		return TempPrint("Texture: %s", PrintTextureError(&buffer->texture));
 	}
-	else if (buffer->error == FrameBufferError_OutTextureError)
+	else if (buffer->error == Result_OutTextureError)
 	{
 		return TempPrint("OutTexture: %s", PrintTextureError(&buffer->outTexture));
 	}
-	else if (buffer->error == FrameBufferError_ApiError)
+	else if (buffer->error == Result_ApiError)
 	{
 		return TempPrint("Api: %.*s", StrPrint(buffer->apiErrorStr));
 	}
 	else
 	{
-		return GetFrameBufferErrorStr(buffer->error);
+		return GetResultStr(buffer->error);
 	}
 }
 

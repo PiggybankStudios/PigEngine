@@ -9,30 +9,6 @@ Date:   01\27\2022
 
 #define VECTOR_IMG_MAX_PART_TREE_DEPTH   16 //parts within parts within parts...
 
-enum VectorImgError_t
-{
-	VectorImgError_None = 0,
-	VectorImgError_CouldntOpenFile,
-	VectorImgError_EmptyFile,
-	VectorImgError_NoGroups,
-	VectorImgError_XmlError,
-	VectorImgError_SvgError,
-	VectorImgError_NumErrors,
-};
-const char* GetVectorImgErrorStr(VectorImgError_t error)
-{
-	switch (error)
-	{
-		case VectorImgError_None:            return "None";
-		case VectorImgError_CouldntOpenFile: return "CouldntOpenFile";
-		case VectorImgError_EmptyFile:       return "EmptyFile";
-		case VectorImgError_NoGroups:        return "NoGroups";
-		case VectorImgError_XmlError:        return "XmlError";
-		case VectorImgError_SvgError:        return "SvgError";
-		default: return "Unknown";
-	}
-}
-
 enum VectorImgFillType_t
 {
 	VectorImgFillType_None = 0,
@@ -147,9 +123,8 @@ struct VectorImg_t
 	u64 id;
 	bool isValid;
 	MemArena_t* allocArena;
-	VectorImgError_t error;
+	Result_t error;
 	XmlParsingError_t xmlError;
-	TryDeserSvgFileError_t svgError;
 	
 	u64 totalNumParts;
 	u64 totalNumShapes;

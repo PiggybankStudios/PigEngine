@@ -789,19 +789,13 @@ struct PlatSteamFriendGroup_t
 	VarArray_t memberIds; //u64 (sorted by friend info)
 };
 
-enum PlatSteamFriendsListQueryError_t
-{
-	PlatSteamFriendsListQueryError_None = 0,
-	PlatSteamFriendsListQueryError_NumErrors,
-};
-
 struct PlatSteamFriendsList_t
 {
 	MemArena_t* allocArena;
 	
 	u64 lastQueryAttemptTime; //0 means we've never queried before
 	u64 lastQuerySuccessTime; //0 means we've never successfully queried before
-	PlatSteamFriendsListQueryError_t lastQueryError;
+	Result_t lastQueryError;
 	
 	u64 nextFriendId;
 	u64 nextGroupId;

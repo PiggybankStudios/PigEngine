@@ -59,7 +59,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 	textureOut->sizei = imageData->size;
 	textureOut->size = ToVec2(imageData->size);
 	textureOut->numLayers = 1;
-	textureOut->error = TextureError_None;
+	textureOut->error = Result_None;
 	bool hasAntialiasing = (antialiasingNumSamples > 0);
 	
 	const char* errorStr = nullptr;
@@ -70,7 +70,7 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 		if (errorStr != nullptr)                                                                    \
 		{                                                                                           \
 			textureOut->apiErrorStr = PrintInArenaStr(memArena, apiCallStr " error: %s", errorStr); \
-			textureOut->error = TextureError_ApiError;                                              \
+			textureOut->error = Result_ApiError;                                              \
 		}                                                                                           \
 	} if (errorStr != nullptr)
 	#endif
@@ -180,11 +180,11 @@ bool CreateTexture(MemArena_t* memArena, Texture_t* textureOut, const PlatImageD
 		// +==============================+
 		default:
 		{
-			textureOut->error = TextureError_UnsupportedApi;
+			textureOut->error = Result_UnsupportedApi;
 		} break;
 	}
 	
-	AssertIf(!textureOut->isValid, textureOut->error != TextureError_None);
+	AssertIf(!textureOut->isValid, textureOut->error != Result_None);
 	return textureOut->isValid;
 }
 
@@ -198,12 +198,12 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	PlatFileContents_t textureFile;
 	if (!plat->ReadFileContents(filePath, nullptr, false, &textureFile))
 	{
-		textureOut->error = TextureError_CouldntOpenFile;
+		textureOut->error = Result_CouldntOpenFile;
 		return false;
 	}
 	if (textureFile.size == 0)
 	{
-		textureOut->error = TextureError_EmptyFile;
+		textureOut->error = Result_EmptyFile;
 		plat->FreeFileContents(&textureFile);
 		return false;
 	}
@@ -212,7 +212,7 @@ bool LoadTexture(MemArena_t* memArena, Texture_t* textureOut, MyStr_t filePath, 
 	PlatImageData_t imageData;
 	if (!plat->TryParseImageFile(&textureFile, sizeof(u32), &imageData))
 	{
-		textureOut->error = TextureError_ParseFailure;
+		textureOut->error = Result_ParseFailure;
 		plat->FreeFileContents(&textureFile);
 		return false;
 	}
@@ -265,13 +265,13 @@ void TextureGenerateMipmaps(Texture_t* texture)
 const char* PrintTextureError(const Texture_t* texture)
 {
 	NotNull(texture);
-	if (texture->error == TextureError_ApiError)
+	if (texture->error == Result_ApiError)
 	{
 		return TempPrint("Api: %.*s", StrPrint(texture->apiErrorStr));
 	}
 	else
 	{
-		return GetTextureErrorStr(texture->error);
+		return GetResultStr(texture->error);
 	}
 }
 

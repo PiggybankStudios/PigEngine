@@ -79,13 +79,11 @@ void DestroyVectorImg(VectorImg_t* image)
 {
 	NotNull(image);
 	DestroyVectorImgPart(image, &image->root);
-	VectorImgError_t error          = image->error;
-	XmlParsingError_t xmlError      = image->xmlError;
-	TryDeserSvgFileError_t svgError = image->svgError;
+	Result_t error             = image->error;
+	XmlParsingError_t xmlError = image->xmlError;
 	ClearPointer(image);
 	image->error    = error;
 	image->xmlError = xmlError;
-	image->svgError = svgError;
 }
 
 // +--------------------------------------------------------------+
@@ -204,7 +202,7 @@ bool CreateVectorImgFromSvg(MemArena_t* memArena, VectorImg_t* imageOut, const S
 	
 	if (svgData->groups.length == 0)
 	{
-		imageOut->error = VectorImgError_NoGroups;
+		imageOut->error = Result_NoGroups;
 		DestroyVectorImg(imageOut);
 		return false;
 	}

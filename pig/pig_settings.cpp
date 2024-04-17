@@ -10,34 +10,6 @@ Description:
 #define PIG_SETTINGS_FILE_PREFIX_STR      "# [Pig Settings]"
 #define PIG_SETTINGS_FILE_PREFIX_LENGTH   16
 
-enum PigTryDeserSettingsError_t
-{
-	PigTryDeserSettingsError_None = 0,
-	PigTryDeserSettingsError_CantOpenFile,
-	PigTryDeserSettingsError_EmptyFile,
-	PigTryDeserSettingsError_MissingFilePrefix,
-	PigTryDeserSettingsError_TokenBeforeFilePrefix,
-	PigTryDeserSettingsError_InvalidFilePrefix,
-	PigTryDeserSettingsError_MultipleFilePrefix,
-	PigTryDeserSettingsError_NotEnoughMemoryForStrings,
-	PigTryDeserSettingsError_NumErrors,
-};
-const char* GetPigTryDeserSettingsErrorStr(PigTryDeserSettingsError_t error)
-{
-	switch (error)
-	{
-		case PigTryDeserSettingsError_None:                      return "None";
-		case PigTryDeserSettingsError_CantOpenFile:              return "CantOpenFile";
-		case PigTryDeserSettingsError_EmptyFile:                 return "EmptyFile";
-		case PigTryDeserSettingsError_MissingFilePrefix:         return "MissingFilePrefix";
-		case PigTryDeserSettingsError_TokenBeforeFilePrefix:     return "TokenBeforeFilePrefix";
-		case PigTryDeserSettingsError_InvalidFilePrefix:         return "InvalidFilePrefix";
-		case PigTryDeserSettingsError_MultipleFilePrefix:        return "MultipleFilePrefix";
-		case PigTryDeserSettingsError_NotEnoughMemoryForStrings: return "NotEnoughMemoryForStrings";
-		default: return "Unknown";
-	}
-}
-
 MyStr_t PigGetSettingsFilePath(MemArena_t* tempArena, MemArena_t* memArena, MyStr_t applicationName, MyStr_t fileName, PlatApiGetSpecialFolderPath_f* getSpecialFolderPathFunc = nullptr)
 {
 	NotNull2(tempArena, memArena);
@@ -90,7 +62,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 	if (fileContents.length < PIG_SETTINGS_FILE_PREFIX_LENGTH)
 	{
 		LogWriteLine_E(log, "The file is empty. It can't be a valid settings file");
-		LogExitFailure(log, PigTryDeserSettingsError_EmptyFile);
+		LogExitFailure(log, Result_EmptyFile);
 		return false;
 	}
 	
@@ -116,7 +88,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 			if (!foundFilePrefix && token.type != ParsingTokenType_FilePrefix)
 			{
 				LogPrintLine_E(log, "Found %s token before file prefix: \"%.*s\"", GetParsingTokenTypeStr(token.type), StrPrint(token.str));
-				LogExitFailure(log, PigTryDeserSettingsError_TokenBeforeFilePrefix);
+				LogExitFailure(log, Result_TokenBeforeFilePrefix);
 				return false;
 			}
 			
@@ -140,7 +112,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 						if (token.str.length != PIG_SETTINGS_FILE_PREFIX_LENGTH || MyMemCompare(token.str.pntr, PIG_SETTINGS_FILE_PREFIX_STR, PIG_SETTINGS_FILE_PREFIX_LENGTH) != 0)
 						{
 							LogPrintLine_E(log, "Invalid file prefix found: \"%.*s\"", StrPrint(token.str));
-							LogExitFailure(log, PigTryDeserSettingsError_InvalidFilePrefix);
+							LogExitFailure(log, Result_InvalidFilePrefix);
 							return false;
 						}
 						foundFilePrefix = true;
@@ -148,7 +120,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 					else
 					{
 						LogPrintLine_E(log, "Second file prefix found: \"%.*s\"", StrPrint(token.str));
-						LogExitFailure(log, PigTryDeserSettingsError_MultipleFilePrefix);
+						LogExitFailure(log, Result_MultipleFilePrefix);
 						return false;
 					}
 				} break;
@@ -202,7 +174,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 		if (!foundFilePrefix)
 		{
 			LogWriteLine_E(log, "Found no file prefix! This is probably an empty file");
-			LogExitFailure(log, PigTryDeserSettingsError_MissingFilePrefix);
+			LogExitFailure(log, Result_MissingFilePrefix);
 			return false;
 		}
 		
@@ -215,7 +187,7 @@ bool PigTryDeserSettings(MyStr_t fileContents, ProcessLog_t* log, PigSettings_t*
 				if (stringsBuffer == nullptr)
 				{
 					LogPrintLine_E(log, "Failed to allocation %llu bytes for strings from provided memory arena!", stringBufferSize);
-					LogExitFailure(log, PigTryDeserSettingsError_NotEnoughMemoryForStrings);
+					LogExitFailure(log, Result_NotEnoughMemory);
 					return false;
 				}
 				InitMemArena_Buffer(&stringBufferArena, stringBufferSize, stringsBuffer);
@@ -244,7 +216,7 @@ bool PigTryLoadSettings(MyStr_t filePath, ProcessLog_t* log, PigSettings_t* sett
 	else
 	{
 		LogPrintLine_E(log, "Failed to open settings file at \"%.*s\"", StrPrint(filePath));
-		LogExitFailure(log, PigTryDeserSettingsError_CantOpenFile);
+		LogExitFailure(log, Result_CouldntOpenFile);
 	}
 	return result;
 }

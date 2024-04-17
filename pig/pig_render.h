@@ -195,54 +195,6 @@ enum ShaderUniform_t
 	ShaderUniform_NumPolygonPlanes = 8, //make sure this matches the define in convexPolygon2D.glsl
 };
 
-enum ShaderError_t
-{
-	ShaderError_None = 0,
-	ShaderError_CouldntOpenFile,
-	ShaderError_Empty,
-	ShaderError_UnsupportedApi,
-	ShaderError_ApiError,
-	ShaderError_CompilationNotSupported,
-	ShaderError_MissingDivider,
-	ShaderError_VertexCreationFailed,
-	ShaderError_VertexCompileFailed,
-	ShaderError_FragmentCreationFailed,
-	ShaderError_FragmentCompileFailed,
-	ShaderError_ShaderCreationFailed,
-	ShaderError_LinkingFailed,
-	ShaderError_VertexArrayCreationFailed,
-	ShaderError_MissingAttribute,
-	ShaderError_MissingUniform,
-	ShaderError_NoVertShaderPieces,
-	ShaderError_NoFragShaderPieces,
-	ShaderError_NumErrors,
-};
-const char* GetShaderErrorStr(ShaderError_t error)
-{
-	switch (error)
-	{
-		case ShaderError_None:                      return "None";
-		case ShaderError_CouldntOpenFile:           return "CouldntOpenFile";
-		case ShaderError_Empty:                     return "Empty";
-		case ShaderError_UnsupportedApi:            return "UnsupportedApi";
-		case ShaderError_ApiError:                  return "ApiError";
-		case ShaderError_CompilationNotSupported:   return "CompilationNotSupported";
-		case ShaderError_MissingDivider:            return "MissingDivider";
-		case ShaderError_VertexCreationFailed:      return "VertexCreationFailed";
-		case ShaderError_VertexCompileFailed:       return "VertexCompileFailed";
-		case ShaderError_FragmentCreationFailed:    return "FragmentCreationFailed";
-		case ShaderError_FragmentCompileFailed:     return "FragmentCompileFailed";
-		case ShaderError_ShaderCreationFailed:      return "ShaderCreationFailed";
-		case ShaderError_LinkingFailed:             return "LinkingFailed";
-		case ShaderError_VertexArrayCreationFailed: return "VertexArrayCreationFailed";
-		case ShaderError_MissingAttribute:          return "MissingAttribute";
-		case ShaderError_MissingUniform:            return "MissingUniform";
-		case ShaderError_NoVertShaderPieces:        return "NoVertShaderPieces";
-		case ShaderError_NoFragShaderPieces:        return "NoFragShaderPieces";
-		default: return "Unknown";
-	}
-}
-
 struct ShaderDynamicUniform_t
 {
 	u64 uniformIndex;
@@ -256,7 +208,7 @@ struct Shader_t
 {
 	bool isValid;
 	u64 id;
-	ShaderError_t error;
+	Result_t error;
 	MyStr_t apiErrorStr;
 	MemArena_t* allocArena;
 	VertexType_t vertexType;
@@ -365,35 +317,11 @@ struct VertBuffer_t
 	#endif
 };
 
-enum TextureError_t
-{
-	TextureError_None = 0,
-	TextureError_CouldntOpenFile,
-	TextureError_EmptyFile,
-	TextureError_ParseFailure,
-	TextureError_UnsupportedApi,
-	TextureError_ApiError,
-	TextureError_NumErrors,
-};
-const char* GetTextureErrorStr(TextureError_t error)
-{
-	switch (error)
-	{
-		case TextureError_None:            return "None";
-		case TextureError_CouldntOpenFile: return "CouldntOpenFile";
-		case TextureError_EmptyFile:       return "EmptyFile";
-		case TextureError_ParseFailure:    return "ParseFailure";
-		case TextureError_UnsupportedApi:  return "UnsupportedApi";
-		case TextureError_ApiError:        return "ApiFailure";
-		default: return "Unknown";
-	}
-}
-
 struct Texture_t
 {
 	bool isValid;
 	u64 id;
-	TextureError_t error;
+	Result_t error;
 	MyStr_t apiErrorStr;
 	MemArena_t* allocArena;
 	
@@ -422,28 +350,6 @@ struct Texture_t
 	#endif
 };
 
-enum FrameBufferError_t
-{
-	FrameBufferError_None = 0,
-	FrameBufferError_UnsupportedApi,
-	FrameBufferError_ApiError,
-	FrameBufferError_TextureError,
-	FrameBufferError_OutTextureError,
-	FrameBufferError_NumErrors,
-};
-const char* GetFrameBufferErrorStr(FrameBufferError_t error)
-{
-	switch (error)
-	{
-		case FrameBufferError_None:            return "None";
-		case FrameBufferError_UnsupportedApi:  return "UnsupportedApi";
-		case FrameBufferError_ApiError:        return "ApiFailure";
-		case FrameBufferError_TextureError:    return "TextureError";
-		case FrameBufferError_OutTextureError: return "OutTextureError";
-		default: return "Unknown";
-	}
-}
-
 enum FrameBufferChannel_t
 {
 	FrameBufferChannel_None    = 0x00,
@@ -459,7 +365,7 @@ struct FrameBuffer_t
 	MemArena_t* allocArena;
 	u64 id;
 	bool isValid;
-	FrameBufferError_t error;
+	Result_t error;
 	MyStr_t apiErrorStr;
 	
 	Texture_t texture;
@@ -493,30 +399,6 @@ struct PostProcessingChain_t
 	BktArray_t inputBuffers; //FrameBuffer_t
 };
 
-enum SpriteSheetError_t
-{
-	SpriteSheetError_None = 0,
-	SpriteSheetError_CouldntOpenFile,
-	SpriteSheetError_EmptyFile,
-	SpriteSheetError_ParseFailure,
-	SpriteSheetError_AllocFailure,
-	SpriteSheetError_TextureError,
-	SpriteSheetError_NumErrors,
-};
-const char* GetSpriteSheetErrorStr(SpriteSheetError_t error)
-{
-	switch (error)
-	{
-		case SpriteSheetError_None:            return "None";
-		case SpriteSheetError_CouldntOpenFile: return "CouldntOpenFile";
-		case SpriteSheetError_EmptyFile:       return "EmptyFile";
-		case SpriteSheetError_ParseFailure:    return "ParseFailure";
-		case SpriteSheetError_AllocFailure:    return "AllocFailure";
-		case SpriteSheetError_TextureError:    return "TextureError";
-		default: return "Unknown";
-	}
-}
-
 struct SpriteSheetFramePoint_t
 {
 	v2 point;
@@ -542,7 +424,7 @@ struct SpriteSheet_t
 	bool isValid;
 	u64 id;
 	MemArena_t* allocArena;
-	SpriteSheetError_t error;
+	Result_t error;
 	
 	Texture_t texture;
 	union
