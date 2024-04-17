@@ -267,7 +267,7 @@ void PigInitPython()
 	PyStatus status = {};
 	
 	//TODO: Change this back to our own arena! (Our arena was running rather slow during initialization of python. We should do some performance work for PagedHeap and arenas in general)
-	#if 1
+	#if 0
 	pig->python.allocator.ctx     = &pig->pythonHeap;
 	#else
 	pig->python.allocator.ctx     = platInfo->stdHeap;
@@ -507,19 +507,19 @@ bool ParsePythonScriptStr(PythonScript_t* script, MyStr_t codeStr)
 	return (parseResult != nullptr);
 }
 
-//If this returns RunPythonFunctionResult_Exception, you can call PrintPyException to print the error
-RunPythonFunctionResult_t RunPythonFunctionInDict(PyObject* pyDict, MyStr_t functionName, PyObject** returnOut)
+//If this returns Result_Exception, you can call PrintPyException to print the error
+Result_t RunPythonFunctionInDict(PyObject* pyDict, MyStr_t functionName, PyObject** returnOut)
 {
 	PyObject* functionNameObject = PyUnicode_FromStringAndSize(functionName.chars, functionName.length);
 	PyObject* functionObject = PyDict_GetItem(pyDict, functionNameObject);
 	Py_DECREF(functionNameObject);
-	if (functionObject == nullptr) { return RunPythonFunctionResult_FunctionMissing; }
+	if (functionObject == nullptr) { return Result_FunctionMissing; }
 	Py_INCREF(functionObject);
 	
-	if (!PyFunction_Check(functionObject)) { Py_DECREF(functionObject); return RunPythonFunctionResult_NotAFunction; }
+	if (!PyFunction_Check(functionObject)) { Py_DECREF(functionObject); return Result_NotAFunction; }
 	
 	PyObject* mainResult = PyObject_CallNoArgs(functionObject);
-	if (mainResult == nullptr) { Py_DECREF(functionObject); return RunPythonFunctionResult_Exception; }
+	if (mainResult == nullptr) { Py_DECREF(functionObject); return Result_Exception; }
 	
 	if (returnOut != nullptr)
 	{
@@ -527,9 +527,9 @@ RunPythonFunctionResult_t RunPythonFunctionInDict(PyObject* pyDict, MyStr_t func
 	}
 	else { Py_DECREF(mainResult); }
 	
-	return RunPythonFunctionResult_Success;
+	return Result_Success;
 }
-RunPythonFunctionResult_t RunPythonFunctionInScript(PythonScript_t* script, MyStr_t functionName, PyObject** returnOut)
+Result_t RunPythonFunctionInScript(PythonScript_t* script, MyStr_t functionName, PyObject** returnOut)
 {
 	NotNull2(script, script->localDict);
 	return RunPythonFunctionInDict(script->localDict, functionName, returnOut);

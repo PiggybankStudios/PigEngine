@@ -1573,11 +1573,13 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 	{
 		if (numArguments != 1) { PrintLine_E("This command takes 1 argument, not %llu: python_file [file_name]", numArguments); return validCommand; }
 		
+		StartPerfSections(4, "LoadFile", true);
 		MemArena_t* scratch = GetScratchArena();
 		PlatFileContents_t scriptFile;
 		if (!plat->ReadFileContents(arguments[0], scratch, true, &scriptFile)) { PrintLine_E("Failed to open file \"%.*s\"", StrPrint(arguments[0])); return validCommand; }
 		MyStr_t scriptStr = NewStr(scriptFile.length, scriptFile.chars);
 		
+		PerfSection("CreateScript");
 		PythonScript_t* script = CreatePythonScript(scratch);
 		if (!ParsePythonScriptStr(script, scriptStr))
 		{
@@ -1587,18 +1589,27 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			return validCommand;
 		}
 		
+		PerfSection("RunScript");
 		PyObject* mainResult = nullptr;
-		RunPythonFunctionResult_t runResult = RunPythonFunctionInScript(script, NewStr("main"), &mainResult);
-		if (runResult == RunPythonFunctionResult_Success)
+		Result_t runResult = RunPythonFunctionInScript(script, NewStr("main"), &mainResult);
+		if (runResult == Result_Success)
 		{
 			PrintPyObject("main() => ", mainResult);
 			if (mainResult != nullptr) { Py_DECREF(mainResult); }
+			
+			runResult = RunPythonFunctionInScript(script, NewStr("main"), &mainResult);
+			PrintPyObject("2nd main() => ", mainResult);
+			if (mainResult != nullptr) { Py_DECREF(mainResult); }
+			
+			runResult = RunPythonFunctionInScript(script, NewStr("main"), &mainResult);
+			PrintPyObject("2nd main() => ", mainResult);
+			if (mainResult != nullptr) { Py_DECREF(mainResult); }
 		}
-		else if (runResult == RunPythonFunctionResult_Exception)
+		else if (runResult == Result_Exception)
 		{
 			PrintPyException("Runtime exception: ");
 		}
-		else if (runResult == RunPythonFunctionResult_NotAFunction)
+		else if (runResult == Result_NotAFunction)
 		{
 			WriteLine_E("The script is missing a \"main()\" function (found \"main\" but it wasn't a function)");
 		}
@@ -1607,10 +1618,14 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 			WriteLine_E("The script is missing a \"main()\" function");
 		}
 		
+		PerfSection("FreeScript");
 		FreePythonScript(script);
 		
 		plat->FreeFileContents(&scriptFile);
 		FreeScratchArena(scratch);
+		
+		EndPerfSections();
+		PrintPerfSections(PrintLine_D, "python_file");
 	}
 	#endif //PYTHON_SUPPORTED
 	
