@@ -1576,7 +1576,7 @@ bool PigHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments
 		StartPerfSections(4, "LoadFile", true);
 		MemArena_t* scratch = GetScratchArena();
 		PlatFileContents_t scriptFile;
-		if (!plat->ReadFileContents(arguments[0], scratch, true, &scriptFile)) { PrintLine_E("Failed to open file \"%.*s\"", StrPrint(arguments[0])); return validCommand; }
+		if (!plat->ReadFileContents(arguments[0], scratch, true, &scriptFile)) { PrintLine_E("Failed to open file \"%.*s\"", StrPrint(arguments[0])); FreeScratchArena(scratch); return validCommand; }
 		MyStr_t scriptStr = NewStr(scriptFile.length, scriptFile.chars);
 		
 		PerfSection("CreateScript");

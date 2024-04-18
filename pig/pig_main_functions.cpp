@@ -477,7 +477,7 @@ void PigPostReload(Version_t oldVersion)
 	#if LUA_SUPPORTED
 	PigLuaHandleReload();
 	#endif
-	#if LUA_SUPPORTED
+	#if PYTHON_SUPPORTED
 	PigPythonHandleReload();
 	#endif
 	GameHandleReload();
