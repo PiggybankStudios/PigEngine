@@ -1080,6 +1080,65 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	{
 		console->inputTextbox.textChanged = false;
 		DebugConsoleUpdateAutocompleteItems(console);
+		
+		MemArena_t* scratch = GetScratchArena();
+		ExpContext_t context = {};
+		InitDebugConsoleExpContext(scratch, &context);
+		ExpAutocompleteInfo_t info = {};
+		GetExpAutocompleteInfo(console->inputTextbox.text, console->inputTextbox.selectionEndIndex, scratch, &info, &context);
+		WriteLine_N("ExpAutocompleteInfo:");
+		PrintLine_I("parensBeginIndex = %lld", info.parensBeginIndex);
+		PrintLine_I("parensEndIndex = %lld", info.parensEndIndex);
+		WriteLine_I("");
+		PrintLine_I("isBetweenTokens = %s", info.isBetweenTokens ? "True" : "False");
+		PrintLine_I("isInsideToken = %s", info.isInsideToken ? "True" : "False");
+		PrintLine_I("isNextToToken = %s", info.isNextToToken ? "True" : "False");
+		PrintLine_I("insideFuncArgs = %s", info.insideFuncArgs ? "True" : "False");
+		PrintLine_I("funcDefFound = %s", info.funcDefFound ? "True" : "False");
+		PrintLine_I("isAtBeginning = %s", info.isAtBeginning ? "True" : "False");
+		PrintLine_I("isAtEnd = %s", info.isAtEnd ? "True" : "False");
+		if (!info.isAtBeginning)
+		{
+			WriteLine_I("");
+			PrintLine_I("prevTokenIndex = %llu", info.prevTokenIndex);;
+			PrintLine_I("prevTokenStartIndex = %llu", info.prevTokenStartIndex);;
+			PrintLine_I("prevTokenEndIndex = %llu", info.prevTokenEndIndex);;
+			PrintLine_I("prevTokenType = %s", GetExpTokenTypeStr(info.prevTokenType));
+		}
+		if (!info.isAtEnd)
+		{
+			WriteLine_I("");
+			PrintLine_I("nextTokenIndex = %llu", info.nextTokenIndex);;
+			PrintLine_I("nextTokenStartIndex = %llu", info.nextTokenStartIndex);;
+			PrintLine_I("nextTokenEndIndex = %llu", info.nextTokenEndIndex);;
+			PrintLine_I("nextTokenType = %s", GetExpTokenTypeStr(info.nextTokenType));
+		}
+		if (info.isInsideToken || info.isNextToToken)
+		{
+			WriteLine_I("");
+			PrintLine_I("currentTokenIndex = %llu", info.currentTokenIndex);;
+			PrintLine_I("currentTokenStartIndex = %llu", info.currentTokenStartIndex);;
+			PrintLine_I("currentTokenEndIndex = %llu", info.currentTokenEndIndex);;
+			PrintLine_I("currentTokenCursorIndex = %llu", info.currentTokenCursorIndex);;
+			PrintLine_I("currentTokenType = %s", GetExpTokenTypeStr(info.currentTokenType));
+			PrintLine_I("currentTokenStr = \"%.*s\"", StrPrint(info.currentTokenStr));
+		}
+		if (info.insideFuncArgs)
+		{
+			WriteLine_I("");
+			PrintLine_I("currentFuncNameStartIndex = %llu", info.currentFuncNameStartIndex);;
+			PrintLine_I("currentFuncNameEndIndex = %llu", info.currentFuncNameEndIndex);;
+			PrintLine_I("currentFuncNameStr = \"%.*s\"", StrPrint(info.currentFuncNameStr));
+			PrintLine_I("currentFuncArgCount = %llu", info.currentFuncArgCount);;
+			PrintLine_I("currentFuncArgIndex = %llu", info.currentFuncArgIndex);;
+		}
+		if (info.funcDefFound)
+		{
+			WriteLine_I("");
+			PrintLine_I("currentFuncDefIndex = %llu", info.currentFuncDefIndex);;
+		}
+		
+		FreeScratchArena(scratch);
 	}
 	
 	// +========================================+

@@ -54,6 +54,7 @@ void PopAppState();
 
 //pig_debug_commands.cpp
 bool PigParseDebugCommand(MyStr_t commandStr);
+void InitDebugConsoleExpContext(MemArena_t* scratchArena, ExpContext_t* contextOut);
 
 //pig_render_funcs_imgui.cpp
 void RcRenderImDrawData(ImDrawData* imDrawData);
