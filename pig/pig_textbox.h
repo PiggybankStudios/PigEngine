@@ -23,6 +23,7 @@ struct Textbox_t
 		{
 			u8 configurationFlags;
 			u8 stateFlags;
+			u8 changeFlags;
 		};
 		struct
 		{
@@ -42,7 +43,10 @@ struct Textbox_t
 			u8 hasTargetRec:1;
 			u8 targetRecMoved:1;
 			u8 mouseHovering:1;
+			u8 unused1:1;
+			
 			u8 textChanged:1;
+			u8 selectionChanged:1;
 		};
 	};
 	
@@ -79,6 +83,25 @@ struct Textbox_t
 	v2 selectionStartPos;
 	v2 selectionEndPos;
 	rec selectionRec;
+};
+
+struct TextboxColors_t
+{
+	Color_t backFocusedColor;
+	Color_t backUnfocusedColor;
+	
+	Color_t textFocusedColor;
+	Color_t textUnfocusedColor;
+	
+	Color_t textSelectedFocusedColor;
+	Color_t textSelectedUnfocusedColor;
+	Color_t selectionFocusedColor;
+	Color_t selectionUnfocusedColor;
+	Color_t cursorColor;
+	Color_t textHintColor;
+	
+	Color_t outlineFocusedColor;
+	Color_t outlineUnfocusedColor;
 };
 
 #endif //  _PIG_TEXTBOX_H

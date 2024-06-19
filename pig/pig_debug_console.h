@@ -126,6 +126,7 @@ struct DebugConsole_t
 	DebugConsoleTextPos_t selectionEnd;
 	VarArray_t selectionRecs; //DebugConsoleSelectionRec_t
 	
+	bool isInputValid;
 	Textbox_t inputTextbox;
 	
 	VarArray_t inputHistory; //MyStr_t
@@ -133,6 +134,7 @@ struct DebugConsole_t
 	MyStr_t suspendedInputStr;
 	
 	bool autocompleteActive;
+	MyStr_t autocompleteFilterStr;
 	r32 autocompleteOpenAmount;
 	i64 autocompleteSelectionIndex;
 	bool autocompleteScrollToSelection;
@@ -141,6 +143,11 @@ struct DebugConsole_t
 	r32 autocompleteScroll;
 	r32 autocompleteScrollGoto;
 	r32 autocompleteScrollMax;
+	
+	bool funcSigDisplayActive;
+	r32 funcSigDisplayOpenAmount;
+	ExpFuncDef_t funcSigDef;
+	u64 funcSigCurrentArgIndex;
 	
 	rec mainRec;
 	rec viewRec;
@@ -158,6 +165,7 @@ struct DebugConsole_t
 	v2 jumpToEndBtnTextPos;
 	rec inputRec;
 	rec autocompleteRec;
+	rec funcSigDisplayRec;
 	rec closeBtnRec;
 	rec toggleGutterBtnRec;
 	rec toggleFileNameBtnRec;

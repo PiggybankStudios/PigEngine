@@ -66,6 +66,7 @@ void CreateTextbox(Textbox_t* tb, MemArena_t* memArena, u64 textBufferSize, bool
 	tb->hasTargetRec = false;
 	tb->needToRemeasure = true;
 	tb->textChanged = false;
+	tb->selectionChanged = false;
 	tb->targetRecMoved = false;
 	tb->lastSelectionMoveTime = 0;
 	
@@ -123,6 +124,7 @@ bool Textbox_RemoveCharacters(Textbox_t* tb, bool forwardRemove)
 		tb->selectionActive = true;
 		tb->selectionStartIndex = tb->text.length;
 		tb->selectionEndIndex = tb->selectionStartIndex;
+		tb->selectionChanged = true;
 		tb->needToRemeasure = true;
 	}
 	
@@ -156,10 +158,11 @@ bool Textbox_RemoveCharacters(Textbox_t* tb, bool forwardRemove)
 		}
 		tb->text.length -= removeNumBytes;
 		tb->text.pntr[tb->text.length] = '\0';
+		tb->textChanged = true;
 		tb->selectionStartIndex = removeStartIndex;
 		tb->selectionEndIndex = removeStartIndex;
+		tb->selectionChanged = true;
 		tb->needToRemeasure = true;
-		tb->textChanged = true;
 		result = true;
 	}
 	
@@ -177,6 +180,7 @@ bool Textbox_CharactersTyped(Textbox_t* tb, MyStr_t newCharacters)
 		tb->selectionActive = true;
 		tb->selectionStartIndex = tb->text.length;
 		tb->selectionEndIndex = tb->text.length;
+		tb->selectionChanged = true;
 	}
 	if (tb->selectionStartIndex != tb->selectionEndIndex)
 	{
@@ -199,6 +203,7 @@ bool Textbox_CharactersTyped(Textbox_t* tb, MyStr_t newCharacters)
 			tb->text.pntr[tb->text.length] = '\0';
 			tb->selectionEndIndex += newCharacters.length;
 			tb->selectionStartIndex = tb->selectionEndIndex;
+			tb->selectionChanged = true;
 			result = true;
 		}
 	}
@@ -315,6 +320,7 @@ bool Textbox_MoveCursor(Textbox_t* tb, bool forward, bool extendSelection, Textb
 	
 	if (result)
 	{
+		tb->selectionChanged = true;
 		tb->needToRemeasure = true;
 		if (!extendSelection) { tb->selectionStartIndex = tb->selectionEndIndex; }
 	}
@@ -399,6 +405,7 @@ void FocusTextbox(Textbox_t* tb)
 			tb->selectionActive = true;
 			tb->selectionStartIndex = 0;
 			tb->selectionEndIndex = tb->text.length;
+			tb->selectionChanged = true;
 			tb->needToRemeasure = true;
 		}
 	}
@@ -433,6 +440,7 @@ void TextboxSetText(Textbox_t* tb, MyStr_t newText)
 		{
 			tb->selectionStartIndex = tb->text.length;
 			tb->selectionEndIndex = tb->selectionStartIndex;
+			tb->selectionChanged = true;
 		}
 		
 		tb->needToRemeasure = true;
@@ -624,6 +632,7 @@ void UpdateTextbox(Textbox_t* tb)
 					{
 						tb->selectionStartIndex = 0;
 						tb->selectionEndIndex = tb->text.length;
+						tb->selectionChanged = true;
 						tb->selectionActive = true;
 						tb->needToRemeasure = true;
 					}
@@ -641,6 +650,7 @@ void UpdateTextbox(Textbox_t* tb)
 					{
 						tb->selectionStartIndex = wordStartIndex;
 						tb->selectionEndIndex = wordEndIndex;
+						tb->selectionChanged = true;
 						tb->selectionActive = true;
 						tb->needToRemeasure = true;
 					}
@@ -652,6 +662,7 @@ void UpdateTextbox(Textbox_t* tb)
 				{
 					tb->selectionStartIndex = tb->mouseHoverIndex;
 					tb->selectionEndIndex = tb->mouseHoverIndex;
+					tb->selectionChanged = true;
 					tb->selectionActive = true;
 					tb->isSelectDragging = true;
 					tb->needToRemeasure = true;
@@ -668,6 +679,7 @@ void UpdateTextbox(Textbox_t* tb)
 			if (tb->isSelectDragging && tb->selectionEndIndex != tb->mouseHoverIndex)
 			{
 				tb->selectionEndIndex = tb->mouseHoverIndex;
+				tb->selectionChanged = true;
 				tb->needToRemeasure = true;
 			}
 		}
@@ -865,6 +877,7 @@ void UpdateTextbox(Textbox_t* tb)
 				tb->selectionActive = true;
 				tb->selectionStartIndex = 0;
 				tb->selectionEndIndex = tb->text.length;
+				tb->selectionChanged = true;
 				tb->needToRemeasure = true;
 			}
 			else
@@ -904,6 +917,7 @@ void UpdateTextbox(Textbox_t* tb)
 				tb->selectionActive = true;
 				tb->selectionStartIndex = tb->text.length;
 				tb->selectionEndIndex = tb->selectionStartIndex;
+				tb->selectionChanged = true;
 				tb->needToRemeasure = true;
 			}
 			MyStr_t pastedText = plat->PasteTextFromClipboard(TempArena);
@@ -927,6 +941,7 @@ void UpdateTextbox(Textbox_t* tb)
 	// |     End of Update Checks     |
 	// +==============================+
 	tb->targetRecMoved = false;
+	//TODO: This logic should move to be next to our setting of tb->selectionChanged flag. Currently it wouldn't capture any movements that happen as a result of a function call on the textbox (aka outside the UpdateTextbox function)
 	if (oldSelectionActive != tb->selectionActive ||
 		oldSelectionStartIndex != tb->selectionStartIndex ||
 		oldSelectionEndIndex != tb->selectionEndIndex)
@@ -938,20 +953,48 @@ void UpdateTextbox(Textbox_t* tb)
 // +--------------------------------------------------------------+
 // |                            Render                            |
 // +--------------------------------------------------------------+
-void RenderTextbox(Textbox_t* tb)
+void InitTextboxColors(TextboxColors_t* colorsOut)
+{
+	ClearPointer(colorsOut);
+	colorsOut->backFocusedColor           = MonokaiDarkGray;
+	colorsOut->backUnfocusedColor         = MonokaiDarkGray;
+	
+	colorsOut->textFocusedColor           = MonokaiWhite;
+	colorsOut->textUnfocusedColor         = MonokaiWhite;
+	
+	colorsOut->textSelectedFocusedColor   = MonokaiDarkGray;
+	colorsOut->textSelectedUnfocusedColor = MonokaiDarkGray;
+	colorsOut->selectionFocusedColor      = MonokaiWhite;
+	colorsOut->selectionUnfocusedColor    = MonokaiGray1;
+	colorsOut->cursorColor                = MonokaiWhite;
+	colorsOut->textHintColor              = MonokaiGray2;
+	
+	colorsOut->outlineFocusedColor        = MonokaiWhite;
+	colorsOut->outlineUnfocusedColor      = MonokaiDarkGray;
+}
+
+void RenderTextbox(Textbox_t* tb, TextboxColors_t* colors = nullptr)
 {
 	NotNull(tb);
 	TextboxLayout(tb);
 	
+	TextboxColors_t defaultColors;
+	if (colors == nullptr)
+	{
+		colors = &defaultColors;
+		InitTextboxColors(&defaultColors);
+	}
+	
 	const FontFace_t* fontFace = GetFontFace(GetPointer(&tb->font), tb->fontFaceSelector);
 	r32 fontMaxAscend = (fontFace != nullptr) ? (fontFace->maxAscend * tb->fontScale) : 0;
 	r32 fontMaxDescend = (fontFace != nullptr) ? (fontFace->maxDescend * tb->fontScale) : 0;
+	bool isFocused = IsFocused(tb);
 	
 	// +==============================+
 	// |          Render Box          |
 	// +==============================+
-	Color_t outlineColor = IsFocused(tb) ? MonokaiWhite : MonokaiDarkGray;
-	Color_t backColor = MonokaiDarkGray;
+	Color_t outlineColor = isFocused ? colors->outlineFocusedColor : colors->outlineUnfocusedColor;
+	Color_t backColor = isFocused ? colors->backFocusedColor : colors->backUnfocusedColor;
 	RcDrawRoundedRectangleWithBorder(tb->mainRec, tb->innerMargin.y, 1, backColor, outlineColor);
 	// RcDrawRoundedRectangle(RecInflate(tb->mainRec, 1, 1), tb->innerMargin.y, outlineColor);
 	// RcDrawRoundedRectangle(tb->mainRec, tb->innerMargin.y, backColor);
@@ -964,9 +1007,9 @@ void RenderTextbox(Textbox_t* tb)
 	if (!IsEmptyStr(tb->text))
 	{
 		RcBindFont(GetPointer(&tb->font), tb->fontFaceSelector, tb->fontScale);
-		Color_t textColor = MonokaiWhite;
-		Color_t selectionColor = IsFocused(tb) ? MonokaiWhite : MonokaiGray1;
-		Color_t selectionTextColor = MonokaiDarkGray;
+		Color_t textColor = isFocused ? colors->textFocusedColor : colors->textUnfocusedColor;
+		Color_t selectionColor = isFocused ? colors->selectionFocusedColor : colors->selectionUnfocusedColor;
+		Color_t selectionTextColor = isFocused ? colors->textSelectedFocusedColor : colors->textSelectedUnfocusedColor;
 		if (tb->selectionActive)
 		{
 			u64 selectionMinIndex = MinU64(tb->selectionStartIndex, tb->selectionEndIndex);
@@ -981,7 +1024,7 @@ void RenderTextbox(Textbox_t* tb)
 	else if (!IsEmptyStr(tb->hintText))
 	{
 		RcBindFont(GetPointer(&tb->font), tb->fontFaceSelector, tb->fontScale);
-		Color_t hintTextColor = MonokaiGray2;
+		Color_t hintTextColor = colors->textHintColor;
 		RcDrawText(tb->hintText, tb->textPos, hintTextColor);
 	}
 	RcSetViewport(oldViewport);
@@ -989,11 +1032,11 @@ void RenderTextbox(Textbox_t* tb)
 	// +==============================+
 	// |        Render Cursor         |
 	// +==============================+
-	if (tb->selectionActive && IsFocused(tb))
+	if (tb->selectionActive && isFocused)
 	{
 		r32 cursorAlpha = ClampR32(Oscillate(2, 0, 1000, 1000 - (tb->lastSelectionMoveTime%1000)), 0, 1);
 		if (TimeSince(tb->lastSelectionMoveTime) < 500) { cursorAlpha = 1; }
-		Color_t cursorColor = ColorTransparent(MonokaiWhite, cursorAlpha);
+		Color_t cursorColor = ColorTransparent(colors->cursorColor, cursorAlpha);
 		v2 selectionEndPos = tb->textPos + tb->selectionEndPos;
 		rec cursorRec = NewRec(selectionEndPos.x, selectionEndPos.y - fontMaxAscend, 1, fontMaxAscend + fontMaxDescend);
 		RecAlign(&cursorRec);

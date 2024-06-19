@@ -22,27 +22,31 @@ Description:
 #define DBG_CONSOLE_SCROLL_SPEED            50 //multiplier
 #define DBG_CONSOLE_SCROLL_LAG              4 //divisor
 
-#define DBG_CONSOLE_INPUT_LABEL_STR            "\bInput:\b"
-#define DBG_CONSOLE_JUMP_TO_END_STR            "\bJump to End\b"
-#define DBG_CONSOLE_REFOCUS_STR                "\bRefocus\b"
-#define DBG_CONSOLE_VIEW_PADDING               6 //px
-#define DBG_CONSOLE_ELEM_MARGIN                5 //px
-#define DBG_CONSOLE_INPUT_BOX_HEIGHT           24 //px
-#define DBG_CONSOLE_GUTTER_WIDTH               50 //px
-#define DBG_CONSOLE_GUTTER_PADDING             1 //px
-#define DBG_CONSOLE_FILE_NAME_GUTTER_WIDTH     250 //px
-#define DBG_CONSOLE_FILE_LINE_NUM_GUTTER_WIDTH 50 //px
-#define DBG_CONSOLE_FUNC_NAME_GUTTER_WIDTH     300 //px
-#define DBG_CONSOLE_TIME_GUTTER_WIDTH          200 //px
-#define DBG_CONSOLE_SCROLL_BAR_WIDTH           4 //px
-#define DBG_CONSOLE_TOGGLE_GUTTER_BTNS_SIZE    30 //px
-#define DBG_CONSOLE_FULL_ALPHA_BTN_SIZE        32 //px
-#define DBG_CONSOLE_ICON_SMALLER_AMOUNT        5 //px deflated
-#define DBG_CONSOLE_AUTOCOMPLETE_OPEN_TIME     300 //ms
-#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN   12 //px
-#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_PADDING  4 //px
-#define DBG_CONSOLE_AUTOCOMPLETE_MAX_HEIGHT    400 //px
-#define DBG_CONSOLE_AUTOCOMPLETE_SCROLL_PAST   50 //px
+#define DBG_CONSOLE_INPUT_LABEL_STR                  "\bInput:\b"
+#define DBG_CONSOLE_JUMP_TO_END_STR                  "\bJump to End\b"
+#define DBG_CONSOLE_REFOCUS_STR                      "\bRefocus\b"
+#define DBG_CONSOLE_VIEW_PADDING                     6 //px
+#define DBG_CONSOLE_ELEM_MARGIN                      5 //px
+#define DBG_CONSOLE_INPUT_BOX_HEIGHT                 24 //px
+#define DBG_CONSOLE_GUTTER_WIDTH                     50 //px
+#define DBG_CONSOLE_GUTTER_PADDING                   1 //px
+#define DBG_CONSOLE_FILE_NAME_GUTTER_WIDTH           250 //px
+#define DBG_CONSOLE_FILE_LINE_NUM_GUTTER_WIDTH       50 //px
+#define DBG_CONSOLE_FUNC_NAME_GUTTER_WIDTH           300 //px
+#define DBG_CONSOLE_TIME_GUTTER_WIDTH                200 //px
+#define DBG_CONSOLE_SCROLL_BAR_WIDTH                 4 //px
+#define DBG_CONSOLE_TOGGLE_GUTTER_BTNS_SIZE          30 //px
+#define DBG_CONSOLE_FULL_ALPHA_BTN_SIZE              32 //px
+#define DBG_CONSOLE_ICON_SMALLER_AMOUNT              5 //px deflated
+#define DBG_CONSOLE_AUTOCOMPLETE_OPEN_TIME           300 //ms
+#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN         12 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_ITEM_PADDING        4 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_MAX_HEIGHT          400 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_SCROLL_PAST         50 //px
+#define DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH   32 //chars
+#define DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH   128 //chars
+#define DBG_CONSOLE_FUNC_SIG_WINDOW_OPEN_TIME        200 //ms
+#define DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN           6 //px
 
 // +--------------------------------------------------------------+
 // |                        Initialization                        |
@@ -377,13 +381,13 @@ COMPARE_FUNC_DEFINITION(DebugConsoleAutocompleteSortingFunction)
 	DebugConsole_t* console = (DebugConsole_t*)contextPntr;
 	DebugConsoleAutocompleteItem_t* leftItem = (DebugConsoleAutocompleteItem_t*)left;
 	DebugConsoleAutocompleteItem_t* rightItem = (DebugConsoleAutocompleteItem_t*)right;
-	if (console->inputTextbox.text.length > 0)
+	if (!IsEmptyStr(console->autocompleteFilterStr))
 	{
 		u64 leftMatchIndex = 0;
-		bool leftFoundSubstring = FindSubstring(leftItem->command, console->inputTextbox.text, &leftMatchIndex, true);
+		bool leftFoundSubstring = FindSubstring(leftItem->command, console->autocompleteFilterStr, &leftMatchIndex, true);
 		DebugAssertAndUnused(leftFoundSubstring, leftFoundSubstring);
 		u64 rightMatchIndex = 0;
-		bool rightFoundSubstring = FindSubstring(rightItem->command, console->inputTextbox.text, &rightMatchIndex, true);
+		bool rightFoundSubstring = FindSubstring(rightItem->command, console->autocompleteFilterStr, &rightMatchIndex, true);
 		DebugAssertAndUnused(rightFoundSubstring, rightFoundSubstring);
 		if (leftMatchIndex < rightMatchIndex) { return -1; }
 		if (rightMatchIndex < leftMatchIndex) { return 1; }
@@ -391,75 +395,133 @@ COMPARE_FUNC_DEFINITION(DebugConsoleAutocompleteSortingFunction)
 	return CompareFuncMyStr(&leftItem->command, &rightItem->command, nullptr);
 }
 
-void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, bool forceShowAllItems = false)
+void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, ExpContext_t* context, MemArena_t* scratchArena, bool forceShowAllItems = false)
 {
-	NotNull(console);
+	NotNull3(console, context, scratchArena);
+	
 	DebugConsoleClearAutocompleteItems(console, false);
+	FreeString(mainHeap, &console->autocompleteFilterStr);
+	FreeExpFuncDef(&console->funcSigDef, mainHeap);
+	console->funcSigDisplayActive = false;
+	
 	if (console->inputTextbox.text.length > 0 || forceShowAllItems)
 	{
-		VarArrayLoop(&console->registeredCommands, rIndex)
+		ExpAutocompleteInfo_t info = {};
+		GetExpAutocompleteInfo(console->inputTextbox.text, console->inputTextbox.selectionEndIndex, scratchArena, &info, context);
+		
+		MyStr_t filterStr = MyStr_Empty;
+		if (info.isInsideToken || info.isNextToToken)
 		{
-			VarArrayLoopGet(DebugConsoleRegisteredCommand_t, registeredCommand, &console->registeredCommands, rIndex);
-			if (forceShowAllItems || FindSubstring(registeredCommand->command, console->inputTextbox.text, nullptr, true))
+			if (info.currentTokenType == ExpTokenType_Identifier)
 			{
-				u64 formattedCommandStrLength = registeredCommand->command.length+3; //+2 for bold toggle chars and +1 for a colon
-				for (u64 aIndex = 0; aIndex < registeredCommand->numArguments; aIndex++)
-				{
-					formattedCommandStrLength += 1 + registeredCommand->arguments[aIndex].length;
-				}
-				u64 formattedCommandStrLengthBeforeTabs = formattedCommandStrLength-2; //-2 for bold chars not affecting column index
-				if (formattedCommandStrLengthBeforeTabs <   4) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <   8) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  12) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  16) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  20) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  24) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  28) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs <  32) { formattedCommandStrLength++; }
-				if (formattedCommandStrLengthBeforeTabs >= 32) { formattedCommandStrLength++; }
-				
-				MemArena_t* scratch = GetScratchArena();
-				char* formattedCommandStr = AllocArray(scratch, char, formattedCommandStrLength+1);
-				NotNull(formattedCommandStr);
-				u64 formattedCommandStrIndex = 0;
-				formattedCommandStr[formattedCommandStrIndex] = '\b'; formattedCommandStrIndex++;
-				MyMemCopy(&formattedCommandStr[formattedCommandStrIndex], registeredCommand->command.pntr, registeredCommand->command.length); formattedCommandStrIndex += registeredCommand->command.length;
-				formattedCommandStr[formattedCommandStrIndex] = '\b'; formattedCommandStrIndex++;
-				for (u64 aIndex = 0; aIndex < registeredCommand->numArguments; aIndex++)
-				{
-					MyStr_t argument = registeredCommand->arguments[aIndex];
-					formattedCommandStr[formattedCommandStrIndex] = ' '; formattedCommandStrIndex++;
-					MyMemCopy(&formattedCommandStr[formattedCommandStrIndex], argument.pntr, argument.length); formattedCommandStrIndex += argument.length;
-				}
-				formattedCommandStr[formattedCommandStrIndex] = ':'; formattedCommandStrIndex++;
-				if (formattedCommandStrLengthBeforeTabs <   4) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <   8) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  12) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  16) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  20) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  24) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  28) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs <  32) { formattedCommandStr[formattedCommandStrIndex] = '\t'; formattedCommandStrIndex++; }
-				if (formattedCommandStrLengthBeforeTabs >= 32) { formattedCommandStr[formattedCommandStrIndex] = ' ';  formattedCommandStrIndex++; }
-				Assert(formattedCommandStrIndex == formattedCommandStrLength);
-				formattedCommandStr[formattedCommandStrLength] = '\0';
-				
-				DebugConsoleAutocompleteItem_t* newItem = VarArrayAdd(&console->autocompleteItems, DebugConsoleAutocompleteItem_t);
-				NotNull(newItem);
-				ClearPointer(newItem);
-				newItem->index = console->autocompleteItems.length-1;
-				newItem->command = AllocString(mainHeap, &registeredCommand->command);
-				if (registeredCommand->description.length > 0)
-				{
-					newItem->displayText = PrintInArenaStr(mainHeap, "%s%.*s", formattedCommandStr, StrPrint(registeredCommand->description));
-				}
-				else
-				{
-					newItem->displayText = PrintInArenaStr(mainHeap, "%s", formattedCommandStr);
-				}
-				
-				FreeScratchArena(scratch);
+				filterStr = info.currentTokenStr;
 			}
+		}
+		
+		char tabChars[DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH / 4] = { '\t', '\t', '\t', '\t', '\t', '\t', '\t', '\t' };
+		if (forceShowAllItems || !IsEmptyStr(filterStr))
+		{
+			if (!forceShowAllItems)
+			{
+				console->autocompleteFilterStr = AllocString(mainHeap, &filterStr);
+			}
+			
+			VarArrayLoop(&context->variableDefs, vIndex)
+			{
+				VarArrayLoopGet(ExpVariableDef_t, varDef, &context->variableDefs, vIndex);
+				if (forceShowAllItems || FindSubstring(varDef->name, filterStr))
+				{
+					PushMemMark(scratchArena);
+					//TODO: We probably should include the type of the variable somewhere in this display
+					MyStr_t displayName = varDef->name;
+					u32 numTabs = 0;
+					if (varDef->name.length > DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH)
+					{
+						displayName = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH-3, varDef->name.chars);
+					}
+					else
+					{
+						numTabs = (DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH / 4) - (u32)(varDef->name.length / 4);
+					}
+					MyStr_t displayDescription = varDef->documentation;
+					if (displayDescription.length > DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH)
+					{
+						displayDescription = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH-3, varDef->documentation.chars);
+					}
+					
+					DebugConsoleAutocompleteItem_t* newItem = VarArrayAdd(&console->autocompleteItems, DebugConsoleAutocompleteItem_t);
+					NotNull(newItem);
+					ClearPointer(newItem);
+					newItem->index = console->autocompleteItems.length-1;
+					newItem->command = AllocString(mainHeap, &varDef->name);
+					newItem->displayText = PrintInArenaStr(mainHeap, "\b%.*s\b%.*s%.*s",
+						StrPrint(displayName),
+						numTabs, &tabChars[0],
+						StrPrint(displayDescription)
+					);
+					PopMemMark(scratchArena);
+				}
+			}
+			
+			VarArrayLoop(&context->functionDefs, fIndex)
+			{
+				VarArrayLoopGet(ExpFuncDef_t, funcDef, &context->functionDefs, fIndex);
+				if (forceShowAllItems || FindSubstring(funcDef->name, filterStr))
+				{
+					PushMemMark(scratchArena);
+					
+					//TODO: We probably should include the return type of the function somewhere in this display
+					
+					StringBuilder_t signatureStr;
+					NewStringBuilder(&signatureStr, scratchArena, funcDef->name.length + 4);
+					StringBuilderAppendChar(&signatureStr, '\b');
+					StringBuilderAppend(&signatureStr, funcDef->name);
+					StringBuilderAppendChar(&signatureStr, '\b');
+					StringBuilderAppendChar(&signatureStr, '(');
+					for (u64 aIndex = 0; aIndex < funcDef->numArguments; aIndex++)
+					{
+						if (aIndex > 0) { StringBuilderAppend(&signatureStr, ", "); }
+						StringBuilderAppend(&signatureStr, funcDef->arguments[aIndex].name);
+					}
+					StringBuilderAppendChar(&signatureStr, ')');
+					
+					MyStr_t displayName = ToMyStr(&signatureStr);
+					u32 numTabs = 0;
+					if (displayName.length > DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH)
+					{
+						displayName = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH-3, displayName.chars);
+					}
+					else
+					{
+						numTabs = (DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH / 4) - (u32)(displayName.length / 4);
+					}
+					MyStr_t displayDescription = funcDef->documentation;
+					if (displayDescription.length > DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH)
+					{
+						displayDescription = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH-3, funcDef->documentation.chars);
+					}
+					
+					DebugConsoleAutocompleteItem_t* newItem = VarArrayAdd(&console->autocompleteItems, DebugConsoleAutocompleteItem_t);
+					NotNull(newItem);
+					ClearPointer(newItem);
+					newItem->index = console->autocompleteItems.length-1;
+					newItem->command = AllocString(mainHeap, &funcDef->name);
+					newItem->displayText = PrintInArenaStr(mainHeap, "%.*s%.*s%.*s",
+						StrPrint(displayName),
+						numTabs, &tabChars[0],
+						StrPrint(displayDescription)
+					);
+					PopMemMark(scratchArena);
+				}
+			}
+		}
+		
+		if (info.insideFuncArgs && info.funcDefFound)
+		{
+			console->funcSigDisplayActive = true;
+			ExpFuncDef_t* funcDef = VarArrayGet(&context->functionDefs, info.currentFuncDefIndex, ExpFuncDef_t);
+			CopyExpFuncDef(&console->funcSigDef, funcDef, mainHeap);
+			console->funcSigCurrentArgIndex = info.currentFuncArgIndex;
 		}
 		
 		VarArraySort(&console->autocompleteItems, DebugConsoleAutocompleteSortingFunction, console);
@@ -673,6 +735,8 @@ void DebugConsoleLayout(DebugConsole_t* console)
 {
 	NotNull(console);
 	
+	RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
+	
 	console->mainRec = NewRec(0, 0, ScreenSize.width, ScreenSize.height);
 	if (console->state == DbgConsoleState_Open)
 	{
@@ -685,7 +749,7 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	console->mainRec.height *= EaseQuadraticInOut(console->openAmount);
 	RecAlign(&console->mainRec);
 	
-	TextMeasure_t inputLabelMeasure = MeasureTextInFont(DBG_CONSOLE_INPUT_LABEL_STR, &pig->resources.fonts->debug, SelectDefaultFontFace());
+	TextMeasure_t inputLabelMeasure = RcMeasureText(DBG_CONSOLE_INPUT_LABEL_STR);
 	console->inputLabelRec.size = inputLabelMeasure.size;
 	
 	console->inputRec.height = console->inputTextbox.mainRec.height;
@@ -704,11 +768,12 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	console->inputLabelTextPos = console->inputLabelRec.topLeft + inputLabelMeasure.offset;
 	Vec2Align(&console->inputLabelTextPos);
 	
+	RcBindFont(&pig->resources.fonts->debug, SelectFontFace(18));
 	console->autocompleteItemsSize = Vec2_Zero;
 	VarArrayLoop(&console->autocompleteItems, iIndex)
 	{
 		VarArrayLoopGet(DebugConsoleAutocompleteItem_t, item, &console->autocompleteItems, iIndex);
-		item->displayTextMeasure = MeasureTextInFont(item->displayText, &pig->resources.fonts->debug, SelectFontFace(18));
+		item->displayTextMeasure = RcMeasureText(item->displayText);
 		item->mainRec.size = item->displayTextMeasure.size + NewVec2(DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN*2, DBG_CONSOLE_AUTOCOMPLETE_ITEM_PADDING);
 		item->mainRec.y = console->autocompleteItemsSize.height + ((iIndex == 0) ? DBG_CONSOLE_AUTOCOMPLETE_ITEM_MARGIN : 0);
 		item->mainRec.x = 0;
@@ -752,6 +817,14 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	console->autocompleteScroll = ClampR32(console->autocompleteScroll, 0, console->autocompleteScrollMax);
 	console->autocompleteScrollGoto = ClampR32(console->autocompleteScrollGoto, 0, console->autocompleteScrollMax);
 	
+	RcBindFont(&pig->resources.fonts->debug, SelectFontFace(18));
+	console->funcSigDisplayRec.width = console->inputRec.width;
+	console->funcSigDisplayRec.height = RcGetLineHeight() + DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN*2 + RcGetMaxDescend();
+	console->funcSigDisplayRec.height *= EaseQuadraticOut(console->funcSigDisplayOpenAmount);
+	console->funcSigDisplayRec.x = console->inputRec.x;
+	console->funcSigDisplayRec.y = console->inputRec.y + console->inputRec.height;
+	RecAlign(&console->funcSigDisplayRec);
+	
 	console->viewRec = console->mainRec;
 	RecLayoutBetweenY(&console->viewRec, console->mainRec.y, console->inputRec.y, 0, DBG_CONSOLE_ELEM_MARGIN);
 	RecAlign(&console->viewRec);
@@ -776,7 +849,7 @@ void DebugConsoleLayout(DebugConsole_t* console)
 	RecAlign(&console->viewUsableRec);
 	
 	const char* currentJumpToEndStr = (console->overlayMode ? DBG_CONSOLE_REFOCUS_STR : DBG_CONSOLE_JUMP_TO_END_STR);
-	TextMeasure_t jumpToEndBtnTextMeasure = MeasureTextInFont(currentJumpToEndStr, &pig->resources.fonts->debug, SelectDefaultFontFace());
+	TextMeasure_t jumpToEndBtnTextMeasure = RcMeasureText(currentJumpToEndStr);
 	console->jumpToEndBtnRec.size = jumpToEndBtnTextMeasure.size;
 	bool shouldBtnBeShiftedRight = (console->fileNameGutterEnabled && console->funcNameGutterEnabled);
 	RecLayoutHorizontalCenter(&console->jumpToEndBtnRec, console->viewRec, (shouldBtnBeShiftedRight ? 0.75f : 0.5f));
@@ -976,6 +1049,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					console->autocompleteSelectionIndex = (i64)iIndex;
 					TextboxSetText(&console->inputTextbox, item->command);
 					console->inputTextbox.textChanged = false;
+					console->inputTextbox.selectionChanged = false;
 					console->inputTextbox.skipNextUnfocusClick = true;
 					//don't scroll to selection because that feels bad for mouse selection
 				}
@@ -1007,7 +1081,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				}
 				else
 				{
-					bool wasValidCommand = PigParseDebugCommand(NewStr("help"));
+					bool wasValidCommand = PigParseDebugCommand(NewStr("help(\"\")"));
 					UNUSED(wasValidCommand);
 				}
 				
@@ -1015,6 +1089,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				FreeString(mainHeap, &console->suspendedInputStr);
 				console->suspendedInputStr = MyStr_Empty;
 				DebugConsoleDismissAutocomplete(console);
+				console->funcSigDisplayActive = false;
 			}
 			else
 			{
@@ -1040,7 +1115,9 @@ void UpdateDebugConsole(DebugConsole_t* console)
 				MyStr_t* previousInputPntr = VarArrayGet(&console->inputHistory, console->recallIndex, MyStr_t);
 				TextboxSetText(&console->inputTextbox, *previousInputPntr);
 				console->inputTextbox.textChanged = false;
+				console->inputTextbox.selectionChanged = false;
 				DebugConsoleDismissAutocomplete(console);
+				console->funcSigDisplayActive = false;
 				console->recallIndex++;
 			}
 		}
@@ -1068,75 +1145,32 @@ void UpdateDebugConsole(DebugConsole_t* console)
 					TextboxSetText(&console->inputTextbox, *previousInputPntr);
 				}
 				console->inputTextbox.textChanged = false;
+				console->inputTextbox.selectionChanged = false;
 				DebugConsoleDismissAutocomplete(console);
+				console->funcSigDisplayActive = false;
 			}
 		}
 	}
 	
-	// +==============================+
-	// |     Update Autocomplete      |
-	// +==============================+
-	if (console->inputTextbox.textChanged)
+	// +==================================================+
+	// | Handle inputBox TextChanged or SelectionChanged  |
+	// +==================================================+
+	if (console->inputTextbox.textChanged || console->inputTextbox.selectionChanged)
 	{
 		console->inputTextbox.textChanged = false;
-		DebugConsoleUpdateAutocompleteItems(console);
+		console->inputTextbox.selectionChanged = false;
 		
 		MemArena_t* scratch = GetScratchArena();
 		ExpContext_t context = {};
 		InitDebugConsoleExpContext(scratch, &context);
-		ExpAutocompleteInfo_t info = {};
-		GetExpAutocompleteInfo(console->inputTextbox.text, console->inputTextbox.selectionEndIndex, scratch, &info, &context);
-		WriteLine_N("ExpAutocompleteInfo:");
-		PrintLine_I("parensBeginIndex = %lld", info.parensBeginIndex);
-		PrintLine_I("parensEndIndex = %lld", info.parensEndIndex);
-		WriteLine_I("");
-		PrintLine_I("isBetweenTokens = %s", info.isBetweenTokens ? "True" : "False");
-		PrintLine_I("isInsideToken = %s", info.isInsideToken ? "True" : "False");
-		PrintLine_I("isNextToToken = %s", info.isNextToToken ? "True" : "False");
-		PrintLine_I("insideFuncArgs = %s", info.insideFuncArgs ? "True" : "False");
-		PrintLine_I("funcDefFound = %s", info.funcDefFound ? "True" : "False");
-		PrintLine_I("isAtBeginning = %s", info.isAtBeginning ? "True" : "False");
-		PrintLine_I("isAtEnd = %s", info.isAtEnd ? "True" : "False");
-		if (!info.isAtBeginning)
+		
+		console->isInputValid = true;
+		if (!IsEmptyStr(console->inputTextbox.text))
 		{
-			WriteLine_I("");
-			PrintLine_I("prevTokenIndex = %llu", info.prevTokenIndex);;
-			PrintLine_I("prevTokenStartIndex = %llu", info.prevTokenStartIndex);;
-			PrintLine_I("prevTokenEndIndex = %llu", info.prevTokenEndIndex);;
-			PrintLine_I("prevTokenType = %s", GetExpTokenTypeStr(info.prevTokenType));
+			console->isInputValid = (ValidateExpression(console->inputTextbox.text, scratch, &context) == Result_Success);
 		}
-		if (!info.isAtEnd)
-		{
-			WriteLine_I("");
-			PrintLine_I("nextTokenIndex = %llu", info.nextTokenIndex);;
-			PrintLine_I("nextTokenStartIndex = %llu", info.nextTokenStartIndex);;
-			PrintLine_I("nextTokenEndIndex = %llu", info.nextTokenEndIndex);;
-			PrintLine_I("nextTokenType = %s", GetExpTokenTypeStr(info.nextTokenType));
-		}
-		if (info.isInsideToken || info.isNextToToken)
-		{
-			WriteLine_I("");
-			PrintLine_I("currentTokenIndex = %llu", info.currentTokenIndex);;
-			PrintLine_I("currentTokenStartIndex = %llu", info.currentTokenStartIndex);;
-			PrintLine_I("currentTokenEndIndex = %llu", info.currentTokenEndIndex);;
-			PrintLine_I("currentTokenCursorIndex = %llu", info.currentTokenCursorIndex);;
-			PrintLine_I("currentTokenType = %s", GetExpTokenTypeStr(info.currentTokenType));
-			PrintLine_I("currentTokenStr = \"%.*s\"", StrPrint(info.currentTokenStr));
-		}
-		if (info.insideFuncArgs)
-		{
-			WriteLine_I("");
-			PrintLine_I("currentFuncNameStartIndex = %llu", info.currentFuncNameStartIndex);;
-			PrintLine_I("currentFuncNameEndIndex = %llu", info.currentFuncNameEndIndex);;
-			PrintLine_I("currentFuncNameStr = \"%.*s\"", StrPrint(info.currentFuncNameStr));
-			PrintLine_I("currentFuncArgCount = %llu", info.currentFuncArgCount);;
-			PrintLine_I("currentFuncArgIndex = %llu", info.currentFuncArgIndex);;
-		}
-		if (info.funcDefFound)
-		{
-			WriteLine_I("");
-			PrintLine_I("currentFuncDefIndex = %llu", info.currentFuncDefIndex);;
-		}
+		
+		DebugConsoleUpdateAutocompleteItems(console, &context, scratch);
 		
 		FreeScratchArena(scratch);
 	}
@@ -1144,9 +1178,10 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +========================================+
 	// | Autocomplete Hides on InputBox Unfocus |
 	// +========================================+
-	if (!IsFocused(&console->inputTextbox) && console->autocompleteActive)
+	if (!IsFocused(&console->inputTextbox) && (console->autocompleteActive || console->funcSigDisplayActive))
 	{
 		DebugConsoleDismissAutocomplete(console);
+		console->funcSigDisplayActive = false;
 	}
 	
 	// +==============================================+
@@ -1156,7 +1191,11 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	{
 		if (!console->autocompleteActive && console->inputTextbox.text.length == 0)
 		{
-			DebugConsoleUpdateAutocompleteItems(console, true);
+			MemArena_t* scratch = GetScratchArena();
+			ExpContext_t context = {};
+			InitDebugConsoleExpContext(scratch, &context);
+			DebugConsoleUpdateAutocompleteItems(console, &context, scratch, true);
+			FreeScratchArena(scratch);
 		}
 		if (console->autocompleteActive && console->autocompleteItems.length > 0)
 		{
@@ -1188,9 +1227,37 @@ void UpdateDebugConsole(DebugConsole_t* console)
 			}
 			
 			DebugConsoleAutocompleteItem_t* selectedItem = VarArrayGet(&console->autocompleteItems, console->autocompleteSelectionIndex, DebugConsoleAutocompleteItem_t);
-			TextboxSetText(&console->inputTextbox, selectedItem->command);
+			
+			MemArena_t* scratch = GetScratchArena();
+			ExpContext_t context = {};
+			InitDebugConsoleExpContext(scratch, &context);
+			ExpAutocompleteInfo_t info = {};
+			GetExpAutocompleteInfo(console->inputTextbox.text, console->inputTextbox.selectionEndIndex, scratch, &info, &context);
+			
+			u64 replaceSectionStart = console->inputTextbox.selectionEndIndex;
+			u64 replaceSectionEnd = console->inputTextbox.selectionEndIndex;
+			if (info.isInsideToken || info.isNextToToken)
+			{
+				replaceSectionStart = info.currentTokenStartIndex;
+				replaceSectionEnd = info.currentTokenEndIndex;
+			}
+			Assert(replaceSectionEnd >= replaceSectionStart);
+			
+			MyStr_t newContents = PrintInArenaStr(scratch, "%.*s%.*s%.*s",
+				replaceSectionStart, &console->inputTextbox.text.chars[0],
+				StrPrint(selectedItem->command),
+				console->inputTextbox.text.length - replaceSectionEnd, &console->inputTextbox.text.chars[replaceSectionEnd]
+			);
+			u64 newCursorPos = replaceSectionStart + selectedItem->command.length;
+			
+			TextboxSetText(&console->inputTextbox, newContents);
+			console->inputTextbox.selectionEndIndex = newCursorPos;
+			console->inputTextbox.selectionStartIndex = console->inputTextbox.selectionEndIndex;
 			console->inputTextbox.textChanged = false;
+			console->inputTextbox.selectionChanged = false;
 			console->autocompleteScrollToSelection = true;
+			
+			FreeScratchArena(scratch);
 		}
 	}
 	
@@ -1713,9 +1780,10 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	// +==============================+
 	if (escapeKeyWasPressed && console->state != DbgConsoleState_Closed && !console->overlayMode)
 	{
-		if (console->autocompleteActive)
+		if (console->autocompleteActive || console->funcSigDisplayActive)
 		{
 			DebugConsoleDismissAutocomplete(console);
+			console->funcSigDisplayActive = false;
 		}
 		else
 		{
@@ -1786,6 +1854,18 @@ void UpdateDebugConsole(DebugConsole_t* console)
 	}
 	
 	// +==============================+
+	// | Update FuncSig Display Anim  |
+	// +==============================+
+	if (console->funcSigDisplayActive && console->funcSigDisplayOpenAmount < 1.0f)
+	{
+		UpdateAnimationUp(&console->funcSigDisplayOpenAmount, DBG_CONSOLE_FUNC_SIG_WINDOW_OPEN_TIME);
+	}
+	else if (!console->funcSigDisplayActive && console->funcSigDisplayOpenAmount > 0.0f)
+	{
+		UpdateAnimationDown(&console->funcSigDisplayOpenAmount, DBG_CONSOLE_FUNC_SIG_WINDOW_OPEN_TIME);
+	}
+	
+	// +==============================+
 	// |  Handle Overlay Mode Clicks  |
 	// +==============================+
 	if (console->state != DbgConsoleState_Closed && !console->overlayMode && IsMouseOverNamed("OutsideDebugConsole"))
@@ -1853,6 +1933,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 	
 	if (console->openAmount > 0)
 	{
+		MemArena_t* scratch = GetScratchArena();
 		RcBindFont(&pig->resources.fonts->debug, SelectDefaultFontFace());
 		
 		// +==============================+
@@ -1884,7 +1965,14 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// +==============================+
 		if (!console->overlayMode)
 		{
-			RenderTextbox(&console->inputTextbox);
+			TextboxColors_t tbColors = {};
+			InitTextboxColors(&tbColors);
+			if (!console->isInputValid)
+			{
+				tbColors.outlineFocusedColor = ColorLerp(MonokaiRed, tbColors.outlineFocusedColor, 0.2f);
+				tbColors.outlineUnfocusedColor = ColorLerp(MonokaiRed, tbColors.outlineUnfocusedColor, 0.4f);
+			}
+			RenderTextbox(&console->inputTextbox, &tbColors);
 			// RcDrawRoundedRectangle(RecInflate(console->inputRec, 1, 1), 4, ColorTransparent(MonokaiWhite, console->alphaAmount));
 			// RcDrawRoundedRectangle(console->inputRec, 4, ColorTransparent(MonokaiDarkGray, console->alphaAmount));
 		}
@@ -1921,8 +2009,6 @@ void RenderDebugConsole(DebugConsole_t* console)
 		// | Render Lines and Gutter Blocks |
 		// +================================+
 		{
-			MemArena_t* scratch = GetScratchArena();
-			
 			bool selectionIsBackwards = false;
 			DebugConsoleTextPos_t selectionMin = console->selectionStart;
 			DebugConsoleTextPos_t selectionMax = console->selectionEnd;
@@ -2091,8 +2177,6 @@ void RenderDebugConsole(DebugConsole_t* console)
 				DebugConsoleRenderGutterBlock(console->timeGutterRec, timeBlockStr, pretendNextRec, timeBlockStartY, console->viewRec, gutterColor, gutterTextColor, gutterTextOffsetY);
 				timeBlockStarted = false;
 			}
-			
-			FreeScratchArena(scratch);
 		}
 		
 		// +==============================+
@@ -2154,6 +2238,45 @@ void RenderDebugConsole(DebugConsole_t* console)
 			RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
 		}
 		
+		// +===============================+
+		// | Render FuncSig Display Window |
+		// +===============================+
+		if (console->funcSigDisplayOpenAmount > 0.0f && !console->overlayMode)
+		{
+			RcBindFont(&pig->resources.fonts->debug, SelectFontFace(18));
+			
+			StringBuilder_t funcSigTextBuilder;
+			NewStringBuilder(&funcSigTextBuilder, scratch, console->funcSigDef.name.length+2);
+			StringBuilderAppendPrint(&funcSigTextBuilder, "%s %.*s(", GetExpValueTypeStrLower(console->funcSigDef.returnType), StrPrint(console->funcSigDef.name));
+			for (u64 aIndex = 0; aIndex < console->funcSigDef.numArguments; aIndex++)
+			{
+				if (aIndex > 0) { StringBuilderAppend(&funcSigTextBuilder, ", "); }
+				if (aIndex == console->funcSigCurrentArgIndex) { StringBuilderAppend(&funcSigTextBuilder, "\b"); }
+				StringBuilderAppendPrint(&funcSigTextBuilder, "%s %.*s", GetExpValueTypeStrLower(console->funcSigDef.arguments[aIndex].type), StrPrint(console->funcSigDef.arguments[aIndex].name));
+				if (aIndex == console->funcSigCurrentArgIndex) { StringBuilderAppend(&funcSigTextBuilder, "\b"); }
+			}
+			StringBuilderAppendChar(&funcSigTextBuilder, ')');
+			
+			MyStr_t funcSigText = ToMyStr(&funcSigTextBuilder);
+			TextMeasure_t funcSigTextMeasure = RcMeasureText(funcSigText);
+			v2 funcSigTextPos = NewVec2(
+				console->funcSigDisplayRec.x + DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN,
+				console->funcSigDisplayRec.y + console->funcSigDisplayRec.height/2 - RcGetLineHeight()/2 + RcGetMaxAscend()
+			);
+			Vec2Align(&funcSigTextPos);
+			rec funcSigDisplayRec = console->funcSigDisplayRec;
+			if (funcSigDisplayRec.width > funcSigTextMeasure.size.width + DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN*2)
+			{
+				funcSigDisplayRec.width = funcSigTextMeasure.size.width + DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN*2;
+			}
+			
+			RcDrawRectangle(funcSigDisplayRec, ColorTransparent(Black, 0.75f));
+			
+			RcSetViewport(RecDeflateY(console->funcSigDisplayRec, DBG_CONSOLE_FUNC_SIG_WINDOW_MARGIN));
+			RcDrawText(funcSigText, funcSigTextPos, MonokaiWhite);
+			RcSetViewport(NewRec(Vec2_Zero, ScreenSize));
+		}
+		
 		// +==============================+
 		// |    Render Toggle Buttons     |
 		// +==============================+
@@ -2188,5 +2311,7 @@ void RenderDebugConsole(DebugConsole_t* console)
 			RcBindSpriteSheet(&pig->resources.sheets->vectorIcons64);
 			RcDrawSheetFrame(NewStr("EyeIcon"), console->fullAlphaTextBtnRec, iconColor);
 		}
+		
+		FreeScratchArena(scratch);
 	}
 }
