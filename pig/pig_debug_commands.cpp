@@ -99,7 +99,7 @@ void Debug_Help(MyStr_t varOrFuncName)
 	
 	MemArena_t* scratch = GetScratchArena();
 	ExpContext_t context = {};
-	InitDebugConsoleExpContext(scratch, &context);
+	InitDebugConsoleExpContext(scratch, false, &context);
 	
 	if (!IsEmptyStr(varOrFuncName))
 	{
@@ -1558,18 +1558,17 @@ EXPRESSION_FUNC_DEFINITION(Debug_RunMemTestSet_Glue) { Debug_RunMemTestSet(); re
 // +--------------------------------------------------------------+
 // |                      current_app_state                       |
 // +--------------------------------------------------------------+
-#define Debug_CurrentAppState_Def "string current_app_state()"
-#define Debug_CurrentAppState_Desc "Returns the name of the current app state (the AppState which is on the top of the stack)"
-const char* Debug_CurrentAppState()
-{
-	return GetAppStateStr(GetCurrentAppState());
-}
-EXPRESSION_FUNC_DEFINITION(Debug_CurrentAppState_Glue) { return NewExpValueStr(NewStr(Debug_CurrentAppState())); }
+EXPRESSION_VAR_GETTER(MyStr_t, CurrentAppState_Getter) { return NewStr(GetAppStateStr(GetCurrentAppState())); }
 
 void PigAddDebugVarsToExpContext(ExpContext_t* context)
 {
 	const bool read = false;
 	const bool write = true;
+	
+	// Constants
+	AddExpConstantDef(context, "pig_version_major", NewExpValueU8(ENGINE_VERSION_MAJOR));
+	AddExpConstantDef(context, "pig_version_minor", NewExpValueU8(ENGINE_VERSION_MINOR));
+	AddExpConstantDef(context, "pig_version_build", NewExpValueU16(ENGINE_VERSION_BUILD));
 	
 	// Read-only variables
 	AddExpVariableDefU64(context,  read,  "program_time",        &ProgramTime,                          "Number of milliseconds since the start of the program");
@@ -1583,6 +1582,7 @@ void PigAddDebugVarsToExpContext(ExpContext_t* context)
 	AddExpVariableDefR32(context,  read,  "screen_width",        &ScreenSize.width,                     "The width in pixels of the window (the renderable portion of it at least)");
 	AddExpVariableDefR32(context,  read,  "screen_height",       &ScreenSize.height,                    "The height in pixels of the window (the renderable portion of it at least)");
 	AddExpVariableDefBool(context, read,  "fullscreen_enabled",  &pig->currentWindow->input.fullscreen, "Whether the game is currently in fullscreen mode or not"); //TODO: This is reporting the opposite value than I expect!
+	AddExpVariableDefStr(context,         "current_app_state",   CurrentAppState_Getter,                "Enables a debug render of a sphere of a particular radius around the player's position");
 	
 	AddExpVariableDefR64(context,  write, "fixed_time_scale",         &pigOut->fixedTimeScale,        "The current time scale multiplier (only applies if fixed_time_scale_enabled)");
 	AddExpVariableDefBool(context, write, "fixed_time_scale_enabled", &pigOut->fixedTimeScaleEnabled, "Whether the time scale value for the game is currently fixed by fixed_time_scale multiplier");
@@ -1641,18 +1641,21 @@ void PigAddDebugCommandsToExpContext(ExpContext_t* context)
 	#if PIG_MEM_ARENA_TEST_SET
 	AddDebugCommandDef(context, Debug_RunMemTestSet_Def,       Debug_RunMemTestSet_Glue,       Debug_RunMemTestSet_Desc);
 	#endif //PIG_MEM_ARENA_TEST_SET
-	AddDebugCommandDef(context, Debug_CurrentAppState_Def,     Debug_CurrentAppState_Glue,     Debug_CurrentAppState_Desc);
 }
 
-void InitDebugConsoleExpContext(MemArena_t* scratchArena, ExpContext_t* contextOut) //pre-declared in pig_func_defs.h
+void InitDebugConsoleExpContext(MemArena_t* contextArena, bool allocateStrings, ExpContext_t* contextOut) //pre-declared in pig_func_defs.h
 {
-	InitExpContext(scratchArena, contextOut, false);
+	MemArena_t* scratch = GetScratchArena(contextArena);
+	InitExpContext(contextArena, contextOut, allocateStrings);
 	contextOut->isConsoleInput = true;
-	contextOut->scratch = scratchArena;
+	contextOut->scratch = scratch;
+	AddStdLibraryConstantsToExpContext(contextOut);
+	AddStdLibraryFuncsToExpContext(contextOut, scratch);
 	PigAddDebugVarsToExpContext(contextOut);
 	PigAddDebugCommandsToExpContext(contextOut);
 	GameAddDebugVarsToExpContext(contextOut);
 	GameAddDebugCommandsToExpContext(contextOut);
+	FreeScratchArena(scratch);
 }
 
 bool PigParseDebugCommand(MyStr_t commandStr) //pre-declared in pig_func_defs.h
@@ -1661,7 +1664,7 @@ bool PigParseDebugCommand(MyStr_t commandStr) //pre-declared in pig_func_defs.h
 	
 	MemArena_t* scratch = GetScratchArena();
 	ExpContext_t context = {};
-	InitDebugConsoleExpContext(scratch, &context);
+	InitDebugConsoleExpContext(scratch, false, &context);
 	
 	ExpValue_t result = {};
 	MyStr_t errorStr = TryRunExpressionErrorStr(commandStr, scratch, &result, &context);

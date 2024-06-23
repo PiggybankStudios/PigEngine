@@ -426,6 +426,43 @@ void DebugConsoleUpdateAutocompleteItems(DebugConsole_t* console, ExpContext_t* 
 				console->autocompleteFilterStr = AllocString(mainHeap, &filterStr);
 			}
 			
+			VarArrayLoop(&context->constantDefs, cIndex)
+			{
+				VarArrayLoopGet(ExpConstantDef_t, constantDef, &context->constantDefs, cIndex);
+				if (forceShowAllItems || FindSubstring(constantDef->name, filterStr))
+				{
+					PushMemMark(scratchArena);
+					//TODO: We probably should include the type of the constant somewhere in this display
+					MyStr_t displayName = constantDef->name;
+					u32 numTabs = 0;
+					if (constantDef->name.length > DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH)
+					{
+						displayName = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH-3, constantDef->name.chars);
+					}
+					else
+					{
+						numTabs = (DBG_CONSOLE_AUTOCOMPLETE_NAME_COLUMN_WIDTH / 4) - (u32)(constantDef->name.length / 4);
+					}
+					MyStr_t displayDescription = constantDef->documentation;
+					if (displayDescription.length > DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH)
+					{
+						displayDescription = PrintInArenaStr(scratchArena, "%.*s...", DBG_CONSOLE_AUTOCOMPLETE_DESC_COLUMN_WIDTH-3, constantDef->documentation.chars);
+					}
+					
+					DebugConsoleAutocompleteItem_t* newItem = VarArrayAdd(&console->autocompleteItems, DebugConsoleAutocompleteItem_t);
+					NotNull(newItem);
+					ClearPointer(newItem);
+					newItem->index = console->autocompleteItems.length-1;
+					newItem->command = AllocString(mainHeap, &constantDef->name);
+					newItem->displayText = PrintInArenaStr(mainHeap, "\b%.*s\b%.*s%.*s",
+						StrPrint(displayName),
+						numTabs, &tabChars[0],
+						StrPrint(displayDescription)
+					);
+					PopMemMark(scratchArena);
+				}
+			}
+			
 			VarArrayLoop(&context->variableDefs, vIndex)
 			{
 				VarArrayLoopGet(ExpVariableDef_t, varDef, &context->variableDefs, vIndex);
@@ -1162,7 +1199,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		
 		MemArena_t* scratch = GetScratchArena();
 		ExpContext_t context = {};
-		InitDebugConsoleExpContext(scratch, &context);
+		InitDebugConsoleExpContext(scratch, false, &context);
 		
 		console->isInputValid = true;
 		if (!IsEmptyStr(console->inputTextbox.text))
@@ -1193,7 +1230,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 		{
 			MemArena_t* scratch = GetScratchArena();
 			ExpContext_t context = {};
-			InitDebugConsoleExpContext(scratch, &context);
+			InitDebugConsoleExpContext(scratch, false, &context);
 			DebugConsoleUpdateAutocompleteItems(console, &context, scratch, true);
 			FreeScratchArena(scratch);
 		}
@@ -1230,7 +1267,7 @@ void UpdateDebugConsole(DebugConsole_t* console)
 			
 			MemArena_t* scratch = GetScratchArena();
 			ExpContext_t context = {};
-			InitDebugConsoleExpContext(scratch, &context);
+			InitDebugConsoleExpContext(scratch, false, &context);
 			ExpAutocompleteInfo_t info = {};
 			GetExpAutocompleteInfo(console->inputTextbox.text, console->inputTextbox.selectionEndIndex, scratch, &info, &context);
 			
