@@ -48,6 +48,7 @@ for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%
 for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h SLUG_SUPPORTED') do set SLUG_SUPPORTED=%%i
 for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h LUA_SUPPORTED') do set LUA_SUPPORTED=%%i
 for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h BULLET_SUPPORTED') do set BULLET_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h PYTHON_SUPPORTED') do set PYTHON_SUPPORTED=%%i
 
 if "%DEMO_BUILD%"=="1" (
 	set ProjectName=%ProjectName% Demo
@@ -80,7 +81,7 @@ rem /wd4127 = Conditional expression is constant [W4]
 rem /wd4706 = assignment within conditional expression [W?]
 set CompilerFlags=%CompilerFlags% /wd4130 /wd4201 /wd4324 /wd4458 /wd4505 /wd4996 /wd4127 /wd4706
 set Libraries=
-set EngineLibraries=lua.lib
+set EngineLibraries=
 set LinkerFlags=-incremental:no
 rem TODO: Do we really need all of these? Maybe go through and document what functions we use from them?
 rem glfw3.lib    = GLFW, platform independent window creation + device context + input
@@ -148,6 +149,10 @@ if "%BULLET_SUPPORTED%"=="1" (
 )
 if "%LUA_SUPPORTED%"=="1" (
 	set IncludeDirectories=%IncludeDirectories% /I"%LibDirectory%\include\lua\src"
+	set EngineLibraries=%EngineLibraries% lua.lib
+)
+if "%PYTHON_SUPPORTED%"=="1" (
+	set IncludeDirectories=%IncludeDirectories% /I"%LibDirectory%\include\python\Include"
 )
 if "%PROCMON_SUPPORTED%"=="1" (
 	set CompilerFlags=%CompilerFlags% -DUNICODE -D_UNICODE
@@ -168,6 +173,9 @@ rc /nologo resources.rc
 
 del *.pdb > NUL 2> NUL
 
+rem +--------------------------------------------------------------+
+rem |                       Compile Platform                       |
+rem +--------------------------------------------------------------+
 if "%CompilePlatform%"=="1" (
 	echo[
 	
@@ -195,6 +203,9 @@ if "%CompilePlatform%"=="1" (
 	)
 )
 
+rem +--------------------------------------------------------------+
+rem |                        Compile Engine                        |
+rem +--------------------------------------------------------------+
 if "%CompileEngine%"=="1" (
 	echo[
 	
@@ -223,6 +234,9 @@ if "%CompileEngine%"=="1" (
 	)
 )
 
+rem +--------------------------------------------------------------+
+rem |                      Compile Installer                       |
+rem +--------------------------------------------------------------+
 if "%CompileInstaller%"=="1" (
 	echo[
 	

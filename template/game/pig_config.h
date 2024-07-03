@@ -34,5 +34,6 @@ Description:
 #define JSON_SUPPORTED      0
 #define LUA_SUPPORTED       0
 #define BULLET_SUPPORTED    0
+#define PYTHON_SUPPORTED    0
 
 #endif //  _PIG_CONFIG_H

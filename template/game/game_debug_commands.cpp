@@ -8,42 +8,40 @@ Description:
 	** See pig_debug_commands.cpp for engine level debug commands
 */
 
-const char* GameDebugCommandInfoStrs[] = {
-	//"command", "description", "arg1", "arg2", ... "\n",
-	"test", "Serves as a dedicated spot to place temporary test code", "\n",
-};
-DebugCommandInfoList_t GameGetDebugCommandInfoList() //pre-declared in game_main.h
-{
-	return CreateDebugCommandInfoList(GameDebugCommandInfoStrs, ArrayCount(GameDebugCommandInfoStrs));
-}
-
+// +--------------------------------------------------------------+
+// |                       Command Helpers                        |
+// +--------------------------------------------------------------+
 ResourcePool_t* GameGetCurrentResourcePool() //pre-declared in game_main.h
 {
-	//TODO: Implement me!
-	return nullptr;
+	return nullptr; //TODO: Implement me!
 }
 
-//Pre-declared in game_main.h
-bool GameHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr)
+// +--------------------------------------------------------------+
+// |                             test                             |
+// +--------------------------------------------------------------+
+#define Debug_Test_Def  "void test()"
+#define Debug_Test_Desc "Serves as a dedicated spot to place temporary test code"
+void Debug_Test()
 {
-	UNUSED(fullInputStr);
-	bool isValidCommand = true;
+	Unimplemented(); //TODO: Implement me!
+}
+EXPRESSION_FUNC_DEFINITION(Debug_Test_Glue) { Debug_Test(); return NewExpValueVoid(); }
+
+// +--------------------------------------------------------------+
+// |                         Registration                         |
+// +--------------------------------------------------------------+
+void GameAddDebugVarsToExpContext(ExpContext_t* context) //pre-declared in game_main.h
+{
+	const bool read = false;
+	const bool write = true;
 	
-	// +==============================+
-	// |             test             |
-	// +==============================+
-	if (StrCompareIgnoreCase(command, "test") == 0)
-	{
-		WriteLine_D("Nothing to test right now");
-	}
-	
-	// +==============================+
-	// |       Unknown Command        |
-	// +==============================+
-	else
-	{
-		isValidCommand = false;
-	}
-	
-	return isValidCommand;
+	// Constants
+	AddExpConstantDef(context, "version_major", NewExpValueU8(GAME_VERSION_MAJOR));
+	AddExpConstantDef(context, "version_minor", NewExpValueU8(GAME_VERSION_MINOR));
+	AddExpConstantDef(context, "version_build", NewExpValueU16(GAME_VERSION_BUILD));
+}
+
+void GameAddDebugCommandsToExpContext(ExpContext_t* context) //pre-declared in game_main.h
+{
+	AddDebugCommandDef(context, Debug_Test_Def, Debug_Test_Glue, Debug_Test_Desc);
 }

@@ -15,6 +15,7 @@ Description:
 #include "game_settings.cpp"
 #include "game_tasks.cpp"
 #include "game_debug_commands.cpp"
+#include "imgui/imgui_windows.cpp"
 
 // +--------------------------------------------------------------+
 // |                          Functions                           |
@@ -54,20 +55,20 @@ void GameUpdateGlobals() //pre-declared in pig_func_defs.h
 
 void GameLoadDebugBindings(PigDebugBindings_t* bindings) //pre-declared in pig_func_defs.h
 {
-	MyStr_t localBindingsFilePath = NewStr(GAME_DBG_BINDINGS_FILE_NAME);
-	if (plat->DoesFileExist(localBindingsFilePath, nullptr))
+	MyStr_t builtinBindingsFilePath = NewStr(GAME_DBG_BINDINGS_FILE_NAME);
+	if (plat->DoesFileExist(builtinBindingsFilePath, nullptr))
 	{
-		PigLoadDebugBindingsFullService(bindings, localBindingsFilePath);
+		PigLoadDebugBindingsFullService(bindings, builtinBindingsFilePath, false);
 	}
 	else
 	{
-		PrintLine_D("No local debug bindings file found at \"%.*s\"", localBindingsFilePath.length, localBindingsFilePath.pntr);
+		PrintLine_D("No local debug bindings file found at \"%.*s\"", StrPrint(builtinBindingsFilePath));
 	}
 	
-	MyStr_t bindingsFilePath = PigGetDebugBindingsFilePath(TempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
-	if (bindingsFilePath.length > 0)
+	MyStr_t userBindingsFilePath = PigGetDebugBindingsFilePath(TempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
+	if (userBindingsFilePath.length > 0)
 	{
-		PigLoadDebugBindingsFullService(bindings, bindingsFilePath);
+		PigLoadDebugBindingsFullService(bindings, userBindingsFilePath, true);
 	}
 	else
 	{
@@ -86,6 +87,8 @@ void GameGeneralInit() //pre-declared in pig_func_defs.h
 	PrintLine_N("First AppState is %s", GetAppStateStr(firstAppState));
 	PushAppState(firstAppState);
 	Pig_HandleAppStateChanges(true);
+	
+	GameRegisterImguiWindows();
 	
 	WriteLine_N("=====GameGeneralInit Finish=====");
 }
@@ -140,7 +143,6 @@ void GamePinResources() //pre-declared in pig_func_defs.h
 	
 	PinResource(&pig->resources.sheets->vectorIcons64);
 	PinResource(&pig->resources.sheets->controllerBtns);
-	PinResource(&pig->resources.sheets->parts);
 	
 	PinResource(&pig->resources.shaders->main2D);
 	PinResource(&pig->resources.shaders->main2DArray);
@@ -162,3 +164,8 @@ void GamePrepareForClose() //pre-declared in pig_func_defs.h
 	Pig_ChangeWindow(platInfo->mainWindow);
 	GameSaveSettings();
 }
+
+// +--------------------------------------------------------------+
+// |                    Function Table Filling                    |
+// +--------------------------------------------------------------+
+#include "game_func_table_filling.cpp"

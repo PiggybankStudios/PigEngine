@@ -20,7 +20,7 @@ void GameLoadSettings(PigSettings_t* settingsOut, MemArena_t* memArena)
 		if (plat->DoesFileExist(settingsFilePath, nullptr))
 		{
 			ProcessLog_t settingsParseLog;
-			CreateProcessLog(&settingsParseLog, Kilobytes(8), mainHeap, mainHeap, TempArena);
+			CreateProcessLog(&settingsParseLog, Kilobytes(8), mainHeap, mainHeap);
 			if (PigTryLoadSettings(settingsFilePath, &settingsParseLog, settingsOut, memArena))
 			{
 				PrintLine_I("Loaded settings successfully from \"%.*s\"", settingsFilePath.length, settingsFilePath.pntr);

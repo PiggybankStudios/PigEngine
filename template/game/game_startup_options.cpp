@@ -11,25 +11,29 @@ Description:
 #define GAME_WINDOW_ALWAYS_ON_TOP            false
 #define GAME_WINDOW_DEFAULT_RESOLUTION       NewVec2i(1600, 900)
 #define GAME_FOLLOW_SAVED_SETTING_RESOLUTION true
+#define GAME_WINDOW_MIN_SIZE                 NewVec2i(1000, 500)
 #define GAME_ANTI_ALIASING_SAMPLES           4
 #define GAME_THREAD_POOL_SIZE                4 //threads
-#define GAME_PERMANANT_MEM_SIZE              Kilobytes(1024)
+#define GAME_FIXED_HEAP_MEM_SIZE             Kilobytes(1024)
 #define GAME_TEMP_ARENA_SIZE                 Megabytes(16)
 #define GAME_THREAD_TEMP_ARENA_SIZE          Kilobytes(128)
 #define GAME_THREAD_TEMP_NUM_MARKS           32 //marks
+#define GAME_THREAD_SCRATCH_ARENA_MAX_SIZE   Gigabytes(1)
+#define GAME_THREAD_SCRATCH_NUM_MARKS        32 //marks
 #define GAME_SETTINGS_FILE_NAME              "settings.txt"
 #define GAME_DBG_BINDINGS_FILE_NAME          "debug_bindings.txt"
 #define GAME_INITIAL_APP_STATE               AppState_MainMenu
 
-#define GAME_DEFAULT_MASTER_VOLUME 0.8f
-#define GAME_DEFAULT_MUSIC_VOLUME  1.0f
-#define GAME_DEFAULT_SOUNDS_VOLUME 1.0f
+#define GAME_DEFAULT_MASTER_VOLUME     0.8f
+#define GAME_DEFAULT_MUSIC_VOLUME      1.0f
+#define GAME_DEFAULT_SOUNDS_VOLUME     1.0f
+#define GAME_DEFAULT_MOUSE_SENSITIVITY 5.0f
 
-void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
+void GameGetStartupOptions(StartupOptions_t* options)
 {
 	//TODO: Assertions in here are unclear to the user. Try to limit failure cases as much as possible
 	//TODO: We need some way to relay errors/warnings to the application from here!
-	NotNull(info);
+	NotNull(startup);
 	NotNull(options);
 	
 	bool savedFullscreen = false;
@@ -40,74 +44,80 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	u64 savedFramerate = PIG_DEFAULT_FRAMERATE;
 	v2i savedWindowedPosition = NewVec2i(-1, -1);
 	bool savedMaximizedWindow = false;
+	bool makeTopmostWindow = GAME_WINDOW_ALWAYS_ON_TOP;
+	
+	if (startup->GetProgramArg(startup->platTempArena, NewStr("top"), nullptr))
+	{
+		makeTopmostWindow = true;
+	}
 	
 	// +==============================+
 	// |        Load Settings         |
 	// +==============================+
-	MyStr_t settingsFilePath = PigGetSettingsFilePath(info->platTempArena, info->platTempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_SETTINGS_FILE_NAME), info->GetSpecialFolderPath);
+	MyStr_t settingsFilePath = PigGetSettingsFilePath(startup->platTempArena, startup->platTempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_SETTINGS_FILE_NAME), startup->GetSpecialFolderPath);
 	if (settingsFilePath.length > 0)
 	{
-		if (info->DoesFileExist(settingsFilePath, nullptr))
+		if (startup->DoesFileExist(settingsFilePath, nullptr))
 		{
 			PigSettings_t settings = {};
 			ProcessLog_t settingsParseLog;
 			CreateProcessLogStub(&settingsParseLog);
 			// settingsParseLog.debugBreakOnWarningsAndErrors = true;
-			if (PigTryLoadSettings(settingsFilePath, &settingsParseLog, &settings, info->platTempArena, info->ReadFileContents, info->FreeFileContents))
+			if (PigTryLoadSettings(settingsFilePath, &settingsParseLog, &settings, startup->platTempArena, startup->ReadFileContents, startup->FreeFileContents))
 			{
 				#if GAME_FOLLOW_SAVED_SETTING_RESOLUTION
 				TryParseFailureReason_t parseFailureReason = TryParseFailureReason_None;
 				if (PigTryGetSettingV2i(&settings, "Resolution", &savedResolution, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "Resolution", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "Resolution setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "Resolution setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				if (PigTryGetSettingBool(&settings, "Fullscreen", &savedFullscreen, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "Fullscreen", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "Fullscreen setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "Fullscreen setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				if (PigTryGetSettingU64(&settings, "Framerate", &savedFramerate, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "Framerate", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "Framerate setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "Framerate setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				PigTryGetSettingStr(&settings, "Monitor", &savedMonitorName, true);
 				if (PigTryGetSettingU64(&settings, "MonitorNumber", &savedMonitorNumber, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "MonitorNumber", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "MonitorNumber setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "MonitorNumber setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				if (PigTryGetSettingBool(&settings, "MaximizedWindow", &savedMaximizedWindow, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "MaximizedWindow", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "MaximizedWindow setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "MaximizedWindow setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				if (PigTryGetSettingV2i(&settings, "WindowedPosition", &savedWindowedPosition, true, &parseFailureReason) == TryGetSettingResult_ParseError)
 				{
 					MyStr_t settingValueStr = PigGetSettingStr(&settings, "WindowedPosition", MyStr_Empty);
-					info->DebugOutput(PrintInArenaStr(info->platTempArena, "WindowedPosition setting has invalid (unparsable) value: \"%.*s\" error: %s", settingValueStr.length, settingValueStr.pntr, GetTryParseFailureReasonStr(parseFailureReason)), true);
+					startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "WindowedPosition setting has invalid (unparsable) value: \"%.*s\" error: %s", StrPrint(settingValueStr), GetTryParseFailureReasonStr(parseFailureReason)), true);
 				}
 				#endif
 			}
 			else
 			{
-				info->DebugOutput(
-					PrintInArenaStr(info->platTempArena, "Failed to parse settings file at \"%.*s\": %s",
-						settingsFilePath.length, settingsFilePath.pntr,
-						GetPigTryDeserSettingsErrorStr((PigTryDeserSettingsError_t)settingsParseLog.errorCode)),
+				startup->DebugOutput(
+					PrintInArenaStr(startup->platTempArena, "Failed to parse settings file at \"%.*s\": %s",
+						StrPrint(settingsFilePath),
+						GetResultStr((Result_t)settingsParseLog.errorCode)),
 					true
 				);
 			}
 		}
 		else
 		{
-			info->DebugOutput(PrintInArenaStr(info->platTempArena, "No settings file found at \"%.*s\"", settingsFilePath.length, settingsFilePath.pntr), true);
+			startup->DebugOutput(PrintInArenaStr(startup->platTempArena, "No settings file found at \"%.*s\"", StrPrint(settingsFilePath)), true);
 		}
 	}
 	else
 	{
-		info->DebugOutput(NewStr("Failed to get special folder path from platform/OS. We can't load settings!"), true);
+		startup->DebugOutput(NewStr("Failed to get special folder path from platform/OS. We can't load settings!"), true);
 	}
 	
 	// +==============================+
@@ -115,8 +125,8 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	// +==============================+
 	if (!IsEmptyStr(savedMonitorName) || savedMonitorNumber != 0)
 	{
-		const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&info->monitors->list, PlatMonitorInfo_t);
-		for (u64 mIndex = 0; mIndex < info->monitors->list.count; mIndex++)
+		const PlatMonitorInfo_t* monitorInfo = LinkedListFirst(&startup->monitors->list, PlatMonitorInfo_t);
+		for (u64 mIndex = 0; mIndex < startup->monitors->list.count; mIndex++)
 		{
 			if ((IsEmptyStr(savedMonitorName) || StrEquals(savedMonitorName, monitorInfo->name)) &&
 				(savedMonitorNumber == 0 || monitorInfo->designatedNumber == savedMonitorNumber))
@@ -124,25 +134,36 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 				savedMonitorInfo = monitorInfo;
 				break;
 			}
-			monitorInfo = LinkedListNext(&info->monitors->list, PlatMonitorInfo_t, monitorInfo);
+			monitorInfo = LinkedListNext(&startup->monitors->list, PlatMonitorInfo_t, monitorInfo);
 		}
 		if (savedMonitorInfo == nullptr)
 		{
-			info->DebugOutput(NewStr("The monitor we were on when we last closed either doesn't exist or changed name/number"), true);
+			startup->DebugOutput(NewStr("The monitor we were on when we last closed either doesn't exist or changed name/number"), true);
 		}
 	}
 	
-	options->mainMemoryRequest = GAME_PERMANANT_MEM_SIZE;
+	options->mainMemoryRequest = GAME_FIXED_HEAP_MEM_SIZE;
 	options->tempMemoryRequest = GAME_TEMP_ARENA_SIZE;
 	
-	options->renderApi = RenderApi_OpenGL; //TODO: Can we somehow choose this smartly?
+	options->render.api = RenderApi_OpenGL;
+	options->render.opengl.requestCoreProfile = true;
+	//NOTE: Requesting OpenGL 3.2 or earlier requires us to change the profile type to COMPAT (or ANY)
+	options->render.opengl.requestVersionMajor = 4;
+	options->render.opengl.requestVersionMinor = 6;
+	options->render.opengl.minVersionMajor = 3;
+	options->render.opengl.minVersionMinor = 3;
+	//NOTE: Setting this to true causes weird texture problems when we run with the Steam Overlay on top.
+	//      This setting is supposed to make sure that all deprecated functionality in version 3.0 of OpenGL
+	//      are unsupported. Maybe we are using some deprecated features that we shouldn't be?
+	options->render.opengl.forwardCompat = true;
+	options->render.opengl.debugEnabled = (true && DEBUG_BUILD);
 	options->openDebugConsole = false;
-	if (info->GetProgramArg(info->platTempArena, NewStr("debug"), nullptr))
+	if (startup->GetProgramArg(startup->platTempArena, NewStr("debug"), nullptr))
 	{
 		options->openDebugConsole = true;
 	}
 	
-	options->audioDeviceIndex = info->defaultAudioDeviceIndex;
+	options->audioDeviceIndex = startup->defaultAudioDeviceIndex;
 	options->audioOutputFormat.bitsPerSample    = 16;
 	options->audioOutputFormat.numChannels      = 2;
 	options->audioOutputFormat.samplesPerSecond = 44100;
@@ -150,9 +171,11 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	options->threadPoolSize = GAME_THREAD_POOL_SIZE;
 	options->threadPoolTempArenasSize = GAME_THREAD_TEMP_ARENA_SIZE;
 	options->threadPoolTempArenasNumMarks = GAME_THREAD_TEMP_NUM_MARKS;
+	options->threadPoolScratchArenasMaxSize = GAME_THREAD_SCRATCH_ARENA_MAX_SIZE;
+	options->threadPoolScratchArenasNumMarks = GAME_THREAD_SCRATCH_NUM_MARKS;
 	
 	options->numIconFiles = 6;
-	options->iconFilePaths = AllocArray(info->platTempArena, MyStr_t, options->numIconFiles);
+	options->iconFilePaths = AllocArray(startup->platTempArena, MyStr_t, options->numIconFiles);
 	NotNull(options->iconFilePaths);
 	options->iconFilePaths[0] = NewStr("Resources/icon16.png");
 	options->iconFilePaths[1] = NewStr("Resources/icon24.png");
@@ -162,18 +185,18 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	options->iconFilePaths[5] = NewStr("Resources/icon256.png");
 	
 	options->numWindows = 1;
-	options->windowOptions = AllocArray(info->platTempArena, PlatWindowOptions_t, options->numWindows);
+	options->windowOptions = AllocArray(startup->platTempArena, PlatWindowOptions_t, options->numWindows);
 	NotNull(options->windowOptions);
 	MyMemSet(options->windowOptions, 0x00, sizeof(PlatWindowOptions_t) * options->numWindows);
 	
 	options->windowOptions[0].create.resizableWindow = true;
-	options->windowOptions[0].create.topmostWindow = GAME_WINDOW_ALWAYS_ON_TOP;
+	options->windowOptions[0].create.topmostWindow = makeTopmostWindow;
 	options->windowOptions[0].create.decoratedWindow = true;
 	options->windowOptions[0].create.antialiasingNumSamples = GAME_ANTI_ALIASING_SAMPLES;
 	options->windowOptions[0].create.autoIconify = true;
-	options->windowOptions[0].create.windowTitle = NewStringInArenaNt(info->platTempArena, GAME_WINDOW_TITLE);
+	options->windowOptions[0].create.windowTitle = NewStringInArenaNt(startup->platTempArena, GAME_WINDOW_TITLE);
 	options->windowOptions[0].enforceMinSize = true;
-	options->windowOptions[0].minWindowSize = PIG_WINDOW_MIN_SIZE;
+	options->windowOptions[0].minWindowSize = GAME_WINDOW_MIN_SIZE;
 	options->windowOptions[0].enforceMaxSize = false;
 	options->windowOptions[0].maxWindowSize = Vec2i_Zero;
 	options->windowOptions[0].forceAspectRatio = false;
@@ -184,7 +207,7 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	{
 		if (savedMonitorInfo == nullptr)
 		{
-			savedMonitorInfo = LinkedListGet(&info->monitors->list, PlatMonitorInfo_t, info->monitors->primaryIndex);
+			savedMonitorInfo = LinkedListGet(&startup->monitors->list, PlatMonitorInfo_t, startup->monitors->primaryIndex);
 			NotNull(savedMonitorInfo);
 		}
 		
@@ -215,11 +238,11 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 		}
 		if (!foundSavedVideoMode)
 		{
-			info->DebugOutput(NewStr("The monitor we were on when we last closed doesn't support the previously used resolution. Maybe it changed if you moved which port your monitor is connected to and therefore what video modes it supports"), true);
+			startup->DebugOutput(NewStr("The monitor we were on when we last closed doesn't support the previously used resolution. Maybe it changed if you moved which port your monitor is connected to and therefore what video modes it supports"), true);
 		}
 		else if (!foundSavedFramerate)
 		{
-			info->DebugOutput(NewStr("The monitor we were on when we last closed doesn't support the previously used framerate. Maybe it changed if you moved which port your monitor is connected to and therefore what video modes it supports"), true);
+			startup->DebugOutput(NewStr("The monitor we were on when we last closed doesn't support the previously used framerate. Maybe it changed if you moved which port your monitor is connected to and therefore what video modes it supports"), true);
 		}
 		
 		if (!foundSavedVideoMode || !foundSavedFramerate)
@@ -241,7 +264,7 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 		//default to primary monitor if one is not specified
 		if (savedMonitorInfo == nullptr)
 		{
-			savedMonitorInfo = LinkedListGet(&info->monitors->list, PlatMonitorInfo_t, info->monitors->primaryIndex);
+			savedMonitorInfo = LinkedListGet(&startup->monitors->list, PlatMonitorInfo_t, startup->monitors->primaryIndex);
 			NotNull(savedMonitorInfo);
 		}
 		
@@ -265,8 +288,8 @@ void GameGetStartupOptions(const StartupInfo_t* info, StartupOptions_t* options)
 	
 	options->loadingBackgroundColor = NewColor(0xFF361935);
 	options->loadingBarColor = NewColor(0xFFA25B95);
-	options->loadingImagePath = NewStringInArenaNt(info->platTempArena, RESOURCE_FOLDER_SPRITES "/pig_loading_image.png");
-	options->loadingBackPath = NewStringInArenaNt(info->platTempArena, RESOURCE_FOLDER_SPRITES "/pig_loading_back.png");
+	options->loadingImagePath = NewStringInArenaNt(startup->platTempArena, RESOURCE_FOLDER_SPRITES "/pig_loading_image.png");
+	options->loadingBackPath = NewStringInArenaNt(startup->platTempArena, RESOURCE_FOLDER_TEXTURES "/pig_loading_back.png");
 	options->loadingBackScale = 0.0f;
 	options->loadingBackTiling = false;
 }

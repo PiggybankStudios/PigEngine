@@ -16,7 +16,8 @@ Description:
 #define RESOURCES_NUM_FONTS       4
 #define RESOURCES_NUM_SOUNDS      3
 #define RESOURCES_NUM_MUSICS      1
-#define TOTAL_NUM_RESOURCES       (RESOURCES_NUM_TEXTURES + RESOURCES_NUM_VECTORS + RESOURCES_NUM_SHEETS + RESOURCES_NUM_SHADERS + RESOURCES_NUM_FONTS + RESOURCES_NUM_SOUNDS + RESOURCES_NUM_MUSICS)
+#define RESOURCES_NUM_MODELS      1
+#define TOTAL_NUM_RESOURCES       (RESOURCES_NUM_TEXTURES + RESOURCES_NUM_VECTORS + RESOURCES_NUM_SHEETS + RESOURCES_NUM_SHADERS + RESOURCES_NUM_FONTS + RESOURCES_NUM_SOUNDS + RESOURCES_NUM_MUSICS + RESOURCES_NUM_MODELS)
 
 #define RESOURCE_FOLDER_FONTS          "Resources/Fonts"
 #define RESOURCE_FOLDER_MUSIC          "Resources/Music"
@@ -119,7 +120,15 @@ union ATTR_PACKED ResourceMusics_t
 	Sound_t items[RESOURCES_NUM_MUSICS];
 	struct
 	{
-		Sound_t mainMenu;
+		Sound_t testMusic;
+	};
+};
+union ATTR_PACKED ResourceModels_t
+{
+	Model_t items[RESOURCES_NUM_MODELS];
+	struct
+	{
+		Model_t testModel;
 	};
 };
 END_PACK()
@@ -152,7 +161,7 @@ const char* Resources_GetPathForTexture(u64 textureIndex, ResourceTextureMetaInf
 		case 11: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_invalid_yellow.png");        //| defaultYellow    |
 		case 12: NORMAL_TEXTURE_META_INFO(true,  true,  TEXTURES, "pig_blue_gradient.png");         //| blueGradientBack |
 		
-		case 13: NORMAL_TEXTURE_META_INFO(false, false, SPRITES,  "main_menu.png");                 //| mainMenuBackground    |
+		case 13: NORMAL_TEXTURE_META_INFO(true, false,  SPRITES,  "main_menu.png");                 //| mainMenuBackground |
 		
 		default: DebugAssert(false); return nullptr;
 	}
@@ -506,7 +515,32 @@ const char* Resources_GetPathForMusic(u64 musicIndex)
 {
 	switch (musicIndex)
 	{
-		case 0: return RESOURCE_FOLDER_MUSIC "/main_menu.ogg"; // | mainMenu |
+		case 0: return RESOURCE_FOLDER_MUSIC "/test.ogg"; // | testMusic |
+		default: DebugAssert(false); return nullptr;
+	}
+}
+
+// +--------------------------------------------------------------+
+// |                       Model Meta Info                        |
+// +--------------------------------------------------------------+
+const char* Resources_GetPathForModel(u64 musicIndex, ResourceModelMetaInfo_t* metaInfo)
+{
+	NotNull(metaInfo);
+	ClearPointer(metaInfo);
+	metaInfo->textureType = ModelTextureType_FromResources;
+	metaInfo->copyVertices = false;
+	metaInfo->flipUvY = false;
+	switch (musicIndex)
+	{
+		// +==============================+
+		// |          testModel           |
+		// +==============================+
+		case 0:
+		{
+			metaInfo->textureType = ModelTextureType_FromModelsFolder;
+			metaInfo->flipUvY = true;
+			return RESOURCE_FOLDER_MODELS "/test.obj";
+		} break;
 		default: DebugAssert(false); return nullptr;
 	}
 }

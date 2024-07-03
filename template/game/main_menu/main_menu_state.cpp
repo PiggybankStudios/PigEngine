@@ -13,7 +13,7 @@ void MainMenuAppStateAccessResources()
 {
 	AccessResource(&pig->resources.textures->mainMenuBackground);
 	AccessResource(&pig->resources.textures->madeInPigEngine);
-	AccessResource(&pig->resources.musics->mainMenu);
+	AccessResource(&pig->resources.musics->testMusic);
 	AccessResource(&pig->resources.sounds->oink);
 	AccessResource(&pig->resources.sounds->click1);
 }
@@ -37,7 +37,7 @@ void StartMainMenuAppState(AppState_t oldAppState, bool initialize)
 	}
 	
 	MainMenuAppStateAccessResources();
-	SoftPlayMusic(&pig->resources.musics->mainMenu, MusicFade_LinearCrossfade, MMENU_MUSIC_FADE_TIME);
+	SoftPlayMusic(&pig->resources.musics->testMusic, MusicFade_LinearCrossfade, MMENU_MUSIC_FADE_TIME);
 	mmenu->previousMouseHoverBtnIndex = -1;
 	
 	if (oldAppState == AppState_None)
@@ -140,7 +140,7 @@ void UpdateMainMenuAppState()
 		mmenu->pigLogoAnimProgress = -0.6f;
 		mmenu->pigLogoClickAnimProgress = 0.0f;
 		mmenu->pigClickCount = 0;
-		PlayMusic(&pig->resources.musics->mainMenu);
+		PlayMusic(&pig->resources.musics->testMusic);
 	}
 	
 	// +==============================+

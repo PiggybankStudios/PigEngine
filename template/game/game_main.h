@@ -34,8 +34,9 @@ struct AppGlobals_t
 static AppGlobals_t*          gl        = nullptr;
 static MainMenuAppState_t*    mmenu     = nullptr;
 
-DebugCommandInfoList_t GameGetDebugCommandInfoList();
-bool GameHandleDebugCommand(MyStr_t command, u64 numArguments, MyStr_t* arguments, MyStr_t fullInputStr);
+//game_debug_commands.cpp
 ResourcePool_t* GameGetCurrentResourcePool();
+void GameAddDebugVarsToExpContext(ExpContext_t* context);
+void GameAddDebugCommandsToExpContext(ExpContext_t* context);
 
 #endif //  _GAME_MAIN_H
