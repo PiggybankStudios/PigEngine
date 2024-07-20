@@ -351,3 +351,17 @@ PLAT_API_FREE_MEMORY_DEF(Win32_FreeMemory)
 	//TODO: Should we track the programs allocations somehow?
 	FreeMem(&Platform->stdHeap, allocPntr, oldSize, false, oldSizeOut);
 }
+
+// +--------------------------------------------------------------+
+// |                     Misc. API Functions                      |
+// +--------------------------------------------------------------+
+// +==============================+
+// |  Win32_GetRapidClickMaxTime  |
+// +==============================+
+// u64 GetRapidClickMaxTime()
+PLAT_API_GET_RAPID_CLICK_MAX_TIME_DEF(Win32_GetRapidClickMaxTime)
+{
+	UINT result = GetDoubleClickTime();
+	return (u64)result;
+}
+

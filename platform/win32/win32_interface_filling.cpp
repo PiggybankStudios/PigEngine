@@ -163,6 +163,7 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->AllocateMemory            = Win32_AllocateMemory;
 	api->ReallocMemory             = Win32_ReallocMemory;
 	api->FreeMemory                = Win32_FreeMemory;
+	api->GetRapidClickMaxTime      = Win32_GetRapidClickMaxTime;
 	api->ChangeWindowTarget        = Win32_ChangeWindowTarget;
 	api->SwapBuffers               = Win32_SwapBuffers;
 	api->GetNativeWindowPntr       = Win32_GetNativeWindowPntr;

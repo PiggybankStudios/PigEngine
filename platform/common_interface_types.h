@@ -150,6 +150,7 @@ struct PlatformApi_t
 	PlatApiAllocateMemory_f*            AllocateMemory;
 	PlatApiReallocMemory_f*             ReallocMemory;
 	PlatApiFreeMemory_f*                FreeMemory;
+	PlatApiGetRapidClickMaxTime_f*      GetRapidClickMaxTime;
 	PlatApiChangeWindowTarget_f*        ChangeWindowTarget;
 	PlatApiSwapBuffers_f*               SwapBuffers;
 	PlatApiGetNativeWindowPntr_f*       GetNativeWindowPntr;

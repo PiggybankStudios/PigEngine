@@ -81,6 +81,9 @@ typedef PLAT_API_REALLOC_MEMORY_DEF(PlatApiReallocMemory_f);
 #define PLAT_API_FREE_MEMORY_DEF(functionName) void functionName(void* allocPntr, u64 oldSize, u64* oldSizeOut)
 typedef PLAT_API_FREE_MEMORY_DEF(PlatApiFreeMemory_f);
 
+#define PLAT_API_GET_RAPID_CLICK_MAX_TIME_DEF(functionName) u64 functionName()
+typedef PLAT_API_GET_RAPID_CLICK_MAX_TIME_DEF(PlatApiGetRapidClickMaxTime_f);
+
 #define PLAT_API_CHANGE_WINDOW_TARGET_DEF(functionName) void functionName(const PlatWindow_t* window)
 typedef PLAT_API_CHANGE_WINDOW_TARGET_DEF(PlatApiChangeWindowTarget_f);
 
