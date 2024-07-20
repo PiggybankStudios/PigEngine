@@ -77,6 +77,7 @@ void Pig_ChangeWindow(const PlatWindow_t* window)
 	pig->currentWindowState = GetWindowStateById(window->id, true);
 	MousePos = window->input.mousePos;
 	ScreenSize = window->input.renderResolution;
+	ScreenRec = NewRec(0, 0, ScreenSize.width, ScreenSize.height);
 }
 
 // +--------------------------------------------------------------+

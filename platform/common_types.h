@@ -430,6 +430,7 @@ const char* GetPlatImageFormatStr(PlatImageFormat_t imageFormat)
 enum SpecialFolder_t
 {
 	SpecialFolder_None = 0,
+	SpecialFolder_Home,
 	SpecialFolder_SavesAndSettings,
 	SpecialFolder_Screenshots,
 	SpecialFolder_Share,
@@ -443,6 +444,7 @@ const char* GetSpecialFolderStr(SpecialFolder_t specialFolder)
 	switch (specialFolder)
 	{
 		case SpecialFolder_None:             return "None";
+		case SpecialFolder_Home:             return "Home";
 		case SpecialFolder_SavesAndSettings: return "SavesAndSettings";
 		case SpecialFolder_Screenshots:      return "Screenshots";
 		case SpecialFolder_Share:            return "Share";

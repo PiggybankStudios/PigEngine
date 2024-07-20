@@ -1186,6 +1186,13 @@ void RcSetViewport(rec viewportRec, bool fakeScreenSpaceCoordinates = true)
 		RcSetProjectionMatrix(projMatrix);
 	}
 }
+//Returns the old viewport rec so it can be restored
+rec RcAndViewport(rec viewportRec, bool fakeScreenSpaceCoordinates = true)
+{
+	rec oldViewport = rc->state.viewportRec;
+	RcSetViewport(RecOverlap(rc->state.viewportRec, viewportRec), fakeScreenSpaceCoordinates);
+	return oldViewport;
+}
 
 void RcSetColor1(Color_t color)
 {

@@ -1168,6 +1168,7 @@ PLAT_API_GET_SPECIAL_FOLDER_PATH(Win32_GetSpecialFolderPath)
 	int specialFolderId = 0;
 	switch (specialFolder)
 	{
+		case SpecialFolder_Home:             specialFolderId = CSIDL_MYDOCUMENTS; break;
 		case SpecialFolder_SavesAndSettings: specialFolderId = CSIDL_APPDATA;     break;
 		case SpecialFolder_Screenshots:      specialFolderId = CSIDL_MYPICTURES;  break;
 		case SpecialFolder_Share:            specialFolderId = CSIDL_MYDOCUMENTS; break;
@@ -1201,6 +1202,7 @@ PLAT_API_GET_SPECIAL_FOLDER_PATH(Win32_GetSpecialFolderPath)
 	MyStr_t result = pathBufferStr;
 	switch (specialFolder)
 	{
+		case SpecialFolder_Home:             result = AllocString(memArena, &pathBufferStr); break;
 		case SpecialFolder_SavesAndSettings: result = PrintInArenaStr(memArena, "%.*s/%.*s",             StrPrint(pathBufferStr), StrPrint(applicationName)); break;
 		case SpecialFolder_Screenshots:      result = PrintInArenaStr(memArena, "%.*s/%.*s Screenshots", StrPrint(pathBufferStr), StrPrint(applicationName)); break;
 		case SpecialFolder_Share:            result = PrintInArenaStr(memArena, "%.*s/%.*s",             StrPrint(pathBufferStr), StrPrint(applicationName)); break;

@@ -132,6 +132,7 @@ static       r64              ElapsedMs      = 0.0;
 static       r64              UncappedElapsedMs = 0.0;
 static       v2               MousePos       = {};
 static       v2               ScreenSize     = {};
+static       rec              ScreenRec      = {};
 
 #include "gylib/gy_temp_memory.cpp"
 
