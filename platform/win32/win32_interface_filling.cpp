@@ -191,6 +191,8 @@ void Win32_FillPlatformApi(PlatformApi_t* api)
 	api->IsFileWatched             = Win32_IsFileWatched;
 	api->WatchFile                 = Win32_WatchFile;
 	api->UnwatchFile               = Win32_UnwatchFile;
+	api->GetFileIconId             = Win32_GetFileIconId;
+	api->GetFileIconImageData      = Win32_GetFileIconImageData;
 	#ifndef WIN32_GFX_TEST
 	api->GetLoadProcAddressFunc    = Win32_GetLoadProcAddressFunc;
 	api->RenderLoadingScreen       = Win32_RenderLoadingScreen;

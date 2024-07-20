@@ -1211,3 +1211,141 @@ PLAT_API_GET_SPECIAL_FOLDER_PATH(Win32_GetSpecialFolderPath)
 	
 	return result;
 }
+
+// +==============================+
+// |     Win32_GetFileIconId      |
+// +==============================+
+// u64 GetFileIconId(MyStr_t filePath)
+PLAT_API_GET_FILE_ICON_ID_DEF(Win32_GetFileIconId)
+{
+	NotNullStr(&filePath);
+	if (IsEmptyStr(filePath)) { return UINT64_MAX; }
+	
+	TempPushMark();
+	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
+	
+	SHFILEINFOA fileInfo = {};
+	DWORD_PTR fileInfoResult = SHGetFileInfoA(
+		fullPath.chars, //pszPath
+		FILE_ATTRIBUTE_NORMAL, //dwFileAttributes
+		&fileInfo, //psfi
+		sizeof(fileInfo), //cbFileInfo
+		SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES //uFlags
+	);
+	if (fileInfoResult == 0) { return UINT64_MAX; }
+	
+	Assert(fileInfo.iIcon >= 0);
+	u64 result = (u64)fileInfo.iIcon;
+	
+	TempPopMark();
+	return result;
+}
+
+// +==============================+
+// |  Win32_GetFileIconImageData  |
+// +==============================+
+//TODO: Can we somehow get the file icon with just the iconId, rather than needing the filePath again?
+// bool GetFileIconImageData(MyStr_t filePath, MemArena_t* memArena, PlatImageData_t* imageDataOut)
+PLAT_API_GET_FILE_ICON_IMAGE_DATA_DEF(Win32_GetFileIconImageData)
+{
+	NotNullStr(&filePath);
+	NotNull(imageDataOut);
+	Assert(memArena != GetTempArena());
+	
+	ClearPointer(imageDataOut);
+	if (IsEmptyStr(filePath)) { return false; }
+	
+	TempPushMark();
+	MyStr_t fullPath = Win32_GetFullPath(GetTempArena(), filePath, true);
+	
+	SHFILEINFOA fileInfo = {};
+	DWORD_PTR fileInfoResult = SHGetFileInfoA(
+		fullPath.chars, //pszPath
+		FILE_ATTRIBUTE_NORMAL, //dwFileAttributes
+		&fileInfo, //psfi
+		sizeof(fileInfo), //cbFileInfo
+		SHGFI_ICON | SHGFI_USEFILEATTRIBUTES //uFlags
+	);
+	//NOTE: SHGFI_SMALLICON gives me 16x16 icons, no flag is 32x32, SHGFI_LARGEICON also gives 32x32
+	if (fileInfoResult == 0) { TempPopMark(); return false; }
+	
+	ICONINFOEXA iconInfo = {};
+	iconInfo.cbSize = sizeof(iconInfo);
+	BOOL getIconInfoResult = GetIconInfoExA(
+		fileInfo.hIcon, //hicon
+		&iconInfo //piconinfo
+	);
+	if (getIconInfoResult != TRUE) { TempPopMark(); return false; }
+	
+	HBITMAP colorBitmapHandle = (HBITMAP)CopyImage(
+		iconInfo.hbmColor, //h
+		IMAGE_BITMAP, //type
+		0, //cx
+		0, //cy
+		LR_CREATEDIBSECTION //flags
+	);
+	Assert(colorBitmapHandle != NULL); //TODO: Should we handle this failure case?
+	BITMAP colorBitmap = {};
+	int getObjectResult1 = GetObject(colorBitmapHandle, sizeof(BITMAP), &colorBitmap);
+	Assert(getObjectResult1 == sizeof(BITMAP));
+	Assert(colorBitmap.bmBits != NULL);
+	Assert(colorBitmap.bmBitsPixel == 32);
+	Assert(colorBitmap.bmWidth > 0);
+	Assert(colorBitmap.bmHeight > 0);
+	
+	HBITMAP maskBitmapHandle = (HBITMAP)CopyImage(
+		iconInfo.hbmMask, //h
+		IMAGE_BITMAP, //type
+		0, //cx
+		0, //cy
+		LR_CREATEDIBSECTION //flags
+	);
+	Assert(maskBitmapHandle != NULL); //TODO: Should we handle this failure case?
+	BITMAP maskBitmap = {};
+	int getObjectResult2 = GetObject(maskBitmapHandle, sizeof(BITMAP), &maskBitmap);
+	Assert(getObjectResult2 == sizeof(BITMAP));
+	Assert(maskBitmap.bmBits != NULL);
+	Assert(maskBitmap.bmBitsPixel == 1);
+	Assert(maskBitmap.bmWidthBytes == maskBitmap.bmWidth / 8);
+	Assert((maskBitmap.bmWidth % 8) == 0);
+	Assert(maskBitmap.bmWidth == colorBitmap.bmWidth);
+	Assert(maskBitmap.bmHeight == colorBitmap.bmHeight);
+	
+	imageDataOut->id = (u64)fileInfo.iIcon;
+	imageDataOut->allocArena = memArena;
+	imageDataOut->floatChannels = false;
+	imageDataOut->width = (i32)colorBitmap.bmWidth;
+	imageDataOut->height = (i32)colorBitmap.bmHeight;
+	imageDataOut->pixelSize = 4;
+	imageDataOut->rowSize = imageDataOut->pixelSize * (u64)imageDataOut->width;
+	imageDataOut->dataSize = imageDataOut->rowSize * (u64)imageDataOut->height;
+	imageDataOut->data8 = AllocArray(memArena, u8, imageDataOut->dataSize);
+	NotNull(imageDataOut->data8);
+	
+	for (i32 pixelY = 0; pixelY < imageDataOut->height; pixelY++)
+	{
+		for (i32 pixelX = 0; pixelX < imageDataOut->width; pixelX++)
+		{
+			u64 inputRow = (colorBitmap.bmHeight-1 - pixelY);
+			u64 inputColorByteIndex = (inputRow * colorBitmap.bmWidthBytes) + (pixelX * imageDataOut->pixelSize);
+			u64 inputMaskIndex = (inputRow * maskBitmap.bmWidth) + pixelX;
+			u64 outputByteIndex = (pixelY * imageDataOut->rowSize) + (pixelX * imageDataOut->pixelSize);
+			u8* outputPntr = &imageDataOut->data8[outputByteIndex];
+			u8* inputColorPntr = &((u8*)colorBitmap.bmBits)[inputColorByteIndex];
+			u8* inputMaskPntr = &((u8*)maskBitmap.bmBits)[inputMaskIndex / 8];
+			u8 inputMaskBitOffset = (u8)(inputMaskIndex % 8);
+			bool maskValue = !IsFlagSet(*inputMaskPntr, (1 << inputMaskBitOffset));
+			//output format is BGRA order in memory
+			//input format seems to be RGBA order in memory
+			outputPntr[0] = inputColorPntr[2]; //B
+			outputPntr[1] = inputColorPntr[1]; //G
+			outputPntr[2] = inputColorPntr[0]; //R
+			outputPntr[3] = maskValue ? inputColorPntr[3] : 0x00; //A
+		}
+	}
+	
+	DeleteObject(maskBitmapHandle);
+	DeleteObject(colorBitmapHandle);
+	TempPopMark();
+	return true;
+}

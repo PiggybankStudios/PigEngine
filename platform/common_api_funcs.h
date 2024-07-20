@@ -168,6 +168,12 @@ typedef PLAT_API_WATCH_FILE_DEF(PlatApiWatchFile_f);
 #define PLAT_API_UNWATCH_FILE_DEF(functionName) bool functionName(const PlatWatchedFile_t* watchedFile)
 typedef PLAT_API_UNWATCH_FILE_DEF(PlatApiUnwatchFile_f);
 
+#define PLAT_API_GET_FILE_ICON_ID_DEF(functionName) u64 functionName(MyStr_t filePath)
+typedef PLAT_API_GET_FILE_ICON_ID_DEF(PlatApiGetFileIconId_f);
+
+#define PLAT_API_GET_FILE_ICON_IMAGE_DATA_DEF(functionName) bool functionName(MyStr_t filePath, MemArena_t* memArena, PlatImageData_t* imageDataOut)
+typedef PLAT_API_GET_FILE_ICON_IMAGE_DATA_DEF(PlatApiGetFileIconImageData_f);
+
 #ifndef WIN32_GFX_TEST
 #define PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(functionName) GlLoadProc_f functionName()
 typedef PLAT_API_GET_LOAD_PROC_ADDRESS_FUNC(PlatApiGetLoadProcAddressFunc_f);
