@@ -133,6 +133,10 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->steamUserId = Platform->steamUserId;
 	info->steamFriendsList = &Platform->steamFriendsList;
 	#endif
+	
+	#if PROCMON_SUPPORTED
+	info->wasRunInAdministratorMode = Win32_WasProgramRunInAdministratorMode();
+	#endif
 }
 
 void Win32_FillPlatformApi(PlatformApi_t* api)

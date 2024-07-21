@@ -9,115 +9,146 @@ Description:
 
 #if PROCMON_SUPPORTED
 
+BOOL HandleProcmonEvent(const CRefPtr<CEventView> pEventView)
+{
+	ULONGLONG Time = pEventView->GetStartTime().QuadPart;
+	
+	// PrintLine_D("PROCMON: %llu Process %s Do 0x%x for %s",
+	// 	Time,
+	// 	pEventView->GetProcessName().GetBuffer(),
+	// 	pEventView->GetEventOperator(),
+	// 	pEventView->GetPath().GetBuffer()
+	// );
+	//m_viewList.push_back(pEventView);
+	
+	DWORD eventClass = pEventView->GetEventClass();
+	if (eventClass == MONITOR_TYPE_PROCESS) { /* TODO: Do something with these events? */ }
+	else if (eventClass == MONITOR_TYPE_FILE)
+	{
+		// LPCTSTR operationStr = StrMapOperation(pEventView->GetPreEventEntry());
+		DWORD eventOperator = pEventView->GetEventOperator();
+		ProcmonEventType_t eventType = (ProcmonEventType_t)eventOperator;
+		ProcmonEventBit_t eventBit = GetProcmonEventBit(eventType);
+		
+		MemArena_t conversionBufferArena;
+		InitMemArena_Buffer(&conversionBufferArena, sizeof(Platform->procmonConversionBuffer), &Platform->procmonConversionBuffer[0]);
+		MyStr_t rawProcessName = ConvertUcs2StrToUtf8(&conversionBufferArena, pEventView->GetProcessName().GetBuffer(), MyWideStrLength(pEventView->GetProcessName().GetBuffer()));
+		
+		ProcmonEntry_t* entry = StrHashDictGetSoft(&Platform->processEntries, rawProcessName, ProcmonEntry_t);
+		if (entry == nullptr)
+		{
+			entry = StrHashDictAdd(&Platform->processEntries, rawProcessName, ProcmonEntry_t);
+			entry->id = Platform->nextProcmonEntryId;
+			Platform->nextProcmonEntryId++;
+			entry->processName = AllocString(&Platform->procmonHeap, &rawProcessName);
+			entry->numEvents = 1;
+			// ClearArray(entry->lastFewEvents);
+			// entry->lastFewEvents[0] = eventType;
+			// entry->eventIndex = 1;
+			entry->eventBits = eventBit;
+		}
+		else
+		{
+			entry->numEvents++;
+			// entry->lastFewEvents[entry->eventIndex] = eventType;
+			// entry->eventIndex = (entry->eventIndex + 1) % ArrayCount(entry->lastFewEvents);
+			entry->eventBits |= eventBit;
+		}
+		
+		CString eventViewPath = pEventView->GetPath();
+		if (eventViewPath.GetLength() > 0)
+		{
+			InitMemArena_Buffer(&conversionBufferArena, sizeof(Platform->procmonConversionBuffer), &Platform->procmonConversionBuffer[0]);
+			MyStr_t rawPath = ConvertUcs2StrToUtf8(&conversionBufferArena, eventViewPath.GetBuffer(), eventViewPath.GetLength());
+			
+			if (FindSubstring(rawPath, ".cpp")) //TODO: Remove this check!
+			{
+				ProcmonFile_t* touchedFile = StrHashDictGetSoft(&Platform->touchedFiles, rawPath, ProcmonFile_t);
+				if (touchedFile == nullptr)
+				{
+					touchedFile = StrHashDictAdd(&Platform->touchedFiles, rawPath, ProcmonFile_t);
+					touchedFile->id = Platform->nextProcmonFileId;
+					Platform->nextProcmonFileId++;
+					touchedFile->filePath = AllocString(&Platform->procmonHeap, &rawPath);
+					touchedFile->numTouches = 0;
+				}
+				touchedFile->processId = entry->id;
+				touchedFile->numTouches++;
+			}
+		}
+		else
+		{
+			// MyDebugBreak();
+		}
+		
+		Platform->nextProcmonEventId++;
+	}
+	else { MyDebugBreak(); }
+	
+	return TRUE;
+}
+
 class CMyEvent : public IEventCallback
 {
 public:
 	virtual BOOL DoEvent(const CRefPtr<CEventView> pEventView)
 	{
-		ULONGLONG Time = pEventView->GetStartTime().QuadPart;
-		
-		// PrintLine_D("PROCMON: %llu Process %s Do 0x%x for %s",
-		// 	Time,
-		// 	pEventView->GetProcessName().GetBuffer(),
-		// 	pEventView->GetEventOperator(),
-		// 	pEventView->GetPath().GetBuffer()
-		// );
-		//m_viewList.push_back(pEventView);
-		
-		DWORD eventClass = pEventView->GetEventClass();
-		if (eventClass == MONITOR_TYPE_PROCESS) { /* TODO: Do something with these events? */ }
-		else if (eventClass == MONITOR_TYPE_FILE)
-		{
-			// LPCTSTR operationStr = StrMapOperation(pEventView->GetPreEventEntry());
-			DWORD eventOperator = pEventView->GetEventOperator();
-			ProcmonEventType_t eventType = (ProcmonEventType_t)eventOperator;
-			ProcmonEventBit_t eventBit = GetProcmonEventBit(eventType);
-			
-			MemArena_t conversionBufferArena;
-			InitMemArena_Buffer(&conversionBufferArena, sizeof(Platform->procmonConversionBuffer), &Platform->procmonConversionBuffer[0]);
-			MyStr_t rawProcessName = ConvertUcs2StrToUtf8(&conversionBufferArena, pEventView->GetProcessName().GetBuffer(), MyWideStrLength(pEventView->GetProcessName().GetBuffer()));
-			
-			ProcmonEntry_t* entry = StrHashDictGetSoft(&Platform->processEntries, rawProcessName, ProcmonEntry_t);
-			if (entry == nullptr)
-			{
-				entry = StrHashDictAdd(&Platform->processEntries, rawProcessName, ProcmonEntry_t);
-				entry->id = Platform->nextProcmonEntryId;
-				Platform->nextProcmonEntryId++;
-				entry->processName = AllocString(&Platform->procmonHeap, &rawProcessName);
-				entry->numEvents = 1;
-				// ClearArray(entry->lastFewEvents);
-				// entry->lastFewEvents[0] = eventType;
-				// entry->eventIndex = 1;
-				entry->eventBits = eventBit;
-			}
-			else
-			{
-				entry->numEvents++;
-				// entry->lastFewEvents[entry->eventIndex] = eventType;
-				// entry->eventIndex = (entry->eventIndex + 1) % ArrayCount(entry->lastFewEvents);
-				entry->eventBits |= eventBit;
-			}
-			
-			CString eventViewPath = pEventView->GetPath();
-			if (eventViewPath.GetLength() > 0)
-			{
-				InitMemArena_Buffer(&conversionBufferArena, sizeof(Platform->procmonConversionBuffer), &Platform->procmonConversionBuffer[0]);
-				MyStr_t rawPath = ConvertUcs2StrToUtf8(&conversionBufferArena, eventViewPath.GetBuffer(), eventViewPath.GetLength());
-				
-				if (FindSubstring(rawPath, ".cpp")) //TODO: Remove this check!
-				{
-					ProcmonFile_t* touchedFile = StrHashDictGetSoft(&Platform->touchedFiles, rawPath, ProcmonFile_t);
-					if (touchedFile == nullptr)
-					{
-						touchedFile = StrHashDictAdd(&Platform->touchedFiles, rawPath, ProcmonFile_t);
-						touchedFile->id = Platform->nextProcmonFileId;
-						Platform->nextProcmonFileId++;
-						touchedFile->filePath = AllocString(&Platform->procmonHeap, &rawPath);
-						touchedFile->numTouches = 0;
-					}
-					touchedFile->processId = entry->id;
-					touchedFile->numTouches++;
-				}
-			}
-			else
-			{
-				// MyDebugBreak();
-			}
-			
-			Platform->nextProcmonEventId++;
-		}
-		else { MyDebugBreak(); }
-		
-		return TRUE;
+		return HandleProcmonEvent(pEventView);
 	}
 };
 
+bool Win32_WasProgramRunInAdministratorMode()
+{
+	bool result = false;
+	HANDLE tokenHandle = NULL;
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &tokenHandle))
+	{
+		TOKEN_ELEVATION elevation;
+		DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+		if (GetTokenInformation(tokenHandle, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
+		{
+			result = elevation.TokenIsElevated;
+		}
+	}
+	if (tokenHandle != NULL) { CloseHandle(tokenHandle); }
+	return result;
+}
 
 void Win32_ProcmonInit()
 {
 	CreateStrHashDict(&Platform->processEntries, &Platform->procmonHeap, sizeof(ProcmonEntry_t), 512);
 	CreateStrHashDict(&Platform->touchedFiles, &Platform->procmonHeap, sizeof(ProcmonFile_t), 512);
 	
-	Platform->Optmgr     = &Singleton<CEventMgr>::getInstance();
-	Platform->Monitormgr = &Singleton<CMonitorContoller>::getInstance();
-	Platform->Drvload    = &Singleton<CDrvLoader>::getInstance();
+	bool wasRunInAdministratorMode = Win32_WasProgramRunInAdministratorMode();
 	
-	if (!Platform->Drvload->Init(TEXT("PROCMON24"), TEXT("procmon.sys")))
+	if (wasRunInAdministratorMode)
 	{
-		Win32_InitError("Failed to load procmon.sys (open process monitor driver)");
+		Platform->Optmgr     = &Singleton<CEventMgr>::getInstance();
+		Platform->Monitormgr = &Singleton<CMonitorContoller>::getInstance();
+		Platform->Drvload    = &Singleton<CDrvLoader>::getInstance();
+		
+		if (!Platform->Drvload->Init(TEXT("PROCMON24"), TEXT("procmon.sys")))
+		{
+			Win32_InitError("Failed to load procmon.sys (open process monitor driver)");
+		}
+		
+		Platform->Optmgr->RegisterCallback(new CMyEvent);
+		
+		if (!Platform->Monitormgr->Connect())
+		{
+			Win32_InitError("Failed to Connect to procmon driver (open process monitor driver)");
+		}
+		
+		Platform->Monitormgr->SetMonitor(TRUE, TRUE, FALSE);
+		if (!Platform->Monitormgr->Start())
+		{
+			Win32_InitError("Failed to start the procmon monitor (open process monitor driver). Make sure you run the program as Administrator!");
+		}
 	}
-	
-	Platform->Optmgr->RegisterCallback(new CMyEvent);
-	
-	if (!Platform->Monitormgr->Connect())
+	else
 	{
-		Win32_InitError("Failed to Connect to procmon driver (open process monitor driver)");
-	}
-	
-	Platform->Monitormgr->SetMonitor(TRUE, TRUE, FALSE);
-	if (!Platform->Monitormgr->Start())
-	{
-		Win32_InitError("Failed to start to procmon monitor (open process monitor driver)");
+		WriteLine_E("Failed to start Procmon Driver because the application was not started with Administrator privelages");
+		// Win32_InitError("This application needs administrator privelages so it can start a system driver that monitors file access events.\n\nPlease restart this program in Administrator Mode");
 	}
 }
 

@@ -122,6 +122,10 @@ struct PlatformInfo_t
 	CSteamID steamUserId;
 	PlatSteamFriendsList_t* steamFriendsList;
 	#endif
+	
+	#if PROCMON_SUPPORTED
+	bool wasRunInAdministratorMode;
+	#endif
 };
 
 struct PlatformApi_t

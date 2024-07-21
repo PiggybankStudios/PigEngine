@@ -61,8 +61,8 @@ PLAT_API_START_PROCESS_DEFINITION(Win32_StartProcess)
 	}
 	actualWorkingDirectory = AllocString(GetTempArena(), &actualWorkingDirectory);
 	
-	STARTUPINFO startupInfo = {};
-	startupInfo.cb = sizeof(STARTUPINFO);
+	STARTUPINFOA startupInfo = {};
+	startupInfo.cb = sizeof(STARTUPINFOA);
 	startupInfo.lpReserved      = NULL;
 	startupInfo.lpDesktop       = ""; // LPSTR
 	startupInfo.lpTitle         = NULL;
