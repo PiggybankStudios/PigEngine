@@ -378,12 +378,6 @@ struct EngineInput_t
 	
 	StringFifo_t platDebugLines;
 	
-	#if PROCMON_SUPPORTED
-	u64 nextProcmonEventId;
-	StrHashDict_t processEntries; //ProcmonEntry_t
-	StrHashDict_t touchedFiles; //ProcmonFile_t
-	#endif
-	
 	#if STEAM_BUILD
 	u64 steamIpcCallCount;
 	#endif
@@ -447,5 +441,10 @@ typedef PIG_POST_RELOAD_DEF(PigPostReload_f);
 
 #define PIG_PERFORM_TASK_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, PlatThreadPoolThread_t* thread, PlatTask_t* task)
 typedef PIG_PERFORM_TASK_DEF(PigPerformTask_f);
+
+#if PROCMON_SUPPORTED
+#define PIG_HANDLE_PROCMON_EVENT_DEF(functionName) void functionName(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, ProcmonEvent_t* event, MemArena_t* tempArena)
+typedef PIG_HANDLE_PROCMON_EVENT_DEF(PigHandleProcmonEvent_f);
+#endif
 
 #endif //  _COMMON_INTERFACE_TYPES_H

@@ -437,6 +437,12 @@ GYLIB_GET_TEMP_ARENA_DEF(Win32_GetTempArena) //pre-declared at top of file
 		}
 		else { return nullptr; }
 	}
+	#if PROCMON_SUPPORTED
+	else if (thisThreadId == Platform->procmonThreadId)
+	{
+		return &Platform->procmonTempArena;
+	}
+	#endif
 	else
 	{
 		PlatThreadPoolThread_t* threadContext = Win32_GetThreadContext(thisThreadId);

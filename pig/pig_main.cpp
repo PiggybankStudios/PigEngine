@@ -326,6 +326,19 @@ PIG_PERFORM_TASK_DEF(Pig_PerformTask)
 	AssertIf(thread->tempArena.size > 0, GetNumMarks(&thread->tempArena) == 0);
 }
 
+#if PROCMON_SUPPORTED
+// +==============================+
+// |    Pig_HandleProcmonEvent    |
+// +==============================+
+// void Pig_HandleProcmonEvent(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, ProcmonEvent_t* event, MemArena_t* tempArena)
+PIG_HANDLE_PROCMON_EVENT_DEF(Pig_HandleProcmonEvent)
+{
+	pig->procmonThreadId = api->GetThisThreadId();
+	pig->procmonTempArena = tempArena;
+	GameHandleProcmonEvent(event);
+}
+#endif
+
 // +==============================+
 // |        Pig_PreReload         |
 // +==============================+

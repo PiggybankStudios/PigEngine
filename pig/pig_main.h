@@ -173,6 +173,11 @@ struct PigState_t
 	MemArena_t pythonHeap;
 	PythonState_t python;
 	#endif
+	
+	#if PROCMON_SUPPORTED
+	ThreadId_t procmonThreadId;
+	MemArena_t* procmonTempArena;
+	#endif
 };
 
 #endif //  _PIG_MAIN_H

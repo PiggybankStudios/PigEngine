@@ -169,16 +169,12 @@ struct Win32PlatformState_t
 	mat4 projectionMatrix;
 	
 	#if PROCMON_SUPPORTED
+	ThreadId_t procmonThreadId;
+	MemArena_t procmonTempArena;
+	u64 nextProcmonEventId;
 	CEventMgr*         Optmgr;
 	CMonitorContoller* Monitormgr;
 	CDrvLoader*        Drvload;
-	
-	u64 nextProcmonEventId;
-	char procmonConversionBuffer[1024];
-	u64 nextProcmonEntryId;
-	u64 nextProcmonFileId;
-	StrHashDict_t processEntries; //ProcmonEntry_t
-	StrHashDict_t touchedFiles; //ProcmonFile_t
 	#endif
 	
 	#if STEAM_BUILD

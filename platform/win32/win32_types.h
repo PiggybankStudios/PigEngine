@@ -18,14 +18,14 @@ enum Win32InitPhase_t
 	Win32InitPhase_ProgramArgsParsed,
 	Win32InitPhase_ThreadingInitialized,
 	Win32InitPhase_AudioInitialized,
-	#if PROCMON_SUPPORTED
-	Win32InitPhase_ProcmonDriverLoaded,
-	#endif
 	Win32InitPhase_EngineDllLoaded,
 	Win32InitPhase_GlfwInitialized,
 	Win32InitPhase_StartupOptionsObtained,
 	Win32InitPhase_SocketsInitialized,
 	Win32InitPhase_ThreadPoolsCreated,
+	#if PROCMON_SUPPORTED
+	Win32InitPhase_ProcmonDriverLoaded,
+	#endif
 	Win32InitPhase_WindowOpened,
 	Win32InitPhase_AudioOutputStarted,
 	Win32InitPhase_ResourcesLoaded,

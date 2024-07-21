@@ -39,6 +39,12 @@ GYLIB_GET_TEMP_ARENA_DEF(Pig_GetTempArena)
 	{
 		return &pig->tempArena;
 	}
+	#if PROCMON_SUPPORTED
+	else if (thisThreadId == pig->procmonThreadId)
+	{
+		return pig->procmonTempArena;
+	}
+	#endif
 	else
 	{
 		PlatThreadPoolThread_t* threadContext = plat->GetThreadContext(thisThreadId);

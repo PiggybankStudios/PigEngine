@@ -14,16 +14,19 @@ struct EngineDll_t
 	bool isValid;
 	Version_t version;
 	
-	PigGetVersion_f*        GetVersion;
-	PigGetStartupOptions_f* GetStartupOptions;
-	PigInitialize_f*        Initialize;
-	PigUpdate_f*            Update;
-	PigAudioService_f*      AudioService;
-	PigShouldWindowClose_f* ShouldWindowClose;
-	PigClosing_f*           Closing;
-	PigPreReload_f*         PreReload;
-	PigPostReload_f*        PostReload;
-	PigPerformTask_f*       PerformTask;
+	PigGetVersion_f*         GetVersion;
+	PigGetStartupOptions_f*  GetStartupOptions;
+	PigInitialize_f*         Initialize;
+	PigUpdate_f*             Update;
+	PigAudioService_f*       AudioService;
+	PigShouldWindowClose_f*  ShouldWindowClose;
+	PigClosing_f*            Closing;
+	PigPreReload_f*          PreReload;
+	PigPostReload_f*         PostReload;
+	PigPerformTask_f*        PerformTask;
+	#if PROCMON_SUPPORTED
+	PigHandleProcmonEvent_f* HandleProcmonEvent;
+	#endif
 	
 	HMODULE handle;
 	PlatWatchedFile_t* watch;

@@ -78,28 +78,34 @@ bool Win32_LoadEngineDll(MyStr_t filePath, MyStr_t tempPath, EngineDll_t* dllOut
 		return false;
 	}
 	
-	dllOut->GetVersion        = (PigGetVersion_f*)        GetProcAddress(dllOut->handle, "Pig_GetVersion");
-	dllOut->GetStartupOptions = (PigGetStartupOptions_f*) GetProcAddress(dllOut->handle, "Pig_GetStartupOptions");
-	dllOut->Initialize        = (PigInitialize_f*)        GetProcAddress(dllOut->handle, "Pig_Initialize");
-	dllOut->Update            = (PigUpdate_f*)            GetProcAddress(dllOut->handle, "Pig_Update");
-	dllOut->AudioService      = (PigAudioService_f*)      GetProcAddress(dllOut->handle, "Pig_AudioService");
-	dllOut->ShouldWindowClose = (PigShouldWindowClose_f*) GetProcAddress(dllOut->handle, "Pig_ShouldWindowClose");
-	dllOut->Closing           = (PigClosing_f*)           GetProcAddress(dllOut->handle, "Pig_Closing");
-	dllOut->PreReload         = (PigPreReload_f*)         GetProcAddress(dllOut->handle, "Pig_PreReload");
-	dllOut->PostReload        = (PigPostReload_f*)        GetProcAddress(dllOut->handle, "Pig_PostReload");
-	dllOut->PerformTask       = (PigPerformTask_f*)       GetProcAddress(dllOut->handle, "Pig_PerformTask");
+	dllOut->GetVersion         = (PigGetVersion_f*)         GetProcAddress(dllOut->handle, "Pig_GetVersion");
+	dllOut->GetStartupOptions  = (PigGetStartupOptions_f*)  GetProcAddress(dllOut->handle, "Pig_GetStartupOptions");
+	dllOut->Initialize         = (PigInitialize_f*)         GetProcAddress(dllOut->handle, "Pig_Initialize");
+	dllOut->Update             = (PigUpdate_f*)             GetProcAddress(dllOut->handle, "Pig_Update");
+	dllOut->AudioService       = (PigAudioService_f*)       GetProcAddress(dllOut->handle, "Pig_AudioService");
+	dllOut->ShouldWindowClose  = (PigShouldWindowClose_f*)  GetProcAddress(dllOut->handle, "Pig_ShouldWindowClose");
+	dllOut->Closing            = (PigClosing_f*)            GetProcAddress(dllOut->handle, "Pig_Closing");
+	dllOut->PreReload          = (PigPreReload_f*)          GetProcAddress(dllOut->handle, "Pig_PreReload");
+	dllOut->PostReload         = (PigPostReload_f*)         GetProcAddress(dllOut->handle, "Pig_PostReload");
+	dllOut->PerformTask        = (PigPerformTask_f*)        GetProcAddress(dllOut->handle, "Pig_PerformTask");
+	#if PROCMON_SUPPORTED
+	dllOut->HandleProcmonEvent = (PigHandleProcmonEvent_f*) GetProcAddress(dllOut->handle, "Pig_HandleProcmonEvent");
+	#endif
 	
 	dllOut->isValid = (
-		dllOut->GetVersion        != nullptr &&
-		dllOut->GetStartupOptions != nullptr &&
-		dllOut->Initialize        != nullptr &&
-		dllOut->Update            != nullptr &&
-		dllOut->AudioService      != nullptr &&
-		dllOut->ShouldWindowClose != nullptr &&
-		dllOut->Closing           != nullptr &&
-		dllOut->PreReload         != nullptr &&
-		dllOut->PostReload        != nullptr &&
-		dllOut->PerformTask       != nullptr
+		   dllOut->GetVersion         != nullptr
+		&& dllOut->GetStartupOptions  != nullptr
+		&& dllOut->Initialize         != nullptr
+		&& dllOut->Update             != nullptr
+		&& dllOut->AudioService       != nullptr
+		&& dllOut->ShouldWindowClose  != nullptr
+		&& dllOut->Closing            != nullptr
+		&& dllOut->PreReload          != nullptr
+		&& dllOut->PostReload         != nullptr
+		&& dllOut->PerformTask        != nullptr
+		#if PROCMON_SUPPORTED
+		&& dllOut->HandleProcmonEvent != nullptr
+		#endif
 	);
 	
 	if (dllOut->isValid)

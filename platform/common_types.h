@@ -502,6 +502,23 @@ const char* GetOpenFileModeStr(OpenFileMode_t enumValue)
 // #define IRP_MJ_SET_QUOTA                0x1a
 // #define IRP_MJ_PNP                      0x1b
 
+// #define IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION   ((UCHAR)-1)
+// #define IRP_MJ_RELEASE_FOR_SECTION_SYNCHRONIZATION   ((UCHAR)-2)
+// #define IRP_MJ_ACQUIRE_FOR_MOD_WRITE                 ((UCHAR)-3)
+// #define IRP_MJ_RELEASE_FOR_MOD_WRITE                 ((UCHAR)-4)
+// #define IRP_MJ_ACQUIRE_FOR_CC_FLUSH                  ((UCHAR)-5)
+// #define IRP_MJ_RELEASE_FOR_CC_FLUSH                  ((UCHAR)-6)
+// #define IRP_MJ_QUERY_OPEN                            ((UCHAR)-7)
+
+// #define IRP_MJ_FAST_IO_CHECK_IF_POSSIBLE             ((UCHAR)-13)
+// #define IRP_MJ_NETWORK_QUERY_OPEN                    ((UCHAR)-14)
+// #define IRP_MJ_MDL_READ                              ((UCHAR)-15)
+// #define IRP_MJ_MDL_READ_COMPLETE                     ((UCHAR)-16)
+// #define IRP_MJ_PREPARE_MDL_WRITE                     ((UCHAR)-17)
+// #define IRP_MJ_MDL_WRITE_COMPLETE                    ((UCHAR)-18)
+// #define IRP_MJ_VOLUME_MOUNT                          ((UCHAR)-19)
+// #define IRP_MJ_VOLUME_DISMOUNT                       ((UCHAR)-20)
+
 // IRP_MAP_DEF(IRP_MJ_QUERY_EA, TEXT("QueryEAFile"), NULL),
 // IRP_MAP_DEF(IRP_MJ_SET_EA, TEXT("SetEAFile"), NULL),
 // IRP_MAP_DEF(IRP_MJ_FLUSH_BUFFERS, TEXT("FlushBuffersFile"), NULL),
@@ -523,51 +540,54 @@ const char* GetOpenFileModeStr(OpenFileMode_t enumValue)
 // IRP_MAP_DEF(IRP_MJ_QUERY_QUOTA, TEXT("QueryFileQuota"), NULL),
 // IRP_MAP_DEF(IRP_MJ_SET_QUOTA, TEXT("SetFileQuota"), NULL),
 // IRP_MAP_DEF(IRP_MJ_PNP, TEXT("PlugAndPlay"), gFileSubMapPnp),
+// IRP_MAP_DEF(IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION, TEXT("CreateFileMapping"), NULL),
+// IRP_MAP_DEF(IRP_MJ_RELEASE_FOR_SECTION_SYNCHRONIZATION, TEXT("IRP_MJ_RELEASE_FOR_SECTION_SYNCHRONIZATION"), NULL),
+// IRP_MAP_DEF(IRP_MJ_ACQUIRE_FOR_MOD_WRITE, TEXT("IRP_MJ_ACQUIRE_FOR_MOD_WRITE"), NULL),
+// IRP_MAP_DEF(IRP_MJ_RELEASE_FOR_MOD_WRITE, TEXT("IRP_MJ_RELEASE_FOR_MOD_WRITE"), NULL),
+// IRP_MAP_DEF(IRP_MJ_ACQUIRE_FOR_CC_FLUSH, TEXT("IRP_MJ_ACQUIRE_FOR_CC_FLUSH"), NULL),
+// IRP_MAP_DEF(IRP_MJ_RELEASE_FOR_CC_FLUSH, TEXT("IRP_MJ_RELEASE_FOR_CC_FLUSH"), NULL),
+// IRP_MAP_DEF(IRP_MJ_QUERY_OPEN, TEXT("IRP_MJ_QUERY_OPEN"), NULL),
+// IRP_MAP_DEF(IRP_MJ_FAST_IO_CHECK_IF_POSSIBLE, TEXT("FASTIO_CHECK_IF_POSSIBLE"), NULL),
+// IRP_MAP_DEF(IRP_MJ_NETWORK_QUERY_OPEN, TEXT("QueryOpen"), NULL),
+// IRP_MAP_DEF(IRP_MJ_MDL_READ, TEXT("ReadFile"), NULL),
+// IRP_MAP_DEF(IRP_MJ_MDL_READ_COMPLETE, TEXT("FASTIO_MDL_READ_COMPLETE"), NULL),
+// IRP_MAP_DEF(IRP_MJ_PREPARE_MDL_WRITE, TEXT("WriteFile"), NULL),
+// IRP_MAP_DEF(IRP_MJ_MDL_WRITE_COMPLETE, TEXT("FASTIO_MDL_WRITE_COMPLETE"), NULL),
+// IRP_MAP_DEF(IRP_MJ_VOLUME_MOUNT, TEXT("VolumeMount"), NULL),
+// IRP_MAP_DEF(IRP_MJ_VOLUME_DISMOUNT, TEXT("VolumeDismount"), NULL),
 
 enum ProcmonEventType_t
 {
-	ProcmonEventType_CreateFile              = 0x00,
-	ProcmonEventType_CreatePipe              = 0x01,
-	ProcmonEventType_CloseOther              = 0x02,
-	ProcmonEventType_ReadFile                = 0x03,
-	ProcmonEventType_WriteFile               = 0x04,
-	ProcmonEventType_QueryFileInfo           = 0x05,
-	ProcmonEventType_SetFileInfo             = 0x06,
-	ProcmonEventType_QueryEAFile             = 0x07,
-	ProcmonEventType_SetEAFile               = 0x08,
-	ProcmonEventType_FlushBuffersFile        = 0x09,
-	ProcmonEventType_QueryVolumeInformation  = 0x0A,
-	ProcmonEventType_SetVolumeInformation    = 0x0B,
-	ProcmonEventType_DirectoryControl        = 0x0C,
-	ProcmonEventType_FileSystemControl       = 0x0D,
-	ProcmonEventType_FileDeviceIoControl     = 0x0E,
-	ProcmonEventType_InternalDeviceIoControl = 0x0F,
-	ProcmonEventType_Shutdown                = 0x10,
-	ProcmonEventType_LockUnlockFile          = 0x11,
-	ProcmonEventType_CloseFile               = 0x12,
-	ProcmonEventType_CreateMailSlot          = 0x13,
-	ProcmonEventType_QueryFileSecurity       = 0x14,
-	ProcmonEventType_SetFileSecurity         = 0x15,
-	ProcmonEventType_Power                   = 0x16,
-	ProcmonEventType_SystemControl           = 0x17,
-	ProcmonEventType_DeviceChange            = 0x18,
-	ProcmonEventType_QueryFileQuota          = 0x19,
-	ProcmonEventType_SetFileQuota            = 0x1A,
-	ProcmonEventType_PlugAndPlay             = 0x1B,
+	ProcmonEventType_CreateFile              = 0x00, //IRP_MJ_CREATE
+	ProcmonEventType_CreatePipe              = 0x01, //IRP_MJ_CREATE_NAMED_PIPE
+	ProcmonEventType_CloseOther              = 0x02, //IRP_MJ_CLOSE
+	ProcmonEventType_ReadFile                = 0x03, //IRP_MJ_READ
+	ProcmonEventType_WriteFile               = 0x04, //IRP_MJ_WRITE
+	ProcmonEventType_QueryFileInfo           = 0x05, //IRP_MJ_QUERY_INFORMATION
+	ProcmonEventType_SetFileInfo             = 0x06, //IRP_MJ_SET_INFORMATION
+	ProcmonEventType_QueryEAFile             = 0x07, //IRP_MJ_QUERY_EA
+	ProcmonEventType_SetEAFile               = 0x08, //IRP_MJ_SET_EA
+	ProcmonEventType_FlushBuffersFile        = 0x09, //IRP_MJ_FLUSH_BUFFERS
+	ProcmonEventType_QueryVolumeInformation  = 0x0A, //IRP_MJ_QUERY_VOLUME_INFORMATION
+	ProcmonEventType_SetVolumeInformation    = 0x0B, //IRP_MJ_SET_VOLUME_INFORMATION
+	ProcmonEventType_DirectoryControl        = 0x0C, //IRP_MJ_DIRECTORY_CONTROL
+	ProcmonEventType_FileSystemControl       = 0x0D, //IRP_MJ_FILE_SYSTEM_CONTROL
+	ProcmonEventType_FileDeviceIoControl     = 0x0E, //IRP_MJ_DEVICE_CONTROL
+	ProcmonEventType_InternalDeviceIoControl = 0x0F, //IRP_MJ_INTERNAL_DEVICE_CONTROL
+	ProcmonEventType_Shutdown                = 0x10, //IRP_MJ_SHUTDOWN
+	ProcmonEventType_LockUnlockFile          = 0x11, //IRP_MJ_LOCK_CONTROL
+	ProcmonEventType_CloseFile               = 0x12, //IRP_MJ_CLEANUP
+	ProcmonEventType_CreateMailSlot          = 0x13, //IRP_MJ_CREATE_MAILSLOT
+	ProcmonEventType_QueryFileSecurity       = 0x14, //IRP_MJ_QUERY_SECURITY
+	ProcmonEventType_SetFileSecurity         = 0x15, //IRP_MJ_SET_SECURITY
+	ProcmonEventType_Power                   = 0x16, //IRP_MJ_POWER
+	ProcmonEventType_SystemControl           = 0x17, //IRP_MJ_SYSTEM_CONTROL
+	ProcmonEventType_DeviceChange            = 0x18, //IRP_MJ_DEVICE_CHANGE
+	ProcmonEventType_QueryFileQuota          = 0x19, //IRP_MJ_QUERY_QUOTA
+	ProcmonEventType_SetFileQuota            = 0x1A, //IRP_MJ_SET_QUOTA
+	ProcmonEventType_PlugAndPlay             = 0x1B, //IRP_MJ_PNP
 	ProcmonEventType_NumTypes,
 };
-enum ProcmonEventBit_t
-{
-	ProcmonEventBit_None = 0x00,
-	ProcmonEventBit_CreateFile    = 0x01,
-	ProcmonEventBit_ReadFile      = 0x02,
-	ProcmonEventBit_WriteFile     = 0x04,
-	ProcmonEventBit_QueryFileInfo = 0x08,
-	ProcmonEventBit_SetFileInfo   = 0x10,
-	ProcmonEventBit_CloseFile     = 0x20,
-	ProcmonEventBit_Mask = 0x3F,
-};
-
 const char* GetProcmonEventTypeStr(ProcmonEventType_t eventType)
 {
 	switch (eventType)
@@ -604,72 +624,17 @@ const char* GetProcmonEventTypeStr(ProcmonEventType_t eventType)
 	}
 }
 
-ProcmonEventBit_t GetProcmonEventBit(ProcmonEventType_t eventType)
-{
-	switch (eventType)
-	{
-		case ProcmonEventType_CreateFile:              return ProcmonEventBit_CreateFile;
-		// case ProcmonEventType_CreatePipe:              return ProcmonEventBit_CreatePipe;
-		// case ProcmonEventType_CloseOther:              return ProcmonEventBit_CloseOther;
-		case ProcmonEventType_ReadFile:                return ProcmonEventBit_ReadFile;
-		case ProcmonEventType_WriteFile:               return ProcmonEventBit_WriteFile;
-		case ProcmonEventType_QueryFileInfo:           return ProcmonEventBit_QueryFileInfo;
-		case ProcmonEventType_SetFileInfo:             return ProcmonEventBit_SetFileInfo;
-		// case ProcmonEventType_QueryEAFile:             return ProcmonEventBit_QueryEAFile;
-		// case ProcmonEventType_SetEAFile:               return ProcmonEventBit_SetEAFile;
-		// case ProcmonEventType_FlushBuffersFile:        return ProcmonEventBit_FlushBuffersFile;
-		// case ProcmonEventType_QueryVolumeInformation:  return ProcmonEventBit_QueryVolumeInformation;
-		// case ProcmonEventType_SetVolumeInformation:    return ProcmonEventBit_SetVolumeInformation;
-		// case ProcmonEventType_DirectoryControl:        return ProcmonEventBit_DirectoryControl;
-		// case ProcmonEventType_FileSystemControl:       return ProcmonEventBit_FileSystemControl;
-		// case ProcmonEventType_FileDeviceIoControl:     return ProcmonEventBit_FileDeviceIoControl;
-		// case ProcmonEventType_InternalDeviceIoControl: return ProcmonEventBit_InternalDeviceIoControl;
-		// case ProcmonEventType_Shutdown:                return ProcmonEventBit_Shutdown;
-		// case ProcmonEventType_LockUnlockFile:          return ProcmonEventBit_LockUnlockFile;
-		case ProcmonEventType_CloseFile:               return ProcmonEventBit_CloseFile;
-		// case ProcmonEventType_CreateMailSlot:          return ProcmonEventBit_CreateMailSlot;
-		// case ProcmonEventType_QueryFileSecurity:       return ProcmonEventBit_QueryFileSecurity;
-		// case ProcmonEventType_SetFileSecurity:         return ProcmonEventBit_SetFileSecurity;
-		// case ProcmonEventType_Power:                   return ProcmonEventBit_Power;
-		// case ProcmonEventType_SystemControl:           return ProcmonEventBit_SystemControl;
-		// case ProcmonEventType_DeviceChange:            return ProcmonEventBit_DeviceChange;
-		// case ProcmonEventType_QueryFileQuota:          return ProcmonEventBit_QueryFileQuota;
-		// case ProcmonEventType_SetFileQuota:            return ProcmonEventBit_SetFileQuota;
-		// case ProcmonEventType_PlugAndPlay:             return ProcmonEventBit_PlugAndPlay;
-		// case ProcmonEventType_NumTypes:                return ProcmonEventBit_NumTypes;
-		default: return ProcmonEventBit_None;
-	}
-}
-ProcmonEventType_t GetProcmonEventType(ProcmonEventBit_t eventBit)
-{
-	switch (eventBit)
-	{
-		case ProcmonEventBit_CreateFile:    return ProcmonEventType_CreateFile;
-		case ProcmonEventBit_ReadFile:      return ProcmonEventType_ReadFile;
-		case ProcmonEventBit_WriteFile:     return ProcmonEventType_WriteFile;
-		case ProcmonEventBit_QueryFileInfo: return ProcmonEventType_QueryFileInfo;
-		case ProcmonEventBit_SetFileInfo:   return ProcmonEventType_SetFileInfo;
-		case ProcmonEventBit_CloseFile:     return ProcmonEventType_CloseFile;
-		default: return ProcmonEventType_NumTypes;
-	}
-}
-
-struct ProcmonEntry_t
+struct ProcmonEvent_t
 {
 	u64 id;
-	MyStr_t processName;
-	u64 numEvents;
-	// u64 eventIndex;
-	// ProcmonEventType_t lastFewEvents[16];
-	u32 eventBits;
-};
-
-struct ProcmonFile_t
-{
-	u64 id;
-	MyStr_t filePath;
+	
+	ProcmonEventType_t type;
+	MyStr_t path;
+	MyStr_t detail;
+	
 	u64 processId;
-	u64 numTouches;
+	MyStr_t processName;
+	MyStr_t processImagePath;
 };
 
 #endif

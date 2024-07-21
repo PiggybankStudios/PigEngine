@@ -223,25 +223,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	Win32_AudioInit();
 	
-	#if PROCMON_SUPPORTED
-	// +==============================+
-	// |     ProcmonDriverLoading     |
-	// +==============================+
-	PerfSection("ProcmonDriverLoading");
-	InitPhase = Win32InitPhase_AudioInitialized;
-	
-	Win32_ProcmonInit();
-	#endif
-	
 	// +==============================+
 	// |       LoadingEngineDll       |
 	// +==============================+
 	PerfSection("LoadingEngineDll");
-	#if PROCMON_SUPPORTED
-	InitPhase = Win32InitPhase_ProcmonDriverLoaded;
-	#else
 	InitPhase = Win32InitPhase_AudioInitialized;
-	#endif
 	
 	Win32_DllLoadingInit();
 	if (!Win32_LoadEngineDll(Platform->engineDllPath, Platform->engineDllTempPath, &Platform->engine))
@@ -308,11 +294,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Platform->startupOptions.threadPoolScratchArenasNumMarks
 	);
 	
+	#if PROCMON_SUPPORTED
+	// +==============================+
+	// |     ProcmonDriverLoading     |
+	// +==============================+
+	PerfSection("ProcmonDriverLoading");
+	InitPhase = Win32InitPhase_ThreadPoolsCreated;
+	
+	Win32_ProcmonInit(Platform->startupOptions.threadPoolTempArenasSize, Platform->startupOptions.threadPoolTempArenasNumMarks);
+	#endif
+	
 	// +==============================+
 	// |        WindowOpening         |
 	// +==============================+
 	PerfSection("WindowOpening");
+	#if PROCMON_SUPPORTED
+	InitPhase = Win32InitPhase_ProcmonDriverLoaded;
+	#else
 	InitPhase = Win32InitPhase_ThreadPoolsCreated;
+	#endif
 	
 	if (Platform->startupOptions.openDebugConsole)
 	{
@@ -531,11 +531,6 @@ void Win32_DoMainLoopIteration(bool pollEvents) //pre-declared above
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);
 	}
 	Win32_UpdateEngineInputTimeInfo(&Platform->enginePreviousInput, &Platform->engineInput, windowInteractionOccurred);
-	#if PROCMON_SUPPORTED
-	Platform->engineInput.nextProcmonEventId = Platform->nextProcmonEventId;
-	Platform->engineInput.processEntries = Platform->processEntries;
-	Platform->engineInput.touchedFiles = Platform->touchedFiles;
-	#endif
 	#if STEAM_BUILD
 	Win32_UpdateEngineInputSteamInfo(&Platform->enginePreviousInput, &Platform->engineInput);
 	#endif
