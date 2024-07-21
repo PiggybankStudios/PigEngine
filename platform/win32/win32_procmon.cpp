@@ -97,23 +97,6 @@ public:
 	}
 };
 
-bool Win32_WasProgramRunInAdministratorMode()
-{
-	bool result = false;
-	HANDLE tokenHandle = NULL;
-	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &tokenHandle))
-	{
-		TOKEN_ELEVATION elevation;
-		DWORD elevationSize = sizeof(TOKEN_ELEVATION);
-		if (GetTokenInformation(tokenHandle, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
-		{
-			result = elevation.TokenIsElevated;
-		}
-	}
-	if (tokenHandle != NULL) { CloseHandle(tokenHandle); }
-	return result;
-}
-
 void Win32_ProcmonInit()
 {
 	CreateStrHashDict(&Platform->processEntries, &Platform->procmonHeap, sizeof(ProcmonEntry_t), 512);
@@ -136,19 +119,28 @@ void Win32_ProcmonInit()
 		
 		if (!Platform->Monitormgr->Connect())
 		{
-			Win32_InitError("Failed to Connect to procmon driver (open process monitor driver)");
+			Win32_InitError("Failed to Connect to procmon driver (open process monitor driver).\n\nMake sure you aren't running multiple instances of the program at the same time.");
 		}
 		
 		Platform->Monitormgr->SetMonitor(TRUE, TRUE, FALSE);
 		if (!Platform->Monitormgr->Start())
 		{
-			Win32_InitError("Failed to start the procmon monitor (open process monitor driver). Make sure you run the program as Administrator!");
+			Win32_InitError("Failed to start the procmon monitor (open process monitor driver).\n\nMake sure you aren't running multiple instances of the program at the same time.");
 		}
 	}
 	else
 	{
 		WriteLine_E("Failed to start Procmon Driver because the application was not started with Administrator privelages");
 		// Win32_InitError("This application needs administrator privelages so it can start a system driver that monitors file access events.\n\nPlease restart this program in Administrator Mode");
+	}
+}
+
+void Win32_ProcmonShutdown()
+{
+	if (Platform->info.wasRunInAdministratorMode)
+	{
+		Platform->Monitormgr->Stop();
+		Platform->Monitormgr->Destory();
 	}
 }
 

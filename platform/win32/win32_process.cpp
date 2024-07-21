@@ -6,6 +6,23 @@ Description:
 	** Holds functions that allow us to ask questions about running processes on the computer
 */
 
+bool Win32_WasProgramRunInAdministratorMode()
+{
+	bool result = false;
+	HANDLE tokenHandle = NULL;
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &tokenHandle))
+	{
+		TOKEN_ELEVATION elevation;
+		DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+		if (GetTokenInformation(tokenHandle, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
+		{
+			result = elevation.TokenIsElevated;
+		}
+	}
+	if (tokenHandle != NULL) { CloseHandle(tokenHandle); }
+	return result;
+}
+
 void Win32_FreePlatRunningProcess(PlatRunningProcess_t* process)
 {
 	NotNull(process);
@@ -168,4 +185,43 @@ PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(Win32_CloseRunningProcess)
 	}
 	
 	runningProcess->readyForRemoval = true;
+}
+
+// +==================================+
+// | Win32_RestartWithAdminPrivileges |
+// +==================================+
+// void RestartWithAdminPrivileges()
+PLAT_API_RESTART_WITH_ADMIN_PRIVILEGES_DEF(Win32_RestartWithAdminPrivileges)
+{
+	TempPushMark();
+	StringBuilder_t exeBuilder;
+	NewStringBuilder(&exeBuilder, GetTempArena());
+	StringBuilderAppend(&exeBuilder, Platform->exeDirectory);
+	StringBuilderAppendChar(&exeBuilder, '/');
+	StringBuilderAppend(&exeBuilder, Platform->exeFileName);
+	MyStr_t exeStr = ToMyStr(&exeBuilder);
+	
+	StringBuilder_t argsBuilder;
+	NewStringBuilder(&argsBuilder, GetTempArena());
+	for (u64 aIndex = 0; aIndex < Platform->programArgs.count; aIndex++)
+	{
+		MyStr_t arg = Platform->programArgs.args[aIndex];
+		if (aIndex > 0) { StringBuilderAppendChar(&argsBuilder, ' '); }
+		StringBuilderAppend(&argsBuilder, arg);
+	}
+	MyStr_t argsStr = ToMyStr(&argsBuilder);
+	
+	u64 executeResult = (u64)ShellExecuteA(
+		NULL,   //No parent window
+		"runas", //The action verb
+		exeStr.chars, //The target file
+		argsStr.chars, //No parameters
+		NULL, //Use default working directory
+		SW_SHOWNORMAL //Show command is normal
+	);
+	Assert(executeResult >= 32);
+	
+	TempPopMark();
+	
+	Platform->exitRequested = true;
 }

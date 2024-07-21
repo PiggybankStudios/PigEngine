@@ -484,6 +484,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Platform->engine.Closing(&Platform->info, &Platform->api, &Platform->engineMemory);
 	}
 	
+	#if PROCMON_SUPPORTED
+	Win32_ProcmonShutdown();
+	#endif
+	
 	Win32_GlfwCleanup();
 	
 	return 0;

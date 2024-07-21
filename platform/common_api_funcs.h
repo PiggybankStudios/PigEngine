@@ -242,6 +242,9 @@ typedef PLAT_API_CHECK_RUNNING_PROCESS_DEFINITION(PlatApiCheckRunningProcess_f);
 #define PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(functionName) void functionName(PlatRunningProcess_t* runningProcess)
 typedef PLAT_API_CLOSE_RUNNING_PROCESS_DEFINITION(PlatApiCloseRunningProcess_f);
 
+#define PLAT_API_RESTART_WITH_ADMIN_PRIVILEGES_DEF(functionName) void functionName()
+typedef PLAT_API_RESTART_WITH_ADMIN_PRIVILEGES_DEF(PlatApiRestartWithAdminPrivileges_f);
+
 #if BOX2D_SUPPORTED
 
 #define PLAT_API_INIT_PHYSICS_ENGINE(functionName) void functionName(v2 gravity, r32 scale)

@@ -134,102 +134,101 @@ void Win32_FillPlatformInfo(PlatformInfo_t* info, PerfTime_t programStartPerfTim
 	info->steamFriendsList = &Platform->steamFriendsList;
 	#endif
 	
-	#if PROCMON_SUPPORTED
 	info->wasRunInAdministratorMode = Win32_WasProgramRunInAdministratorMode();
-	#endif
 }
 
 void Win32_FillPlatformApi(PlatformApi_t* api)
 {
 	NotNull(api);
 	ClearPointer(api);
-	api->GetScratchArena           = Win32_GetScratchArena;
-	api->FreeScratchArena          = Win32_FreeScratchArena;
-	api->ShowMessageBox            = Win32_ShowMessageBox;
-	api->HandleAssertion           = Win32_HandleAssertion;
-	api->DebugOutput               = Win32_DebugOutput;
-	api->GetProgramArg             = Win32_GetProgramArg;
-	api->CreateMutex               = Win32_CreateMutex;
-	api->DestroyMutex              = Win32_DestroyMutex;
-	api->LockMutex                 = Win32_LockMutex;
-	api->UnlockMutex               = Win32_UnlockMutex;
-	api->CreateSemaphore           = Win32_CreateSemaphore;
-	api->DestroySemaphore          = Win32_DestroySemaphore;
-	api->WaitOnSemaphore           = Win32_WaitOnSemaphore;
-	api->TriggerSemaphore          = Win32_TriggerSemaphore;
-	api->CreateInterlockedInt      = Win32_CreateInterlockedInt;
-	api->InterlockedExchange       = Win32_InterlockedExchange;
-	api->DestroyInterlockedInt     = Win32_DestroyInterlockedInt;
-	api->GetThisThreadId           = Win32_GetThisThreadId;
-	api->GetThreadContext          = Win32_GetThreadContext;
-	api->SleepForMs                = Win32_SleepForMs;
-	api->QueueTask                 = Win32_QueueTask;
-	api->AllocateMemory            = Win32_AllocateMemory;
-	api->ReallocMemory             = Win32_ReallocMemory;
-	api->FreeMemory                = Win32_FreeMemory;
-	api->GetRapidClickMaxTime      = Win32_GetRapidClickMaxTime;
-	api->ChangeWindowTarget        = Win32_ChangeWindowTarget;
-	api->SwapBuffers               = Win32_SwapBuffers;
-	api->GetNativeWindowPntr       = Win32_GetNativeWindowPntr;
-	api->GetFullPath               = Win32_GetFullPath;
-	api->DoesFileExist             = Win32_DoesFileExist;
-	api->StartEnumeratingFiles     = Win32_StartEnumeratingFiles;
-	api->EnumerateFiles            = Win32_EnumerateFiles;
-	api->CreateFolder              = Win32_CreateFolder;
-	api->ReadFileContents          = Win32_ReadFileContents;
-	api->FreeFileContents          = Win32_FreeFileContents;
-	api->WriteEntireFile           = Win32_WriteEntireFile;
-	api->OpenFile                  = Win32_OpenFile;
-	api->WriteToFile               = Win32_WriteToFile;
-	api->MoveFileCursor            = Win32_MoveFileCursor;
-	api->SeekToOffsetInFile        = Win32_SeekToOffsetInFile;
-	api->ReadFromFile              = Win32_ReadFromFile;
-	api->CloseFile                 = Win32_CloseFile;
-	api->ReadFileContentsStream    = Win32_ReadFileContentsStream;
-	api->OpenFileStream            = Win32_OpenFileStream;
-	api->TryParseImageFile         = Win32_TryParseImageFile;
-	api->SaveImageDataToFile       = Win32_SaveImageDataToFile;
-	api->FreeImageData             = Win32_FreeImageData;
-	api->ShowSourceFile            = Win32_ShowSourceFile;
-	api->ShowFile                  = Win32_ShowFile;
-	api->GetSpecialFolderPath      = Win32_GetSpecialFolderPath;
-	api->IsFileWatched             = Win32_IsFileWatched;
-	api->WatchFile                 = Win32_WatchFile;
-	api->UnwatchFile               = Win32_UnwatchFile;
-	api->GetFileIconId             = Win32_GetFileIconId;
-	api->GetFileIconImageData      = Win32_GetFileIconImageData;
+	api->GetScratchArena            = Win32_GetScratchArena;
+	api->FreeScratchArena           = Win32_FreeScratchArena;
+	api->ShowMessageBox             = Win32_ShowMessageBox;
+	api->HandleAssertion            = Win32_HandleAssertion;
+	api->DebugOutput                = Win32_DebugOutput;
+	api->GetProgramArg              = Win32_GetProgramArg;
+	api->CreateMutex                = Win32_CreateMutex;
+	api->DestroyMutex               = Win32_DestroyMutex;
+	api->LockMutex                  = Win32_LockMutex;
+	api->UnlockMutex                = Win32_UnlockMutex;
+	api->CreateSemaphore            = Win32_CreateSemaphore;
+	api->DestroySemaphore           = Win32_DestroySemaphore;
+	api->WaitOnSemaphore            = Win32_WaitOnSemaphore;
+	api->TriggerSemaphore           = Win32_TriggerSemaphore;
+	api->CreateInterlockedInt       = Win32_CreateInterlockedInt;
+	api->InterlockedExchange        = Win32_InterlockedExchange;
+	api->DestroyInterlockedInt      = Win32_DestroyInterlockedInt;
+	api->GetThisThreadId            = Win32_GetThisThreadId;
+	api->GetThreadContext           = Win32_GetThreadContext;
+	api->SleepForMs                 = Win32_SleepForMs;
+	api->QueueTask                  = Win32_QueueTask;
+	api->AllocateMemory             = Win32_AllocateMemory;
+	api->ReallocMemory              = Win32_ReallocMemory;
+	api->FreeMemory                 = Win32_FreeMemory;
+	api->GetRapidClickMaxTime       = Win32_GetRapidClickMaxTime;
+	api->ChangeWindowTarget         = Win32_ChangeWindowTarget;
+	api->SwapBuffers                = Win32_SwapBuffers;
+	api->GetNativeWindowPntr        = Win32_GetNativeWindowPntr;
+	api->GetFullPath                = Win32_GetFullPath;
+	api->DoesFileExist              = Win32_DoesFileExist;
+	api->StartEnumeratingFiles      = Win32_StartEnumeratingFiles;
+	api->EnumerateFiles             = Win32_EnumerateFiles;
+	api->CreateFolder               = Win32_CreateFolder;
+	api->ReadFileContents           = Win32_ReadFileContents;
+	api->FreeFileContents           = Win32_FreeFileContents;
+	api->WriteEntireFile            = Win32_WriteEntireFile;
+	api->OpenFile                   = Win32_OpenFile;
+	api->WriteToFile                = Win32_WriteToFile;
+	api->MoveFileCursor             = Win32_MoveFileCursor;
+	api->SeekToOffsetInFile         = Win32_SeekToOffsetInFile;
+	api->ReadFromFile               = Win32_ReadFromFile;
+	api->CloseFile                  = Win32_CloseFile;
+	api->ReadFileContentsStream     = Win32_ReadFileContentsStream;
+	api->OpenFileStream             = Win32_OpenFileStream;
+	api->TryParseImageFile          = Win32_TryParseImageFile;
+	api->SaveImageDataToFile        = Win32_SaveImageDataToFile;
+	api->FreeImageData              = Win32_FreeImageData;
+	api->ShowSourceFile             = Win32_ShowSourceFile;
+	api->ShowFile                   = Win32_ShowFile;
+	api->GetSpecialFolderPath       = Win32_GetSpecialFolderPath;
+	api->IsFileWatched              = Win32_IsFileWatched;
+	api->WatchFile                  = Win32_WatchFile;
+	api->UnwatchFile                = Win32_UnwatchFile;
+	api->GetFileIconId              = Win32_GetFileIconId;
+	api->GetFileIconImageData       = Win32_GetFileIconImageData;
 	#ifndef WIN32_GFX_TEST
-	api->GetLoadProcAddressFunc    = Win32_GetLoadProcAddressFunc;
-	api->RenderLoadingScreen       = Win32_RenderLoadingScreen;
+	api->GetLoadProcAddressFunc     = Win32_GetLoadProcAddressFunc;
+	api->RenderLoadingScreen        = Win32_RenderLoadingScreen;
 	#endif
-	api->FreeFontData              = Win32_FreeFontData;
-	api->ReadPlatformFont          = Win32_ReadPlatformFont;
-	api->BakeFont                  = Win32_BakeFont;
+	api->FreeFontData               = Win32_FreeFontData;
+	api->ReadPlatformFont           = Win32_ReadPlatformFont;
+	api->BakeFont                   = Win32_BakeFont;
 	#ifndef WIN32_GFX_TEST
-	api->DebugReadout              = Win32_DebugReadout;
+	api->DebugReadout               = Win32_DebugReadout;
 	#endif
-	api->CopyTextToClipboard       = Win32_CopyTextToClipboard;
-	api->PasteTextFromClipboard    = Win32_PasteTextFromClipboard;
-	api->GetProgramTime            = Win32_GetProgramTime;
-	api->GetMonitorVideoMode       = Win32_GetMonitorVideoMode;
+	api->CopyTextToClipboard        = Win32_CopyTextToClipboard;
+	api->PasteTextFromClipboard     = Win32_PasteTextFromClipboard;
+	api->GetProgramTime             = Win32_GetProgramTime;
+	api->GetMonitorVideoMode        = Win32_GetMonitorVideoMode;
 	#if STEAM_BUILD
-	api->GetSteamFriendInfoById    = Win32_GetSteamFriendInfoById;
-	api->GetSteamFriendGroupById   = Win32_GetSteamFriendGroupById;
-	api->GetSteamFriendPresenceStr = Win32_GetSteamFriendPresenceStr;
-	api->StartSteamFriendsQuery    = Win32_StartSteamFriendsQuery;
-	api->UpdateSteamFriendStatus   = Win32_UpdateSteamFriendStatus;
-	api->RequestSteamFriendAvatar  = Win32_RequestSteamFriendAvatar;
+	api->GetSteamFriendInfoById     = Win32_GetSteamFriendInfoById;
+	api->GetSteamFriendGroupById    = Win32_GetSteamFriendGroupById;
+	api->GetSteamFriendPresenceStr  = Win32_GetSteamFriendPresenceStr;
+	api->StartSteamFriendsQuery     = Win32_StartSteamFriendsQuery;
+	api->UpdateSteamFriendStatus    = Win32_UpdateSteamFriendStatus;
+	api->RequestSteamFriendAvatar   = Win32_RequestSteamFriendAvatar;
 	#endif
-	api->CheckRunningProcess       = Win32_CheckRunningProcess;
-	api->StartProcess              = Win32_StartProcess;
-	api->CloseRunningProcess       = Win32_CloseRunningProcess;
+	api->CheckRunningProcess        = Win32_CheckRunningProcess;
+	api->StartProcess               = Win32_StartProcess;
+	api->CloseRunningProcess        = Win32_CloseRunningProcess;
+	api->RestartWithAdminPrivileges = Win32_RestartWithAdminPrivileges;
 	#if BOX2D_SUPPORTED
-	api->InitPhysicsEngine         = Win32_InitPhysicsEngine;
-	api->DestroyPhysicsEngine      = Win32_DestroyPhysicsEngine;
-	api->PhysicsTick               = Win32_PhysicsTick;
-	api->CreatePhysicsBody         = Win32_CreatePhysicsBody;
-	api->DestroyPhysicsBody        = Win32_DestroyPhysicsBody;
-	api->SetPhysicsBodyVelocity    = Win32_SetPhysicsBodyVelocity;
-	api->GetPhysicsBodyState       = Win32_GetPhysicsBodyState;
+	api->InitPhysicsEngine          = Win32_InitPhysicsEngine;
+	api->DestroyPhysicsEngine       = Win32_DestroyPhysicsEngine;
+	api->PhysicsTick                = Win32_PhysicsTick;
+	api->CreatePhysicsBody          = Win32_CreatePhysicsBody;
+	api->DestroyPhysicsBody         = Win32_DestroyPhysicsBody;
+	api->SetPhysicsBodyVelocity     = Win32_SetPhysicsBodyVelocity;
+	api->GetPhysicsBodyState        = Win32_GetPhysicsBodyState;
 	#endif
 }
