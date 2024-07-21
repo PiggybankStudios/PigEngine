@@ -20,7 +20,7 @@ BOOL HandleProcmonEvent(const CRefPtr<CEventView> pEventView)
 		NotNull(scratch);
 	}
 	
-	ULONGLONG Time = pEventView->GetStartTime().QuadPart;
+	// ULONGLONG Time = pEventView->GetStartTime().QuadPart;
 	
 	// PrintLine_D("PROCMON: %llu Process %s Do 0x%x for %s",
 	// 	Time,

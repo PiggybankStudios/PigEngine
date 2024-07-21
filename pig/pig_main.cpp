@@ -333,6 +333,9 @@ PIG_PERFORM_TASK_DEF(Pig_PerformTask)
 // void Pig_HandleProcmonEvent(const PlatformInfo_t* info, const PlatformApi_t* api, EngineMemory_t* memory, ProcmonEvent_t* event, MemArena_t* tempArena)
 PIG_HANDLE_PROCMON_EVENT_DEF(Pig_HandleProcmonEvent)
 {
+	//TODO: How do we want to handle globals in an application where threaded tasks are more common? Especially globals that likely won't change between threads
+	UNUSED(info);
+	UNUSED(memory);
 	pig->procmonThreadId = api->GetThisThreadId();
 	pig->procmonTempArena = tempArena;
 	GameHandleProcmonEvent(event);

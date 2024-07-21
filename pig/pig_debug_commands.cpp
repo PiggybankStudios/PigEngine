@@ -9,6 +9,9 @@ Description:
 
 #define DEBUG_COMMAND_DOC_TRUNCATE_LIMIT   64 //chars
 
+#pragma warning(push)
+#pragma warning(disable: 4100) //'context': unreferenced formal parameter
+
 // +--------------------------------------------------------------+
 // |                       Command Helpers                        |
 // +--------------------------------------------------------------+
@@ -1682,3 +1685,5 @@ bool PigParseDebugCommand(MyStr_t commandStr) //pre-declared in pig_func_defs.h
 	FreeScratchArena(scratch);
 	return isValidCommand;
 }
+
+#pragma warning(pop)
