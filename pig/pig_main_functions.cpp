@@ -58,6 +58,8 @@ void PigInitialize(EngineMemory_t* memory)
 	TempPushMark();
 	
 	PerfTime_t initStartTime = GetPerfTime();
+	ClearStruct(pig->theme);
+	FillTheme(&pig->theme);
 	u8* consoleSpace = ((u8*)memory->persistentDataPntr) + sizeof(PigState_t);
 	InitializeDebugConsole(&pig->debugConsole, DBG_CONSOLE_BUFFER_SIZE, consoleSpace + DBG_CONSOLE_BUILD_SPACE_SIZE, DBG_CONSOLE_BUILD_SPACE_SIZE, consoleSpace);
 	GameLoadSettings(&pig->settings, mainHeap);

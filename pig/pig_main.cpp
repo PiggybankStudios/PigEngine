@@ -73,6 +73,7 @@ extern "C" {
 #include "pig/pig_defines.h"
 #include "pig/pig_serialization.h"
 #include "pig/pig_input_chars.h"
+#include "pig/pig_ui_theme.h"
 #include "pig/pig_render.h"
 #include "pig/pig_types.h"
 #include "pig/pig_slug_types.h"
@@ -152,6 +153,7 @@ static       rec              ScreenRec      = {};
 #include "pig/pig_log.cpp"
 #include "pig/pig_notification_macros.cpp"
 #include "pig/pig_time.cpp"
+#include "pig/pig_ui_theme.cpp"
 
 #include "pig/pig_json.cpp"
 #include "pig/pig_wav.cpp"

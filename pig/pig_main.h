@@ -78,6 +78,9 @@ struct PigState_t
 	RenderApi_t renderApi;
 	RenderContext_t renderContext;
 	
+	//UI
+	GlobalTheme_t theme;
+	
 	//IDs
 	u64 nextSoundId;
 	u64 nextShaderId;
