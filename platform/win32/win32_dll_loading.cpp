@@ -7,13 +7,13 @@ Description:
 */
 
 #if DEMO_BUILD
-#define ENGINE_DLL_NAME            PROJECT_NAME_SAFE "_Demo.dll"
-#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME_SAFE "_Demo_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME_SAFE "_Demo_TEMP_Reload%llu.dll"
+#define ENGINE_DLL_NAME            PROJECT_NAME_SAFE_STR "_Demo.dll"
+#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME_SAFE_STR "_Demo_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME_SAFE_STR "_Demo_TEMP_Reload%llu.dll"
 #else
-#define ENGINE_DLL_NAME            PROJECT_NAME_SAFE ".dll"
-#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME_SAFE "_TEMP.dll"
-#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME_SAFE "_TEMP__Reload%llu.dll"
+#define ENGINE_DLL_NAME            PROJECT_NAME_SAFE_STR ".dll"
+#define ENGINE_DLL_TEMP_NAME       PROJECT_NAME_SAFE_STR "_TEMP.dll"
+#define ENGINE_DLL_TEMP_FORMAT_STR PROJECT_NAME_SAFE_STR "_TEMP__Reload%llu.dll"
 #endif
 
 #define ENGINE_DLL_RELOAD_WAIT_TIME  400 //ms

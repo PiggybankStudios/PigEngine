@@ -6,7 +6,7 @@ Description:
 	** Holds all of the entry points for the engine DLL and includes all other files that need to be included to compile the engine DLL 
 */
 
-#include "pig_config.h"
+#include "build_config.h"
 
 // +--------------------------------------------------------------+
 // |                           Includes                           |

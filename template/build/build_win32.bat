@@ -1,64 +1,63 @@
 @echo off
 
-rem NOTE: We need to change this in the build_installer.nsi as well
-rem The "Safe" name doesn't have spaces or invalid characters and also doesn't change for Demo vs non-Demo
-set ProjectName=New Pig Engine Game
-set ProjectNameSafe=NewPigEngineGame
+echo Running on %ComputerName%
 
-set CompilePlatform=1
-set CompileEngine=1
-set CompileInstaller=0
-set DumpPreprocessor=0
-REM You have to run the game from a terminal that has run VsDevCmd.bat for this to work
-set EnableAddressSanitizer=0
-set CopyToDataDirectory=1
+python --version 2>NUL
+if errorlevel 1 (
+	echo WARNING: Python isn't installed on this computer. Defines cannot be extracted from build_config.h! And build number won't be incremented
+	exit
+)
 
 set LibDirectory=..\lib
 set EngineSourceDirectory=..\engine
 set GameSourceDirectory=..\game
 set DataDirectory=..\data
 set GeneratedCodeDirectory=..\build\gen
-set PlatformCodePath=%EngineSourceDirectory%\platform\win32\win32_main.cpp
-set EngineCodePath=%EngineSourceDirectory%\pig\pig_main.cpp
-set IncVersNumScriptPath=%LibDirectory%\include\gylib\IncrementVersionNumber.py
+set TestSourceDirectory=..\game
 set ExtractDefineScriptPath=%LibDirectory%\include\gylib\ExtractDefine.py
-set PlatformVersionFilePath=%EngineSourceDirectory%\platform\win32\win32_version.h
-set EngineVersionFilePath=%EngineSourceDirectory%\pig\pig_version.h
-set GameVersionFilePath=%GameSourceDirectory%\game_version.h
-set TimeString=%date:~-4,4%%date:~-10,2%%date:~-7,2%%time:~0,2%%time:~3,2%%time:~6,2%
+set BuildConfigPath=%GameSourceDirectory%\build_config.h
 
-echo Running on %ComputerName%
-
-python --version 2>NUL
-if errorlevel 1 (
-	echo WARNING: Python isn't installed on this computer. Defines cannot be extracted from pig_config.h! And build number won't be incremented
-	exit
-)
-
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h DEBUG_BUILD') do set DEBUG_BUILD=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h RUN_PIG_GEN') do set RUN_PIG_GEN=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h DEMO_BUILD') do set DEMO_BUILD=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h STEAM_BUILD') do set STEAM_BUILD=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h OPENGL_SUPPORTED') do set OPENGL_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h DIRECTX_SUPPORTED') do set DIRECTX_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h VULKAN_SUPPORTED') do set VULKAN_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h PROCMON_SUPPORTED') do set PROCMON_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h SOCKETS_SUPPORTED') do set SOCKETS_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h BOX2D_SUPPORTED') do set BOX2D_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h SLUG_SUPPORTED') do set SLUG_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h LUA_SUPPORTED') do set LUA_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h BULLET_SUPPORTED') do set BULLET_SUPPORTED=%%i
-for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %GameSourceDirectory%\pig_config.h PYTHON_SUPPORTED') do set PYTHON_SUPPORTED=%%i
-
-if "%DEMO_BUILD%"=="1" (
-	set ProjectName=%ProjectName% Demo
-)
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% COMPILE_PLATFORM') do set COMPILE_PLATFORM=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% COMPILE_ENGINE') do set COMPILE_ENGINE=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% COMPILE_INSTALLER') do set COMPILE_INSTALLER=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% COPY_TO_DATA_DIRECTORY') do set COPY_TO_DATA_DIRECTORY=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% RUN_PIG_GEN') do set RUN_PIG_GEN=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% DUMP_PREPROCESSOR') do set DUMP_PREPROCESSOR=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% ENABLE_ADDRESS_SANITIZER') do set ENABLE_ADDRESS_SANITIZER=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% DEBUG_BUILD') do set DEBUG_BUILD=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% DEMO_BUILD') do set DEMO_BUILD=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% STEAM_BUILD') do set STEAM_BUILD=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% OPENGL_SUPPORTED') do set OPENGL_SUPPORTED=%%i
+rem for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% DIRECTX_SUPPORTED') do set DIRECTX_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% VULKAN_SUPPORTED') do set VULKAN_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% PROCMON_SUPPORTED') do set PROCMON_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% SOCKETS_SUPPORTED') do set SOCKETS_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% BOX2D_SUPPORTED') do set BOX2D_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% SLUG_SUPPORTED') do set SLUG_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% LUA_SUPPORTED') do set LUA_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% BULLET_SUPPORTED') do set BULLET_SUPPORTED=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% PYTHON_SUPPORTED') do set PYTHON_SUPPORTED=%%i
+rem for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% PROJECT_NAME') do set PROJECT_NAME=%%i
+for /f "delims=" %%i in ('python %ExtractDefineScriptPath% %BuildConfigPath% PROJECT_NAME_SAFE') do set PROJECT_NAME_SAFE=%%i
 
 rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 rem call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64 -no_logo
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
 
-set CompilerFlags=-DWINDOWS_COMPILATION -DPROJECT_NAME="\"%ProjectName%\"" -DPROJECT_NAME_SAFE=\"%ProjectNameSafe%\"
+set PlatformCodePath=%EngineSourceDirectory%\platform\win32\win32_main.cpp
+set EngineCodePath=%EngineSourceDirectory%\pig\pig_main.cpp
+set IncVersNumScriptPath=%LibDirectory%\include\gylib\IncrementVersionNumber.py
+set PlatformVersionFilePath=%EngineSourceDirectory%\platform\win32\win32_version.h
+set EngineVersionFilePath=%EngineSourceDirectory%\pig\pig_version.h
+set GameVersionFilePath=%GameSourceDirectory%\game_version.h
+set TimeString=%date:~-4,4%%date:~-10,2%%date:~-7,2%%time:~0,2%%time:~3,2%%time:~6,2%
+
+set ProjectFileName=%PROJECT_NAME_SAFE%
+if "%DEMO_BUILD%"=="1" (
+	set ProjectFileName=%ProjectFileName%_DEMO
+)
+
+set CompilerFlags=-DWINDOWS_COMPILATION
 rem /FC = Full path for error messages
 rem /EHsc = Exception Handling Model: Standard C++ Stack Unwinding. Functions declared as extern "C" can't throw exceptions
 rem /EHa- = TODO: Do we really need this?? It seems like this option should be off if we specify s and c earlier
@@ -93,10 +92,11 @@ rem winmm.lib    = ?
 rem Winhttp.lib  = ?
 rem Shlwapi.lib  = ?
 rem Ole32.lib    = Combaseapi.h, CoCreateInstance
-set PlatformLibraries=glfw3.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib Winhttp.lib Shlwapi.lib Ole32.lib
+rem Advapi32.lib = Processthreadsapi.h, OpenProcessToken, GetTokenInformation
+set PlatformLibraries=glfw3.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib Winhttp.lib Shlwapi.lib Ole32.lib Advapi32.lib
 set IncludeDirectories=/I"%EngineSourceDirectory%" /I"%EngineSourceDirectory%"\platform /I"%GameSourceDirectory%" /I"%GeneratedCodeDirectory%" /I"%LibDirectory%\include" /I"%LibDirectory%\include\my_glfw\include" /I"%LibDirectory%\include\imgui"
 set EngineDllExports=/EXPORT:Pig_GetVersion /EXPORT:Pig_GetStartupOptions /EXPORT:Pig_Initialize /EXPORT:Pig_Update /EXPORT:Pig_AudioService /EXPORT:Pig_ShouldWindowClose /EXPORT:Pig_Closing /EXPORT:Pig_PreReload /EXPORT:Pig_PostReload /EXPORT:Pig_PerformTask
-set EngineDllDirective=/DLL /PDB:"%ProjectNameSafe%_%TimeString%.pdb"
+set EngineDllDirective=/DLL /PDB:"%ProjectFileName%_%TimeString%.pdb"
 set LibraryDirectories=
 
 if "%DEBUG_BUILD%"=="1" (
@@ -126,7 +126,7 @@ if "%DEBUG_BUILD%"=="1" (
 	rem set EngineLibraries=%EngineLibraries%
 )
 
-if "%EnableAddressSanitizer%"=="1" (
+if "%ENABLE_ADDRESS_SANITIZER%"=="1" (
 	rem /fsanitize=address = Enable Address Sanitizer
 	set CompilerFlags=%CompilerFlags% /fsanitize=address
 )
@@ -176,7 +176,7 @@ del *.pdb > NUL 2> NUL
 rem +--------------------------------------------------------------+
 rem |                       Compile Platform                       |
 rem +--------------------------------------------------------------+
-if "%CompilePlatform%"=="1" (
+if "%COMPILE_PLATFORM%"=="1" (
 	echo[
 	
 	python %IncVersNumScriptPath% %PlatformVersionFilePath%
@@ -185,19 +185,19 @@ if "%CompilePlatform%"=="1" (
 		PigGen.exe ../engine -output="gen"
 	)
 	
-	if "%DumpPreprocessor%"=="1" (
+	if "%DUMP_PREPROCESSOR%"=="1" (
 		rem /P = Output preprocessed file to [filename].i
 		rem /d1PP = Undocumented option that keeps #defines in preprocessed output (useful with /P)
 		rem /PD /Zc:preprocessor = Output all #defines to the debug output
-		cl /Fe%ProjectNameSafe%.exe /PD /Zc:preprocessor %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res > defines_win32_main.txt
-		cl /Fe%ProjectNameSafe%.exe /P %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
+		cl /Fe%ProjectFileName%.exe /PD /Zc:preprocessor %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res > defines_win32_main.txt
+		cl /Fe%ProjectFileName%.exe /P %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
 	) else (
-		cl /Fe%ProjectNameSafe%.exe %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
+		cl /Fe%ProjectFileName%.exe %CompilerFlags% %IncludeDirectories% "%PlatformCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %PlatformLibraries% resources.res
 	)
 	
-	if "%CopyToDataDirectory%"=="1" (
-		echo [Copying %ProjectNameSafe%.exe to data directory]
-		XCOPY ".\%ProjectNameSafe%.exe" "%DataDirectory%\" /Y > NUL
+	if "%COPY_TO_DATA_DIRECTORY%"=="1" (
+		echo [Copying %ProjectFileName%.exe to data directory]
+		XCOPY ".\%ProjectFileName%.exe" "%DataDirectory%\" /Y > NUL
 	) else (
 		echo [Platform Build Finished!]
 	)
@@ -206,7 +206,7 @@ if "%CompilePlatform%"=="1" (
 rem +--------------------------------------------------------------+
 rem |                        Compile Engine                        |
 rem +--------------------------------------------------------------+
-if "%CompileEngine%"=="1" (
+if "%COMPILE_ENGINE%"=="1" (
 	echo[
 	
 	python %IncVersNumScriptPath% %EngineVersionFilePath%
@@ -216,19 +216,19 @@ if "%CompileEngine%"=="1" (
 		PigGen.exe ../game -output="gen"
 	)
 	
-	if "%DumpPreprocessor%"=="1" (
+	if "%DUMP_PREPROCESSOR%"=="1" (
 		rem /P = Output preprocessed file to [filename].i
 		rem /d1PP = Undocumented option that keeps #defines in preprocessed output (useful with /P)
 		rem /PD /Zc:preprocessor = Output all #defines to the debug output
-		cl /Fe%ProjectNameSafe%.dll /PD /Zc:preprocessor %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective% > defines_pig_main.txt
-		cl /Fe%ProjectNameSafe%.dll /P %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
+		cl /Fe%ProjectFileName%.dll /PD /Zc:preprocessor %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective% > defines_pig_main.txt
+		cl /Fe%ProjectFileName%.dll /P %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
 	) else (
-		cl /Fe%ProjectNameSafe%.dll %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
+		cl /Fe%ProjectFileName%.dll %CompilerFlags% %IncludeDirectories% "%EngineCodePath%" /link %LibraryDirectories% %LinkerFlags% %Libraries% %EngineLibraries% %EngineDllExports% %EngineDllDirective%
 	)
 	
-	if "%CopyToDataDirectory%"=="1" (
-		echo [Copying %ProjectNameSafe%.dll to data directory]
-		XCOPY ".\%ProjectNameSafe%.dll" "%DataDirectory%\" /Y > NUL
+	if "%COPY_TO_DATA_DIRECTORY%"=="1" (
+		echo [Copying %ProjectFileName%.dll to data directory]
+		XCOPY ".\%ProjectFileName%.dll" "%DataDirectory%\" /Y > NUL
 	) else (
 		echo [Engine Build Finished!]
 	)
@@ -237,7 +237,7 @@ if "%CompileEngine%"=="1" (
 rem +--------------------------------------------------------------+
 rem |                      Compile Installer                       |
 rem +--------------------------------------------------------------+
-if "%CompileInstaller%"=="1" (
+if "%COMPILE_INSTALLER%"=="1" (
 	echo[
 	
 	makensis build_installer.nsi

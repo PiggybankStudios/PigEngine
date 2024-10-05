@@ -6,7 +6,7 @@ Description:
 	** Holds the main entry point for the Win32 Platform Layer executable
 */
 
-#include "pig_config.h"
+#include "build_config.h"
 
 #define WIN32_OPEN_CONSOLE_WINDOW_AT_START false //TODO: Find a better home for this?
 

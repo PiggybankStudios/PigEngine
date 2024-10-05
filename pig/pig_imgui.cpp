@@ -97,7 +97,7 @@ ImFileHandle ImFileOpen(const char* filename, const char* mode)
 	MemArena_t* scratch = GetScratchArena();
 	
 	//NOTE: All imgui files go to the AppData folder, not wherever the .exe and Resources are
-	MyStr_t appDataFolder = plat->GetSpecialFolderPath(SpecialFolder_SavesAndSettings, NewStr(PROJECT_NAME_SAFE), scratch);
+	MyStr_t appDataFolder = plat->GetSpecialFolderPath(SpecialFolder_SavesAndSettings, NewStr(PROJECT_NAME_SAFE_STR), scratch);
 	MyStr_t fullPath = PrintInArenaStr(scratch, "%.*s/%s", StrPrint(appDataFolder), filename);
 	
 	MyStr_t modeStr = NewStr(mode);

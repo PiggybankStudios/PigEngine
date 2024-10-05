@@ -253,7 +253,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		windowOptions.create.decoratedWindow = true;
 		windowOptions.create.antialiasingNumSamples = 4;
 		windowOptions.create.autoIconify = false;
-		windowOptions.create.windowTitle = NewStr(PROJECT_NAME);
+		windowOptions.create.windowTitle = NewStr(PROJECT_NAME_STR);
 		windowOptions.create.fullscreen = false;
 		windowOptions.create.fullscreenMonitor = nullptr;
 		windowOptions.create.fullscreenVideoMode = nullptr;
@@ -350,7 +350,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	gfxOptions.gl.requestDebugContext = OPENGL_DEBUG_CONTEXT;
 	#endif
 	#if PIG_GFX_VULKAN_SUPPORTED
-	gfxOptions.vk.applicationName = PROJECT_NAME_SAFE;
+	gfxOptions.vk.applicationName = PROJECT_NAME_SAFE_STR;
 	gfxOptions.vk.applicationVersionInt = VK_MAKE_VERSION(1, 0, 0);
 	gfxOptions.vk.engineName = "PigEngineWin32";
 	gfxOptions.vk.engineVersionInt = VK_MAKE_VERSION(WIN32_VERSION_MAJOR, WIN32_VERSION_MINOR, WIN32_VERSION_BUILD);
