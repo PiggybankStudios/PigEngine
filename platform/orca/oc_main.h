@@ -17,6 +17,8 @@ struct PlatformState_t
 	OC_CanvasContext_t canvasContext;
 	OC_UiContext_t ui;
 	
+	AppInput_t appInput;
+	
 	OC_Font_t debugFont;
 };
 

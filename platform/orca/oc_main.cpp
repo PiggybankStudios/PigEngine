@@ -30,27 +30,36 @@ Description:
 // +==============================+
 // |    Platform Header Files     |
 // +==============================+
-#include "debug.h"
-#include "vector_img.h"
+#include "common_button_enums.h"
+
+#include "oc_debug.h"
+#include "oc_input.h"
+#include "oc_vector_img.h"
 #include "oc_main.h"
 
 // +==============================+
 // |       Platform Globals       |
 // +==============================+
 PlatformState_t* platform = nullptr;
+AppInput_t* appInput = nullptr;
 MemArena_t* stdHeap = nullptr;
 MemArena_t* mainHeap = nullptr;
 v2 MousePos = Vec2_Zero_Const;
 v2 ScreenSize = Vec2_Zero_Const;
 v2i ScreenSizei = Vec2i_Zero_Const;
 rec ScreenRec = Rec_Zero_Const;
+u64 ProgramTime = 0;
+r32 ElapsedMs = 0.0f;
+r32 TimeScale = 1.0f;
 
 // +==============================+
 // |    Platform Source Files     |
 // +==============================+
-#include "debug.cpp"
-#include "scratch.cpp"
-#include "vector_img.cpp"
+#include "oc_debug.cpp"
+#include "oc_scratch.cpp"
+#include "oc_input_handling.cpp"
+#include "oc_input_api.cpp"
+#include "oc_vector_img.cpp"
 
 #include "app_main.cpp"
 
@@ -103,15 +112,28 @@ ORCA_EXPORT void OC_OnInit()
     };
 	platform->debugFont = OC_FontCreateFromPath(NewStr("Font/consolab.ttf"), ArrayCount(fontRanges), fontRanges);
 	
+	Orca_InitAppInput(&platform->appInput);
+	appInput = &platform->appInput;
+	
 	AppInit();
 	
 	FreeScratchArena(scratch);
 }
 
-//TODO: Should we free any memory when the application closes?
+// +==============================+
+// |        OC_OnTerminate        |
+// +==============================+
+ORCA_EXPORT void OC_OnTerminate()
+{
+	//TODO: Should we free any memory when the application closes?
+}
 
+// +==============================+
+// |        OC_OnRawEvent         |
+// +==============================+
 ORCA_EXPORT void OC_OnRawEvent(OC_Event_t* event)
 {
+	Orca_AppInputHandleRawEvent(&platform->appInput, event);
 	OC_UiSetContext(&platform->ui);
 	OC_UiProcessEvent(event);
 }
@@ -121,26 +143,38 @@ ORCA_EXPORT void OC_OnRawEvent(OC_Event_t* event)
 // +==============================+
 ORCA_EXPORT void OC_OnResize(u32 width, u32 height)
 {
-	// PrintLine_I("OC_OnResize(%d, %d)!", width, height);
-	ScreenSize = NewVec2((r32)width, (r32)height);
-	ScreenSizei = NewVec2i((i32)width, (i32)height);
-	ScreenRec = NewRec(0, 0, (r32)width, (r32)height);
+	Assert_(width <= INT32_MAX);
+	Assert_(height <= INT32_MAX);
+	Orca_AppInputHandleResize(&platform->appInput, NewVec2i(width, height));
 }
 
 // +==============================+
-// |         OC_OnKeyDown         |
+// |        OC_OnMouseDown        |
 // +==============================+
-ORCA_EXPORT void OC_OnKeyDown(OC_ScanCode_t scan, OC_KeyCode_t key)
+ORCA_EXPORT void OC_OnMouseDown(OC_MouseButton_t button)
 {
-	//TODO: Implement me!
+	Orca_AppInputHandleMouseBtnEvent(&platform->appInput, button, true);
 }
-
 // +==============================+
-// |          OC_OnKeyUp          |
+// |         OC_OnMouseUp         |
 // +==============================+
-ORCA_EXPORT void OC_OnKeyUp(OC_ScanCode_t scan, OC_KeyCode_t key)
+ORCA_EXPORT void OC_OnMouseUp(OC_MouseButton_t button)
 {
-	//TODO: Implement me!
+	Orca_AppInputHandleMouseBtnEvent(&platform->appInput, button, false);
+}
+// +==============================+
+// |       OC_OnMouseEnter        |
+// +==============================+
+ORCA_EXPORT void OC_OnMouseEnter()
+{
+	Orca_AppInputHandleMouseHoverEvent(&platform->appInput, true);
+}
+// +==============================+
+// |       OC_OnMouseLeave        |
+// +==============================+
+ORCA_EXPORT void OC_OnMouseLeave()
+{
+	Orca_AppInputHandleMouseHoverEvent(&platform->appInput, false);
 }
 
 // +==============================+
@@ -148,8 +182,31 @@ ORCA_EXPORT void OC_OnKeyUp(OC_ScanCode_t scan, OC_KeyCode_t key)
 // +==============================+
 ORCA_EXPORT void OC_OnMouseMove(r32 x, r32 y, r32 dx, r32 dy)
 {
-	MousePos.x = x;
-	MousePos.y = y;
+	Orca_AppInputHandleMouseMove(&platform->appInput, NewVec2(x, y), NewVec2(dx, dy));
+}
+
+// +==============================+
+// |       OC_OnMouseWheel        |
+// +==============================+
+ORCA_EXPORT void OC_OnMouseWheel(r32 deltaX, r32 deltaY)
+{
+	Orca_AppInputHandleMouseWheel(&platform->appInput, NewVec2(deltaX, deltaY));
+}
+
+// +==============================+
+// |         OC_OnKeyDown         |
+// +==============================+
+ORCA_EXPORT void OC_OnKeyDown(OC_ScanCode_t scan, OC_KeyCode_t key)
+{
+	Orca_AppInputHandleKeyEvent(&platform->appInput, scan, key, true);
+}
+
+// +==============================+
+// |          OC_OnKeyUp          |
+// +==============================+
+ORCA_EXPORT void OC_OnKeyUp(OC_ScanCode_t scan, OC_KeyCode_t key)
+{
+	Orca_AppInputHandleKeyEvent(&platform->appInput, scan, key, false);
 }
 
 // +==============================+
@@ -157,5 +214,7 @@ ORCA_EXPORT void OC_OnMouseMove(r32 x, r32 y, r32 dx, r32 dy)
 // +==============================+
 ORCA_EXPORT void OC_OnFrameRefresh()
 {
+	Orca_AppInputBeforeFrame(&platform->appInput);
 	AppUpdateAndRender();
+	Orca_AppInputAfterFrame(&platform->appInput);
 }
