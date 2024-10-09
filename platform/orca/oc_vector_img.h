@@ -1,11 +1,11 @@
 /*
-File:   vector_img.h
+File:   oc_vector_img.h
 Author: Taylor Robbins
 Date:   09\29\2024
 */
 
-#ifndef _VECTOR_IMG_H
-#define _VECTOR_IMG_H
+#ifndef _OC_VECTOR_IMG_H
+#define _OC_VECTOR_IMG_H
 
 struct VectorEdge_t
 {
@@ -75,4 +75,4 @@ struct VectorImg_t
 	VarArray_t shapes; //VectorShape_t
 };
 
-#endif //  _VECTOR_IMG_H
+#endif //  _OC_VECTOR_IMG_H
