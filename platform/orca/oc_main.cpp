@@ -85,6 +85,7 @@ ORCA_EXPORT void OC_OnInit()
 		InitMemArena_PagedHeapArena(&platform->mainHeap, MAIN_HEAP_PAGE_SIZE, stdHeap);
 		mainHeap = &platform->mainHeap;
 		InitScratchArenas(stdHeap, SCRATCH_ARENAS_PAGE_SIZE, SCRATCH_ARENAS_MAX_MARKS);
+		OC_ArenaInit(&platform->ocArena);
 	}
 	
 	MemArena_t* scratch = GetScratchArena();

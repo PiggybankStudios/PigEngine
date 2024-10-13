@@ -11,6 +11,7 @@ struct PlatformState_t
 {
 	MemArena_t stdHeap;
 	MemArena_t mainHeap;
+	OC_Arena_t ocArena;
 	
 	OC_Surface_t surface;
 	OC_CanvasRenderer_t renderer;
