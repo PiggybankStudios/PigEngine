@@ -65,7 +65,7 @@ void GameLoadDebugBindings(PigDebugBindings_t* bindings) //pre-declared in pig_f
 		PrintLine_D("No local debug bindings file found at \"%.*s\"", StrPrint(builtinBindingsFilePath));
 	}
 	
-	MyStr_t userBindingsFilePath = PigGetDebugBindingsFilePath(TempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
+	MyStr_t userBindingsFilePath = PigGetDebugBindingsFilePath(TempArena, NewStr(PROJECT_NAME_SAFE_STR), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
 	if (userBindingsFilePath.length > 0)
 	{
 		PigLoadDebugBindingsFullService(bindings, userBindingsFilePath, true);

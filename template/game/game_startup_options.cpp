@@ -7,7 +7,7 @@ Description:
 	** that may change from project to project or based on files on the user's computer that need to be parsed by the game code
 */
 
-#define GAME_WINDOW_TITLE                    PROJECT_NAME //comes from build.bat
+#define GAME_WINDOW_TITLE                    PROJECT_NAME_STR //comes from build.bat
 #define GAME_WINDOW_ALWAYS_ON_TOP            false
 #define GAME_WINDOW_DEFAULT_RESOLUTION       NewVec2i(1600, 900)
 #define GAME_FOLLOW_SAVED_SETTING_RESOLUTION true
@@ -54,7 +54,7 @@ void GameGetStartupOptions(StartupOptions_t* options)
 	// +==============================+
 	// |        Load Settings         |
 	// +==============================+
-	MyStr_t settingsFilePath = PigGetSettingsFilePath(startup->platTempArena, startup->platTempArena, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_SETTINGS_FILE_NAME), startup->GetSpecialFolderPath);
+	MyStr_t settingsFilePath = PigGetSettingsFilePath(startup->platTempArena, startup->platTempArena, NewStr(PROJECT_NAME_SAFE_STR), NewStr(GAME_SETTINGS_FILE_NAME), startup->GetSpecialFolderPath);
 	if (settingsFilePath.length > 0)
 	{
 		if (startup->DoesFileExist(settingsFilePath, nullptr))

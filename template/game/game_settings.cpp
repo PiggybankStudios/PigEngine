@@ -14,7 +14,7 @@ void GameLoadSettings(PigSettings_t* settingsOut, MemArena_t* memArena)
 	NotNull(settingsOut);
 	bool loadedSettings = false;
 	
-	MyStr_t settingsFilePath = PigGetSettingsFilePath(TempArena, mainHeap, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_SETTINGS_FILE_NAME));
+	MyStr_t settingsFilePath = PigGetSettingsFilePath(TempArena, mainHeap, NewStr(PROJECT_NAME_SAFE_STR), NewStr(GAME_SETTINGS_FILE_NAME));
 	if (settingsFilePath.length > 0)
 	{
 		if (plat->DoesFileExist(settingsFilePath, nullptr))
@@ -85,7 +85,7 @@ bool GameSaveSettings()
 		PigSetSettingStr(&pig->settings, "PrevDebugCommand", prevDebugCommand);
 	}
 	
-	MyStr_t settingsFilePath = PigGetSettingsFilePath(TempArena, mainHeap, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_SETTINGS_FILE_NAME));
+	MyStr_t settingsFilePath = PigGetSettingsFilePath(TempArena, mainHeap, NewStr(PROJECT_NAME_SAFE_STR), NewStr(GAME_SETTINGS_FILE_NAME));
 	NotNullStr(&settingsFilePath);
 	if (settingsFilePath.length > 0)
 	{

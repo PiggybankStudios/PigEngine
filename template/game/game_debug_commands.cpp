@@ -16,6 +16,9 @@ ResourcePool_t* GameGetCurrentResourcePool() //pre-declared in game_main.h
 	return nullptr; //TODO: Implement me!
 }
 
+#pragma warning(push)
+#pragma warning(disable:4100) //'x': unreferenced formal parameter
+
 // +--------------------------------------------------------------+
 // |                             test                             |
 // +--------------------------------------------------------------+
@@ -27,6 +30,8 @@ void Debug_Test()
 }
 EXPRESSION_FUNC_DEFINITION(Debug_Test_Glue) { Debug_Test(); return NewExpValueVoid(); }
 
+#pragma warning(pop)
+
 // +--------------------------------------------------------------+
 // |                         Registration                         |
 // +--------------------------------------------------------------+
@@ -34,6 +39,8 @@ void GameAddDebugVarsToExpContext(ExpContext_t* context) //pre-declared in game_
 {
 	const bool read = false;
 	const bool write = true;
+	UNUSED(read);
+	UNUSED(write);
 	
 	// Constants
 	AddExpConstantDef(context, "version_major", NewExpValueU8(GAME_VERSION_MAJOR));

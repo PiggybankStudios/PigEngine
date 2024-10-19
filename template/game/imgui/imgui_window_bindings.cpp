@@ -98,7 +98,7 @@ IMGUI_WINDOW_RENDER_FUNC_DEF(BindingsWindowRender)
 		ImGui::SameLine();
 		if (ImGui::Button("Edit (User)"))
 		{
-			MyStr_t bindingsFilePath = PigGetDebugBindingsFilePath(scratch, NewStr(PROJECT_NAME_SAFE), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
+			MyStr_t bindingsFilePath = PigGetDebugBindingsFilePath(scratch, NewStr(PROJECT_NAME_SAFE_STR), NewStr(GAME_DBG_BINDINGS_FILE_NAME));
 			if (!plat->DoesFileExist(bindingsFilePath, nullptr))
 			{
 				MyStr_t newBindingFileContents = NewStr("# [Pig Bindings]\n// Put your personal debug bindings here");

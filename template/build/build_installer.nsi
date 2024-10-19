@@ -68,6 +68,8 @@ Delete "$SMPROGRAMS\Pig Parts.lnk"
 Delete $INSTDIR\PigParts.exe
 Delete $INSTDIR\PigParts.dll
 Delete $INSTDIR\PigParts_TEMP.dll
+Delete $INSTDIR\debug_bindings.txt
+Delete $INSTDIR\DEVELOPER_README.txt
 Delete $INSTDIR\Resources\*.ico
 Delete $INSTDIR\Resources\*.png
 RMDir /r $INSTDIR\Resources\Fonts
