@@ -15,7 +15,7 @@ void RcDrawTriangle(v3* positions, Color_t color)
 	NotNull(positions);
 	RcSetWorldMatrix(Mat4_Identity);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	v3 triNormal = Vec3Normalize(Vec3Cross(positions[2] - positions[0], positions[1] - positions[0]));
 	v4 colorVec = ToVec4(color);
@@ -75,7 +75,7 @@ void RcDrawSphere(v3 center, r32 radius, Color_t color, u64 sphereQuality = Sphe
 	RcSetWorldMatrix(worldMatrix);
 	RcSetColor1(color);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcBindVertBuffer(&rc->sphereBuffers[sphereQuality]);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
 }
@@ -113,7 +113,7 @@ void RcDrawBox(box boundingBox, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.bottomLeft));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -190,7 +190,7 @@ void RcDrawObb3D(obb3 boundingBox, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.center));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -273,7 +273,7 @@ void RcDrawLine3DBox(v3 point1, v3 point2, r32 thickness, Color_t color)
 	RcSetWorldMatrix(worldMatrix);
 	
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->cubeBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -310,7 +310,7 @@ void RcDrawLine3D(v3 point1, v3 point2, Color_t color)
 	RcSetWorldMatrix(worldMatrix);
 	
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->lineBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Lines);
@@ -380,7 +380,7 @@ void RcApplyModelMaterial(ModelTextureType_t textureType, ModelMaterial_t* mater
 		else
 		{
 			RcBindTexture1(nullptr);
-			RcSetSourceRec1(Rec_Default);
+			RcSetSourceRec1(Rec_Unit);
 		}
 		
 		if (specularTexture != nullptr)
@@ -391,7 +391,7 @@ void RcApplyModelMaterial(ModelTextureType_t textureType, ModelMaterial_t* mater
 		else
 		{
 			RcBindTexture2(nullptr);
-			RcSetSourceRec2(Rec_Default);
+			RcSetSourceRec2(Rec_Unit);
 		}
 	}
 	RcSetDynamicUniformVec3("AmbientColor",  ToVec3(material->ambientColor));

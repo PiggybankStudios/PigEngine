@@ -215,14 +215,14 @@ PLAT_API_RENDER_LOADING_SCREEN(Win32_RenderLoadingScreen)
 				Win32_SetShaderValue(0, LerpR32(0.0f, 0.4f, actualLoadPercent)); //vignetteInnerRadius
 				Win32_SetShaderValue(1, LerpR32(1.5f, 1.8f, actualLoadPercent)); //vignetteOuterRadius
 				Win32_BindTexture(&Platform->dotTexture);
-				Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), TransparentBlack, Rec_Default);
+				Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), TransparentBlack, Rec_Unit);
 				Win32_SetShaderValue(0, 0.0f);
 				Win32_SetShaderValue(1, 0.0f);
-				// Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), ColorTransparent(Black, LerpR32(1.0f, 0.0f, actualLoadPercent)), Rec_Default);
+				// Win32_DrawTexturedRec(NewRec(Vec2_Zero, window->input.renderResolution), ColorTransparent(Black, LerpR32(1.0f, 0.0f, actualLoadPercent)), Rec_Unit);
 				
 				Win32_BindTexture(&Platform->dotTexture);
-				Win32_DrawTexturedRec(NewRec(0, 0, window->input.renderResolution.width * actualLoadPercent, 10), Platform->startupOptions.loadingBarColor, Rec_Default);
-				Win32_DrawTexturedRec(NewRec(0, window->input.renderResolution.height - 10, window->input.renderResolution.width * actualLoadPercent, 10), Platform->startupOptions.loadingBarColor, Rec_Default);
+				Win32_DrawTexturedRec(NewRec(0, 0, window->input.renderResolution.width * actualLoadPercent, 10), Platform->startupOptions.loadingBarColor, Rec_Unit);
+				Win32_DrawTexturedRec(NewRec(0, window->input.renderResolution.height - 10, window->input.renderResolution.width * actualLoadPercent, 10), Platform->startupOptions.loadingBarColor, Rec_Unit);
 			}
 		}
 		window = LinkedListNext(&Platform->windows, PlatWindow_t, window);

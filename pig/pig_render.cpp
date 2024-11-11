@@ -1797,8 +1797,8 @@ void RcBegin(const PlatWindow_t* window, FrameBuffer_t* frameBuffer, Shader_t* i
 	
 	rc->state.depth = clearDepth;
 	
-	rc->state.sourceRec1 = Rec_Default;
-	rc->state.sourceRec2 = Rec_Default;
+	rc->state.sourceRec1 = Rec_Unit;
+	rc->state.sourceRec2 = Rec_Unit;
 	rc->state.maskRectangle = Rec_Zero;
 	rc->state.shiftVec = Vec2_Zero;
 	rc->state.count = 0;
@@ -1943,7 +1943,7 @@ void RcLoadBasicResources()
 		for (u64 iIndex = 0; iIndex < primVerts.numIndices; iIndex++)
 		{
 			PrimitiveIndex3D_t* index = &primVerts.indices[iIndex];
-			rec faceSourceRec = Rec_Default;
+			rec faceSourceRec = Rec_Unit;
 			bool flipYAxis = false;
 			bool flipXAxis = true;
 			switch (index->faceIndex)

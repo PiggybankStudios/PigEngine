@@ -11,7 +11,7 @@ void RcDrawTriangle2D(v2* positions, Color_t color)
 	NotNull(positions);
 	RcSetWorldMatrix(Mat4_Identity);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	v4 colorVec = ToVec4(color);
 	Vertex2D_t vertices[3];
@@ -78,7 +78,7 @@ void RcDrawRectangle(rec rectangle, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x, rectangle.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -333,7 +333,7 @@ void RcDrawObb2(obb2 boundingBox, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -347,7 +347,7 @@ void RcDrawObb2(obb2 boundingBox, Colorf_t colorf)
 	Mat4Transform(worldMatrix, Mat4Translate3(boundingBox.x, boundingBox.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(colorf);
 	RcBindVertBuffer(&rc->squareBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -484,7 +484,7 @@ void RcDrawEquilTriangleFrom(v2 base, r32 direction, r32 height, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(base.x, base.y, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->equilTriangleBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
@@ -825,7 +825,7 @@ void RcDrawVectorImgShape(VectorImgShape_t* shape, Color_t color)
 					// RcSetColor1((GetNumSubPathsInBezierPath(&shape->path.value) > 1) ? ColorLerp(MonokaiRed, MonokaiBlue, Oscillate(0, 1, 1000)) : shape->fill.color);
 					RcSetColor1(shape->fill.color);
 					RcBindTexture1(&rc->dotTexture);
-					RcSetSourceRec1(Rec_Default);
+					RcSetSourceRec1(Rec_Unit);
 					RcBindVertBuffer(&shape->path.vertBuffer);
 					RcDrawBuffer(VertBufferPrimitive_Triangles);
 				}
@@ -900,7 +900,7 @@ void RcDrawRightAngleTriangle(rec rectangle, Dir2Ex_t direction, Color_t color)
 	Mat4Transform(worldMatrix, Mat4Translate3(rectangle.x + rectangle.width/2, rectangle.y + rectangle.height/2, RcGetRealDepth()));
 	RcSetWorldMatrix(worldMatrix);
 	RcBindTexture1(&rc->dotTexture);
-	RcSetSourceRec1(Rec_Default);
+	RcSetSourceRec1(Rec_Unit);
 	RcSetColor1(color);
 	RcBindVertBuffer(&rc->rightAngleTriBuffer);
 	RcDrawBuffer(VertBufferPrimitive_Triangles);
