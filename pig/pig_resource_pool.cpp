@@ -36,14 +36,15 @@ void FreeResourcePoolEntry(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 		FreeString(pool->allocArena, &entry->filePath);
 		switch (entry->type)
 		{
-			case ResourceType_Texture:     DestroyTexture(&entry->texture);         break;
-			case ResourceType_VectorImage: DestroyVectorImg(&entry->vectorImg);     break;
-			case ResourceType_Sheet:       DestroySpriteSheet(&entry->spriteSheet); break;
-			case ResourceType_Shader:      DestroyShader(&entry->shader);           break;
-			case ResourceType_Font:        DestroyFont(&entry->font);               break;
-			case ResourceType_Sound:       FreeSound(&entry->sound);                break;
-			case ResourceType_Music:       FreeSound(&entry->music);                break;
-			case ResourceType_Model:       DestroyModel(&entry->model);             break;
+			case ResourceType_Texture:       DestroyTexture(&entry->texture);         break;
+			case ResourceType_VectorImage:   DestroyVectorImg(&entry->vectorImg);     break;
+			case ResourceType_Sheet:         DestroySpriteSheet(&entry->spriteSheet); break;
+			case ResourceType_Shader:        DestroyShader(&entry->shader);           break;
+			case ResourceType_Font:          DestroyFont(&entry->font);               break;
+			case ResourceType_Sound:         FreeSound(&entry->sound);                break;
+			case ResourceType_Music:         FreeSound(&entry->music);                break;
+			case ResourceType_Model:         DestroyModel(&entry->model);             break;
+			case ResourceType_VoxelFrameSet: FreeVoxFrameSet(&entry->voxFrameSet);    break;
 			default: AssertMsg(false, "Unhandle ResourceType_t in FreeResourcePoolEntry"); break;
 		}
 		entry->id = 0;
@@ -279,6 +280,19 @@ ModelRef_t TakeRefModel(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
 	entry->lastRefCountChangeTime = ProgramTime;
 	return result;
 }
+VoxFrameSetRef_t TakeRefVoxFrameSet(ResourcePool_t* pool, ResourcePoolEntry_t* entry)
+{
+	NotNull2(pool, entry);
+	Assert(entry->id != 0);
+	Assert(entry->type == ResourceType_VoxelFrameSet);
+	VoxFrameSetRef_t result;
+	result.pool = pool;
+	result.arrayIndex = entry->arrayIndex;
+	result.pntr = &entry->voxFrameSet;
+	IncrementU64(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
+	return result;
+}
 
 TextureRef_t DuplicateRefTexture(const TextureRef_t* reference)
 {
@@ -343,6 +357,14 @@ ModelRef_t DuplicateRefModel(const ModelRef_t* reference)
 	Assert(reference->arrayIndex < reference->pool->models.length);
 	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->models, ResourcePoolEntry_t, reference->arrayIndex);
 	return TakeRefModel(reference->pool, entry);
+}
+VoxFrameSetRef_t DuplicateRefVoxFrameSet(const VoxFrameSetRef_t* reference)
+{
+	NotNull(reference);
+	NotNull(reference->pool);
+	Assert(reference->arrayIndex < reference->pool->voxelFrameSets.length);
+	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->voxelFrameSets, ResourcePoolEntry_t, reference->arrayIndex);
+	return TakeRefVoxFrameSet(reference->pool, entry);
 }
 
 void ReleaseRef(TextureRef_t* reference)
@@ -449,6 +471,19 @@ void ReleaseRef(ModelRef_t* reference)
 	entry->lastRefCountChangeTime = ProgramTime;
 	ClearPointer(reference);
 }
+void ReleaseRef(VoxFrameSetRef_t* reference)
+{
+	NotNull(reference);
+	NotNull(reference->pool);
+	NotNull(reference->pntr);
+	Assert(reference->arrayIndex < reference->pool->voxelFrameSets.length);
+	ResourcePoolEntry_t* entry = BktArrayGet(&reference->pool->voxelFrameSets, ResourcePoolEntry_t, reference->arrayIndex);
+	AssertMsg(entry->id != 0, "The resource pool model was already freed! This is a double release situation!");
+	Assert(entry->refCount > 0);
+	Decrement(entry->refCount);
+	entry->lastRefCountChangeTime = ProgramTime;
+	ClearPointer(reference);
+}
 
 void SoftReleaseRef(TextureRef_t*     reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(VectorImgRef_t*   reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
@@ -458,6 +493,7 @@ void SoftReleaseRef(FontRef_t*        reference) { NotNull(reference); if (!IsVa
 void SoftReleaseRef(SoundRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(MusicRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 void SoftReleaseRef(ModelRef_t*       reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
+void SoftReleaseRef(VoxFrameSetRef_t* reference) { NotNull(reference); if (!IsValidRef(*reference)) { return; } ReleaseRef(reference); }
 
 // +--------------------------------------------------------------+
 // |                       Main Loading API                       |
@@ -712,4 +748,33 @@ ModelRef_t ResourcePoolGetOrLoadModel(ResourcePool_t* pool, MyStr_t filePath, Mo
 	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->models, filePath);
 	if (existingEntry != nullptr) { return TakeRefModel(pool, existingEntry); }
 	return ResourcePoolLoadModel(pool, filePath, textureType, copyVertices, flipUvY, log);
+}
+
+VoxFrameSetRef_t ResourcePoolLoadVoxFrameSet(ResourcePool_t* pool, MyStr_t filePath)
+{
+	VoxFrameSet_t tempFrameSet = {};
+	if (!TryLoadVoxFrameSet(filePath, mainHeap, &tempFrameSet))
+	{
+		PrintLine_E("Failed to load voxFrameSet for pool from \"%.*s\"", StrPrint(filePath));
+		return VoxFrameSetRef_Invalid;
+	}
+	
+	ResourcePoolEntry_t* newEntry = FindEmptyResourcePoolEntry(&pool->voxelFrameSets, true);
+	DebugAssert(newEntry != nullptr);
+	newEntry->id = pool->nextVoxelFrameSetId;
+	pool->nextVoxelFrameSetId++;
+	pool->numMusics++;
+	newEntry->type = ResourceType_Music;
+	newEntry->refCount = 0;
+	newEntry->lastRefCountChangeTime = ProgramTime;
+	newEntry->filePath = AllocString(pool->allocArena, &filePath);
+	MyMemCopy(&newEntry->music, &tempFrameSet, sizeof(VoxFrameSet_t));
+	
+	return TakeRefVoxFrameSet(pool, newEntry);
+}
+VoxFrameSetRef_t ResourcePoolGetOrLoadVoxFrameSet(ResourcePool_t* pool, MyStr_t filePath)
+{
+	ResourcePoolEntry_t* existingEntry = FindResourcePoolEntryByPath(&pool->voxelFrameSets, filePath);
+	if (existingEntry != nullptr) { return TakeRefVoxFrameSet(pool, existingEntry); }
+	return ResourcePoolLoadVoxFrameSet(pool, filePath);
 }

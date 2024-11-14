@@ -27,32 +27,35 @@ void Pig_InitResources()
 	CreateVarArray(&pig->resources.watches, fixedHeap, sizeof(ResourceWatch_t), TOTAL_NUM_RESOURCES);
 	#endif
 	
-	pig->resources.numTexturesAlloc   = RESOURCES_NUM_TEXTURES;
-	pig->resources.numVectorImgsAlloc = RESOURCES_NUM_VECTORS;
-	pig->resources.numSheetsAlloc     = RESOURCES_NUM_SHEETS;
-	pig->resources.numShadersAlloc    = RESOURCES_NUM_SHADERS;
-	pig->resources.numFontsAlloc      = RESOURCES_NUM_FONTS;
-	pig->resources.numSoundsAlloc     = RESOURCES_NUM_SOUNDS;
-	pig->resources.numMusicsAlloc     = RESOURCES_NUM_MUSICS;
-	pig->resources.numModelsAlloc     = RESOURCES_NUM_MODELS;
+	pig->resources.numTexturesAlloc       = RESOURCES_NUM_TEXTURES;
+	pig->resources.numVectorImgsAlloc     = RESOURCES_NUM_VECTORS;
+	pig->resources.numSheetsAlloc         = RESOURCES_NUM_SHEETS;
+	pig->resources.numShadersAlloc        = RESOURCES_NUM_SHADERS;
+	pig->resources.numFontsAlloc          = RESOURCES_NUM_FONTS;
+	pig->resources.numSoundsAlloc         = RESOURCES_NUM_SOUNDS;
+	pig->resources.numMusicsAlloc         = RESOURCES_NUM_MUSICS;
+	pig->resources.numModelsAlloc         = RESOURCES_NUM_MODELS;
+	pig->resources.numVoxelFrameSetsAlloc = RESOURCES_NUM_VOXEL_FRAME_SETS;
 	
-	Assert(sizeof(ResourceTextures_t) == sizeof(Texture_t)     * RESOURCES_NUM_TEXTURES);
-	Assert(sizeof(ResourceVectors_t)  == sizeof(VectorImg_t)   * RESOURCES_NUM_VECTORS);
-	Assert(sizeof(ResourceSheets_t)   == sizeof(SpriteSheet_t) * RESOURCES_NUM_SHEETS);
-	Assert(sizeof(ResourceShaders_t)  == sizeof(Shader_t)      * RESOURCES_NUM_SHADERS);
-	Assert(sizeof(ResourceFonts_t)    == sizeof(Font_t)        * RESOURCES_NUM_FONTS);
-	Assert(sizeof(ResourceSounds_t)   == sizeof(Sound_t)       * RESOURCES_NUM_SOUNDS);
-	Assert(sizeof(ResourceMusics_t)   == sizeof(Sound_t)       * RESOURCES_NUM_MUSICS);
-	Assert(sizeof(ResourceModels_t)   == sizeof(Model_t)       * RESOURCES_NUM_MODELS);
+	Assert(sizeof(ResourceTextures_t)       == sizeof(Texture_t)     * RESOURCES_NUM_TEXTURES);
+	Assert(sizeof(ResourceVectors_t)        == sizeof(VectorImg_t)   * RESOURCES_NUM_VECTORS);
+	Assert(sizeof(ResourceSheets_t)         == sizeof(SpriteSheet_t) * RESOURCES_NUM_SHEETS);
+	Assert(sizeof(ResourceShaders_t)        == sizeof(Shader_t)      * RESOURCES_NUM_SHADERS);
+	Assert(sizeof(ResourceFonts_t)          == sizeof(Font_t)        * RESOURCES_NUM_FONTS);
+	Assert(sizeof(ResourceSounds_t)         == sizeof(Sound_t)       * RESOURCES_NUM_SOUNDS);
+	Assert(sizeof(ResourceMusics_t)         == sizeof(Sound_t)       * RESOURCES_NUM_MUSICS);
+	Assert(sizeof(ResourceModels_t)         == sizeof(Model_t)       * RESOURCES_NUM_MODELS);
+	Assert(sizeof(ResourceVoxelFrameSets_t) == sizeof(VoxFrameSet_t) * RESOURCES_NUM_VOXEL_FRAME_SETS);
 	
-	pig->resources.textureStatus = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_TEXTURES);
-	pig->resources.vectorStatus  = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_VECTORS);
-	pig->resources.sheetStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SHEETS);
-	pig->resources.shaderStatus  = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SHADERS);
-	pig->resources.fontStatus    = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_FONTS);
-	pig->resources.soundStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SOUNDS);
-	pig->resources.musicStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MUSICS);
-	pig->resources.modelStatus   = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MODELS);
+	pig->resources.textureStatus       = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_TEXTURES);
+	pig->resources.vectorStatus        = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_VECTORS);
+	pig->resources.sheetStatus         = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SHEETS);
+	pig->resources.shaderStatus        = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SHADERS);
+	pig->resources.fontStatus          = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_FONTS);
+	pig->resources.soundStatus         = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_SOUNDS);
+	pig->resources.musicStatus         = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MUSICS);
+	pig->resources.modelStatus         = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_MODELS);
+	pig->resources.voxelFrameSetStatus = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_VOXEL_FRAME_SETS);
 	NotNull(pig->resources.textureStatus);
 	NotNull(pig->resources.vectorStatus);
 	NotNull(pig->resources.sheetStatus);
@@ -61,23 +64,26 @@ void Pig_InitResources()
 	NotNull(pig->resources.soundStatus);
 	NotNull(pig->resources.musicStatus);
 	NotNull(pig->resources.modelStatus);
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_TEXTURES; rIndex++) { InitResourceStatus(&pig->resources.textureStatus[rIndex]); }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_VECTORS;  rIndex++) { InitResourceStatus(&pig->resources.vectorStatus[rIndex]);  }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHEETS;   rIndex++) { InitResourceStatus(&pig->resources.sheetStatus[rIndex]);   }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHADERS;  rIndex++) { InitResourceStatus(&pig->resources.shaderStatus[rIndex]);  }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_FONTS;    rIndex++) { InitResourceStatus(&pig->resources.fontStatus[rIndex]);    }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SOUNDS;   rIndex++) { InitResourceStatus(&pig->resources.soundStatus[rIndex]);   }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MUSICS;   rIndex++) { InitResourceStatus(&pig->resources.musicStatus[rIndex]);   }
-	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MODELS;   rIndex++) { InitResourceStatus(&pig->resources.modelStatus[rIndex]);   }
+	NotNull(pig->resources.voxelFrameSetStatus);
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_TEXTURES;         rIndex++) { InitResourceStatus(&pig->resources.textureStatus[rIndex]);       }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_VECTORS;          rIndex++) { InitResourceStatus(&pig->resources.vectorStatus[rIndex]);        }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHEETS;           rIndex++) { InitResourceStatus(&pig->resources.sheetStatus[rIndex]);         }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SHADERS;          rIndex++) { InitResourceStatus(&pig->resources.shaderStatus[rIndex]);        }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_FONTS;            rIndex++) { InitResourceStatus(&pig->resources.fontStatus[rIndex]);          }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_SOUNDS;           rIndex++) { InitResourceStatus(&pig->resources.soundStatus[rIndex]);         }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MUSICS;           rIndex++) { InitResourceStatus(&pig->resources.musicStatus[rIndex]);         }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_MODELS;           rIndex++) { InitResourceStatus(&pig->resources.modelStatus[rIndex]);         }
+	for (u64 rIndex = 0; rIndex < RESOURCES_NUM_VOXEL_FRAME_SETS; rIndex++) { InitResourceStatus(&pig->resources.voxelFrameSetStatus[rIndex]); }
 	
-	pig->resources.textures = (ResourceTextures_t*)AllocArray(fixedHeap, Texture_t,     RESOURCES_NUM_TEXTURES);
-	pig->resources.vectors  =  (ResourceVectors_t*)AllocArray(fixedHeap, VectorImg_t,   RESOURCES_NUM_VECTORS);
-	pig->resources.sheets   =   (ResourceSheets_t*)AllocArray(fixedHeap, SpriteSheet_t, RESOURCES_NUM_SHEETS);
-	pig->resources.shaders  =  (ResourceShaders_t*)AllocArray(fixedHeap, Shader_t,      RESOURCES_NUM_SHADERS);
-	pig->resources.fonts    =    (ResourceFonts_t*)AllocArray(fixedHeap, Font_t,        RESOURCES_NUM_FONTS);
-	pig->resources.sounds   =   (ResourceSounds_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_SOUNDS);
-	pig->resources.musics   =   (ResourceMusics_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_MUSICS);
-	pig->resources.models   =   (ResourceModels_t*)AllocArray(fixedHeap, Model_t,       RESOURCES_NUM_MODELS);
+	pig->resources.textures       =       (ResourceTextures_t*)AllocArray(fixedHeap, Texture_t,     RESOURCES_NUM_TEXTURES);
+	pig->resources.vectors        =        (ResourceVectors_t*)AllocArray(fixedHeap, VectorImg_t,   RESOURCES_NUM_VECTORS);
+	pig->resources.sheets         =         (ResourceSheets_t*)AllocArray(fixedHeap, SpriteSheet_t, RESOURCES_NUM_SHEETS);
+	pig->resources.shaders        =        (ResourceShaders_t*)AllocArray(fixedHeap, Shader_t,      RESOURCES_NUM_SHADERS);
+	pig->resources.fonts          =          (ResourceFonts_t*)AllocArray(fixedHeap, Font_t,        RESOURCES_NUM_FONTS);
+	pig->resources.sounds         =         (ResourceSounds_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_SOUNDS);
+	pig->resources.musics         =         (ResourceMusics_t*)AllocArray(fixedHeap, Sound_t,       RESOURCES_NUM_MUSICS);
+	pig->resources.models         =         (ResourceModels_t*)AllocArray(fixedHeap, Model_t,       RESOURCES_NUM_MODELS);
+	pig->resources.voxelFrameSets = (ResourceVoxelFrameSets_t*)AllocArray(fixedHeap, VoxFrameSet_t, RESOURCES_NUM_VOXEL_FRAME_SETS);
 	NotNull(pig->resources.textures);
 	NotNull(pig->resources.vectors);
 	NotNull(pig->resources.sheets);
@@ -86,6 +92,7 @@ void Pig_InitResources()
 	NotNull(pig->resources.sounds);
 	NotNull(pig->resources.musics);
 	NotNull(pig->resources.models);
+	NotNull(pig->resources.voxelFrameSets);
 	ClearPointer(pig->resources.textures);
 	ClearPointer(pig->resources.vectors);
 	ClearPointer(pig->resources.sheets);
@@ -94,6 +101,7 @@ void Pig_InitResources()
 	ClearPointer(pig->resources.sounds);
 	ClearPointer(pig->resources.musics);
 	ClearPointer(pig->resources.models);
+	ClearPointer(pig->resources.voxelFrameSets);
 }
 
 // +--------------------------------------------------------------+
@@ -103,14 +111,15 @@ u64 GetNumResourcesOfType(ResourceType_t resourceType)
 {
 	switch (resourceType)
 	{
-		case ResourceType_Texture:     return RESOURCES_NUM_TEXTURES;
-		case ResourceType_VectorImage: return RESOURCES_NUM_VECTORS;
-		case ResourceType_Sheet:       return RESOURCES_NUM_SHEETS;
-		case ResourceType_Shader:      return RESOURCES_NUM_SHADERS;
-		case ResourceType_Font:        return RESOURCES_NUM_FONTS;
-		case ResourceType_Sound:       return RESOURCES_NUM_SOUNDS;
-		case ResourceType_Music:       return RESOURCES_NUM_MUSICS;
-		case ResourceType_Model:       return RESOURCES_NUM_MODELS;
+		case ResourceType_Texture:       return RESOURCES_NUM_TEXTURES;
+		case ResourceType_VectorImage:   return RESOURCES_NUM_VECTORS;
+		case ResourceType_Sheet:         return RESOURCES_NUM_SHEETS;
+		case ResourceType_Shader:        return RESOURCES_NUM_SHADERS;
+		case ResourceType_Font:          return RESOURCES_NUM_FONTS;
+		case ResourceType_Sound:         return RESOURCES_NUM_SOUNDS;
+		case ResourceType_Music:         return RESOURCES_NUM_MUSICS;
+		case ResourceType_Model:         return RESOURCES_NUM_MODELS;
+		case ResourceType_VoxelFrameSet: return RESOURCES_NUM_VOXEL_FRAME_SETS;
 		default: Unimplemented(); return 0;
 	}
 }
@@ -158,6 +167,10 @@ const char* GetPathOrNameForResource(ResourceType_t type, u64 resourceIndex)
 			ResourceModelMetaInfo_t metaInfo = {};
 			result = Resources_GetPathForModel(resourceIndex, &metaInfo);
 		} break;
+		case ResourceType_VoxelFrameSet:
+		{
+			result = Resources_GetPathForVoxelFrameSet(resourceIndex);
+		} break;
 		default: Unimplemented(); break;
 	}
 	return result;
@@ -167,14 +180,15 @@ void* GetResourcePntr(ResourceType_t type, u64 resourceIndex)
 {
 	switch (type)
 	{
-		case ResourceType_Texture:     Assert(resourceIndex < RESOURCES_NUM_TEXTURES); return (void*)(&pig->resources.textures->items[resourceIndex]);
-		case ResourceType_VectorImage: Assert(resourceIndex < RESOURCES_NUM_VECTORS);  return (void*)(&pig->resources.vectors->items[resourceIndex]);
-		case ResourceType_Sheet:       Assert(resourceIndex < RESOURCES_NUM_SHEETS);   return (void*)(&pig->resources.sheets->items[resourceIndex]);
-		case ResourceType_Shader:      Assert(resourceIndex < RESOURCES_NUM_SHADERS);  return (void*)(&pig->resources.shaders->items[resourceIndex]);
-		case ResourceType_Font:        Assert(resourceIndex < RESOURCES_NUM_FONTS);    return (void*)(&pig->resources.fonts->items[resourceIndex]);
-		case ResourceType_Sound:       Assert(resourceIndex < RESOURCES_NUM_SOUNDS);   return (void*)(&pig->resources.sounds->items[resourceIndex]);
-		case ResourceType_Music:       Assert(resourceIndex < RESOURCES_NUM_MUSICS);   return (void*)(&pig->resources.musics->items[resourceIndex]);
-		case ResourceType_Model:       Assert(resourceIndex < RESOURCES_NUM_MODELS);   return (void*)(&pig->resources.models->items[resourceIndex]);
+		case ResourceType_Texture:       Assert(resourceIndex < RESOURCES_NUM_TEXTURES);         return (void*)(&pig->resources.textures->items[resourceIndex]);
+		case ResourceType_VectorImage:   Assert(resourceIndex < RESOURCES_NUM_VECTORS);          return (void*)(&pig->resources.vectors->items[resourceIndex]);
+		case ResourceType_Sheet:         Assert(resourceIndex < RESOURCES_NUM_SHEETS);           return (void*)(&pig->resources.sheets->items[resourceIndex]);
+		case ResourceType_Shader:        Assert(resourceIndex < RESOURCES_NUM_SHADERS);          return (void*)(&pig->resources.shaders->items[resourceIndex]);
+		case ResourceType_Font:          Assert(resourceIndex < RESOURCES_NUM_FONTS);            return (void*)(&pig->resources.fonts->items[resourceIndex]);
+		case ResourceType_Sound:         Assert(resourceIndex < RESOURCES_NUM_SOUNDS);           return (void*)(&pig->resources.sounds->items[resourceIndex]);
+		case ResourceType_Music:         Assert(resourceIndex < RESOURCES_NUM_MUSICS);           return (void*)(&pig->resources.musics->items[resourceIndex]);
+		case ResourceType_Model:         Assert(resourceIndex < RESOURCES_NUM_MODELS);           return (void*)(&pig->resources.models->items[resourceIndex]);
+		case ResourceType_VoxelFrameSet: Assert(resourceIndex < RESOURCES_NUM_VOXEL_FRAME_SETS); return (void*)(&pig->resources.voxelFrameSets->items[resourceIndex]);
 		default: Unimplemented(); return nullptr; break;
 	}
 }
@@ -210,14 +224,15 @@ ResourceStatus_t* GetResourceStatus(ResourceType_t type, u64 resourceIndex)
 {
 	switch (type)
 	{
-		case ResourceType_Texture:     Assert(resourceIndex < RESOURCES_NUM_TEXTURES); return &pig->resources.textureStatus[resourceIndex];
-		case ResourceType_VectorImage: Assert(resourceIndex < RESOURCES_NUM_VECTORS);  return &pig->resources.vectorStatus[resourceIndex];
-		case ResourceType_Sheet:       Assert(resourceIndex < RESOURCES_NUM_SHEETS);   return &pig->resources.sheetStatus[resourceIndex];
-		case ResourceType_Shader:      Assert(resourceIndex < RESOURCES_NUM_SHADERS);  return &pig->resources.shaderStatus[resourceIndex];
-		case ResourceType_Font:        Assert(resourceIndex < RESOURCES_NUM_FONTS);    return &pig->resources.fontStatus[resourceIndex];
-		case ResourceType_Sound:       Assert(resourceIndex < RESOURCES_NUM_SOUNDS);   return &pig->resources.soundStatus[resourceIndex];
-		case ResourceType_Music:       Assert(resourceIndex < RESOURCES_NUM_MUSICS);   return &pig->resources.musicStatus[resourceIndex];
-		case ResourceType_Model:       Assert(resourceIndex < RESOURCES_NUM_MODELS);   return &pig->resources.modelStatus[resourceIndex];
+		case ResourceType_Texture:       Assert(resourceIndex < RESOURCES_NUM_TEXTURES);         return &pig->resources.textureStatus[resourceIndex];
+		case ResourceType_VectorImage:   Assert(resourceIndex < RESOURCES_NUM_VECTORS);          return &pig->resources.vectorStatus[resourceIndex];
+		case ResourceType_Sheet:         Assert(resourceIndex < RESOURCES_NUM_SHEETS);           return &pig->resources.sheetStatus[resourceIndex];
+		case ResourceType_Shader:        Assert(resourceIndex < RESOURCES_NUM_SHADERS);          return &pig->resources.shaderStatus[resourceIndex];
+		case ResourceType_Font:          Assert(resourceIndex < RESOURCES_NUM_FONTS);            return &pig->resources.fontStatus[resourceIndex];
+		case ResourceType_Sound:         Assert(resourceIndex < RESOURCES_NUM_SOUNDS);           return &pig->resources.soundStatus[resourceIndex];
+		case ResourceType_Music:         Assert(resourceIndex < RESOURCES_NUM_MUSICS);           return &pig->resources.musicStatus[resourceIndex];
+		case ResourceType_Model:         Assert(resourceIndex < RESOURCES_NUM_MODELS);           return &pig->resources.modelStatus[resourceIndex];
+		case ResourceType_VoxelFrameSet: Assert(resourceIndex < RESOURCES_NUM_VOXEL_FRAME_SETS); return &pig->resources.voxelFrameSetStatus[resourceIndex];
 		default: Unimplemented(); return nullptr;
 	}
 }
@@ -1055,20 +1070,70 @@ void Pig_LoadAllModels(bool onlyPinned = false)
 }
 
 // +==============================+
+// |        VoxelFrameSet         |
+// +==============================+
+void Pig_LoadVoxelFrameSetResource(u64 frameSetIndex)
+{
+	NotNull2(pig->resources.voxelFrameSets, pig->resources.voxelFrameSetStatus);
+	Assert(frameSetIndex < RESOURCES_NUM_VOXEL_FRAME_SETS);
+	VoxFrameSet_t* frameSet = &pig->resources.voxelFrameSets->items[frameSetIndex];
+	ResourceStatus_t* frameSetStatus = &pig->resources.voxelFrameSetStatus[frameSetIndex];
+	frameSetStatus->lastAccessTime = ProgramTime;
+	
+	const char* voxFilePath = Resources_GetPathForVoxelFrameSet(frameSetIndex);
+	NotNull(voxFilePath);
+	MyStr_t voxFilePathStr = NewStr(voxFilePath);
+	
+	VoxFrameSet_t tempFrameSet = {};
+	if (!TryLoadVoxFrameSet(voxFilePathStr, mainHeap, &tempFrameSet))
+	{
+		NotifyPrint_E("Failed to load voxelFrameSet[%u] from \"%s\"! Error %s%s%s",
+			frameSetIndex,
+			GetFileNamePart(voxFilePathStr).pntr,
+			GetResultStr(tempFrameSet.error)
+		);
+		frameSetStatus->state = ResourceStateWarnOrError(frameSetStatus->state);
+		return;
+	}
+	
+	if (frameSet->isValid)
+	{
+		frameSetStatus->state = ResourceState_Unloaded;
+		FreeVoxFrameSet(frameSet);
+	}
+	MyMemCopy(frameSet, &tempFrameSet, sizeof(VoxFrameSet_t));
+	frameSetStatus->state = ResourceState_Loaded;
+	
+	StopWatchingFilesForResource(ResourceType_VoxelFrameSet, frameSetIndex);
+	WatchFileForResource(ResourceType_VoxelFrameSet, frameSetIndex, voxFilePathStr);
+}
+void Pig_LoadAllVoxelFrameSets(bool onlyPinned = false)
+{
+	for (u64 frameSetIndex = 0; frameSetIndex < RESOURCES_NUM_VOXEL_FRAME_SETS; frameSetIndex++)
+	{
+		if (!onlyPinned || IsResourcePinned(ResourceType_VoxelFrameSet, frameSetIndex))
+		{
+			Pig_LoadVoxelFrameSetResource(frameSetIndex);
+		}
+	}
+}
+
+// +==============================+
 // |           Generic            |
 // +==============================+
 void Pig_LoadResource(ResourceType_t type, u64 resourceIndex)
 {
 	switch (type)
 	{
-		case ResourceType_Texture:     Pig_LoadTextureResource(resourceIndex);     break;
-		case ResourceType_VectorImage: Pig_LoadVectorImgResource(resourceIndex);   break;
-		case ResourceType_Sheet:       Pig_LoadSpriteSheetResource(resourceIndex); break;
-		case ResourceType_Shader:      Pig_LoadShaderResource(resourceIndex);      break;
-		case ResourceType_Font:        Pig_LoadFontResource(resourceIndex);        break;
-		case ResourceType_Sound:       Pig_LoadSoundResource(resourceIndex);       break;
-		case ResourceType_Music:       Pig_LoadMusicResource(resourceIndex);       break;
-		case ResourceType_Model:       Pig_LoadModelResource(resourceIndex);       break;
+		case ResourceType_Texture:       Pig_LoadTextureResource(resourceIndex);       break;
+		case ResourceType_VectorImage:   Pig_LoadVectorImgResource(resourceIndex);     break;
+		case ResourceType_Sheet:         Pig_LoadSpriteSheetResource(resourceIndex);   break;
+		case ResourceType_Shader:        Pig_LoadShaderResource(resourceIndex);        break;
+		case ResourceType_Font:          Pig_LoadFontResource(resourceIndex);          break;
+		case ResourceType_Sound:         Pig_LoadSoundResource(resourceIndex);         break;
+		case ResourceType_Music:         Pig_LoadMusicResource(resourceIndex);         break;
+		case ResourceType_Model:         Pig_LoadModelResource(resourceIndex);         break;
+		case ResourceType_VoxelFrameSet: Pig_LoadVoxelFrameSetResource(resourceIndex); break;
 		default: Unimplemented(); break;
 	}
 }
@@ -1082,6 +1147,7 @@ void Pig_LoadAllResources(bool onlyPinned = false)
 	Pig_LoadAllSounds(onlyPinned);
 	Pig_LoadAllMusics(onlyPinned);
 	Pig_LoadAllModels(onlyPinned);
+	Pig_LoadAllVoxelFrameSets(onlyPinned);
 }
 void Pig_LoadResourceAtStartup(bool onlyPinned, r32 loadingBarBase, r32 loadingBarAmount)
 {
@@ -1144,7 +1210,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.textures = (ResourceTextures_t*)newSpace;
 		pig->resources.textureStatus = newStatusSpace;
 		u64 numNewTextures = RESOURCES_NUM_TEXTURES - oldTextureCount;
-		if (oldTextureCount < RESOURCES_NUM_TEXTURES) { NotifyPrint_N("Loading %llu new texture resource%s...", numNewTextures, (numNewTextures == 1) ? "" : "s"); }
+		if (oldTextureCount < RESOURCES_NUM_TEXTURES) { NotifyPrint_N("Loading %llu new texture resource%s...", numNewTextures, Plural(numNewTextures, "s")); }
 		for (u64 textureIndex = oldTextureCount; textureIndex < RESOURCES_NUM_TEXTURES; textureIndex++) { InitResourceStatus(&pig->resources.textureStatus[textureIndex]); Pig_LoadTextureResource(textureIndex); }
 	}
 	if (pig->resources.numVectorImgsAlloc != RESOURCES_NUM_VECTORS)
@@ -1162,7 +1228,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.vectors = (ResourceVectors_t*)newSpace;
 		pig->resources.vectorStatus = newStatusSpace;
 		u64 numNewVectorImgs = RESOURCES_NUM_VECTORS - oldVectorImgCount;
-		if (oldVectorImgCount < RESOURCES_NUM_VECTORS) { NotifyPrint_I("Loading %llu new vector resource%s...", numNewVectorImgs, (numNewVectorImgs == 1) ? "" : "s"); }
+		if (oldVectorImgCount < RESOURCES_NUM_VECTORS) { NotifyPrint_I("Loading %llu new vector resource%s...", numNewVectorImgs, Plural(numNewVectorImgs, "s")); }
 		for (u64 vectorIndex = oldVectorImgCount; vectorIndex < RESOURCES_NUM_VECTORS; vectorIndex++) { InitResourceStatus(&pig->resources.vectorStatus[vectorIndex]); Pig_LoadVectorImgResource(vectorIndex); }
 	}
 	if (pig->resources.numSheetsAlloc != RESOURCES_NUM_SHEETS)
@@ -1180,7 +1246,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.sheets = (ResourceSheets_t*)newSpace;
 		pig->resources.sheetStatus = newStatusSpace;
 		u64 numNewSheets = RESOURCES_NUM_SHEETS - oldSheetsCount;
-		if (oldSheetsCount < RESOURCES_NUM_SHEETS) { NotifyPrint_I("Loading %llu new sprite sheet resource%s...", numNewSheets, (numNewSheets == 1) ? "" : "s"); }
+		if (oldSheetsCount < RESOURCES_NUM_SHEETS) { NotifyPrint_I("Loading %llu new sprite sheet resource%s...", numNewSheets, Plural(numNewSheets, "s")); }
 		for (u64 sheetIndex = oldSheetsCount; sheetIndex < RESOURCES_NUM_SHEETS; sheetIndex++) { InitResourceStatus(&pig->resources.sheetStatus[sheetIndex]); Pig_LoadSpriteSheetResource(sheetIndex); }
 	}
 	if (pig->resources.numShadersAlloc != RESOURCES_NUM_SHADERS)
@@ -1198,7 +1264,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.shaders = (ResourceShaders_t*)newSpace;
 		pig->resources.shaderStatus = newStatusSpace;
 		u64 numNewShaders = RESOURCES_NUM_SHADERS - oldShadersCount;
-		if (oldShadersCount < RESOURCES_NUM_SHADERS) { NotifyPrint_I("Loading %llu new shader resource%s...", numNewShaders, (numNewShaders == 1) ? "" : "s"); }
+		if (oldShadersCount < RESOURCES_NUM_SHADERS) { NotifyPrint_I("Loading %llu new shader resource%s...", numNewShaders, Plural(numNewShaders, "s")); }
 		for (u64 shaderIndex = oldShadersCount; shaderIndex < RESOURCES_NUM_SHADERS; shaderIndex++) { InitResourceStatus(&pig->resources.shaderStatus[shaderIndex]); Pig_LoadShaderResource(shaderIndex); }
 	}
 	if (pig->resources.numFontsAlloc != RESOURCES_NUM_FONTS)
@@ -1216,7 +1282,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.fonts = (ResourceFonts_t*)newSpace;
 		pig->resources.fontStatus = newStatusSpace;
 		u64 numNewFonts = RESOURCES_NUM_FONTS - oldFontsCount;
-		if (oldFontsCount < RESOURCES_NUM_FONTS) { NotifyPrint_I("Loading %llu new font resource%s...", numNewFonts, (numNewFonts == 1) ? "" : "s"); }
+		if (oldFontsCount < RESOURCES_NUM_FONTS) { NotifyPrint_I("Loading %llu new font resource%s...", numNewFonts, Plural(numNewFonts, "s")); }
 		for (u64 fontIndex = oldFontsCount; fontIndex < RESOURCES_NUM_FONTS; fontIndex++) { InitResourceStatus(&pig->resources.fontStatus[fontIndex]); Pig_LoadFontResource(fontIndex); }
 	}
 	if (pig->resources.numSoundsAlloc != RESOURCES_NUM_SOUNDS)
@@ -1234,7 +1300,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.sounds = (ResourceSounds_t*)newSpace;
 		pig->resources.soundStatus = newStatusSpace;
 		u64 numNewSounds = RESOURCES_NUM_SOUNDS - oldSoundsCount;
-		if (oldSoundsCount < RESOURCES_NUM_SOUNDS) { NotifyPrint_I("Loading %llu new sound resource%s...", numNewSounds, (numNewSounds == 1) ? "" : "s"); }
+		if (oldSoundsCount < RESOURCES_NUM_SOUNDS) { NotifyPrint_I("Loading %llu new sound resource%s...", numNewSounds, Plural(numNewSounds, "s")); }
 		for (u64 soundIndex = oldSoundsCount; soundIndex < RESOURCES_NUM_SOUNDS; soundIndex++) { InitResourceStatus(&pig->resources.soundStatus[soundIndex]); Pig_LoadSoundResource(soundIndex); }
 	}
 	if (pig->resources.numMusicsAlloc != RESOURCES_NUM_MUSICS)
@@ -1252,7 +1318,7 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.musics = (ResourceMusics_t*)newSpace;
 		pig->resources.musicStatus = newStatusSpace;
 		u64 numNewMusics = RESOURCES_NUM_MUSICS - oldMusicsCount;
-		if (oldMusicsCount < RESOURCES_NUM_MUSICS) { NotifyPrint_I("Loading %llu new music resource%s...", numNewMusics, (numNewMusics == 1) ? "" : "s"); }
+		if (oldMusicsCount < RESOURCES_NUM_MUSICS) { NotifyPrint_I("Loading %llu new music resource%s...", numNewMusics, Plural(numNewMusics, "s")); }
 		for (u64 musicIndex = oldMusicsCount; musicIndex < RESOURCES_NUM_MUSICS; musicIndex++) { InitResourceStatus(&pig->resources.musicStatus[musicIndex]); Pig_LoadMusicResource(musicIndex); }
 	}
 	if (pig->resources.numModelsAlloc != RESOURCES_NUM_MODELS)
@@ -1270,8 +1336,26 @@ void Pig_HandleResourcesOnReload()
 		pig->resources.models = (ResourceModels_t*)newSpace;
 		pig->resources.modelStatus = newStatusSpace;
 		u64 numNewModels = RESOURCES_NUM_MODELS - oldModelsCount;
-		if (oldModelsCount < RESOURCES_NUM_MODELS) { NotifyPrint_I("Loading %llu new model resource%s...", numNewModels, (numNewModels == 1) ? "" : "s"); }
+		if (oldModelsCount < RESOURCES_NUM_MODELS) { NotifyPrint_I("Loading %llu new model resource%s...", numNewModels, Plural(numNewModels, "s")); }
 		for (u64 modelIndex = oldModelsCount; modelIndex < RESOURCES_NUM_MODELS; modelIndex++) { InitResourceStatus(&pig->resources.modelStatus[modelIndex]); Pig_LoadModelResource(modelIndex); }
+	}
+	if (pig->resources.numVoxelFrameSetsAlloc != RESOURCES_NUM_VOXEL_FRAME_SETS)
+	{
+		PrintLine_N("VoxelFrameSet resource count changed: %llu -> %llu", pig->resources.numVoxelFrameSetsAlloc, RESOURCES_NUM_VOXEL_FRAME_SETS);
+		u64 oldFrameSetsCount = pig->resources.numVoxelFrameSetsAlloc;
+		VoxFrameSet_t* newSpace = AllocArray(fixedHeap, VoxFrameSet_t, RESOURCES_NUM_VOXEL_FRAME_SETS);
+		ResourceStatus_t* newStatusSpace = AllocArray(fixedHeap, ResourceStatus_t, RESOURCES_NUM_VOXEL_FRAME_SETS);
+		NotNull2(newSpace, newStatusSpace);
+		MyMemCopy(newSpace, pig->resources.voxelFrameSets, sizeof(VoxFrameSet_t) * MinU64(RESOURCES_NUM_VOXEL_FRAME_SETS, oldFrameSetsCount));
+		MyMemCopy(newStatusSpace, pig->resources.voxelFrameSetStatus, sizeof(ResourceStatus_t) * MinU64(RESOURCES_NUM_VOXEL_FRAME_SETS, oldFrameSetsCount));
+		FreeMem(fixedHeap, pig->resources.voxelFrameSets, sizeof(VoxFrameSet_t) * oldFrameSetsCount);
+		FreeMem(fixedHeap, pig->resources.voxelFrameSetStatus, sizeof(ResourceStatus_t) * oldFrameSetsCount);
+		pig->resources.numVoxelFrameSetsAlloc = RESOURCES_NUM_VOXEL_FRAME_SETS;
+		pig->resources.voxelFrameSets = (ResourceVoxelFrameSets_t*)newSpace;
+		pig->resources.voxelFrameSetStatus = newStatusSpace;
+		u64 numNewFrameSets = RESOURCES_NUM_VOXEL_FRAME_SETS - oldFrameSetsCount;
+		if (oldFrameSetsCount < RESOURCES_NUM_VOXEL_FRAME_SETS) { NotifyPrint_I("Loading %llu new voxelFrameSet resource%s...", numNewFrameSets, Plural(numNewFrameSets, "s")); }
+		for (u64 frameSetIndex = oldFrameSetsCount; frameSetIndex < RESOURCES_NUM_VOXEL_FRAME_SETS; frameSetIndex++) { InitResourceStatus(&pig->resources.voxelFrameSetStatus[frameSetIndex]); Pig_LoadVoxelFrameSetResource(frameSetIndex); }
 	}
 }
 
@@ -1326,6 +1410,11 @@ void Pig_UpdateResources()
 				{
 					PrintLine_N("Reloading Model[%llu]...", watch->resourceIndex);
 					Pig_LoadModelResource(watch->resourceIndex);
+				} break;
+				case ResourceType_VoxelFrameSet:
+				{
+					PrintLine_N("Reloading VoxelFrameSet[%llu]...", watch->resourceIndex);
+					Pig_LoadVoxelFrameSetResource(watch->resourceIndex);
 				} break;
 				default: DebugAssert(false); break;
 			}
@@ -1441,6 +1530,13 @@ void AccessResource(const Model_t* model) //pre-declared in pig_func_defs.h
 	Assert(type == ResourceType_Model);
 	AccessResource(ResourceType_Model, modelIndex);
 }
+void AccessResource(const VoxFrameSet_t* frameSet) //pre-declared in pig_func_defs.h
+{
+	u64 frameSetIndex = 0;
+	ResourceType_t type = GetResourceByPntr((const void*)frameSet, &frameSetIndex);
+	Assert(type == ResourceType_VoxelFrameSet);
+	AccessResource(ResourceType_VoxelFrameSet, frameSetIndex);
+}
 
 // +--------------------------------------------------------------+
 // |                           Handles                            |
@@ -1481,6 +1577,11 @@ bool IsHandleFilled(const MusicHandle_t* handle)
 	return (handle->reloadIndex != 0);
 }
 bool IsHandleFilled(const ModelHandle_t* handle)
+{
+	NotNull(handle);
+	return (handle->reloadIndex != 0);
+}
+bool IsHandleFilled(const VoxFrameSetHandle_t* handle)
 {
 	NotNull(handle);
 	return (handle->reloadIndex != 0);
@@ -1585,6 +1686,18 @@ ModelHandle_t GetModelHandle(const Model_t* modelPointer)
 	result.pntr = (Model_t*)modelPointer;
 	return result;
 }
+VoxFrameSetHandle_t GetVoxFrameSetHandle(const VoxFrameSet_t* frameSetPointer)
+{
+	VoxFrameSetHandle_t result = {};
+	if (frameSetPointer == nullptr && pig->resources.voxelFrameSets != nullptr) { return result; }
+	Assert(frameSetPointer >= (VoxFrameSet_t*)pig->resources.voxelFrameSets);
+	if (pig->resources.voxelFrameSets == nullptr) { Assert(frameSetPointer < ((VoxFrameSet_t*)pig->resources.voxelFrameSets) + RESOURCES_NUM_VOXEL_FRAME_SETS); }
+	else { Assert(frameSetPointer < ((VoxFrameSet_t*)pig->resources.voxelFrameSets) + pig->resources.numVoxelFrameSetsAlloc); }
+	result.index = (u64)(frameSetPointer - ((VoxFrameSet_t*)pig->resources.voxelFrameSets));
+	result.reloadIndex = pig->reloadIndex;
+	result.pntr = (VoxFrameSet_t*)frameSetPointer;
+	return result;
+}
 
 Texture_t* GetPointer(TextureHandle_t* handle)
 {
@@ -1663,6 +1776,16 @@ Model_t* GetPointer(ModelHandle_t* handle)
 	if (handle->reloadIndex == 0) { return nullptr; }
 	if (pig->resources.models == nullptr) { return nullptr; }
 	handle->pntr = &pig->resources.models->items[handle->index];
+	handle->reloadIndex = pig->reloadIndex;
+	return handle->pntr;
+}
+VoxFrameSet_t* GetPointer(VoxFrameSetHandle_t* handle)
+{
+	if (handle->reloadIndex == pig->reloadIndex && handle->pntr != nullptr) { return handle->pntr; }
+	Assert(handle->index < pig->resources.numVoxelFrameSetsAlloc);
+	if (handle->reloadIndex == 0) { return nullptr; }
+	if (pig->resources.voxelFrameSets == nullptr) { return nullptr; }
+	handle->pntr = &pig->resources.voxelFrameSets->items[handle->index];
 	handle->reloadIndex = pig->reloadIndex;
 	return handle->pntr;
 }

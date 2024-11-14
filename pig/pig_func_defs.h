@@ -34,6 +34,7 @@ void AccessResource(const Shader_t* shader);
 void AccessResource(const Font_t* font);
 void AccessResource(const Sound_t* soundOrMusic);
 void AccessResource(const Model_t* model);
+void AccessResource(const VoxFrameSet_t* frameSet);
 Texture_t* FindTextureResourceByFilename(MyStr_t filename, u64* textureIndexOut = nullptr);
 
 //pig_debug_console.cpp

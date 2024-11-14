@@ -21,21 +21,23 @@ enum ResourceType_t
 	ResourceType_Sound,
 	ResourceType_Music,
 	ResourceType_Model,
+	ResourceType_VoxelFrameSet,
 	ResourceType_NumTypes,
 };
 const char* GetResourceTypeStr(ResourceType_t resourceType)
 {
 	switch (resourceType)
 	{
-		case ResourceType_None:        return "None";
-		case ResourceType_Texture:     return "Texture";
-		case ResourceType_VectorImage: return "VectorImage";
-		case ResourceType_Sheet:       return "Sheet";
-		case ResourceType_Shader:      return "Shader";
-		case ResourceType_Font:        return "Font";
-		case ResourceType_Sound:       return "Sound";
-		case ResourceType_Music:       return "Music";
-		case ResourceType_Model:       return "Model";
+		case ResourceType_None:          return "None";
+		case ResourceType_Texture:       return "Texture";
+		case ResourceType_VectorImage:   return "VectorImage";
+		case ResourceType_Sheet:         return "Sheet";
+		case ResourceType_Shader:        return "Shader";
+		case ResourceType_Font:          return "Font";
+		case ResourceType_Sound:         return "Sound";
+		case ResourceType_Music:         return "Music";
+		case ResourceType_Model:         return "Model";
+		case ResourceType_VoxelFrameSet: return "Voxel";
 		default: return "Unknown";
 	}
 }
@@ -208,6 +210,12 @@ struct ModelHandle_t
 	u64 reloadIndex;
 	Model_t* pntr;
 };
+struct VoxFrameSetHandle_t
+{
+	u64 index;
+	u64 reloadIndex;
+	VoxFrameSet_t* pntr;
+};
 
 #include "game_resources.h"
 
@@ -225,6 +233,7 @@ struct Resources_t
 	u64 numSoundsAlloc;
 	u64 numMusicsAlloc;
 	u64 numModelsAlloc;
+	u64 numVoxelFrameSetsAlloc;
 	
 	ResourceStatus_t* textureStatus;
 	ResourceStatus_t* vectorStatus;
@@ -234,15 +243,17 @@ struct Resources_t
 	ResourceStatus_t* soundStatus;
 	ResourceStatus_t* musicStatus;
 	ResourceStatus_t* modelStatus;
+	ResourceStatus_t* voxelFrameSetStatus;
 	
-	ResourceTextures_t* textures;
-	ResourceVectors_t*  vectors;
-	ResourceSheets_t*   sheets;
-	ResourceShaders_t*  shaders;
-	ResourceFonts_t*    fonts;
-	ResourceSounds_t*   sounds;
-	ResourceMusics_t*   musics;
-	ResourceModels_t*   models;
+	ResourceTextures_t*       textures;
+	ResourceVectors_t*        vectors;
+	ResourceSheets_t*         sheets;
+	ResourceShaders_t*        shaders;
+	ResourceFonts_t*          fonts;
+	ResourceSounds_t*         sounds;
+	ResourceMusics_t*         musics;
+	ResourceModels_t*         models;
+	ResourceVoxelFrameSets_t* voxelFrameSets;
 };
 
 #endif //  _PIG_RESOURCES_H

@@ -25,6 +25,7 @@ struct ResourcePoolEntry_t
 		Sound_t sound;
 		Sound_t music;
 		Model_t model;
+		VoxFrameSet_t voxFrameSet;
 	};
 };
 
@@ -46,6 +47,7 @@ struct ResourcePool_t
 			u64 nextSoundId;
 			u64 nextMusicId;
 			u64 nextModelId;
+			u64 nextVoxelFrameSetId;
 		};
 	};
 	union
@@ -62,6 +64,7 @@ struct ResourcePool_t
 			u64 numSounds;
 			u64 numMusics;
 			u64 numModels;
+			u64 numVoxelFrameSets;
 		};
 	};
 	union
@@ -81,10 +84,11 @@ struct ResourcePool_t
 			BktArray_t sounds;
 			BktArray_t musics;
 			BktArray_t models;
+			BktArray_t voxelFrameSets;
 		};
 	};
 };
-CompileAssert(ResourceType_NumTypes == 9); //Update the above code if ResourceType_NumTypes changes
+CompileAssert(ResourceType_NumTypes == 10); //Update the above code if ResourceType_NumTypes changes
 
 struct TextureRef_t
 {
@@ -134,6 +138,12 @@ struct ModelRef_t
 	u64 arrayIndex;
 	Model_t* pntr;
 };
+struct VoxFrameSetRef_t
+{
+	ResourcePool_t* pool;
+	u64 arrayIndex;
+	VoxFrameSet_t* pntr;
+};
 
 bool IsValidRef(const TextureRef_t&     reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const VectorImgRef_t&   reference) { return (reference.pool != nullptr); }
@@ -143,6 +153,7 @@ bool IsValidRef(const FontRef_t&        reference) { return (reference.pool != n
 bool IsValidRef(const SoundRef_t&       reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const MusicRef_t&       reference) { return (reference.pool != nullptr); }
 bool IsValidRef(const ModelRef_t&       reference) { return (reference.pool != nullptr); }
+bool IsValidRef(const VoxFrameSetRef_t& reference) { return (reference.pool != nullptr); }
 
 #define TextureRef_Invalid     TextureRef_t()
 #define VectorImgRef_Invalid   VectorImgRef_t()
@@ -152,5 +163,6 @@ bool IsValidRef(const ModelRef_t&       reference) { return (reference.pool != n
 #define SoundRef_Invalid       SoundRef_t()
 #define MusicRef_Invalid       MusicRef_t()
 #define ModelRef_Invalid       ModelRef_t()
+#define VoxFrameSetRef_Invalid VoxFrameSetRef_t()
 
 #endif //  _PIG_RESOURCE_POOL_H

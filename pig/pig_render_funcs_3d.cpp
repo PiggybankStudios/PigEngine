@@ -467,3 +467,24 @@ void RcDrawModelCustomTexture(v3 position, quat rotation, v3 scale, Color_t colo
 		}
 	}
 }
+
+void RcDrawVoxFrame(VoxFrame_t* frame, v3 position, v3 scale, quat rotation, bool centered = false)
+{
+	NotNull(frame);
+	
+	v3 frameSize = ToVec3(frame->size);
+	v3 halfFrameSize = frameSize * 0.5f;
+	v3 scaledHalfFrameSize = Vec3Multiply(halfFrameSize, scale);
+	
+	mat4 worldMatrix = Mat4_Identity;
+	if (centered) { Mat4Transform(worldMatrix, Mat4Translate3(-halfFrameSize)); }
+	Mat4Transform(worldMatrix, Mat4Scale3(scale));
+	Mat4Transform(worldMatrix, Mat4Quaternion(rotation));
+	Mat4Transform(worldMatrix, Mat4Translate3(position + (centered ? scaledHalfFrameSize : Vec3_Zero)));
+	RcSetWorldMatrix(worldMatrix);
+	
+	RcBindTexture1(nullptr);
+	RcSetColor1(White);
+	RcBindVertBuffer(&frame->vertBuffer);
+	RcDrawBuffer(VertBufferPrimitive_Triangles);
+}
